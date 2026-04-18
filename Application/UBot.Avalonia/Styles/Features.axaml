@@ -1,4 +1,4 @@
-﻿<Styles
+<Styles
   xmlns="https://github.com/avaloniaui"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
@@ -8,7 +8,7 @@
     <Setter Property="BorderBrush"      Value="{DynamicResource StrokeSoftBrush}" />
     <Setter Property="BorderThickness"  Value="1" />
     <Setter Property="CornerRadius"     Value="12" />
-    <Setter Property="Padding"          Value="16,12" />
+    <Setter Property="Padding"          Value="18,14" />
   </Style>
 
   <Style Selector="TextBlock.section-title">
@@ -57,6 +57,7 @@
   <Style Selector="CheckBox.legacy-check">
     <Setter Property="FontSize"   Value="12" />
     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+    <Setter Property="Margin"     Value="0,1" />
   </Style>
 
   <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• LEGACY TABLE â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
@@ -137,6 +138,57 @@
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="CornerRadius"    Value="8" />
     <Setter Property="Padding"         Value="8" />
+  </Style>
+
+  <!-- ═══════════════ BROWSE BUTTON (prominent) ═══════════════ -->
+  <Style Selector="Button.browse-btn">
+    <Setter Property="Height"          Value="32" />
+    <Setter Property="MinWidth"        Value="32" />
+    <Setter Property="Padding"         Value="0" />
+    <Setter Property="CornerRadius"    Value="8" />
+    <Setter Property="Background"      Value="{DynamicResource AccentSoftBrush}" />
+    <Setter Property="BorderBrush"     Value="#505BA3F5" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Foreground"      Value="{DynamicResource AccentBrush}" />
+    <Setter Property="FontSize"        Value="12" />
+    <Setter Property="FontWeight"      Value="Bold" />
+    <Setter Property="Cursor"          Value="Hand" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+
+  <Style Selector="Button.browse-btn:pointerover">
+    <Setter Property="BorderBrush" Value="#805BA3F5" />
+    <Setter Property="Background"  Value="#3C5BA3F5" />
+  </Style>
+
+  <!-- ═══════════════ COMPACT NUMERIC FIELD ═══════════════ -->
+  <Style Selector="TextBox.compact-num">
+    <Setter Property="Background"      Value="#E0122740" />
+    <Setter Property="BorderBrush"     Value="{DynamicResource StrokeSoftBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius"    Value="6" />
+    <Setter Property="Padding"         Value="4,0" />
+    <Setter Property="Foreground"      Value="{DynamicResource TextPrimaryBrush}" />
+    <Setter Property="FontSize"        Value="12" />
+    <Setter Property="FontWeight"      Value="SemiBold" />
+    <Setter Property="Height"          Value="26" />
+    <Setter Property="Width"           Value="56" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="TextAlignment"   Value="Center" />
+  </Style>
+
+  <Style Selector="TextBox.compact-num:focus">
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+  </Style>
+
+  <!-- ═══════════════ NUMERIC UNIT LABEL ═══════════════ -->
+  <Style Selector="TextBlock.unit-label">
+    <Setter Property="FontSize"   Value="11" />
+    <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="Margin"     Value="4,0,0,0" />
   </Style>
 
 </Styles>

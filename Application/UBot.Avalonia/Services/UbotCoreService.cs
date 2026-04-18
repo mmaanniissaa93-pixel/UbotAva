@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using UBot.Core;
@@ -12,6 +13,7 @@ using UBot.Core.Components;
 using UBot.Core.Event;
 using UBot.Core.Extensions;
 using UBot.Core.Network;
+using UBot.Core.Network.Protocol;
 using UBot.Core.Objects;
 using UBot.Core.Plugins;
 using Forms = System.Windows.Forms;
@@ -33,6 +35,10 @@ public sealed class UbotCoreService : IUbotCoreService
     private static bool _clientVisible = true;
     private static string _statusText = "Ready";
     private static bool _eventsSubscribed;
+    private static readonly JsonSerializerOptions AutoLoginReadOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
 
     private static event Action<string, string>? GlobalLogReceived;
 
@@ -295,6 +301,9 @@ public sealed class UbotCoreService : IUbotCoreService
         if (normalized is "general.toggle-pending-window")
             return TogglePendingWindow();
 
+        if (normalized is "general.open-account-setup" or "general.open-accounts-window")
+            return OpenAccountsWindow();
+
         if (normalized is "general.open-sound-settings")
         {
             EventManager.FireEvent("OnOpenSoundSettings");
@@ -457,6 +466,67 @@ public sealed class UbotCoreService : IUbotCoreService
             BeginReferenceDataLoad();
 
         return Task.FromResult(true);
+    }
+
+    public Task<string> GetSroExecutablePathAsync()
+    {
+        var directory = GlobalConfig.Get("UBot.SilkroadDirectory", string.Empty) ?? string.Empty;
+        var executable = GlobalConfig.Get("UBot.SilkroadExecutable", string.Empty) ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(directory) || string.IsNullOrWhiteSpace(executable))
+            return Task.FromResult(string.Empty);
+
+        return Task.FromResult(Path.Combine(directory, executable));
+    }
+
+    public Task<IReadOnlyList<AutoLoginAccountDto>> GetAutoLoginAccountsAsync()
+    {
+        var accounts = LoadAutoLoginAccountsFromFile()
+            .OrderBy(x => x.Username, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        return Task.FromResult((IReadOnlyList<AutoLoginAccountDto>)accounts);
+    }
+
+    public Task<bool> SaveAutoLoginAccountsAsync(IReadOnlyList<AutoLoginAccountDto> accounts)
+    {
+        try
+        {
+            var sanitized = (accounts ?? Array.Empty<AutoLoginAccountDto>())
+                .Where(x => !string.IsNullOrWhiteSpace(x.Username))
+                .GroupBy(x => x.Username.Trim(), StringComparer.OrdinalIgnoreCase)
+                .Select(group =>
+                {
+                    var item = group.Last();
+                    return new AutoLoginAccountDto
+                    {
+                        Username = item.Username.Trim(),
+                        Password = item.Password ?? string.Empty,
+                        SecondaryPassword = item.SecondaryPassword ?? string.Empty,
+                        Channel = item.Channel == 0 ? (byte)1 : item.Channel,
+                        Type = string.IsNullOrWhiteSpace(item.Type) ? "Joymax" : item.Type,
+                        ServerName = item.ServerName?.Trim() ?? string.Empty,
+                        SelectedCharacter = item.SelectedCharacter?.Trim() ?? string.Empty,
+                        Characters = (item.Characters ?? new List<string>())
+                            .Where(name => !string.IsNullOrWhiteSpace(name))
+                            .Select(name => name.Trim())
+                            .Distinct(StringComparer.OrdinalIgnoreCase)
+                            .ToList()
+                    };
+                })
+                .OrderBy(x => x.Username, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (!WriteAutoLoginAccountsToFile(sanitized))
+                return Task.FromResult(false);
+
+            ReloadGeneralAccountsRuntime();
+            return Task.FromResult(true);
+        }
+        catch
+        {
+            return Task.FromResult(false);
+        }
     }
 
     public Task<string> PickExecutableAsync()
@@ -879,6 +949,7 @@ public sealed class UbotCoreService : IUbotCoreService
     private static Dictionary<string, object?> BuildGeneralPluginConfig()
     {
         var config = LoadPluginJsonConfig("UBot.General");
+        var savedAccounts = LoadAutoLoginAccountsFromFile();
         config["enableAutomatedLogin"] = GlobalConfig.Get("UBot.General.EnableAutomatedLogin", false);
         config["autoLoginAccount"] = GlobalConfig.Get("UBot.General.AutoLoginAccountUsername", string.Empty);
         config["selectedCharacter"] = GlobalConfig.Get("UBot.General.AutoLoginCharacter", string.Empty);
@@ -903,7 +974,37 @@ public sealed class UbotCoreService : IUbotCoreService
         config["sroExecutable"] = Path.Combine(
             GlobalConfig.Get("UBot.SilkroadDirectory", string.Empty),
             GlobalConfig.Get("UBot.SilkroadExecutable", string.Empty));
-        config["autoLoginAccounts"] = new List<string>();
+
+        var accounts = savedAccounts.Select(x => x.Username).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        var characterMap = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var account in savedAccounts)
+        {
+            if (string.IsNullOrWhiteSpace(account.Username))
+                continue;
+
+            characterMap[account.Username] = account.Characters
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
+        var selectedAccount = GlobalConfig.Get("UBot.General.AutoLoginAccountUsername", string.Empty);
+        characterMap.TryGetValue(selectedAccount, out var selectedCharacters);
+        var selectedCharacter = GlobalConfig.Get("UBot.General.AutoLoginCharacter", string.Empty);
+
+        if (string.IsNullOrWhiteSpace(selectedCharacter))
+        {
+            var preferredCharacter = savedAccounts
+                .FirstOrDefault(x => string.Equals(x.Username, selectedAccount, StringComparison.OrdinalIgnoreCase))
+                ?.SelectedCharacter;
+            if (!string.IsNullOrWhiteSpace(preferredCharacter))
+                selectedCharacter = preferredCharacter;
+        }
+
+        config["autoLoginAccounts"] = accounts;
+        config["autoLoginCharacters"] = selectedCharacters ?? new List<string>();
+        config["autoLoginCharacterMap"] = characterMap;
+        config["selectedCharacter"] = selectedCharacter;
         return config;
     }
 
@@ -999,6 +1100,9 @@ public sealed class UbotCoreService : IUbotCoreService
     private static bool ApplyGeneralPluginPatch(Dictionary<string, object?> patch)
     {
         var changed = false;
+        var selectedCharacterPatched = false;
+        string? selectedCharacterValue = null;
+        string? selectedAccountValue = null;
         foreach (var kv in patch)
         {
             switch (kv.Key)
@@ -1020,9 +1124,12 @@ public sealed class UbotCoreService : IUbotCoreService
                     break;
                 case "autoLoginAccount":
                     changed |= SetGlobalString("UBot.General.AutoLoginAccountUsername", kv.Value);
+                    selectedAccountValue = kv.Value?.ToString()?.Trim();
                     break;
                 case "selectedCharacter":
                     changed |= SetGlobalString("UBot.General.AutoLoginCharacter", kv.Value);
+                    selectedCharacterPatched = true;
+                    selectedCharacterValue = kv.Value?.ToString()?.Trim() ?? string.Empty;
                     break;
                 case "autoCharSelect":
                     changed |= SetGlobalBool("UBot.General.CharacterAutoSelect", kv.Value);
@@ -1081,6 +1188,14 @@ public sealed class UbotCoreService : IUbotCoreService
                 default:
                     break;
             }
+        }
+
+        if (selectedCharacterPatched)
+        {
+            if (string.IsNullOrWhiteSpace(selectedAccountValue))
+                selectedAccountValue = GlobalConfig.Get("UBot.General.AutoLoginAccountUsername", string.Empty);
+
+            changed |= UpdateSelectedCharacterForAccount(selectedAccountValue, selectedCharacterValue);
         }
 
         return changed;
@@ -1402,6 +1517,188 @@ public sealed class UbotCoreService : IUbotCoreService
             return false;
         }
     }
+
+    private static bool OpenAccountsWindow()
+    {
+        try
+        {
+            var viewType = Type.GetType("UBot.General.Views.View, UBot.General", false);
+            if (viewType == null)
+                return false;
+
+            var accountsWindowProperty = viewType.GetProperty("AccountsWindow", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+            var mainViewProperty = viewType.GetProperty("Instance", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+            var form = accountsWindowProperty?.GetValue(null) as Forms.Form;
+            if (form == null)
+                return false;
+
+            if (form.Visible)
+            {
+                form.BringToFront();
+                form.Focus();
+                return true;
+            }
+
+            var owner = mainViewProperty?.GetValue(null) as Forms.Control;
+            if (owner != null)
+                form.Show(owner);
+            else
+                form.Show();
+
+            form.BringToFront();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static List<AutoLoginAccountDto> LoadAutoLoginAccountsFromFile()
+    {
+        try
+        {
+            var filePath = GetAutoLoginDataFilePath();
+            if (!File.Exists(filePath))
+                return new List<AutoLoginAccountDto>();
+
+            var encoded = File.ReadAllBytes(filePath);
+            if (encoded.Length == 0)
+                return new List<AutoLoginAccountDto>();
+
+            var blowfish = new Blowfish();
+            var decoded = blowfish.Decode(encoded);
+            if (decoded == null || decoded.Length == 0)
+                return new List<AutoLoginAccountDto>();
+
+            var json = Encoding.UTF8.GetString(decoded).Trim('\0').Trim();
+            if (string.IsNullOrWhiteSpace(json))
+                return new List<AutoLoginAccountDto>();
+
+            var accounts = JsonSerializer.Deserialize<List<AutoLoginAccountDto>>(json, AutoLoginReadOptions);
+            if (accounts == null)
+                return new List<AutoLoginAccountDto>();
+
+            foreach (var account in accounts)
+            {
+                account.Username = account.Username?.Trim() ?? string.Empty;
+                account.Password ??= string.Empty;
+                account.SecondaryPassword ??= string.Empty;
+                account.Type = string.IsNullOrWhiteSpace(account.Type) ? "Joymax" : account.Type;
+                account.ServerName = account.ServerName?.Trim() ?? string.Empty;
+                account.SelectedCharacter = account.SelectedCharacter?.Trim() ?? string.Empty;
+                account.Characters = (account.Characters ?? new List<string>())
+                    .Where(name => !string.IsNullOrWhiteSpace(name))
+                    .Select(name => name.Trim())
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+                if (account.Channel == 0)
+                    account.Channel = 1;
+            }
+
+            var result = accounts.Where(x => !string.IsNullOrWhiteSpace(x.Username)).ToList();
+
+            // Compatibility migration:
+            // Earlier Avalonia builds wrote camelCase keys (username/serverName/...).
+            // UBot.General deserializes Account with PascalCase property names, so auto-login
+            // can silently fail if file shape is not normalized.
+            if (RequiresLegacyAutoLoginMigration(json))
+            {
+                if (WriteAutoLoginAccountsToFile(result))
+                    ReloadGeneralAccountsRuntime();
+            }
+
+            return result;
+        }
+        catch
+        {
+            return new List<AutoLoginAccountDto>();
+        }
+    }
+
+    private static bool WriteAutoLoginAccountsToFile(IReadOnlyList<AutoLoginAccountDto> accounts)
+    {
+        try
+        {
+            var json = JsonSerializer.Serialize(accounts ?? Array.Empty<AutoLoginAccountDto>());
+            var data = Encoding.UTF8.GetBytes(json);
+            var blowfish = new Blowfish();
+            var encoded = blowfish.Encode(data);
+            if (encoded == null)
+                return false;
+
+            var filePath = GetAutoLoginDataFilePath();
+            var directory = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrWhiteSpace(directory))
+                Directory.CreateDirectory(directory);
+
+            File.WriteAllBytes(filePath, encoded);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool RequiresLegacyAutoLoginMigration(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+            return false;
+
+        return json.Contains("\"username\"", StringComparison.Ordinal)
+               || json.Contains("\"password\"", StringComparison.Ordinal)
+               || json.Contains("\"secondaryPassword\"", StringComparison.Ordinal)
+               || json.Contains("\"serverName\"", StringComparison.Ordinal)
+               || json.Contains("\"selectedCharacter\"", StringComparison.Ordinal)
+               || json.Contains("\"characters\"", StringComparison.Ordinal);
+    }
+
+    private static bool UpdateSelectedCharacterForAccount(string? username, string? selectedCharacter)
+    {
+        if (string.IsNullOrWhiteSpace(username))
+            return false;
+
+        var accounts = LoadAutoLoginAccountsFromFile();
+        if (accounts.Count == 0)
+            return false;
+
+        var account = accounts.FirstOrDefault(x =>
+            string.Equals(x.Username, username.Trim(), StringComparison.OrdinalIgnoreCase));
+        if (account == null)
+            return false;
+
+        var normalizedCharacter = selectedCharacter?.Trim() ?? string.Empty;
+        if (string.Equals(account.SelectedCharacter ?? string.Empty, normalizedCharacter, StringComparison.Ordinal))
+            return false;
+
+        account.SelectedCharacter = normalizedCharacter;
+        if (!WriteAutoLoginAccountsToFile(accounts))
+            return false;
+
+        ReloadGeneralAccountsRuntime();
+        return true;
+    }
+
+    private static void ReloadGeneralAccountsRuntime()
+    {
+        try
+        {
+            var accountsType = Type.GetType("UBot.General.Components.Accounts, UBot.General", false);
+            var loadMethod = accountsType?.GetMethod("Load", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+            loadMethod?.Invoke(null, null);
+        }
+        catch
+        {
+            // ignored
+        }
+    }
+
+    private static string GetAutoLoginDataFilePath()
+    {
+        return Path.Combine(Kernel.BasePath, "User", ProfileManager.SelectedProfile, "autologin.data");
+    }
+
     private static string GetPluginConfigKey(string pluginName) => $"UBot.Desktop.PluginConfig.{pluginName}";
 
     private static Dictionary<string, object?> LoadPluginJsonConfig(string pluginName)

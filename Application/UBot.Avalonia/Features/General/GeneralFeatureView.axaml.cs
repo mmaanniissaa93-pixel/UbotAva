@@ -1,5 +1,6 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using System.Collections.Generic;
 using UBot.Avalonia.Controls;
 using UBot.Avalonia.Services;
@@ -17,6 +18,13 @@ public partial class GeneralFeatureView : UserControl
     public void Initialize(GeneralViewModel vm)
     {
         _vm = vm;
+        _vm.UiStateChanged += OnVmUiStateChanged;
+        _vm.RequestAccountSetupDialog = () => _ = OpenAccountSetupDialogAsync();
+
+        AccountSelect.SelectionChanged += AccountSelect_SelectionChanged;
+        CharacterSelect.SelectionChanged += CharacterSelect_SelectionChanged;
+        ClientTypeSelect.SelectionChanged += ClientTypeSelect_SelectionChanged;
+
         Refresh();
     }
 
@@ -25,7 +33,10 @@ public partial class GeneralFeatureView : UserControl
         if (_vm is null) return;
         _syncing = true;
 
-        SroBox.Text = _vm.TextCfg("sroExecutable");
+        var sroPath = _vm.SroExecutable;
+        if (string.IsNullOrWhiteSpace(sroPath))
+            sroPath = _vm.TextCfg("sroExecutable");
+        SroBox.Text = sroPath;
         StayConnectedCheck.IsChecked      = _vm.BoolCfg("stayConnectedAfterClientExit");
         MoveToTrayCheck.IsChecked         = _vm.BoolCfg("moveToTrayOnMinimize");
         AutoHidePendingCheck.IsChecked    = _vm.BoolCfg("autoHidePendingWindow");
@@ -78,11 +89,21 @@ public partial class GeneralFeatureView : UserControl
     private void SroBox_LostFocus(object? s, RoutedEventArgs e)
         => _vm?.SyncSroExecutablePathAsync(SroBox.Text ?? "");
 
-    private void BrowseSro_Click(object? s, RoutedEventArgs e) => _vm?.PickSroExecutableAsync();
+    private async void BrowseSro_Click(object? s, RoutedEventArgs e)
+    {
+        if (_vm == null) return;
+        var path = await _vm.PickSroExecutableAsync();
+        if (!string.IsNullOrEmpty(path))
+        {
+            _syncing = true;
+            SroBox.Text = path;
+            _syncing = false;
+        }
+    }
     private void StartClient_Click(object? s, RoutedEventArgs e) => _vm?.StartClientAsync();
     private void GoClientless_Click(object? s, RoutedEventArgs e) => _vm?.GoClientlessAsync();
     private void ToggleClientVisibility_Click(object? s, RoutedEventArgs e) => _vm?.ToggleClientVisibilityAsync();
-    private void AccountSetup_Click(object? s, RoutedEventArgs e) => _vm?.OpenAccountSetupDialog();
+    private void AccountSetup_Click(object? s, RoutedEventArgs e) => _ = _vm?.OpenAccountSetupDialogAsync();
     private void TogglePendingWindow_Click(object? s, RoutedEventArgs e) => _vm?.TogglePendingWindowAsync();
     private void OpenSoundSettings_Click(object? s, RoutedEventArgs e) => _vm?.OpenSoundSettingsAsync();
 
@@ -114,6 +135,45 @@ public partial class GeneralFeatureView : UserControl
     {
         if (_syncing || _vm is null) return;
         _ = _vm.PatchConfigAsync(new Dictionary<string, object?> { ["autoCharSelect"] = true, ["characterAutoSelectFirst"] = false, ["characterAutoSelectHigher"] = true });
+    }
+
+    private void AccountSelect_SelectionChanged(object value)
+    {
+        if (_syncing || _vm is null) return;
+        _ = _vm.SelectAutoLoginAccountAsync(value?.ToString());
+    }
+
+    private void CharacterSelect_SelectionChanged(object value)
+    {
+        if (_syncing || _vm is null) return;
+        _ = _vm.SelectAutoLoginCharacterAsync(value?.ToString());
+    }
+
+    private void ClientTypeSelect_SelectionChanged(object value)
+    {
+        if (_syncing || _vm is null) return;
+        _ = _vm.UpdateClientTypeAsync(value?.ToString());
+    }
+
+    private void OnVmUiStateChanged()
+    {
+        Dispatcher.UIThread.Post(Refresh);
+    }
+
+    private async System.Threading.Tasks.Task OpenAccountSetupDialogAsync()
+    {
+        if (_vm == null)
+            return;
+
+        var owner = TopLevel.GetTopLevel(this) as Window;
+        var dialog = new AccountSetupWindow(_vm);
+        if (owner != null)
+            await dialog.ShowDialog(owner);
+        else
+            dialog.Show();
+
+        await _vm.LoadConfigAsync();
+        await _vm.RefreshUiModelFromConfigAsync();
     }
 }
 

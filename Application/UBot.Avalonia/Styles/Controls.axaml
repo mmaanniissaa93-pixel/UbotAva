@@ -32,9 +32,20 @@
   </Style>
 
   <Style Selector="Button.sidebar-item.active">
-    <Setter Property="Background" Value="#264A6B9B"/>
-    <Setter Property="BorderBrush" Value="#476B8BB6"/>
+    <Setter Property="Background" Value="#364A6B9B"/>
+    <Setter Property="BorderBrush" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="3,0,0,0"/>
+    <Setter Property="CornerRadius" Value="2,8,8,2"/>
     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+  </Style>
+
+  <Style Selector="Button.sidebar-item.active /template/ ContentPresenter">
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+  </Style>
+
+  <!-- Active nav icon turns accent blue -->
+  <Style Selector="Button.sidebar-item.active Path">
+    <Setter Property="Stroke" Value="{DynamicResource AccentBrush}"/>
   </Style>
 
   <Style Selector="TextBlock.sidebar-group">
@@ -69,37 +80,56 @@
     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
   </Style>
 
+  <!-- Toggle-style language/theme switch -->
   <Style Selector="Button.lang-btn">
-    <Setter Property="Height" Value="22"/>
-    <Setter Property="MinWidth" Value="30"/>
-    <Setter Property="Padding" Value="6,0"/>
+    <Setter Property="Height" Value="24"/>
+    <Setter Property="MinWidth" Value="32"/>
+    <Setter Property="Padding" Value="8,0"/>
     <Setter Property="Background" Value="Transparent"/>
     <Setter Property="BorderBrush" Value="Transparent"/>
     <Setter Property="BorderThickness" Value="0"/>
     <Setter Property="CornerRadius" Value="999"/>
-    <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
-    <Setter Property="FontSize" Value="10"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}"/>
+    <Setter Property="FontSize" Value="10.5"/>
     <Setter Property="FontWeight" Value="Bold"/>
     <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="Opacity" Value="0.7"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
   </Style>
 
   <Style Selector="Button.lang-btn:pointerover">
     <Setter Property="Background" Value="#22476688"/>
     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+    <Setter Property="Opacity" Value="1"/>
   </Style>
 
   <Style Selector="Button.lang-btn.active">
-    <Setter Property="Background" Value="#355979A8"/>
+    <Setter Property="Background" Value="#355BA3F5"/>
     <Setter Property="Foreground" Value="White"/>
+    <Setter Property="Opacity" Value="1"/>
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.15"/>
+      </Transitions>
+    </Setter>
   </Style>
 
-  <Style Selector="Border.status-running">
-    <Setter Property="Background" Value="#1734D399"/>
-    <Setter Property="BorderBrush" Value="#4A34D399"/>
+  <!-- ═══ Status badge variants ═══ -->
+  <Style Selector="Border.status-chip">
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="999"/>
     <Setter Property="Padding" Value="10,0"/>
-    <Setter Property="Height" Value="26"/>
+    <Setter Property="Height" Value="28"/>
+  </Style>
+
+  <Style Selector="Border.status-running">
+    <Setter Property="Background" Value="#1E34D399"/>
+    <Setter Property="BorderBrush" Value="#5534D399"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="999"/>
+    <Setter Property="Padding" Value="10,0"/>
+    <Setter Property="Height" Value="28"/>
   </Style>
 
   <Style Selector="Border.status-stopped">
@@ -108,7 +138,25 @@
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="999"/>
     <Setter Property="Padding" Value="10,0"/>
-    <Setter Property="Height" Value="26"/>
+    <Setter Property="Height" Value="28"/>
+  </Style>
+
+  <Style Selector="Border.status-waiting">
+    <Setter Property="Background" Value="#1EF59E0B"/>
+    <Setter Property="BorderBrush" Value="#56F59E0B"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="999"/>
+    <Setter Property="Padding" Value="10,0"/>
+    <Setter Property="Height" Value="28"/>
+  </Style>
+
+  <Style Selector="Border.status-connected">
+    <Setter Property="Background" Value="#1A5BA3F5"/>
+    <Setter Property="BorderBrush" Value="#505BA3F5"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="999"/>
+    <Setter Property="Padding" Value="10,0"/>
+    <Setter Property="Height" Value="28"/>
   </Style>
 
   <Style Selector="Border.topbar-pill">
@@ -138,6 +186,7 @@
     <Setter Property="FontWeight" Value="SemiBold"/>
     <Setter Property="Cursor" Value="Hand"/>
     <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
   </Style>
 
   <Style Selector="Button.btn:pointerover">
@@ -146,6 +195,53 @@
 
   <Style Selector="Button.btn:disabled">
     <Setter Property="Opacity" Value="0.45"/>
+  </Style>
+
+  <!-- Primary action: the single powerful Start/Stop toggle -->
+  <Style Selector="Button.btn.primary">
+    <Setter Property="Height" Value="34"/>
+    <Setter Property="MinWidth" Value="120"/>
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="FontWeight" Value="Bold"/>
+    <Setter Property="CornerRadius" Value="10"/>
+  </Style>
+
+  <Style Selector="Button.btn.primary.go">
+    <Setter Property="Background" Value="{DynamicResource BtnStartBrush}"/>
+    <Setter Property="BorderBrush" Value="#6634D399"/>
+    <Setter Property="Foreground" Value="#F0FFFFFF"/>
+  </Style>
+
+  <Style Selector="Button.btn.primary.go:pointerover">
+    <Setter Property="BorderBrush" Value="#9934D399"/>
+  </Style>
+
+  <Style Selector="Button.btn.primary.halt">
+    <Setter Property="Background" Value="{DynamicResource BtnDangerBrush}"/>
+    <Setter Property="BorderBrush" Value="#88F26C6C"/>
+    <Setter Property="Foreground" Value="#FFE4E4"/>
+  </Style>
+
+  <Style Selector="Button.btn.primary.halt:pointerover">
+    <Setter Property="BorderBrush" Value="#CCF26C6C"/>
+  </Style>
+
+  <!-- Secondary actions: demoted buttons -->
+  <Style Selector="Button.btn.secondary">
+    <Setter Property="Height" Value="28"/>
+    <Setter Property="MinWidth" Value="0"/>
+    <Setter Property="FontSize" Value="11"/>
+    <Setter Property="Padding" Value="10,0"/>
+    <Setter Property="Background" Value="#18FFFFFF"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+    <Setter Property="CornerRadius" Value="8"/>
+  </Style>
+
+  <Style Selector="Button.btn.secondary:pointerover">
+    <Setter Property="Background" Value="#28FFFFFF"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource StrokeStrongBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
   </Style>
 
   <Style Selector="Button.btn.start">
@@ -190,8 +286,8 @@
     <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="12"/>
-    <Setter Property="Padding" Value="14,10"/>
-    <Setter Property="MinHeight" Value="94"/>
+    <Setter Property="Padding" Value="14,12"/>
+    <Setter Property="Height" Value="100"/>
   </Style>
 
   <Style Selector="TextBlock.metric-label">
@@ -260,6 +356,17 @@
     <Setter Property="ClipToBounds" Value="True"/>
   </Style>
 
+  <Style Selector="Border.metric-card.empty TextBlock.metric-label">
+    <Setter Property="Opacity" Value="0.4"/>
+  </Style>
+  <Style Selector="Border.metric-card.empty TextBlock.metric-value">
+    <Setter Property="Opacity" Value="0.2"/>
+  </Style>
+  <Style Selector="Border.metric-card.empty TextBlock.metric-subtext">
+    <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+  </Style>
+
   <Style Selector="Border.section-header">
     <Setter Property="Background">
       <Setter.Value>
@@ -294,17 +401,20 @@
     <Setter Property="VerticalAlignment" Value="Center"/>
   </Style>
 
-  <Style Selector="TextBlock.hint">
-    <Setter Property="FontSize" Value="11"/>
+  <Style Selector="TextBlock.sidebar-group">
+    <Setter Property="FontSize" Value="10.5"/>
+    <Setter Property="FontWeight" Value="Bold"/>
     <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}"/>
-    <Setter Property="TextWrapping" Value="Wrap"/>
-    <Setter Property="Margin" Value="0,3,0,0"/>
+    <Setter Property="LetterSpacing" Value="0.1"/>
+    <Setter Property="Margin" Value="12,14,12,6"/>
+    <Setter Property="Opacity" Value="0.8"/>
   </Style>
 
   <Style Selector="CheckBox.check">
     <Setter Property="FontSize" Value="12.5"/>
     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
     <Setter Property="Margin" Value="0,2"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
   </Style>
 
   <Style Selector="ScrollBar">

@@ -54,6 +54,10 @@
     <GradientStop Offset="0" Color="#CC3578D2"/>
     <GradientStop Offset="1" Color="#CC4FA2FF"/>
   </LinearGradientBrush>
+    <LinearGradientBrush x:Key="BtnPrimaryBrush" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Offset="0" Color="#CC22A67E"/>
+    <GradientStop Offset="1" Color="#CC34D399"/>
+  </LinearGradientBrush>
   <LinearGradientBrush x:Key="BtnDangerBrush" StartPoint="0,0" EndPoint="1,1">
     <GradientStop Offset="0" Color="#EED43B4A"/>
     <GradientStop Offset="1" Color="#EEF54F61"/>
@@ -78,6 +82,7 @@
   <SolidColorBrush x:Key="TextMutedBrush"    Color="#8FA8CC"/>
   <SolidColorBrush x:Key="TextDimBrush"      Color="#5C7899"/>
   <SolidColorBrush x:Key="AccentBrush"       Color="#5BA3F5"/>
+  <SolidColorBrush x:Key="AccentSoftBrush"   Color="#2C5BA3F5"/>
   <SolidColorBrush x:Key="DangerBrush"       Color="#F26C6C"/>
   <SolidColorBrush x:Key="GoodBrush"         Color="#34D399"/>
   <SolidColorBrush x:Key="SignalBrush"       Color="#F59E0B"/>

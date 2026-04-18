@@ -82,6 +82,18 @@ public partial class AppState : ObservableObject
             PlayerExpPercent     = p.ExperiencePercent ?? 0;
             HasLiveStats         = AgentConnected && (PlayerLevel > 0 || PlayerMaxHealth > 0);
         }
+        else
+        {
+            PlayerLevel = 0;
+            PlayerHealth = 0;
+            PlayerMaxHealth = 0;
+            PlayerHealthPercent = 0;
+            PlayerMana = 0;
+            PlayerMaxMana = 0;
+            PlayerManaPercent = 0;
+            PlayerExpPercent = 0;
+            HasLiveStats = false;
+        }
     }
 }
 

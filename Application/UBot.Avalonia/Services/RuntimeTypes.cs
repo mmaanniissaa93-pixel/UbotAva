@@ -128,3 +128,15 @@ public class ProxyConfig
     [JsonPropertyName("type")]     public string Type     { get; set; } = "SOCKS5";
     [JsonPropertyName("version")]  public int    Version  { get; set; } = 5;
 }
+
+public class AutoLoginAccountDto
+{
+    public string Username { get; set; } = "";
+    public string Password { get; set; } = "";
+    public string SecondaryPassword { get; set; } = "";
+    public byte Channel { get; set; } = 1;
+    public string Type { get; set; } = "Joymax";
+    public string ServerName { get; set; } = "";
+    public string SelectedCharacter { get; set; } = "";
+    public List<string> Characters { get; set; } = new();
+}

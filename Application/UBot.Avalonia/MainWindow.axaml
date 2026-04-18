@@ -83,6 +83,7 @@
 
           <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto">
 
+            <!-- Row 0 Left: Status chip + language + theme -->
             <StackPanel Grid.Row="0" Grid.Column="0"
                         Orientation="Horizontal"
                         Spacing="7"
@@ -90,7 +91,9 @@
 
               <Border x:Name="StatusChipBorder" Classes="status-stopped">
                 <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                  <Ellipse x:Name="StatusDot" Width="7" Height="7" Fill="{DynamicResource DangerBrush}"/>
+                  <shapes:Path x:Name="StatusIcon" Width="11" Height="11" Stretch="Uniform"
+                               StrokeThickness="1.6"
+                               Data="M18,6 L6,18 M6,6 L18,18"/>
                   <TextBlock x:Name="StatusText"
                              FontSize="10.5"
                              FontWeight="SemiBold"
@@ -102,28 +105,31 @@
               <Border CornerRadius="999"
                       BorderBrush="{DynamicResource StrokeSoftBrush}"
                       BorderThickness="1"
-                      Background="#0EFFFFFF"
-                      Padding="2">
-                <StackPanel Orientation="Horizontal" Spacing="1">
-                  <Button x:Name="BtnEn" Classes="lang-btn" Content="EN" Click="BtnEn_Click"/>
+                      Background="#12FFFFFF"
+                      Padding="3">
+                <StackPanel Orientation="Horizontal" Spacing="2">
+                  <Button x:Name="BtnEn" Classes="lang-btn active" Content="EN" Click="BtnEn_Click"/>
                   <Button x:Name="BtnTr" Classes="lang-btn" Content="TR" Click="BtnTr_Click"/>
-                  <Button x:Name="BtnTheme"
-                          Classes="lang-btn"
-                          Width="26"
-                          Click="BtnTheme_Click"
-                          ToolTip.Tip="Toggle theme">
-                    <shapes:Path x:Name="ThemeIcon"
-                                 Width="12"
-                                 Height="12"
-                                 Stretch="Uniform"
-                                 Stroke="{DynamicResource TextDimBrush}"
-                                 StrokeThickness="1.4"
-                                 Data="M12,3 A9,9 0 1,0 12,21 A9,9 0 0,0 12,3 Z"/>
-                  </Button>
                 </StackPanel>
               </Border>
+
+              <Button x:Name="BtnTheme"
+                      Classes="lang-btn"
+                      Width="26"
+                      Click="BtnTheme_Click"
+                      ToolTip.Tip="Toggle theme"
+                      Background="#12FFFFFF">
+                <shapes:Path x:Name="ThemeIcon"
+                             Width="12"
+                             Height="12"
+                             Stretch="Uniform"
+                             Stroke="{DynamicResource TextDimBrush}"
+                             StrokeThickness="1.4"
+                             Data="M12,3 C9.1,3 6.4,4.5 4.8,7 C3.2,9.5 3.2,12.5 4.8,15 C6.4,17.5 9.1,19 12,19 C16,19 19,16 19,12 A9,9 0 0,0 12,3 Z"/>
+              </Button>
             </StackPanel>
 
+            <!-- Row 0 Right: Selects + PRIMARY toggle + Save -->
             <StackPanel Grid.Row="0" Grid.Column="1"
                         Orientation="Horizontal"
                         Spacing="6"
@@ -133,26 +139,22 @@
               <ctrls:CustomSelect x:Name="DivisionSelect" Placeholder="Aege" MinWidth="128"/>
               <ctrls:CustomSelect x:Name="GatewaySelect" Placeholder="Aege" MinWidth="128"/>
 
-              <Button x:Name="BtnDisconnect" Classes="btn ghost" Click="BtnDisconnect_Click" MinWidth="124">
-                <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
-                  <shapes:Path Width="13" Height="13" Stretch="Uniform"
-                               Stroke="#FFD48A" StrokeThickness="1.4"
+              <Button x:Name="BtnDisconnect" Classes="btn secondary" Click="BtnDisconnect_Click" Width="120">
+                <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" HorizontalAlignment="Center">
+                  <shapes:Path Width="11" Height="11" Stretch="Uniform"
+                               Stroke="{DynamicResource TextMutedBrush}" StrokeThickness="1.4"
                                Data="M18.36,6.64 A9,9 0 1,1 5.64,6.64 M12,2 L12,12"/>
                   <TextBlock x:Name="LblDisconnect" VerticalAlignment="Center"/>
                 </StackPanel>
               </Button>
 
-              <Button x:Name="BtnStart" Classes="btn blue" Click="BtnStart_Click" MinWidth="106">
-                <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
-                  <shapes:Path Width="11" Height="11" Stretch="Uniform" Fill="#E8F4FF" Data="M5,3 L19,12 L5,21 Z"/>
-                  <TextBlock x:Name="LblStart" VerticalAlignment="Center"/>
-                </StackPanel>
-              </Button>
-
-              <Button x:Name="BtnStop" Classes="btn danger" Click="BtnStop_Click" MinWidth="106">
-                <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
-                  <shapes:Path Width="11" Height="11" Stretch="Uniform" Fill="#FFE4E4" Data="M3,3 L21,3 L21,21 L3,21 Z"/>
-                  <TextBlock x:Name="LblStop" VerticalAlignment="Center"/>
+              <!-- Single primary Start/Stop toggle -->
+              <Button x:Name="BtnToggle" Classes="btn primary go" Click="BtnToggle_Click" Width="130">
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" HorizontalAlignment="Center">
+                  <shapes:Path x:Name="ToggleIcon" Width="13" Height="13" Stretch="Uniform"
+                               Fill="#F0FFFFFF"
+                               Data="M5,3 L19,12 L5,21 Z"/>
+                  <TextBlock x:Name="LblToggle" Text="START" VerticalAlignment="Center" FontWeight="Bold"/>
                 </StackPanel>
               </Button>
 
@@ -163,6 +165,7 @@
               </Button>
             </StackPanel>
 
+            <!-- Row 1 Left: Profile + Character pills -->
             <StackPanel Grid.Row="1" Grid.Column="0"
                         Orientation="Horizontal"
                         Spacing="7"
@@ -195,32 +198,35 @@
               </Border>
             </StackPanel>
 
+            <!-- Row 1 Right: Secondary actions -->
             <StackPanel Grid.Row="1" Grid.Column="1"
                         Orientation="Horizontal"
-                        Spacing="6"
+                        Spacing="5"
                         Margin="8,8,0,0"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center">
 
-              <Button x:Name="BtnStartClient" Classes="btn" Click="BtnStartClient_Click" MinWidth="120">
-                <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
-                  <shapes:Path Width="11" Height="11" Stretch="Uniform" Fill="#8CC4FF" Data="M5,3 L19,12 L5,21 Z"/>
+              <Button x:Name="BtnStartClient" Classes="btn secondary" Click="BtnStartClient_Click" Width="105">
+                <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" HorizontalAlignment="Center">
+                  <shapes:Path Width="10" Height="10" Stretch="Uniform"
+                               Stroke="{DynamicResource TextMutedBrush}" StrokeThickness="1.4"
+                               Data="M5,3 L19,12 L5,21 Z"/>
                   <TextBlock x:Name="LblStartClient" VerticalAlignment="Center"/>
                 </StackPanel>
               </Button>
 
-              <Button x:Name="BtnGoClientless" Classes="btn ghost" Click="BtnGoClientless_Click" MinWidth="126">
-                <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
-                  <shapes:Path Width="11" Height="11" Stretch="Uniform"
-                               Stroke="#FFD48A" StrokeThickness="1.4"
+              <Button x:Name="BtnGoClientless" Classes="btn secondary" Click="BtnGoClientless_Click" Width="105">
+                <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" HorizontalAlignment="Center">
+                  <shapes:Path Width="10" Height="10" Stretch="Uniform"
+                               Stroke="{DynamicResource TextMutedBrush}" StrokeThickness="1.4"
                                Data="M12,2 A10,10 0 1,0 12,22 A10,10 0 0,0 12,2"/>
                   <TextBlock x:Name="LblGoClientless" VerticalAlignment="Center"/>
                 </StackPanel>
               </Button>
 
-              <Button x:Name="BtnHideClient" Classes="btn" Click="BtnHideClient_Click" MinWidth="110">
-                <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
-                  <shapes:Path Width="11" Height="11" Stretch="Uniform"
+              <Button x:Name="BtnHideClient" Classes="btn secondary" Click="BtnHideClient_Click" Width="105">
+                <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" HorizontalAlignment="Center">
+                  <shapes:Path Width="10" Height="10" Stretch="Uniform"
                                Stroke="{DynamicResource TextMutedBrush}" StrokeThickness="1.4"
                                Data="M1,1 L23,23 M17.94,17.94 A10,10 0 0,1 12,20 C6,20 1,12 1,12 A18.5,18.5 0 0,1 5.06,7.06 M9.9,4.24 A9,9 0 0,1 12,4 C18,4 23,12 23,12 A18.5,18.5 0 0,1 20.49,15.68"/>
                   <TextBlock x:Name="LblHideClient" VerticalAlignment="Center"/>
@@ -243,51 +249,55 @@
                   ColumnDefinitions="*,*,*,*"
                   Margin="12,12,12,0">
 
-              <Border Grid.Column="0" Classes="metric-card">
-                <StackPanel Spacing="6">
-                  <TextBlock Text="LEVEL" Classes="metric-label"/>
-                  <TextBlock x:Name="MetricLevel" Classes="metric-value blue" Text="-"/>
-                  <TextBlock x:Name="MetricLevelHint" Classes="metric-subtext" Text="Waiting"/>
-                </StackPanel>
+              <Border Grid.Column="0" Classes="metric-card empty">
+                <Grid RowDefinitions="Auto,*,Auto">
+                  <TextBlock Grid.Row="0" Text="LEVEL" Classes="metric-label"/>
+                  <TextBlock Grid.Row="1" x:Name="MetricLevel" Classes="metric-value blue" Text="—"
+                             VerticalAlignment="Center" Margin="0,2,0,0"/>
+                  <TextBlock Grid.Row="2" x:Name="MetricLevelHint" Classes="metric-subtext" Text=""/>
+                </Grid>
               </Border>
 
-              <Border Grid.Column="1" Classes="metric-card" Margin="8,0,0,0">
-                <StackPanel Spacing="6">
-                  <TextBlock Text="HP" Classes="metric-label"/>
-                  <TextBlock x:Name="MetricHp" Classes="metric-value green" Text="-"/>
-                  <TextBlock x:Name="MetricHpHint" Classes="metric-subtext" Text="Waiting"/>
-                  <Grid>
+              <Border Grid.Column="1" Classes="metric-card empty" Margin="8,0,0,0">
+                <Grid RowDefinitions="Auto,*,Auto,Auto">
+                  <TextBlock Grid.Row="0" Text="HP" Classes="metric-label"/>
+                  <TextBlock Grid.Row="1" x:Name="MetricHp" Classes="metric-value green" Text="—"
+                             VerticalAlignment="Center" Margin="0,2,0,0"/>
+                  <TextBlock Grid.Row="2" x:Name="MetricHpHint" Classes="metric-subtext" Text=""/>
+                  <Grid Grid.Row="3" Margin="0,4,0,0">
                     <Border Background="#1634D399" CornerRadius="999" Height="4"/>
                     <Border x:Name="HpBar" Background="{DynamicResource MetricGreenBrush}"
                             CornerRadius="999" Height="4" HorizontalAlignment="Left" Width="0"/>
                   </Grid>
-                </StackPanel>
+                </Grid>
               </Border>
 
-              <Border Grid.Column="2" Classes="metric-card" Margin="8,0,0,0">
-                <StackPanel Spacing="6">
-                  <TextBlock Text="MP" Classes="metric-label"/>
-                  <TextBlock x:Name="MetricMp" Classes="metric-value blue" Text="-"/>
-                  <TextBlock x:Name="MetricMpHint" Classes="metric-subtext" Text="Waiting"/>
-                  <Grid>
+              <Border Grid.Column="2" Classes="metric-card empty" Margin="8,0,0,0">
+                <Grid RowDefinitions="Auto,*,Auto,Auto">
+                  <TextBlock Grid.Row="0" Text="MP" Classes="metric-label"/>
+                  <TextBlock Grid.Row="1" x:Name="MetricMp" Classes="metric-value blue" Text="—"
+                             VerticalAlignment="Center" Margin="0,2,0,0"/>
+                  <TextBlock Grid.Row="2" x:Name="MetricMpHint" Classes="metric-subtext" Text=""/>
+                  <Grid Grid.Row="3" Margin="0,4,0,0">
                     <Border Background="#165BA3F5" CornerRadius="999" Height="4"/>
                     <Border x:Name="MpBar" Background="{DynamicResource MetricBlueBrush}"
                             CornerRadius="999" Height="4" HorizontalAlignment="Left" Width="0"/>
                   </Grid>
-                </StackPanel>
+                </Grid>
               </Border>
 
-              <Border Grid.Column="3" Classes="metric-card" Margin="8,0,0,0">
-                <StackPanel Spacing="6">
-                  <TextBlock Text="EXP" Classes="metric-label"/>
-                  <TextBlock x:Name="MetricExp" Classes="metric-value amber" Text="-"/>
-                  <TextBlock x:Name="MetricExpHint" Classes="metric-subtext" Text="Waiting"/>
-                  <Grid>
+              <Border Grid.Column="3" Classes="metric-card empty" Margin="8,0,0,0">
+                <Grid RowDefinitions="Auto,*,Auto,Auto">
+                  <TextBlock Grid.Row="0" Text="EXP" Classes="metric-label"/>
+                  <TextBlock Grid.Row="1" x:Name="MetricExp" Classes="metric-value amber" Text="—"
+                             VerticalAlignment="Center" Margin="0,2,0,0"/>
+                  <TextBlock Grid.Row="2" x:Name="MetricExpHint" Classes="metric-subtext" Text=""/>
+                  <Grid Grid.Row="3" Margin="0,4,0,0">
                     <Border Background="#18F59E0B" CornerRadius="999" Height="4"/>
                     <Border x:Name="ExpBar" Background="{DynamicResource MetricAmberBrush}"
                             CornerRadius="999" Height="4" HorizontalAlignment="Left" Width="0"/>
                   </Grid>
-                </StackPanel>
+                </Grid>
               </Border>
             </Grid>
 

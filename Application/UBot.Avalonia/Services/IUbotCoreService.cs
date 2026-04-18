@@ -29,6 +29,9 @@ public interface IUbotCoreService
     Task<bool> ToggleClientVisibilityAsync();
 
     Task<bool> SetSroExecutableAsync(string path);
+    Task<string> GetSroExecutablePathAsync();
+    Task<IReadOnlyList<AutoLoginAccountDto>> GetAutoLoginAccountsAsync();
+    Task<bool> SaveAutoLoginAccountsAsync(IReadOnlyList<AutoLoginAccountDto> accounts);
     Task<string> PickExecutableAsync();
     Task<string> PickScriptFileAsync();
 }

@@ -1,0 +1,94 @@
+<Window
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  x:Class="UBot.Avalonia.Features.General.AccountSetupWindow"
+  Title="Account Registration"
+  Width="920"
+  Height="520"
+  MinWidth="900"
+  MinHeight="500"
+  CanResize="False"
+  Background="{DynamicResource PanelBrush}"
+  WindowStartupLocation="CenterOwner">
+
+  <Border BorderBrush="{DynamicResource StrokeSoftBrush}" BorderThickness="1" CornerRadius="12" Padding="14">
+    <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="380,*">
+      <Grid Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,10">
+        <TextBlock Text="ACCOUNT REGISTRATION"
+                   Foreground="{DynamicResource AccentBrush}"
+                   FontSize="44"
+                   FontWeight="SemiBold"/>
+      </Grid>
+
+      <Border Grid.Row="1" Grid.Column="0" Classes="section-card" Margin="0,0,10,0">
+        <StackPanel Margin="8" Spacing="8">
+          <TextBlock Text="USERNAME:" Classes="label"/>
+          <TextBox x:Name="UsernameBox" Classes="field" Watermark="Username"/>
+
+          <Grid ColumnDefinitions="*,*">
+            <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,4,0">
+              <TextBlock Text="PASSWORD:" Classes="label"/>
+              <TextBox x:Name="PasswordBox" Classes="field"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Spacing="4" Margin="4,0,0,0">
+              <TextBlock Text="SECONDARY PASSWORD:" Classes="label"/>
+              <TextBox x:Name="SecondaryPasswordBox" Classes="field"/>
+            </StackPanel>
+          </Grid>
+
+          <TextBlock Text="SERVER NAME:" Classes="label"/>
+          <TextBox x:Name="ServerNameBox" Classes="field" Watermark="e.g. SRO"/>
+
+          <Button Classes="btn primary" Content="Add / Update" Click="AddOrUpdate_Click"/>
+          <TextBlock x:Name="InfoText"
+                     Classes="hint"
+                     Text="No accounts."
+                     Margin="4,6,0,0"/>
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Row="1" Grid.Column="1" Classes="section-card">
+        <Grid Margin="8" RowDefinitions="Auto,*,Auto">
+          <Grid ColumnDefinitions="*,*" Margin="6,0,6,8">
+            <TextBlock Text="USERNAME:" Classes="label"/>
+            <TextBlock Grid.Column="1" Text="SERVER NAME:" Classes="label"/>
+          </Grid>
+
+          <Border Grid.Row="1" BorderBrush="{DynamicResource StrokeSoftBrush}" BorderThickness="1" CornerRadius="8">
+            <ListBox x:Name="AccountsList"
+                     SelectionMode="Single"
+                     SelectionChanged="AccountsList_SelectionChanged"
+                     Background="Transparent"
+                     BorderThickness="0"
+                     Margin="4">
+              <ListBox.ItemTemplate>
+                <DataTemplate>
+                  <Border Padding="8,6">
+                    <Grid ColumnDefinitions="*,*">
+                      <TextBlock Text="{Binding Username}" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                      <TextBlock Grid.Column="1" Text="{Binding ServerName}" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </Border>
+
+          <Button Grid.Row="2"
+                  Classes="btn secondary"
+                  Content="Remove Selected"
+                  Margin="0,10,0,0"
+                  Click="RemoveSelected_Click"/>
+        </Grid>
+      </Border>
+
+      <Grid Grid.Row="2" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" Margin="0,10,0,0">
+        <TextBlock x:Name="StatusText"
+                   Grid.Column="0"
+                   Classes="hint"
+                   VerticalAlignment="Center"/>
+        <Button Grid.Column="1" Classes="btn primary" Content="OK" Width="120" Click="Ok_Click"/>
+      </Grid>
+    </Grid>
+  </Border>
+</Window>

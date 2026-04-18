@@ -68,13 +68,14 @@
     <Popup
       x:Name="DropdownPopup"
       Placement="Bottom"
+      VerticalOffset="4"
       PlacementTarget="{Binding #Trigger}"
       IsLightDismissEnabled="True"
       Closed="Popup_Closed">
 
       <Border
         Classes="select-menu"
-        MinWidth="180"
+        MinWidth="{Binding Bounds.Width, ElementName=Trigger}"
         MaxHeight="320"
         BoxShadow="0 18 30 0 #66000000">
 

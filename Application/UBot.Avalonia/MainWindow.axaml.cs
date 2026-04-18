@@ -4,6 +4,7 @@ using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Threading;
 using global::Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using System;
@@ -23,6 +24,10 @@ public partial class MainWindow : Window
     private FeatureViewFactory? _factory;
     private bool _isDark = true;
     private string _lang = "English";
+    private readonly DispatcherTimer _runtimePollTimer = new() { Interval = TimeSpan.FromMilliseconds(900) };
+    private bool _pollInProgress;
+    private bool _syncingConnectionSelects;
+    private int _connectionPollCounter;
 
     private static readonly (string Id, string Label, string Icon)[] DefaultPlugins =
     {
@@ -67,7 +72,11 @@ public partial class MainWindow : Window
         ["targetassist"]= "M12,2 A10,10 0 1,0 12,22 A10,10 0 0,0 12,2 Z M12,7 A5,5 0 1,0 12,17 A5,5 0 0,0 12,7 Z M12,2 L12,5 M12,19 L12,22 M2,12 L5,12 M19,12 L22,12",
     };
 
-    public MainWindow() { InitializeComponent(); }
+    public MainWindow()
+    {
+        InitializeComponent();
+        _runtimePollTimer.Tick += RuntimePollTimer_Tick;
+    }
 
     protected override async void OnOpened(EventArgs e)
     {
@@ -85,14 +94,7 @@ public partial class MainWindow : Window
         InitTopbar();
         BindStateEvents();
 
-        // Load initial status
-        var status = await _core.GetStatusAsync();
-        _state.ApplyStatus(status);
-        SyncTopbar();
-
-        var conn = await _core.GetConnectionOptionsAsync();
-        _state.ConnectionOptions = conn;
-        RebuildDivisionSelects(conn);
+        await RefreshRuntimeStatusAsync(forceConnectionRefresh: true);
 
         var plugins = await _core.GetPluginsAsync();
         if (plugins.Count > 0)
@@ -103,6 +105,52 @@ public partial class MainWindow : Window
         }
 
         Navigate("UBot.General");
+        _runtimePollTimer.Start();
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        _runtimePollTimer.Stop();
+        _runtimePollTimer.Tick -= RuntimePollTimer_Tick;
+        base.OnClosed(e);
+    }
+
+    private async void RuntimePollTimer_Tick(object? sender, EventArgs e)
+    {
+        if (_pollInProgress)
+            return;
+
+        _pollInProgress = true;
+        try
+        {
+            _connectionPollCounter++;
+            var forceConnectionRefresh = _connectionPollCounter >= 3;
+            await RefreshRuntimeStatusAsync(forceConnectionRefresh);
+            if (forceConnectionRefresh)
+                _connectionPollCounter = 0;
+        }
+        finally
+        {
+            _pollInProgress = false;
+        }
+    }
+
+    private async System.Threading.Tasks.Task RefreshRuntimeStatusAsync(bool forceConnectionRefresh = false)
+    {
+        if (_core == null || _state == null)
+            return;
+
+        var status = await _core.GetStatusAsync();
+        _state.ApplyStatus(status);
+
+        if (forceConnectionRefresh
+            || status.DivisionIndex != _state.ConnectionOptions.DivisionIndex
+            || status.GatewayIndex != _state.ConnectionOptions.GatewayIndex)
+        {
+            var options = await _core.GetConnectionOptionsAsync();
+            _state.ConnectionOptions = options;
+            RebuildDivisionSelects(options);
+        }
     }
 
     // â”€â”€â”€ Sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -169,8 +217,8 @@ public partial class MainWindow : Window
             {
                 Data = Geometry.Parse(geo),
                 Stroke = new SolidColorBrush(Color.Parse("#6688AACC")),
-                StrokeThickness = 1.4,
-                Width = 15, Height = 15, Stretch = Stretch.Uniform,
+                StrokeThickness = 1.5,
+                Width = 16, Height = 16, Stretch = Stretch.Uniform,
                 VerticalAlignment = global::Avalonia.Layout.VerticalAlignment.Center
             });
         }
@@ -199,13 +247,14 @@ public partial class MainWindow : Window
 
     private void InitTopbar()
     {
-        LblStart.Text      = "START";
-        LblStop.Text       = "STOP";
+        LblToggle.Text     = "START";
         LblDisconnect.Text = "Disconnect";
         LblStartClient.Text = "Start Client";
         LblGoClientless.Text = "Go Clientless";
         LblHideClient.Text = "Hide Client";
         BtnEn.Classes.Add("active");
+        DivisionSelect.SelectionChanged += DivisionSelect_SelectionChanged;
+        GatewaySelect.SelectionChanged += GatewaySelect_SelectionChanged;
         SyncTopbar();
     }
 
@@ -213,31 +262,74 @@ public partial class MainWindow : Window
     {
         if (_state is null) return;
 
-        // Status chip
         var running = _state.BotRunning;
-        StatusText.Text = running ? "On" : "Off";
+        var ch = _state.Character.Trim();
+        var waiting = string.IsNullOrEmpty(ch) || ch == "-";
+        var connected = _state.AgentConnected || _state.GatewayConnected;
+
+        // ── Status chip: multiple states ──
+        StatusChipBorder.Classes.Remove("status-running");
+        StatusChipBorder.Classes.Remove("status-stopped");
+        StatusChipBorder.Classes.Remove("status-waiting");
+        StatusChipBorder.Classes.Remove("status-connected");
+
         if (running)
         {
-            StatusChipBorder.Classes.Remove("status-stopped");
             StatusChipBorder.Classes.Add("status-running");
-            StatusDot.Fill  = new SolidColorBrush(Color.Parse("#34D399"));
+            StatusText.Text = "Running";
             StatusText.Foreground = new SolidColorBrush(Color.Parse("#34D399"));
+            StatusIcon.Stroke = new SolidColorBrush(Color.Parse("#34D399"));
+            StatusIcon.Data = Geometry.Parse("M5,12 L10,17 L19,8"); // checkmark
+        }
+        else if (connected && waiting)
+        {
+            StatusChipBorder.Classes.Add("status-waiting");
+            StatusText.Text = "Waiting for Character";
+            StatusText.Foreground = new SolidColorBrush(Color.Parse("#F59E0B"));
+            StatusIcon.Stroke = new SolidColorBrush(Color.Parse("#F59E0B"));
+            StatusIcon.Data = Geometry.Parse("M12,2 A10,10 0 1,0 12,22 A10,10 0 0,0 12,2 M12,6 L12,12 L16,14"); // clock
+        }
+        else if (connected)
+        {
+            StatusChipBorder.Classes.Add("status-connected");
+            StatusText.Text = "Connected";
+            StatusText.Foreground = new SolidColorBrush(Color.Parse("#5BA3F5"));
+            StatusIcon.Stroke = new SolidColorBrush(Color.Parse("#5BA3F5"));
+            StatusIcon.Data = Geometry.Parse("M12,2 L20,6 L20,12 C20,17 16,21 12,22 C8,21 4,17 4,12 L4,6 Z"); // shield
         }
         else
         {
-            StatusChipBorder.Classes.Remove("status-running");
             StatusChipBorder.Classes.Add("status-stopped");
-            StatusDot.Fill  = new SolidColorBrush(Color.Parse("#F26C6C"));
+            StatusText.Text = "Off";
             StatusText.Foreground = new SolidColorBrush(Color.Parse("#F26C6C"));
+            StatusIcon.Stroke = new SolidColorBrush(Color.Parse("#F26C6C"));
+            StatusIcon.Data = Geometry.Parse("M18,6 L6,18 M6,6 L18,18"); // X
         }
 
-        BtnStart.IsEnabled = !running;
-        BtnStop.IsEnabled  = running;
-        ProfileLabel.Text  = _state.Profile;
+        // ── Primary toggle button ──
+        bool tr = _lang == "Turkish";
+        if (running)
+        {
+            BtnToggle.Classes.Remove("go");
+            BtnToggle.Classes.Add("halt");
+            LblToggle.Text = tr ? "DURDUR" : "STOP";
+            ToggleIcon.Fill = new SolidColorBrush(Color.Parse("#FFE4E4"));
+            ToggleIcon.Stroke = null;
+            ToggleIcon.Data = Geometry.Parse("M6,6 L18,6 L18,18 L6,18 Z"); // stop square
+        }
+        else
+        {
+            BtnToggle.Classes.Remove("halt");
+            BtnToggle.Classes.Add("go");
+            LblToggle.Text = tr ? "BASLAT" : "START";
+            ToggleIcon.Fill = new SolidColorBrush(Color.Parse("#F0FFFFFF"));
+            ToggleIcon.Stroke = null;
+            ToggleIcon.Data = Geometry.Parse("M5,3 L19,12 L5,21 Z"); // play triangle
+        }
 
-        // Character pill
-        var ch = _state.Character.Trim();
-        var waiting = string.IsNullOrEmpty(ch) || ch == "-";
+        ProfileLabel.Text = _state.Profile;
+
+        // ── Character pill ──
         CharLabel.Text = waiting ? "Waiting for Character..." : ch;
         if (waiting)
         {
@@ -271,19 +363,23 @@ public partial class MainWindow : Window
             UpdateBar(HpBar,  _state.PlayerHealthPercent);
             UpdateBar(MpBar,  _state.PlayerManaPercent);
             UpdateBar(ExpBar, _state.PlayerExpPercent);
+            SetMetricEmpty(MetricLevel, false); SetMetricEmpty(MetricHp, false); SetMetricEmpty(MetricMp, false); SetMetricEmpty(MetricExp, false);
         }
         else
         {
-            MetricLevel.Text = "-";
-            MetricHp.Text = "-";
-            MetricMp.Text = "-";
-            MetricExp.Text = "-";
-            MetricLevelHint.Text = "Waiting";
-            MetricHpHint.Text = "Waiting";
-            MetricMpHint.Text = "Waiting";
-            MetricExpHint.Text = "Waiting";
+            MetricLevel.Text = "—";
+            MetricHp.Text = "—";
+            MetricMp.Text = "—";
+            MetricExp.Text = "—";
+            MetricLevelHint.Text = "";
+            MetricHpHint.Text = "";
+            MetricMpHint.Text = "";
+            MetricExpHint.Text = "";
             UpdateBar(HpBar, 0); UpdateBar(MpBar, 0); UpdateBar(ExpBar, 0);
+            SetMetricEmpty(MetricLevel, true); SetMetricEmpty(MetricHp, true); SetMetricEmpty(MetricMp, true); SetMetricEmpty(MetricExp, true);
         }
+
+        RecalcBars();
     }
 
     private static void UpdateBar(Border bar, double pct)
@@ -312,18 +408,84 @@ public partial class MainWindow : Window
 
     private void RebuildDivisionSelects(ConnectionOptions opts)
     {
+        _syncingConnectionSelects = true;
+
         var divs = new List<SelectOption>();
         foreach (var d in opts.Divisions) divs.Add(new SelectOption(d.Index, d.Name));
         DivisionSelect.Options       = divs;
         DivisionSelect.SelectedValue = opts.DivisionIndex;
-        DivisionSelect.SelectionChanged += v => _ = _core!.SetConnectionOptionsAsync((int)v!, opts.GatewayIndex);
 
         var found = opts.Divisions.Find(d => d.Index == opts.DivisionIndex);
         var srvs  = new List<SelectOption>();
         if (found != null) foreach (var s in found.Servers) srvs.Add(new SelectOption(s.Index, s.Name));
         GatewaySelect.Options       = srvs;
         GatewaySelect.SelectedValue = opts.GatewayIndex;
-        GatewaySelect.SelectionChanged += v => _ = _core!.SetConnectionOptionsAsync(opts.DivisionIndex, (int)v!);
+        GatewaySelect.IsDisabled    = srvs.Count == 0;
+
+        _syncingConnectionSelects = false;
+    }
+
+    private async void DivisionSelect_SelectionChanged(object value)
+    {
+        if (_syncingConnectionSelects || _core == null || _state == null)
+            return;
+        if (!TryGetSelectIndex(value, out var divisionIndex))
+            return;
+
+        var current = _state.ConnectionOptions;
+        var updated = await _core.SetConnectionOptionsAsync(
+            divisionIndex,
+            0,
+            current.Mode,
+            current.ClientType);
+
+        _state.ConnectionOptions = updated;
+        RebuildDivisionSelects(updated);
+        await RefreshRuntimeStatusAsync();
+    }
+
+    private async void GatewaySelect_SelectionChanged(object value)
+    {
+        if (_syncingConnectionSelects || _core == null || _state == null)
+            return;
+        if (!TryGetSelectIndex(value, out var gatewayIndex))
+            return;
+
+        var current = _state.ConnectionOptions;
+        var updated = await _core.SetConnectionOptionsAsync(
+            current.DivisionIndex,
+            gatewayIndex,
+            current.Mode,
+            current.ClientType);
+
+        _state.ConnectionOptions = updated;
+        RebuildDivisionSelects(updated);
+        await RefreshRuntimeStatusAsync();
+    }
+
+    private static bool TryGetSelectIndex(object? value, out int index)
+    {
+        index = 0;
+
+        if (value is int intValue)
+        {
+            index = intValue;
+            return true;
+        }
+
+        if (value is long longValue && longValue >= int.MinValue && longValue <= int.MaxValue)
+        {
+            index = (int)longValue;
+            return true;
+        }
+
+        if (value is string text && int.TryParse(text, out var parsed))
+        {
+            index = parsed;
+            return true;
+        }
+
+        return false;
     }
 
     // â”€â”€â”€ State events â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -337,12 +499,21 @@ public partial class MainWindow : Window
                 case nameof(AppState.BotRunning):
                 case nameof(AppState.Profile):
                 case nameof(AppState.Character):
+                case nameof(AppState.AgentConnected):
+                case nameof(AppState.GatewayConnected):
                 case nameof(AppState.HasLiveStats):
                 case nameof(AppState.PlayerLevel):
+                case nameof(AppState.PlayerHealth):
+                case nameof(AppState.PlayerMaxHealth):
                 case nameof(AppState.PlayerHealthPercent):
+                case nameof(AppState.PlayerMana):
+                case nameof(AppState.PlayerMaxMana):
                 case nameof(AppState.PlayerManaPercent):
                 case nameof(AppState.PlayerExpPercent):
                     global::Avalonia.Threading.Dispatcher.UIThread.Post(SyncTopbar);
+                    break;
+                case nameof(AppState.ConnectionOptions):
+                    global::Avalonia.Threading.Dispatcher.UIThread.Post(() => RebuildDivisionSelects(_state.ConnectionOptions));
                     break;
                 case nameof(AppState.Plugins):
                     global::Avalonia.Threading.Dispatcher.UIThread.Post(BuildSidebar);
@@ -353,25 +524,38 @@ public partial class MainWindow : Window
 
     // â”€â”€â”€ Button handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-    private async void BtnStart_Click(object? s, RoutedEventArgs e)
+    private async void BtnToggle_Click(object? s, RoutedEventArgs e)
     {
-        var r = await _core!.StartBotAsync();
-        _state!.ApplyStatus(r);
-    }
-    private async void BtnStop_Click(object? s, RoutedEventArgs e)
-    {
-        var r = await _core!.StopBotAsync();
-        _state!.ApplyStatus(r);
+        RuntimeStatus r;
+        if (_state!.BotRunning)
+            r = await _core!.StopBotAsync();
+        else
+            r = await _core!.StartBotAsync();
+        _state.ApplyStatus(r);
+        await RefreshRuntimeStatusAsync();
     }
     private async void BtnDisconnect_Click(object? s, RoutedEventArgs e)
     {
         var r = await _core!.DisconnectAsync();
         _state!.ApplyStatus(r);
+        await RefreshRuntimeStatusAsync(forceConnectionRefresh: true);
     }
     private async void BtnSave_Click(object? s, RoutedEventArgs e) => await _core!.SaveConfigAsync();
-    private async void BtnStartClient_Click(object? s, RoutedEventArgs e) => await _core!.StartClientAsync();
-    private async void BtnGoClientless_Click(object? s, RoutedEventArgs e) => await _core!.GoClientlessAsync();
-    private async void BtnHideClient_Click(object? s, RoutedEventArgs e) => await _core!.ToggleClientVisibilityAsync();
+    private async void BtnStartClient_Click(object? s, RoutedEventArgs e)
+    {
+        await _core!.StartClientAsync();
+        await RefreshRuntimeStatusAsync(forceConnectionRefresh: true);
+    }
+    private async void BtnGoClientless_Click(object? s, RoutedEventArgs e)
+    {
+        await _core!.GoClientlessAsync();
+        await RefreshRuntimeStatusAsync(forceConnectionRefresh: true);
+    }
+    private async void BtnHideClient_Click(object? s, RoutedEventArgs e)
+    {
+        await _core!.ToggleClientVisibilityAsync();
+        await RefreshRuntimeStatusAsync();
+    }
 
     private void BtnEn_Click(object? s, RoutedEventArgs e)
     {
@@ -395,12 +579,11 @@ public partial class MainWindow : Window
     private void ApplyTranslations()
     {
         bool tr = _lang == "Turkish";
-        LblStart.Text      = tr ? "Baslat" : "START";
-        LblStop.Text       = tr ? "Durdur" : "STOP";
-        LblDisconnect.Text = tr ? "Baglantiyi Kes" : "Disconnect";
-        LblStartClient.Text = tr ? "Client Baslat" : "Start Client";
+        LblToggle.Text       = _state!.BotRunning ? (tr ? "DURDUR" : "STOP") : (tr ? "BASLAT" : "START");
+        LblDisconnect.Text   = tr ? "Baglantiyi Kes" : "Disconnect";
+        LblStartClient.Text  = tr ? "Client Baslat" : "Start Client";
         LblGoClientless.Text = tr ? "Clientless" : "Go Clientless";
-        LblHideClient.Text = tr ? "Client Gizle" : "Hide Client";
+        LblHideClient.Text   = tr ? "Client Gizle" : "Hide Client";
         SyncTopbar();
     }
 
@@ -429,5 +612,14 @@ public partial class MainWindow : Window
 
     private static string NormKey(string s)
         => s.ToLowerInvariant().Replace("ubot.", "").Replace(".", "").Replace(" ", "").Replace("-", "");
+
+    private void SetMetricEmpty(Control c, bool empty)
+    {
+        if (c.Parent is Grid g && g.Parent is Border b)
+        {
+            b.Classes.Remove("empty");
+            if (empty) b.Classes.Add("empty");
+        }
+    }
 }
 
