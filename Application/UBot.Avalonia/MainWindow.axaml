@@ -14,7 +14,7 @@
   ExtendClientAreaChromeHints="NoChrome"
   WindowStartupLocation="CenterScreen">
 
-  <Panel>
+<Panel>
 
     <Border Height="36"
             VerticalAlignment="Top"
@@ -22,6 +22,28 @@
             Background="Transparent"
             ZIndex="30"
             PointerPressed="DragZone_PointerPressed"/>
+
+    <StackPanel Orientation="Horizontal" 
+                HorizontalAlignment="Right" 
+                VerticalAlignment="Top" 
+                ZIndex="50"
+                Margin="0,0,0,0"
+                Spacing="0">
+      <Button Classes="window-btn" Click="MinimizeWindow_Click">
+        <Grid Width="46" Height="36">
+          <Border Width="18" Height="18" CornerRadius="4" Background="#22FFFFFF" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <Path Data="M4,8 L14,8" Stroke="#FFFFFF" StrokeThickness="2" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          </Border>
+        </Grid>
+      </Button>
+      <Button Classes="window-btn close" Click="CloseWindow_Click">
+        <Grid Width="46" Height="36">
+          <Border Width="18" Height="18" CornerRadius="4" Background="#22FFFFFF" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <Path Data="M5,5 L13,13 M13,5 L5,13" Stroke="#FFFFFF" StrokeThickness="1.8" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          </Border>
+        </Grid>
+      </Button>
+    </StackPanel>
 
     <Grid ColumnDefinitions="250,*"
           Margin="6,36,6,6">

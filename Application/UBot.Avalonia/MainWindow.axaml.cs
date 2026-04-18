@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
@@ -422,6 +422,10 @@ public partial class MainWindow : Window
     {
         if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) BeginMoveDrag(e);
     }
+
+    private void MinimizeWindow_Click(object? sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+
+    private void CloseWindow_Click(object? sender, RoutedEventArgs e) => Close();
 
     private static string NormKey(string s)
         => s.ToLowerInvariant().Replace("ubot.", "").Replace(".", "").Replace(" ", "").Replace("-", "");
