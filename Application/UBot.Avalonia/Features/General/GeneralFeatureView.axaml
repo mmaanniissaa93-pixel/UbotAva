@@ -1,174 +1,190 @@
-﻿<UserControl
+<UserControl
   xmlns="https://github.com/avaloniaui"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-  xmlns:shapes="clr-namespace:Avalonia.Controls.Shapes;assembly=Avalonia.Controls"
   xmlns:ctrls="clr-namespace:UBot.Avalonia.Controls"
   x:Class="UBot.Avalonia.Features.General.GeneralFeatureView">
 
   <StackPanel Spacing="10">
 
-    <!-- â”€â”€ SRO CLIENT PATH â”€â”€ -->
-    <Border Classes="panel">
-      <StackPanel Spacing="8">
-        <TextBlock Text="SRO CLIENT PATH" Classes="panel-title"/>
-        <Grid ColumnDefinitions="*,Auto,Auto">
-          <TextBox x:Name="SroBox" Grid.Column="0" Classes="field"
-                   Watermark="C:\Path\sro_client.exe"
-                   TextChanged="SroBox_Changed" LostFocus="SroBox_LostFocus"/>
-          <ctrls:CustomSelect x:Name="ClientTypeSelect" Grid.Column="1" Placeholder="Client Type" MinWidth="120"/>
-          <Button Grid.Column="2" Classes="btn" Content="..." Click="BrowseSro_Click" MinWidth="42"/>
+    <Border Classes="section-card">
+      <Grid RowDefinitions="Auto,*">
+        <Border Grid.Row="0" Classes="section-header">
+          <TextBlock Text="SRO Client Path" Classes="section-header-text"/>
+        </Border>
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,180,56" Margin="10,10,10,10">
+          <TextBox x:Name="SroBox"
+                   Grid.Column="0"
+                   Classes="field"
+                   Watermark="C:\\Path\\sro_client.exe"
+                   TextChanged="SroBox_Changed"
+                   LostFocus="SroBox_LostFocus"/>
+
+          <ctrls:CustomSelect x:Name="ClientTypeSelect"
+                              Grid.Column="1"
+                              Placeholder="Client Type"
+                              MinWidth="150"/>
+
+          <Button Grid.Column="2"
+                  Classes="btn"
+                  Content="..."
+                  MinWidth="56"
+                  Click="BrowseSro_Click"/>
         </Grid>
-      </StackPanel>
+      </Grid>
     </Border>
 
-    <!-- â”€â”€ START GAME â”€â”€ -->
-    <Border Classes="panel">
-      <StackPanel Spacing="6">
-        <TextBlock Text="START GAME" Classes="panel-title"/>
-        <Grid ColumnDefinitions="*,*">
-          <Button Grid.Column="0" Classes="btn blue" Click="StartClient_Click">
-            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-              <shapes:Path Width="12" Height="12" Stretch="Uniform" Fill="#E8F4FF" Data="M5,3 L19,12 L5,21 Z"/>
-              <TextBlock Text="Start Client" VerticalAlignment="Center"/>
-            </StackPanel>
-          </Button>
-          <Button Grid.Column="1" Classes="btn" Content="Go Clientless" Click="GoClientless_Click"/>
-        </Grid>
-        <Button Classes="btn" Content="Hide Client" Click="ToggleClientVisibility_Click"
-                HorizontalAlignment="Stretch"/>
-      </StackPanel>
-    </Border>
+    <Grid ColumnDefinitions="1.07*,0.93*">
 
-    <!-- â”€â”€ Two-column: Client Settings | Automated Login â”€â”€ -->
-    <Grid ColumnDefinitions="*,*">
+      <Border Grid.Column="0" Classes="section-card">
+        <Grid RowDefinitions="Auto,*">
+          <Border Grid.Row="0" Classes="section-header">
+            <TextBlock Text="Automated Login" Classes="section-header-text"/>
+          </Border>
 
-      <!-- Left: Client Settings + Server Pending + Sound -->
-      <StackPanel Grid.Column="0" Spacing="10">
+          <StackPanel Grid.Row="1" Spacing="9" Margin="10,10,10,10">
 
-        <!-- Client Settings / Bot Settings -->
-        <Border Classes="panel">
-          <StackPanel Spacing="6">
-            <TextBlock Text="CLIENT SETTINGS / BOT SETTINGS" Classes="panel-title"/>
-            <CheckBox x:Name="StayConnectedCheck" Classes="check"
-                      Content="Stay connected if client exits unexpectedly"
-                      IsCheckedChanged="Check_Changed" Tag="stayConnectedAfterClientExit"/>
-            <CheckBox x:Name="MoveToTrayCheck" Classes="check"
-                      Content="Move bot to system tray when minimized"
-                      IsCheckedChanged="Check_Changed" Tag="moveToTrayOnMinimize"/>
+            <Grid ColumnDefinitions="70,*,102">
+              <TextBlock Grid.Column="0" Text="Account" Classes="label"/>
+              <ctrls:CustomSelect x:Name="AccountSelect" Grid.Column="1" Placeholder="Not Selected"/>
+              <Button Grid.Column="2" Classes="btn" Content="Setup" Click="AccountSetup_Click"/>
+            </Grid>
+
+            <Grid ColumnDefinitions="70,*">
+              <TextBlock Grid.Column="0" Text="Player" Classes="label"/>
+              <ctrls:CustomSelect x:Name="CharacterSelect" Grid.Column="1" Placeholder="Not Selected"/>
+            </Grid>
+
+            <Grid ColumnDefinitions="70,*">
+              <TextBlock Grid.Column="0" Text="Captcha" Classes="label"/>
+              <TextBox Grid.Column="1" x:Name="CaptchaBox" Classes="field" LostFocus="Captcha_LostFocus"/>
+            </Grid>
+
+            <Grid ColumnDefinitions="*,*">
+              <StackPanel Grid.Column="0" Spacing="2">
+                <CheckBox x:Name="EnableAutoLoginCheck" Classes="check" Content="Enable automated login"
+                          IsCheckedChanged="Check_Changed" Tag="enableAutomatedLogin"/>
+                <CheckBox x:Name="EnableStaticCaptchaCheck" Classes="check" Content="Enable static captcha solve"
+                          IsCheckedChanged="Check_Changed" Tag="enableStaticCaptcha"/>
+                <CheckBox x:Name="EnableLoginDelayCheck" Classes="check" Content="Enable login delay"
+                          IsCheckedChanged="Check_Changed" Tag="enableLoginDelay"/>
+                <CheckBox x:Name="WaitAfterDcCheck" Classes="check" Content="Wait after DC"
+                          IsCheckedChanged="Check_Changed" Tag="enableWaitAfterDc"/>
+                <CheckBox x:Name="AutoStartBotCheck" Classes="check" Content="Auto start bot"
+                          IsCheckedChanged="Check_Changed" Tag="autoStartBot"/>
+                <CheckBox x:Name="UseReturnScrollCheck" Classes="check" Content="Use return scroll"
+                          IsCheckedChanged="Check_Changed" Tag="useReturnScroll"/>
+              </StackPanel>
+
+              <StackPanel Grid.Column="1" Spacing="2">
+                <CheckBox x:Name="AutoCharSelectCheck" Classes="check" Content="Auto Char Select"
+                          IsCheckedChanged="Check_Changed" Tag="autoCharSelect"/>
+                <CheckBox x:Name="AutoHideClientCheck" Classes="check" Content="Auto Hide Client"
+                          IsCheckedChanged="Check_Changed" Tag="autoHideClient"/>
+                <RadioButton x:Name="FirstFoundRadio"
+                             Content="First Found"
+                             GroupName="charSelect"
+                             Checked="RadioFirstFound_Checked"
+                             Foreground="{DynamicResource TextPrimaryBrush}"
+                             FontSize="12"
+                             Margin="0,6,0,0"/>
+                <RadioButton x:Name="HighestLevelRadio"
+                             Content="Highest Level"
+                             GroupName="charSelect"
+                             Checked="RadioHighest_Checked"
+                             Foreground="{DynamicResource TextPrimaryBrush}"
+                             FontSize="12"/>
+              </StackPanel>
+            </Grid>
+
             <TextBlock Classes="hint"
-                       Text="If the client exits due to a crash, the bot will automatically switch."/>
+                       Text="Please use this only if the captcha never changes."
+                       TextWrapping="Wrap"/>
+
+            <Grid ColumnDefinitions="Auto,74,Auto">
+              <TextBlock Grid.Column="0" Text="Enable login delay:" Classes="label"/>
+              <TextBox Grid.Column="1" x:Name="LoginDelayBox" Classes="field number"
+                       TextChanged="NumBox_Changed" Tag="loginDelay"/>
+              <TextBlock Grid.Column="2" Text="seconds" Classes="label"/>
+            </Grid>
+
+            <Grid ColumnDefinitions="Auto,74,Auto">
+              <TextBlock Grid.Column="0" Text="Wait after DC:" Classes="label"/>
+              <TextBox Grid.Column="1" x:Name="WaitAfterDcBox" Classes="field number"
+                       TextChanged="NumBox_Changed" Tag="waitAfterDc"/>
+              <TextBlock Grid.Column="2" Text="minutes" Classes="label"/>
+            </Grid>
           </StackPanel>
-        </Border>
-
-        <!-- Server Pending -->
-        <Border Classes="panel">
-          <StackPanel Spacing="6">
-            <TextBlock Text="SERVER PENDING" Classes="panel-title"/>
-            <CheckBox x:Name="AutoHidePendingCheck"     Classes="check" Content="Auto hide the pending window"
-                      IsCheckedChanged="Check_Changed" Tag="autoHidePendingWindow"/>
-            <CheckBox x:Name="EnablePendingLogsCheck"   Classes="check" Content="Enable pending queue logs"
-                      IsCheckedChanged="Check_Changed" Tag="enablePendingQueueLogs"/>
-            <CheckBox x:Name="EnableQueueNotifCheck"    Classes="check" Content="Enable queue notification on"
-                      IsCheckedChanged="Check_Changed" Tag="enableQueueNotification"/>
-            <StackPanel Orientation="Horizontal" Spacing="8">
-              <TextBox x:Name="PeopleLeftBox" Width="70" Classes="field"
-                       TextChanged="NumBox_Changed" Tag="queuePeopleLeft"/>
-              <TextBlock Text="people left" Classes="label"/>
-            </StackPanel>
-            <Button Classes="btn" Content="Toggle Pending Window" HorizontalAlignment="Left"
-                    Click="TogglePendingWindow_Click"/>
-          </StackPanel>
-        </Border>
-
-        <!-- Sound Notifications -->
-        <Border Classes="panel">
-          <StackPanel Spacing="6">
-            <TextBlock Text="SOUND NOTIFICATIONS" Classes="panel-title"/>
-            <Button Classes="btn" Content="Open Settings..." HorizontalAlignment="Left"
-                    Click="OpenSoundSettings_Click"/>
-          </StackPanel>
-        </Border>
-
-      </StackPanel>
-
-      <!-- Right: Automated Login -->
-      <Border Grid.Column="1" Classes="panel">
-        <StackPanel Spacing="10">
-          <TextBlock Text="AUTOMATED LOGIN" Classes="panel-title"/>
-
-          <!-- Account -->
-          <Grid ColumnDefinitions="Auto,*,Auto">
-            <TextBlock Grid.Column="0" Text="Account" Classes="label"/>
-            <ctrls:CustomSelect x:Name="AccountSelect" Grid.Column="1" Placeholder="Not selected"/>
-            <Button Grid.Column="2" Classes="btn" Content="Setup" MinWidth="60" Click="AccountSetup_Click"/>
-          </Grid>
-
-          <!-- Character -->
-          <Grid ColumnDefinitions="Auto,*">
-            <TextBlock Grid.Column="0" Text="Player" Classes="label"/>
-            <ctrls:CustomSelect x:Name="CharacterSelect" Grid.Column="1" Placeholder="Not selected"/>
-          </Grid>
-
-          <!-- Captcha -->
-          <Grid ColumnDefinitions="Auto,*">
-            <TextBlock Grid.Column="0" Text="Captcha" Classes="label"/>
-            <TextBox Grid.Column="1" x:Name="CaptchaBox" Classes="field" LostFocus="Captcha_LostFocus"/>
-          </Grid>
-
-          <!-- Checkboxes grid -->
-          <Grid ColumnDefinitions="*,*">
-            <StackPanel Grid.Column="0" Spacing="4">
-              <CheckBox x:Name="EnableAutoLoginCheck"   Classes="check" Content="Enable automated login"
-                        IsCheckedChanged="Check_Changed" Tag="enableAutomatedLogin"/>
-              <CheckBox x:Name="EnableStaticCaptchaCheck" Classes="check" Content="Enable static captcha solve"
-                        IsCheckedChanged="Check_Changed" Tag="enableStaticCaptcha"/>
-              <CheckBox x:Name="EnableLoginDelayCheck"  Classes="check" Content="Enable login delay"
-                        IsCheckedChanged="Check_Changed" Tag="enableLoginDelay"/>
-              <CheckBox x:Name="WaitAfterDcCheck"       Classes="check" Content="Wait after DC"
-                        IsCheckedChanged="Check_Changed" Tag="enableWaitAfterDc"/>
-              <CheckBox x:Name="AutoStartBotCheck"      Classes="check" Content="Auto start bot"
-                        IsCheckedChanged="Check_Changed" Tag="autoStartBot"/>
-              <CheckBox x:Name="UseReturnScrollCheck"   Classes="check" Content="Use return scroll"
-                        IsCheckedChanged="Check_Changed" Tag="useReturnScroll"/>
-            </StackPanel>
-            <StackPanel Grid.Column="1" Spacing="4">
-              <CheckBox x:Name="AutoCharSelectCheck"    Classes="check" Content="Auto Char Select"
-                        IsCheckedChanged="Check_Changed" Tag="autoCharSelect"/>
-              <CheckBox x:Name="AutoHideClientCheck"    Classes="check" Content="Auto Hide Client"
-                        IsCheckedChanged="Check_Changed" Tag="autoHideClient"/>
-              <RadioButton x:Name="FirstFoundRadio"     Content="First Found"
-                           GroupName="charSelect" Checked="RadioFirstFound_Checked"
-                           Foreground="{DynamicResource TextPrimaryBrush}" FontSize="12"/>
-              <RadioButton x:Name="HighestLevelRadio"   Content="Highest Level"
-                           GroupName="charSelect" Checked="RadioHighest_Checked"
-                           Foreground="{DynamicResource TextPrimaryBrush}" FontSize="12"/>
-            </StackPanel>
-          </Grid>
-
-          <!-- Login delay + wait after DC -->
-          <Grid ColumnDefinitions="Auto,Auto,Auto">
-            <TextBlock Grid.Column="0" Text="Enable login delay:" Classes="label"/>
-            <TextBox Grid.Column="1" x:Name="LoginDelayBox" Width="60" Classes="field"
-                     TextChanged="NumBox_Changed" Tag="loginDelay"/>
-            <TextBlock Grid.Column="2" Text="seconds" Classes="label"/>
-          </Grid>
-          <Grid ColumnDefinitions="Auto,Auto,Auto">
-            <TextBlock Grid.Column="0" Text="Wait after DC:" Classes="label"/>
-            <TextBox Grid.Column="1" x:Name="WaitAfterDcBox" Width="60" Classes="field"
-                     TextChanged="NumBox_Changed" Tag="waitAfterDc"/>
-            <TextBlock Grid.Column="2" Text="minutes" Classes="label"/>
-          </Grid>
-
-          <TextBlock Classes="hint"
-                     Text="Please use this only if the captcha never changes."
-                     TextWrapping="Wrap"/>
-        </StackPanel>
+        </Grid>
       </Border>
 
+      <StackPanel Grid.Column="1" Spacing="10">
+
+        <Border Classes="section-card">
+          <Grid RowDefinitions="Auto,*">
+            <Border Grid.Row="0" Classes="section-header">
+              <TextBlock Text="Client Settings / Bot Settings" Classes="section-header-text"/>
+            </Border>
+
+            <StackPanel Grid.Row="1" Spacing="4" Margin="10,10,10,10">
+              <CheckBox x:Name="StayConnectedCheck" Classes="check"
+                        Content="Stay connected if client exits unexpectedly"
+                        IsCheckedChanged="Check_Changed" Tag="stayConnectedAfterClientExit"/>
+              <CheckBox x:Name="MoveToTrayCheck" Classes="check"
+                        Content="Move bot to system tray when minimized"
+                        IsCheckedChanged="Check_Changed" Tag="moveToTrayOnMinimize"/>
+              <TextBlock Classes="hint"
+                         Text="If the client exits due to a crash, the bot will automatically switch."/>
+            </StackPanel>
+          </Grid>
+        </Border>
+
+        <Border Classes="section-card">
+          <Grid RowDefinitions="Auto,*">
+            <Border Grid.Row="0" Classes="section-header">
+              <TextBlock Text="Server Pending" Classes="section-header-text"/>
+            </Border>
+
+            <StackPanel Grid.Row="1" Spacing="4" Margin="10,10,10,10">
+              <CheckBox x:Name="AutoHidePendingCheck" Classes="check" Content="Auto hide the pending window"
+                        IsCheckedChanged="Check_Changed" Tag="autoHidePendingWindow"/>
+              <CheckBox x:Name="EnablePendingLogsCheck" Classes="check" Content="Enable pending queue logs"
+                        IsCheckedChanged="Check_Changed" Tag="enablePendingQueueLogs"/>
+
+              <Grid ColumnDefinitions="Auto,72,Auto" VerticalAlignment="Center">
+                <CheckBox x:Name="EnableQueueNotifCheck" Grid.Column="0" Classes="check"
+                          Content="Enable queue notification on"
+                          IsCheckedChanged="Check_Changed" Tag="enableQueueNotification"/>
+                <TextBox x:Name="PeopleLeftBox" Grid.Column="1" Classes="field number"
+                         TextChanged="NumBox_Changed" Tag="queuePeopleLeft"/>
+                <TextBlock Grid.Column="2" Text="people left" Classes="label"/>
+              </Grid>
+
+              <Button Classes="btn"
+                      Content="Toggle Pending Window"
+                      HorizontalAlignment="Stretch"
+                      Click="TogglePendingWindow_Click"/>
+            </StackPanel>
+          </Grid>
+        </Border>
+
+        <Border Classes="section-card">
+          <Grid RowDefinitions="Auto,*">
+            <Border Grid.Row="0" Classes="section-header">
+              <TextBlock Text="Sound Notifications" Classes="section-header-text"/>
+            </Border>
+
+            <StackPanel Grid.Row="1" Spacing="4" Margin="10,10,10,10">
+              <Button Classes="btn"
+                      Content="Open Settings..."
+                      HorizontalAlignment="Stretch"
+                      Click="OpenSoundSettings_Click"/>
+            </StackPanel>
+          </Grid>
+        </Border>
+
+      </StackPanel>
     </Grid>
   </StackPanel>
-
 </UserControl>
-
-
 

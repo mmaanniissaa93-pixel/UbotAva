@@ -1,12 +1,12 @@
-﻿<Window
+<Window
   xmlns="https://github.com/avaloniaui"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:shapes="clr-namespace:Avalonia.Controls.Shapes;assembly=Avalonia.Controls"
   xmlns:ctrls="clr-namespace:UBot.Avalonia.Controls"
   x:Class="UBot.Avalonia.MainWindow"
   Title="UBot"
-  Width="1280" Height="760"
-  MinWidth="960" MinHeight="600"
+  Width="1380" Height="840"
+  MinWidth="1080" MinHeight="680"
   Background="{DynamicResource AppBg}"
   ExtendClientAreaToDecorationsHint="True"
   ExtendClientAreaChromeHints="NoChrome"
@@ -14,196 +14,250 @@
 
   <Panel>
 
-    <!-- Drag zone -->
-    <Border Height="36" VerticalAlignment="Top" IsHitTestVisible="True"
-            Background="Transparent" ZIndex="30"
+    <Border Height="36"
+            VerticalAlignment="Top"
+            IsHitTestVisible="True"
+            Background="Transparent"
+            ZIndex="30"
             PointerPressed="DragZone_PointerPressed"/>
 
-    <!-- App shell: sidebar | workspace -->
-    <Grid ColumnDefinitions="220,*"
-          Margin="8,36,8,8">
+    <Grid ColumnDefinitions="250,*"
+          Margin="6,36,6,6">
 
-      <!-- â•â•â•â•â•â•â•â•â•â• SIDEBAR â•â•â•â•â•â•â•â•â•â• -->
       <Border Grid.Column="0"
-              Background="{DynamicResource SidebarBrush}"
-              BorderBrush="{DynamicResource StrokeSoftBrush}"
-              BorderThickness="1"
-              CornerRadius="{DynamicResource RadiusLg}">
-        <Grid RowDefinitions="Auto,*" Margin="8">
+              Classes="shell-card"
+              Background="{DynamicResource SidebarBrush}">
+        <Grid RowDefinitions="Auto,*" Margin="10">
 
-          <!-- Banner -->
-          <Border Grid.Row="0" CornerRadius="10" ClipToBounds="True"
-                  Height="70" Margin="0,0,0,8">
-            <Image x:Name="BannerImage" Stretch="UniformToFill" HorizontalAlignment="Left"/>
+          <Border Grid.Row="0"
+                  CornerRadius="12"
+                  ClipToBounds="True"
+                  Height="78"
+                  Margin="0,0,0,10"
+                  BorderBrush="{DynamicResource StrokeSoftBrush}"
+                  BorderThickness="1">
+            <Image x:Name="BannerImage"
+                   Stretch="UniformToFill"
+                   HorizontalAlignment="Stretch"
+                   VerticalAlignment="Stretch"/>
           </Border>
 
-          <!-- Nav -->
           <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel x:Name="NavPanel" Spacing="2"/>
+            <StackPanel x:Name="NavPanel" Spacing="3"/>
           </ScrollViewer>
         </Grid>
       </Border>
 
-      <!-- â•â•â•â•â•â•â•â•â•â• WORKSPACE â•â•â•â•â•â•â•â•â•â• -->
-      <Grid Grid.Column="1" RowDefinitions="Auto,*">
+      <Grid Grid.Column="1" RowDefinitions="Auto,*" Margin="10,0,0,0">
 
-        <!-- â”€â”€ TOPBAR â”€â”€ -->
         <Border Grid.Row="0"
                 Background="{DynamicResource TopbarBrush}"
                 BorderBrush="{DynamicResource StrokeSoftBrush}"
                 BorderThickness="1"
-                CornerRadius="{DynamicResource RadiusMd}"
+                CornerRadius="14"
                 Padding="10,8">
 
-          <Grid ColumnDefinitions="Auto,*,Auto">
+          <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto">
 
-            <!-- Left: status + lang -->
-            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <StackPanel Grid.Row="0" Grid.Column="0"
+                        Orientation="Horizontal"
+                        Spacing="7"
+                        VerticalAlignment="Center">
 
-              <!-- Status chip -->
               <Border x:Name="StatusChipBorder" Classes="status-stopped">
                 <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                   <Ellipse x:Name="StatusDot" Width="7" Height="7" Fill="{DynamicResource DangerBrush}"/>
-                  <TextBlock x:Name="StatusText" FontSize="10" FontWeight="Bold"
-                             Foreground="{DynamicResource DangerBrush}" VerticalAlignment="Center"/>
+                  <TextBlock x:Name="StatusText"
+                             FontSize="10.5"
+                             FontWeight="SemiBold"
+                             Foreground="{DynamicResource DangerBrush}"
+                             VerticalAlignment="Center"/>
                 </StackPanel>
               </Border>
 
-              <!-- Lang + theme pill -->
-              <Border CornerRadius="999" BorderBrush="{DynamicResource StrokeSoftBrush}"
-                      BorderThickness="1" Background="#08FFFFFF" Padding="2">
+              <Border CornerRadius="999"
+                      BorderBrush="{DynamicResource StrokeSoftBrush}"
+                      BorderThickness="1"
+                      Background="#0EFFFFFF"
+                      Padding="2">
                 <StackPanel Orientation="Horizontal" Spacing="1">
                   <Button x:Name="BtnEn" Classes="lang-btn" Content="EN" Click="BtnEn_Click"/>
                   <Button x:Name="BtnTr" Classes="lang-btn" Content="TR" Click="BtnTr_Click"/>
-                  <Button x:Name="BtnTheme" Classes="lang-btn" Width="26"
-                          Click="BtnTheme_Click" ToolTip.Tip="Toggle theme">
+                  <Button x:Name="BtnTheme"
+                          Classes="lang-btn"
+                          Width="26"
+                          Click="BtnTheme_Click"
+                          ToolTip.Tip="Toggle theme">
                     <shapes:Path x:Name="ThemeIcon"
-                      Width="12" Height="12" Stretch="Uniform"
-                      Stroke="{DynamicResource TextDimBrush}" StrokeThickness="1.4"
-                      Data="M12,3 A9,9 0 1,0 12,21 A9,9 0 0,0 12,3 Z"/>
+                                 Width="12"
+                                 Height="12"
+                                 Stretch="Uniform"
+                                 Stroke="{DynamicResource TextDimBrush}"
+                                 StrokeThickness="1.4"
+                                 Data="M12,3 A9,9 0 1,0 12,21 A9,9 0 0,0 12,3 Z"/>
                   </Button>
                 </StackPanel>
               </Border>
-
             </StackPanel>
 
-            <!-- Center: profile + character -->
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6"
-                        VerticalAlignment="Center" HorizontalAlignment="Center">
+            <StackPanel Grid.Row="0" Grid.Column="1"
+                        Orientation="Horizontal"
+                        Spacing="6"
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Right">
+              <ctrls:CustomSelect x:Name="DivisionSelect" Placeholder="Aege" MinWidth="128"/>
+              <ctrls:CustomSelect x:Name="GatewaySelect" Placeholder="Aege" MinWidth="128"/>
+
+              <Button x:Name="BtnDisconnect" Classes="btn ghost" Click="BtnDisconnect_Click" MinWidth="124">
+                <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                  <shapes:Path Width="13" Height="13" Stretch="Uniform"
+                               Stroke="#FFD48A" StrokeThickness="1.4"
+                               Data="M18.36,6.64 A9,9 0 1,1 5.64,6.64 M12,2 L12,12"/>
+                  <TextBlock x:Name="LblDisconnect" VerticalAlignment="Center"/>
+                </StackPanel>
+              </Button>
+
+              <Button x:Name="BtnStart" Classes="btn blue" Click="BtnStart_Click" MinWidth="106">
+                <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                  <shapes:Path Width="11" Height="11" Stretch="Uniform" Fill="#E8F4FF" Data="M5,3 L19,12 L5,21 Z"/>
+                  <TextBlock x:Name="LblStart" VerticalAlignment="Center"/>
+                </StackPanel>
+              </Button>
+
+              <Button x:Name="BtnStop" Classes="btn danger" Click="BtnStop_Click" MinWidth="106">
+                <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                  <shapes:Path Width="11" Height="11" Stretch="Uniform" Fill="#FFE4E4" Data="M3,3 L21,3 L21,21 L3,21 Z"/>
+                  <TextBlock x:Name="LblStop" VerticalAlignment="Center"/>
+                </StackPanel>
+              </Button>
+
+              <Button x:Name="BtnSave" Classes="btn icon" Click="BtnSave_Click" ToolTip.Tip="Save config">
+                <shapes:Path Width="13" Height="13" Stretch="Uniform"
+                             Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.4"
+                             Data="M19,21 L5,21 A2,2 0 0,1 3,19 L3,5 A2,2 0 0,1 5,3 L16,3 L21,8 L21,19 A2,2 0 0,1 19,21 Z M17,21 L17,13 L7,13 L7,21 M7,3 L7,8 L15,8"/>
+              </Button>
+            </StackPanel>
+
+            <StackPanel Grid.Row="1" Grid.Column="0"
+                        Orientation="Horizontal"
+                        Spacing="7"
+                        Margin="0,8,0,0"
+                        VerticalAlignment="Center">
               <Border Classes="topbar-pill">
                 <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
                   <shapes:Path Width="13" Height="13" Stretch="Uniform"
-                    Stroke="#64F3D0" StrokeThickness="1.4"
-                    Data="M20,21 A8,8 0 1,0 4,21 M12,13 A4,4 0 1,0 12,5 A4,4 0 0,0 12,13"/>
-                  <TextBlock x:Name="ProfileLabel" FontSize="11" Foreground="{DynamicResource TextPrimaryBrush}"
-                             MaxWidth="130" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                               Stroke="#64F3D0" StrokeThickness="1.4"
+                               Data="M20,21 A8,8 0 1,0 4,21 M12,13 A4,4 0 1,0 12,5 A4,4 0 0,0 12,13"/>
+                  <TextBlock x:Name="ProfileLabel"
+                             FontSize="11"
+                             Foreground="{DynamicResource TextPrimaryBrush}"
+                             MaxWidth="160"
+                             TextTrimming="CharacterEllipsis"
+                             VerticalAlignment="Center"/>
                 </StackPanel>
               </Border>
 
               <Border x:Name="CharPill" Classes="topbar-pill">
                 <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
                   <ContentControl x:Name="CharIcon" Width="13" Height="13"/>
-                  <TextBlock x:Name="CharLabel" FontSize="11" Foreground="{DynamicResource TextPrimaryBrush}"
-                             MaxWidth="160" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                  <TextBlock x:Name="CharLabel"
+                             FontSize="11"
+                             Foreground="{DynamicResource TextPrimaryBrush}"
+                             MaxWidth="200"
+                             TextTrimming="CharacterEllipsis"
+                             VerticalAlignment="Center"/>
                 </StackPanel>
               </Border>
             </StackPanel>
 
-            <!-- Right: selects + buttons -->
-            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-              <ctrls:CustomSelect x:Name="DivisionSelect" Placeholder="Division" MinWidth="120"/>
-              <ctrls:CustomSelect x:Name="GatewaySelect"  Placeholder="Server..."  MinWidth="130"/>
+            <StackPanel Grid.Row="1" Grid.Column="1"
+                        Orientation="Horizontal"
+                        Spacing="6"
+                        Margin="8,8,0,0"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center">
 
-              <Button x:Name="BtnDisconnect" Classes="btn ghost" Click="BtnDisconnect_Click">
+              <Button x:Name="BtnStartClient" Classes="btn" Click="BtnStartClient_Click" MinWidth="120">
                 <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
-                  <shapes:Path Width="13" Height="13" Stretch="Uniform"
-                    Stroke="#FFD48A" StrokeThickness="1.4"
-                    Data="M18.36,6.64 A9,9 0 1,1 5.64,6.64 M12,2 L12,12"/>
-                  <TextBlock x:Name="LblDisconnect" VerticalAlignment="Center"/>
+                  <shapes:Path Width="11" Height="11" Stretch="Uniform" Fill="#8CC4FF" Data="M5,3 L19,12 L5,21 Z"/>
+                  <TextBlock x:Name="LblStartClient" VerticalAlignment="Center"/>
                 </StackPanel>
               </Button>
 
-              <Button x:Name="BtnStart" Classes="btn start" Click="BtnStart_Click">
-                <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
-                  <shapes:Path Width="11" Height="11" Stretch="Uniform"
-                    Fill="#042E1E" Data="M5,3 L19,12 L5,21 Z"/>
-                  <TextBlock x:Name="LblStart" VerticalAlignment="Center"/>
-                </StackPanel>
-              </Button>
-
-              <Button x:Name="BtnStop" Classes="btn danger" Click="BtnStop_Click">
+              <Button x:Name="BtnGoClientless" Classes="btn ghost" Click="BtnGoClientless_Click" MinWidth="126">
                 <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
                   <shapes:Path Width="11" Height="11" Stretch="Uniform"
-                    Fill="#FFE4E4" Data="M3,3 L21,3 L21,21 L3,21 Z"/>
-                  <TextBlock x:Name="LblStop" VerticalAlignment="Center"/>
+                               Stroke="#FFD48A" StrokeThickness="1.4"
+                               Data="M12,2 A10,10 0 1,0 12,22 A10,10 0 0,0 12,2"/>
+                  <TextBlock x:Name="LblGoClientless" VerticalAlignment="Center"/>
                 </StackPanel>
               </Button>
 
-              <Button x:Name="BtnSave" Classes="btn icon" Click="BtnSave_Click"
-                      ToolTip.Tip="Save config">
-                <shapes:Path Width="13" Height="13" Stretch="Uniform"
-                  Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.4"
-                  Data="M19,21 L5,21 A2,2 0 0,1 3,19 L3,5 A2,2 0 0,1 5,3 L16,3 L21,8 L21,19 A2,2 0 0,1 19,21 Z M17,21 L17,13 L7,13 L7,21 M7,3 L7,8 L15,8"/>
+              <Button x:Name="BtnHideClient" Classes="btn" Click="BtnHideClient_Click" MinWidth="110">
+                <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                  <shapes:Path Width="11" Height="11" Stretch="Uniform"
+                               Stroke="{DynamicResource TextMutedBrush}" StrokeThickness="1.4"
+                               Data="M1,1 L23,23 M17.94,17.94 A10,10 0 0,1 12,20 C6,20 1,12 1,12 A18.5,18.5 0 0,1 5.06,7.06 M9.9,4.24 A9,9 0 0,1 12,4 C18,4 23,12 23,12 A18.5,18.5 0 0,1 20.49,15.68"/>
+                  <TextBlock x:Name="LblHideClient" VerticalAlignment="Center"/>
+                </StackPanel>
               </Button>
             </StackPanel>
 
           </Grid>
         </Border>
 
-        <!-- â”€â”€ CONTENT AREA â”€â”€ -->
         <Border Grid.Row="1"
                 Background="{DynamicResource PanelBrush}"
                 BorderBrush="{DynamicResource StrokeSoftBrush}"
                 BorderThickness="1"
-                CornerRadius="{DynamicResource RadiusLg}"
+                CornerRadius="16"
                 ClipToBounds="True">
           <Grid RowDefinitions="Auto,*">
 
-            <!-- Metric cards row (Level, HP, MP, EXP) â€” always visible -->
             <Grid Grid.Row="0"
                   ColumnDefinitions="*,*,*,*"
-                 
-                  Margin="14,14,14,0">
+                  Margin="12,12,12,0">
 
-              <!-- LEVEL -->
               <Border Grid.Column="0" Classes="metric-card">
-                <StackPanel>
+                <StackPanel Spacing="6">
                   <TextBlock Text="LEVEL" Classes="metric-label"/>
-                  <TextBlock x:Name="MetricLevel" Classes="metric-value green"/>
+                  <TextBlock x:Name="MetricLevel" Classes="metric-value blue" Text="-"/>
+                  <TextBlock x:Name="MetricLevelHint" Classes="metric-subtext" Text="Waiting"/>
                 </StackPanel>
               </Border>
 
-              <!-- HP -->
-              <Border Grid.Column="1" Classes="metric-card">
+              <Border Grid.Column="1" Classes="metric-card" Margin="8,0,0,0">
                 <StackPanel Spacing="6">
                   <TextBlock Text="HP" Classes="metric-label"/>
-                  <TextBlock x:Name="MetricHp" Classes="metric-value blue"/>
+                  <TextBlock x:Name="MetricHp" Classes="metric-value green" Text="-"/>
+                  <TextBlock x:Name="MetricHpHint" Classes="metric-subtext" Text="Waiting"/>
                   <Grid>
-                    <Border Background="#1878A0CC" CornerRadius="999" Height="4"/>
-                    <Border x:Name="HpBar" Background="{DynamicResource MetricBlueBrush}"
+                    <Border Background="#1634D399" CornerRadius="999" Height="4"/>
+                    <Border x:Name="HpBar" Background="{DynamicResource MetricGreenBrush}"
                             CornerRadius="999" Height="4" HorizontalAlignment="Left" Width="0"/>
                   </Grid>
                 </StackPanel>
               </Border>
 
-              <!-- MP -->
-              <Border Grid.Column="2" Classes="metric-card">
+              <Border Grid.Column="2" Classes="metric-card" Margin="8,0,0,0">
                 <StackPanel Spacing="6">
                   <TextBlock Text="MP" Classes="metric-label"/>
-                  <TextBlock x:Name="MetricMp" Classes="metric-value amber"/>
+                  <TextBlock x:Name="MetricMp" Classes="metric-value blue" Text="-"/>
+                  <TextBlock x:Name="MetricMpHint" Classes="metric-subtext" Text="Waiting"/>
                   <Grid>
-                    <Border Background="#18F59E0B" CornerRadius="999" Height="4"/>
-                    <Border x:Name="MpBar" Background="{DynamicResource MetricAmberBrush}"
+                    <Border Background="#165BA3F5" CornerRadius="999" Height="4"/>
+                    <Border x:Name="MpBar" Background="{DynamicResource MetricBlueBrush}"
                             CornerRadius="999" Height="4" HorizontalAlignment="Left" Width="0"/>
                   </Grid>
                 </StackPanel>
               </Border>
 
-              <!-- EXP -->
-              <Border Grid.Column="3" Classes="metric-card">
+              <Border Grid.Column="3" Classes="metric-card" Margin="8,0,0,0">
                 <StackPanel Spacing="6">
                   <TextBlock Text="EXP" Classes="metric-label"/>
-                  <TextBlock x:Name="MetricExp" Classes="metric-value amber"/>
+                  <TextBlock x:Name="MetricExp" Classes="metric-value amber" Text="-"/>
+                  <TextBlock x:Name="MetricExpHint" Classes="metric-subtext" Text="Waiting"/>
                   <Grid>
                     <Border Background="#18F59E0B" CornerRadius="999" Height="4"/>
                     <Border x:Name="ExpBar" Background="{DynamicResource MetricAmberBrush}"
@@ -211,23 +265,18 @@
                   </Grid>
                 </StackPanel>
               </Border>
-
             </Grid>
 
-            <!-- Feature view content -->
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+            <ScrollViewer Grid.Row="1"
+                          VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled"
-                          Padding="14,10,14,14">
+                          Padding="12,10,12,12">
               <ContentControl x:Name="ContentHost"/>
             </ScrollViewer>
-
           </Grid>
         </Border>
-
       </Grid>
     </Grid>
   </Panel>
 </Window>
-
-
 

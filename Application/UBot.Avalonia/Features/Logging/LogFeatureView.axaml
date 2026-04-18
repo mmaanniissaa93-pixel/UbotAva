@@ -1,0 +1,30 @@
+<UserControl
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  x:Class="UBot.Avalonia.Features.Logging.LogFeatureView">
+
+  <Grid RowDefinitions="Auto,*">
+    <Border Grid.Row="0" Classes="section-card">
+      <Border Classes="section-header">
+        <TextBlock Text="Runtime Log" Classes="section-header-text"/>
+      </Border>
+    </Border>
+
+    <Border Grid.Row="1" Classes="log-board" Padding="6" Margin="0,8,0,0">
+      <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <ItemsControl x:Name="LogItems">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding .}"
+                         FontFamily="Consolas"
+                         FontSize="11.5"
+                         Margin="6,1"
+                         TextWrapping="Wrap"
+                         Foreground="{DynamicResource TextPrimaryBrush}"/>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </Border>
+  </Grid>
+</UserControl>

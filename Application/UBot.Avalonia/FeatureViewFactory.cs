@@ -8,7 +8,7 @@ using UBot.Avalonia.Features.Chat;
 using UBot.Avalonia.Features.General;
 using UBot.Avalonia.Features.Inventory;
 using UBot.Avalonia.Features.Items;
-using UBot.Avalonia.Features.Log;
+using UBot.Avalonia.Features.Logging;
 using UBot.Avalonia.Features.Lure;
 using UBot.Avalonia.Features.Map;
 using UBot.Avalonia.Features.Party;

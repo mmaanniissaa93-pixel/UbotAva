@@ -202,6 +202,9 @@ public partial class MainWindow : Window
         LblStart.Text      = "START";
         LblStop.Text       = "STOP";
         LblDisconnect.Text = "Disconnect";
+        LblStartClient.Text = "Start Client";
+        LblGoClientless.Text = "Go Clientless";
+        LblHideClient.Text = "Hide Client";
         BtnEn.Classes.Add("active");
         SyncTopbar();
     }
@@ -212,7 +215,7 @@ public partial class MainWindow : Window
 
         // Status chip
         var running = _state.BotRunning;
-        StatusText.Text = running ? "ON" : "OFF";
+        StatusText.Text = running ? "On" : "Off";
         if (running)
         {
             StatusChipBorder.Classes.Remove("status-stopped");
@@ -235,7 +238,7 @@ public partial class MainWindow : Window
         // Character pill
         var ch = _state.Character.Trim();
         var waiting = string.IsNullOrEmpty(ch) || ch == "-";
-        CharLabel.Text = waiting ? "Waiting for character..." : ch;
+        CharLabel.Text = waiting ? "Waiting for Character..." : ch;
         if (waiting)
         {
             CharPill.Classes.Add("waiting");
@@ -261,15 +264,24 @@ public partial class MainWindow : Window
             MetricHp.Text    = $"{_state.PlayerHealth:N0} / {_state.PlayerMaxHealth:N0}";
             MetricMp.Text    = $"{_state.PlayerMana:N0} / {_state.PlayerMaxMana:N0}";
             MetricExp.Text   = $"{_state.PlayerExpPercent:F2}%";
+            MetricLevelHint.Text = "Live";
+            MetricHpHint.Text = "Live";
+            MetricMpHint.Text = "Live";
+            MetricExpHint.Text = "Live";
             UpdateBar(HpBar,  _state.PlayerHealthPercent);
             UpdateBar(MpBar,  _state.PlayerManaPercent);
             UpdateBar(ExpBar, _state.PlayerExpPercent);
         }
         else
         {
-            MetricLevel.Text = "0";
-            MetricHp.Text = MetricMp.Text = "0 / 0";
-            MetricExp.Text = "0.00%";
+            MetricLevel.Text = "-";
+            MetricHp.Text = "-";
+            MetricMp.Text = "-";
+            MetricExp.Text = "-";
+            MetricLevelHint.Text = "Waiting";
+            MetricHpHint.Text = "Waiting";
+            MetricMpHint.Text = "Waiting";
+            MetricExpHint.Text = "Waiting";
             UpdateBar(HpBar, 0); UpdateBar(MpBar, 0); UpdateBar(ExpBar, 0);
         }
     }
@@ -288,11 +300,6 @@ public partial class MainWindow : Window
 
     private void RecalcBars()
     {
-        void Set(Border bar, Border track)
-        {
-            var pct = bar.Tag is double d ? d : 0;
-            bar.Width = track.Bounds.Width * pct / 100.0;
-        }
         // The bars recalc after layout; use deferred
         global::Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
@@ -362,6 +369,9 @@ public partial class MainWindow : Window
         _state!.ApplyStatus(r);
     }
     private async void BtnSave_Click(object? s, RoutedEventArgs e) => await _core!.SaveConfigAsync();
+    private async void BtnStartClient_Click(object? s, RoutedEventArgs e) => await _core!.StartClientAsync();
+    private async void BtnGoClientless_Click(object? s, RoutedEventArgs e) => await _core!.GoClientlessAsync();
+    private async void BtnHideClient_Click(object? s, RoutedEventArgs e) => await _core!.ToggleClientVisibilityAsync();
 
     private void BtnEn_Click(object? s, RoutedEventArgs e)
     {
@@ -385,9 +395,12 @@ public partial class MainWindow : Window
     private void ApplyTranslations()
     {
         bool tr = _lang == "Turkish";
-        LblStart.Text      = tr ? "BAÅLAT" : "START";
-        LblStop.Text       = tr ? "DURDUR" : "STOP";
-        LblDisconnect.Text = tr ? "BaÄŸlantÄ±yÄ± Kes" : "Disconnect";
+        LblStart.Text      = tr ? "Baslat" : "START";
+        LblStop.Text       = tr ? "Durdur" : "STOP";
+        LblDisconnect.Text = tr ? "Baglantiyi Kes" : "Disconnect";
+        LblStartClient.Text = tr ? "Client Baslat" : "Start Client";
+        LblGoClientless.Text = tr ? "Clientless" : "Go Clientless";
+        LblHideClient.Text = tr ? "Client Gizle" : "Hide Client";
         SyncTopbar();
     }
 
