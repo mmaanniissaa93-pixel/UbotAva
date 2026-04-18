@@ -1,0 +1,119 @@
+﻿using UBot.Chat.Views;
+using UBot.Core;
+using UBot.Core.Components;
+using UBot.Core.Extensions;
+using UBot.Core.Network;
+using UBot.Core.Objects;
+using UBot.Core.Objects.Spawn;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
+
+namespace UBot.Chat.Network;
+
+internal class ChatResponse : IPacketHandler
+{
+    /// <summary>
+    ///     Gets or sets the opcode.
+    /// </summary>
+    /// <value>
+    ///     The opcode.
+    /// </value>
+    public ushort Opcode => 0x3026;
+
+    /// <summary>
+    ///     Gets or sets the destination.
+    /// </summary>
+    /// <value>
+    ///     The destination.
+    /// </value>
+    public PacketDestination Destination => PacketDestination.Client;
+
+    /// <summary>
+    ///     Handles the packet.
+    /// </summary>
+    /// <param name="packet">The packet.</param>
+    public void Invoke(Packet packet)
+    {
+        var type = (ChatType)packet.ReadByte();
+
+        var message = string.Empty;
+
+        switch (type)
+        {
+            case ChatType.All:
+            case ChatType.AllGM:
+                var senderId = packet.ReadUInt();
+                message = packet.ReadConditonalString();
+
+                message = ReadChatWithLinkedItems(message);
+
+                if (senderId != Game.Player.UniqueId)
+                {
+                    if (!SpawnManager.TryGetEntity<SpawnedPlayer>(senderId, out var player))
+                        return;
+
+                    View.Instance.AppendMessage(message, player.Name, ChatType.All);
+                }
+                else
+                {
+                    View.Instance.AppendMessage(message, Game.Player.Name, ChatType.All);
+                }
+
+                break;
+
+            case ChatType.Notice:
+
+                message = packet.ReadConditonalString();
+
+                message = ReadChatWithLinkedItems(message);
+
+                View.Instance.AppendMessage(message, "Notice", type);
+                break;
+
+            case ChatType.Npc:
+                //TODO: get npc by guid
+                break;
+
+            default:
+                var sender = packet.ReadString();
+                message = packet.ReadConditonalString();
+
+                message = ReadChatWithLinkedItems(message);
+
+                View.Instance.AppendMessage(message, sender, type);
+                break;
+        }
+    }
+
+    public static string ReadChatWithLinkedItems(string message)
+    {
+        const string pattern = "\u0002(.*?)\u0003";
+
+        return Regex.Replace(message, pattern, match =>
+        {
+            string rawValue = match.Groups[1].Value;
+
+            if (uint.TryParse(rawValue, out uint uid))
+            {
+                var itemName = string.Empty;
+                if (Bundle.Chat.LinkedItems.TryGetValue(uid, out var data) && (itemName = data.Record.GetRealName()) != null)
+                {
+                    bool hasSpaceBefore = match.Index > 0 && char.IsWhiteSpace(message[match.Index - 1]);
+
+                    int endOfMatch = match.Index + match.Length;
+                    bool hasSpaceAfter = endOfMatch < message.Length && char.IsWhiteSpace(message[endOfMatch]);
+
+                    string leftPadding = hasSpaceBefore ? "" : " ";
+                    string rightPadding = hasSpaceAfter ? "" : " ";
+
+                    string displayName = data.Amount > 1
+                        ? $"{itemName} [{data.Amount}]"
+                        : itemName;
+
+                    return $"{leftPadding}< {displayName} >{rightPadding}";
+                }
+            }
+            return match.Value;
+        });
+    }
+}

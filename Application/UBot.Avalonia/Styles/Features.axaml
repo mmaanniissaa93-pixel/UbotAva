@@ -1,0 +1,144 @@
+﻿<Styles
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• SECTION PANEL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <Style Selector="Border.section-panel">
+    <Setter Property="Background"       Value="#CC0D1016" />
+    <Setter Property="BorderBrush"      Value="{DynamicResource StrokeSoftBrush}" />
+    <Setter Property="BorderThickness"  Value="1" />
+    <Setter Property="CornerRadius"     Value="12" />
+    <Setter Property="Padding"          Value="16,12" />
+  </Style>
+
+  <Style Selector="TextBlock.section-title">
+    <Setter Property="FontSize"     Value="11.5" />
+    <Setter Property="FontWeight"   Value="SemiBold" />
+    <Setter Property="Foreground"   Value="{DynamicResource TextMutedBrush}" />
+    <Setter Property="LetterSpacing" Value="0.8" />
+    <Setter Property="Margin"        Value="0,0,0,8" />
+  </Style>
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• LEGACY INPUT â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <Style Selector="TextBox.legacy-input">
+    <Setter Property="Background"      Value="#E0122740" />
+    <Setter Property="BorderBrush"     Value="{DynamicResource StrokeSoftBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius"    Value="8" />
+    <Setter Property="Padding"         Value="9,5" />
+    <Setter Property="Foreground"      Value="{DynamicResource TextPrimaryBrush}" />
+    <Setter Property="FontSize"        Value="12" />
+    <Setter Property="Height"          Value="30" />
+  </Style>
+
+  <Style Selector="TextBox.legacy-input:focus">
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+  </Style>
+
+  <Style Selector="TextBox.legacy-input.invalid">
+    <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
+  </Style>
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• FORM LABEL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <Style Selector="TextBlock.form-label">
+    <Setter Property="FontSize"   Value="11.5" />
+    <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• HELP TEXT â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <Style Selector="TextBlock.help-text">
+    <Setter Property="FontSize"    Value="10.5" />
+    <Setter Property="Foreground"  Value="{DynamicResource TextDimBrush}" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• LEGACY CHECKBOX â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <Style Selector="CheckBox.legacy-check">
+    <Setter Property="FontSize"   Value="12" />
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+  </Style>
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• LEGACY TABLE â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <Style Selector="DataGrid.legacy-table">
+    <Setter Property="Background"      Value="Transparent" />
+    <Setter Property="BorderBrush"     Value="{DynamicResource StrokeSoftBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius"    Value="8" />
+    <Setter Property="FontSize"        Value="11.5" />
+    <Setter Property="Foreground"      Value="{DynamicResource TextPrimaryBrush}" />
+    <Setter Property="GridLinesVisibility" Value="Horizontal" />
+    <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource StrokeSoftBrush}" />
+    <Setter Property="RowBackground"   Value="Transparent" />
+    <Setter Property="HeadersVisibility" Value="Column" />
+  </Style>
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• LEGACY CHIP â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <Style Selector="Border.metric-chip">
+    <Setter Property="Background"      Value="#1889ACC8" />
+    <Setter Property="BorderBrush"     Value="{DynamicResource StrokeSoftBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius"    Value="6" />
+    <Setter Property="Padding"         Value="8,4" />
+  </Style>
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• THRESHOLD ROW â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <Style Selector="Grid.threshold-row">
+    <Setter Property="Margin" Value="0,3" />
+  </Style>
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• SMALL ACTION BUTTON â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <Style Selector="Button.legacy-btn">
+    <Setter Property="Height"          Value="28" />
+    <Setter Property="MinWidth"        Value="70" />
+    <Setter Property="Padding"         Value="10,0" />
+    <Setter Property="CornerRadius"    Value="8" />
+    <Setter Property="Background"      Value="#CC122740" />
+    <Setter Property="BorderBrush"     Value="{DynamicResource StrokeSoftBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Foreground"      Value="{DynamicResource TextPrimaryBrush}" />
+    <Setter Property="FontSize"        Value="11.5" />
+    <Setter Property="Cursor"          Value="Hand" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+  </Style>
+
+  <Style Selector="Button.legacy-btn:pointerover">
+    <Setter Property="BorderBrush" Value="{DynamicResource StrokeStrongBrush}" />
+    <Setter Property="Background"  Value="#E0122740" />
+  </Style>
+
+  <Style Selector="Button.legacy-btn.primary">
+    <Setter Property="Background"  Value="{DynamicResource BtnPrimaryBrush}" />
+    <Setter Property="BorderBrush" Value="#7A22D3A6" />
+    <Setter Property="Foreground"  Value="#052E25" />
+  </Style>
+
+  <Style Selector="Button.legacy-btn.danger">
+    <Setter Property="Background"  Value="{DynamicResource BtnDangerBrush}" />
+    <Setter Property="BorderBrush" Value="#C7FC727F" />
+    <Setter Property="Foreground"  Value="#FFE4E7" />
+  </Style>
+
+  <Style Selector="Button.legacy-btn.compact">
+    <Setter Property="MinWidth" Value="36" />
+    <Setter Property="Height"   Value="26" />
+    <Setter Property="Padding"  Value="6,0" />
+    <Setter Property="FontSize" Value="11" />
+  </Style>
+
+  <Style Selector="Button.legacy-btn:disabled">
+    <Setter Property="Opacity" Value="0.5" />
+  </Style>
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• LOG BOARD â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <Style Selector="Border.log-board">
+    <Setter Property="Background"      Value="#0A0D1016" />
+    <Setter Property="BorderBrush"     Value="{DynamicResource StrokeSoftBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius"    Value="8" />
+    <Setter Property="Padding"         Value="8" />
+  </Style>
+
+</Styles>
+
+

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<OutputPath>.\..\..\Build</OutputPath>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<Description>A open source bot for Silkroad Online</Description>
+		<Copyright>Copyright © 2026, UBot Team</Copyright>
+		<PackageProjectUrl>https://github.com/mmaanniissaa93-pixel/ubot</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/mmaanniissaa93-pixel/ubot</RepositoryUrl>
+		<OutputType>WinExe</OutputType>
+		<InformationalVersion>1.33</InformationalVersion>
+		<AssemblyVersion>1.33</AssemblyVersion>
+		<PlatformTarget>x86</PlatformTarget>
+	</PropertyGroup>
+
+</Project>

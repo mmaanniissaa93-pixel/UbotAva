@@ -1,0 +1,7 @@
+DisplayName="Log"
+UBot.Log.Main.Panel.checkNormal="عادي"
+UBot.Log.Main.Panel.checkError="خطأ"
+UBot.Log.Main.Panel.checkWarning="تحذير"
+UBot.Log.Main.Panel.checkDebug="تصحيح"
+UBot.Log.Main.Panel.btnReset="مسح الكل"
+UBot.Log.Main.Panel.checkEnabled="تمكين"

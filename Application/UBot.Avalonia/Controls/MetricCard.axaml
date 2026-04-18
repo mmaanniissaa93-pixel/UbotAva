@@ -1,0 +1,57 @@
+<UserControl
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  x:Class="UBot.Avalonia.Controls.MetricCard"
+  x:Name="Root">
+
+  <Border Classes="metric-card">
+    <StackPanel Spacing="0">
+
+      <!-- Label -->
+      <TextBlock
+        x:Name="LabelText"
+        Classes="metric-label" />
+
+      <!-- Value -->
+      <TextBlock
+        x:Name="ValueText"
+        Classes="metric-value" />
+
+      <!-- Hint (optional) -->
+      <TextBlock
+        x:Name="HintText"
+        Classes="metric-hint"
+        IsVisible="False" />
+
+      <!-- Progress bar (optional) -->
+      <Panel
+        x:Name="ProgressPanel"
+        Height="4"
+        Margin="0,8,0,0"
+        IsVisible="False">
+        <Border
+          Background="{DynamicResource StrokeSoftBrush}"
+          CornerRadius="999"
+          HorizontalAlignment="Stretch"
+          Height="4" />
+        <Border
+          x:Name="ProgressFill"
+          Background="{DynamicResource AccentBrush}"
+          CornerRadius="999"
+          HorizontalAlignment="Left"
+          Height="4"
+          Width="0" />
+        <TextBlock
+          x:Name="ProgressText"
+          FontSize="10"
+          Foreground="{DynamicResource TextDimBrush}"
+          HorizontalAlignment="Right"
+          VerticalAlignment="Center"
+          Margin="0,6,0,0"
+          IsVisible="False" />
+      </Panel>
+
+    </StackPanel>
+  </Border>
+
+</UserControl>

@@ -1,0 +1,8 @@
+DisplayName="Harita"
+UBot.Map.Main.label3="Bot aktifken bu fonksiyon çalışmaz. Bot aktifken
+otomatik saldırmasını istiyorsanız, canavar
+tercihlerinden ayarlayınız."
+UBot.Map.Main.checkBoxAutoSelectUniques="Otomatik Unique Seçme"
+UBot.Map.Main.label4="Göster:"
+UBot.Map.Main.lblRegion="Oyunda değil"
+NoName="<No name>"

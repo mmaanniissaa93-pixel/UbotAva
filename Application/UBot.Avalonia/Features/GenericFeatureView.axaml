@@ -1,0 +1,45 @@
+﻿<UserControl
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  x:Class="UBot.Avalonia.Features.GenericFeatureView">
+
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Spacing="10">
+
+      <!-- Top action bar (optional) -->
+      <WrapPanel
+        x:Name="ActionBar"
+        Orientation="Horizontal"
+        IsVisible="False" />
+
+      <!-- Main data grid -->
+      <Border Classes="section-panel">
+        <StackPanel Spacing="6">
+          <TextBlock x:Name="SectionTitle" Classes="section-title" />
+          <DataGrid
+            x:Name="MainGrid"
+            Classes="legacy-table"
+            AutoGenerateColumns="False"
+            CanUserSortColumns="False"
+            CanUserResizeColumns="True"
+            IsReadOnly="True"
+            MinHeight="120">
+            <DataGrid.Columns>
+              <DataGridTextColumn Width="*" />
+              <DataGridTextColumn Width="*" />
+            </DataGrid.Columns>
+          </DataGrid>
+
+          <!-- Footer buttons (optional) -->
+          <WrapPanel x:Name="FooterBar" Orientation="Horizontal" Margin="0,4,0,0" IsVisible="False" />
+        </StackPanel>
+      </Border>
+
+      <!-- Extra sections slot -->
+      <StackPanel x:Name="ExtraContent" Spacing="10" />
+
+    </StackPanel>
+  </ScrollViewer>
+
+</UserControl>
+

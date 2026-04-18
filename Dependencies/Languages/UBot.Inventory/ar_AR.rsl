@@ -1,0 +1,9 @@
+DisplayName="Inventory"
+UBot.Inventory.Main.Panel.buttonUseItem="استخدام"
+UBot.Inventory.Main.Panel.label1="المخزون"
+UBot.Inventory.Main.Panel.label2="Free Slots:"
+UBot.Inventory.UseItemDialog.label2="العنصر  وفقا لقرارك الخاص يمكنك استخدام. سيتم فتح نافذة الشرط ومن هناك يمكنك تعيين الشروط التي تريدها"
+UBot.Inventory.UseItemDialog.label1="إذا كنت ترغب في استخدام العنصر مباشرة،
+ فقط انقر فوق الزر"
+UBot.Inventory.UseItemDialog.buttonCancel="الاستخدام مع الشروط"
+UBot.Inventory.UseItemDialog.buttonOk="استخدم مباشرة"

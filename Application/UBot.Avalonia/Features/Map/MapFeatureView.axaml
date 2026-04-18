@@ -1,0 +1,83 @@
+﻿<UserControl
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:controls="clr-namespace:UBot.Avalonia.Controls"
+  x:Class="UBot.Avalonia.Features.Map.MapFeatureView">
+
+  <StackPanel Spacing="8">
+
+    <!-- Tab strip -->
+    <controls:TabStrip x:Name="MapTabs" />
+
+    <Grid ColumnDefinitions="2*,*">
+
+      <!-- Left: Map Viewport -->
+      <Border Grid.Column="0"
+              Background="#0A0D1016"
+              BorderBrush="{DynamicResource StrokeSoftBrush}"
+              BorderThickness="1"
+              CornerRadius="12"
+              ClipToBounds="True"
+              MinHeight="420">
+
+        <Grid RowDefinitions="*,Auto">
+          <!-- Canvas for map drawing -->
+          <Canvas
+            x:Name="MapCanvas"
+            Grid.Row="0"
+            ClipToBounds="True"
+            PointerPressed="MapCanvas_PointerPressed" />
+
+          <!-- Overlay stats -->
+          <Border Grid.Row="1"
+                  Background="#CC0D1016"
+                  Padding="8,4">
+            <TextBlock x:Name="MapOverlayText"
+                       FontFamily="Consolas,Monospace"
+                       FontSize="10.5"
+                       Foreground="{DynamicResource TextDimBrush}"
+                       TextWrapping="Wrap" />
+          </Border>
+        </Grid>
+      </Border>
+
+      <!-- Right: Entity list + settings -->
+      <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto">
+
+        <!-- Show filter -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
+          <TextBlock Text="Show:" Classes="form-label" VerticalAlignment="Center" />
+          <controls:CustomSelect x:Name="ShowFilterSelect" MinWidth="130" />
+        </StackPanel>
+
+        <!-- Entity table -->
+        <Border Grid.Row="1" Classes="section-panel" Padding="0">
+          <DataGrid
+            x:Name="EntityGrid"
+            Classes="legacy-table"
+            AutoGenerateColumns="False"
+            CanUserSortColumns="False"
+            IsReadOnly="True"
+            MinHeight="200">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="Name"     Binding="{Binding Name}"     Width="*" />
+              <DataGridTextColumn Header="Type"     Binding="{Binding Type}"     Width="80" />
+              <DataGridTextColumn Header="Lvl"      Binding="{Binding Level}"    Width="50" />
+              <DataGridTextColumn Header="Position" Binding="{Binding Position}" Width="*" />
+            </DataGrid.Columns>
+          </DataGrid>
+        </Border>
+
+        <!-- Checkboxes + reset -->
+        <StackPanel Grid.Row="2" Spacing="6">
+          <CheckBox x:Name="CollisionCheck"     Classes="legacy-check" Tag="collisionDetection"  IsCheckedChanged="Check_Changed" Content="Collision detection" />
+          <CheckBox x:Name="AutoSelectUniqueCheck" Classes="legacy-check" Tag="autoSelectUniques" IsCheckedChanged="Check_Changed" Content="Auto select uniques" />
+          <Button x:Name="ResetToPlayerBtn" Classes="legacy-btn compact" Content="Reset to player" Click="ResetToPlayer_Click" IsVisible="False" />
+        </StackPanel>
+
+      </Grid>
+    </Grid>
+  </StackPanel>
+
+</UserControl>
+

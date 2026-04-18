@@ -1,0 +1,12 @@
+<UserControl
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:controls="clr-namespace:UBot.Avalonia.Controls"
+  x:Class="UBot.Avalonia.Features.Lure.LureFeatureView">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Spacing="10" Margin="0,0,0,12">
+      <controls:TabStrip x:Name="TabStripCtrl" />
+      <StackPanel x:Name="ContentHost" Spacing="10" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

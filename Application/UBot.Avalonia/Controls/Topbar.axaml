@@ -1,0 +1,261 @@
+﻿<UserControl
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:shapes="clr-namespace:Avalonia.Controls.Shapes;assembly=Avalonia.Controls"
+  xmlns:controls="clr-namespace:UBot.Avalonia.Controls"
+  x:Class="UBot.Avalonia.Controls.Topbar">
+
+  <!--
+    Mirrors Topbar.tsx:
+      Row 1 left  : status chip + language switcher
+      Row 1 right : division select + server select + disconnect + start + stop + save
+      Row 2 left  : profile pill + character pill
+      Row 2 right : (optional) quick actions â€” Start Client / Go Clientless / Hide Client
+  -->
+
+  <Border
+    Background="{DynamicResource TopbarBrush}"
+    BorderBrush="{DynamicResource StrokeSoftBrush}"
+    BorderThickness="1"
+    CornerRadius="{DynamicResource RadiusLg}"
+    Padding="10,8">
+
+    <Grid
+      ColumnDefinitions="*,Auto"
+      RowDefinitions="Auto,Auto"
+     
+     >
+
+      <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• ROW 1 LEFT â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+      <StackPanel
+        Grid.Row="0" Grid.Column="0"
+        Orientation="Horizontal"
+        Spacing="7"
+        VerticalAlignment="Center">
+
+        <!-- Status chip -->
+        <Border
+          x:Name="StatusChip"
+          Classes="status-chip stopped"
+          VerticalAlignment="Center">
+          <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <!-- Dot -->
+            <Ellipse
+              x:Name="StatusDot"
+              Width="7" Height="7"
+              Fill="{DynamicResource DangerBrush}" />
+            <TextBlock
+              x:Name="StatusLabel"
+              FontSize="10"
+              FontWeight="SemiBold"
+              VerticalAlignment="Center"
+              Foreground="{DynamicResource DangerBrush}" />
+          </StackPanel>
+        </Border>
+
+        <!-- Language + Theme switcher pill -->
+        <Border
+          CornerRadius="999"
+          BorderBrush="{DynamicResource StrokeSoftBrush}"
+          BorderThickness="1"
+          Background="#08FFFFFF"
+          Padding="2">
+          <StackPanel Orientation="Horizontal" Spacing="2">
+            <Button x:Name="BtnLangEn" Classes="lang-btn" Content="EN" Click="BtnLangEn_Click" />
+            <Button x:Name="BtnLangTr" Classes="lang-btn" Content="TR" Click="BtnLangTr_Click" />
+            <Button x:Name="BtnTheme"  Classes="lang-btn"
+                    Width="26" Height="22"
+                    Click="BtnTheme_Click"
+                    BorderBrush="{DynamicResource StrokeSoftBrush}"
+                    BorderThickness="1,0,0,0"
+                    CornerRadius="7">
+              <!-- Sun/Moon paths switched by code-behind -->
+              <shapes:Path
+                x:Name="ThemeIcon"
+                Width="12" Height="12"
+                Stretch="Uniform"
+                Stroke="{DynamicResource TextDimBrush}"
+                StrokeThickness="1.5"
+                Data="M12,3 A9,9 0 1,0 12,21 A9,9 0 0,0 12,3 Z" />
+            </Button>
+          </StackPanel>
+        </Border>
+
+      </StackPanel>
+
+      <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• ROW 1 RIGHT â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+      <StackPanel
+        Grid.Row="0" Grid.Column="1"
+        Orientation="Horizontal"
+        Spacing="7"
+        HorizontalAlignment="Right"
+        VerticalAlignment="Center">
+
+        <!-- Division selector -->
+        <controls:CustomSelect
+          x:Name="DivisionSelect"
+          Placeholder="Division"
+          MinWidth="110" />
+
+        <!-- Gateway / server selector -->
+        <controls:CustomSelect
+          x:Name="GatewaySelect"
+          Placeholder="Server..."
+          MinWidth="110" />
+
+        <!-- Disconnect -->
+        <Button
+          x:Name="BtnDisconnect"
+          Classes="action-btn ghost"
+          Click="BtnDisconnect_Click">
+          <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <shapes:Path
+              Width="14" Height="14" Stretch="Uniform"
+              Stroke="CurrentColor" StrokeThickness="1.5"
+              Data="M18.36,6.64 A9,9 0 1,1 5.64,6.64 M12,2 L12,12" />
+            <TextBlock x:Name="DisconnectLabel" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+
+        <!-- Start -->
+        <Button
+          x:Name="BtnStart"
+          Classes="action-btn primary"
+          Click="BtnStart_Click">
+          <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <shapes:Path
+              Width="12" Height="12" Stretch="Uniform"
+              Fill="#052E25"
+              Data="M5,3 L19,12 L5,21 Z" />
+            <TextBlock x:Name="StartLabel" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+
+        <!-- Stop -->
+        <Button
+          x:Name="BtnStop"
+          Classes="action-btn danger"
+          Click="BtnStop_Click">
+          <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <shapes:Path
+              Width="12" Height="12" Stretch="Uniform"
+              Fill="#FFE4E7"
+              Data="M3,3 L21,3 L21,21 L3,21 Z" />
+            <TextBlock x:Name="StopLabel" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+
+        <!-- Save (icon-only) -->
+        <Button
+          x:Name="BtnSave"
+          Classes="action-btn icon-only"
+          Click="BtnSave_Click">
+          <shapes:Path
+            Width="14" Height="14" Stretch="Uniform"
+            Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.5"
+            Data="M19,21 L5,21 A2,2 0 0,1 3,19 L3,5 A2,2 0 0,1 5,3 L16,3 L21,8 L21,19 A2,2 0 0,1 19,21 Z M17,21 L17,13 L7,13 L7,21 M7,3 L7,8 L15,8" />
+        </Button>
+
+      </StackPanel>
+
+      <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• ROW 2 LEFT â€” profile + character pills â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+      <StackPanel
+        Grid.Row="1" Grid.Column="0"
+        Orientation="Horizontal"
+        Spacing="7"
+        VerticalAlignment="Center">
+
+        <!-- Profile pill -->
+        <Border Classes="topbar-item" x:Name="ProfilePill">
+          <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <shapes:Path
+              Width="14" Height="14" Stretch="Uniform"
+              Stroke="#64F3D0" StrokeThickness="1.5"
+              Data="M20,21 A8,8 0 1,0 4,21 M12,13 A4,4 0 1,0 12,5 A4,4 0 0,0 12,13 Z" />
+            <TextBlock
+              x:Name="ProfileLabel"
+              FontSize="11"
+              Foreground="{DynamicResource TextPrimaryBrush}"
+              MaxWidth="150"
+              TextTrimming="CharacterEllipsis"
+              VerticalAlignment="Center" />
+          </StackPanel>
+        </Border>
+
+        <!-- Character pill (waiting / connected states) -->
+        <Border
+          x:Name="CharacterPill"
+          Classes="topbar-item">
+          <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <!-- Icon swapped by code-behind: dot (waiting) vs shield (connected) -->
+            <ContentControl x:Name="CharacterIcon" Width="14" Height="14" />
+            <TextBlock
+              x:Name="CharacterLabel"
+              FontSize="11"
+              Foreground="{DynamicResource TextPrimaryBrush}"
+              MaxWidth="210"
+              TextTrimming="CharacterEllipsis"
+              VerticalAlignment="Center" />
+          </StackPanel>
+        </Border>
+
+      </StackPanel>
+
+      <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• ROW 2 RIGHT â€” quick actions (optional) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+      <StackPanel
+        x:Name="QuickActionsPanel"
+        Grid.Row="1" Grid.Column="1"
+        Orientation="Horizontal"
+        Spacing="7"
+        HorizontalAlignment="Right"
+        VerticalAlignment="Center"
+        IsVisible="False">
+
+        <Button x:Name="BtnStartClient"
+                Classes="action-btn ghost"
+                MinWidth="98" Height="28"
+                Click="BtnStartClient_Click">
+          <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+            <shapes:Path
+              Width="11" Height="11" Stretch="Uniform"
+              Fill="#FFD48A"
+              Data="M5,3 L19,12 L5,21 Z" />
+            <TextBlock x:Name="StartClientLabel" FontSize="10.5" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+
+        <Button x:Name="BtnGoClientless"
+                Classes="action-btn"
+                MinWidth="98" Height="28"
+                Click="BtnGoClientless_Click">
+          <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+            <shapes:Path
+              Width="11" Height="11" Stretch="Uniform"
+              Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.4"
+              Data="M12,2 A10,10 0 1,0 12,22 A10,10 0 0,0 12,2 Z M2,12 L22,12 M12,2 C9,6 7,9 7,12 C7,15 9,18 12,22" />
+            <TextBlock x:Name="GoClientlessLabel" FontSize="10.5" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+
+        <Button x:Name="BtnToggleClient"
+                Classes="action-btn"
+                MinWidth="98" Height="28"
+                Click="BtnToggleClient_Click">
+          <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+            <shapes:Path
+              Width="11" Height="11" Stretch="Uniform"
+              Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.4"
+              Data="M17.94,17.94 A10,10 0 0,1 12,20 C6,20 1,12 1,12 A18.5,18.5 0 0,1 5.06,7.06 M9.9,4.24 A9,9 0 0,1 12,4 C18,4 23,12 23,12 A18.5,18.5 0 0,1 20.49,15.68 M1,1 L23,23" />
+            <TextBlock x:Name="ToggleClientLabel" FontSize="10.5" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+
+      </StackPanel>
+
+    </Grid>
+  </Border>
+
+</UserControl>
+
+
+

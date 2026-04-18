@@ -1,0 +1,131 @@
+﻿using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using UBot.Core;
+using UBot.Core.Network;
+using UBot.General.Components;
+using View = UBot.General.Views.View;
+
+namespace UBot.General.PacketHandler;
+
+internal class GatewayLoginResponse : IPacketHandler
+{
+    /// <summary>
+    ///     Gets or sets the opcode.
+    /// </summary>
+    /// <value>
+    ///     The opcode.
+    /// </value>
+    public ushort Opcode => 0xA102;
+
+    /// <summary>
+    ///     Gets or sets the destination.
+    /// </summary>
+    /// <value>
+    ///     The destination.
+    /// </value>
+    public PacketDestination Destination => PacketDestination.Client;
+
+    /// <summary>
+    ///     Handles the packet.
+    /// </summary>
+    /// <param name="packet">The packet.</param>
+    public void Invoke(Packet packet)
+    {
+        if (packet.ReadByte() == 0x01)
+        {
+            Log.NotifyLang("AuthGetewaySuccess");
+            AutoLogin.Pending = false;
+            View.PendingWindow?.Hide();
+            View.PendingWindow?.StopClientlessQueueTask();
+
+            if (Game.ClientType == GameClientType.Japanese)
+            {
+                packet.ReadUInt(); //Token
+                packet.ReadString(); //IP
+                packet.ReadUShort(); //Port
+                GlobalConfig.Set("UBot.JSRO.login", packet.ReadString()); //Login
+                packet.ReadByte(); //Channel
+            }
+
+            var selectedAccount = Accounts.SavedAccounts?.Find(p =>
+                p.Username == GlobalConfig.Get<string>("UBot.General.AutoLoginAccountUsername")
+            );
+
+            if (Game.ClientType == GameClientType.Global && selectedAccount.Channel == 0x02)
+            {
+                packet.ReadUInt(); //Token
+                packet.ReadString(); //IP
+                packet.ReadUShort(); //Port
+                packet.ReadByte(); //Channel
+                GlobalConfig.Set("UBot.JCPlanet.login", packet.ReadString()); //Login
+            }
+
+            return;
+        }
+
+        var code = packet.ReadByte();
+
+        switch (code)
+        {
+            case 1:
+                Log.NotifyLang("AuthGatewayWrongIdPw");
+                break;
+
+            case 2:
+                Log.NotifyLang("AuthAccountBanned");
+                break;
+
+            case 3:
+                Log.NotifyLang("AuthAccountAlreadyInGame");
+                break;
+
+            case 4:
+                Log.WarnLang("ServerCheck");
+                AutoLogin.Handle();
+                break;
+
+            case 28: // isro block
+            case 29: // ksro block
+            case 5:
+                Log.WarnLang("ServerFull");
+                Task.Delay(1000).ContinueWith((e) => AutoLogin.Handle());
+
+                break;
+
+            case 15:
+                Log.WarnLang("APIServerError");
+                break;
+
+            case 26: // queue
+
+                var count = packet.ReadUShort();
+                var timestamp = packet.ReadInt();
+
+                Task.Run(() =>
+                {
+                    var main = Application.OpenForms
+                            .OfType<Form>()
+                            .FirstOrDefault();
+
+                    main?.BeginInvoke(() =>
+                    {
+                        View.PendingWindow.Start(count, timestamp);
+                        if (!GlobalConfig.Get<bool>("UBot.General.AutoHidePendingWindow"))
+                            View.PendingWindow.ShowAtTop(View.Instance);
+                    });
+                });
+
+                break;
+
+            case 43:
+                Log.WarnLang("TooManyAttempts");
+                break;
+
+            default:
+                Log.WarnLang("AuthFailed", code);
+                break;
+        }
+    }
+}

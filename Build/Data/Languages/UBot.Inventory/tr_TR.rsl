@@ -1,0 +1,11 @@
+DisplayName="Envanter"
+UBot.Inventory.Main.Panel.buttonUseItem="Kullan"
+UBot.Inventory.Main.Panel.label1="Çanta:"
+UBot.Inventory.Main.Panel.label2="Boş Yer:"
+UBot.Inventory.UseItemDialog.label2="Kendi kararınıza göre eşya
+kullanabilirsiniz. Bir koşul penceresi açılacaktır
+ve oradan istediğiniz şartları ayarlayabilirsiniz"
+UBot.Inventory.UseItemDialog.label1="Öğeyi doğrudan kullanmak istiyorsanız,
+sadece butona tıklayın"
+UBot.Inventory.UseItemDialog.buttonCancel="Koşul kullan"
+UBot.Inventory.UseItemDialog.buttonOk="Doğrudan kullan"

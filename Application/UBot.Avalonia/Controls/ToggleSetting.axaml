@@ -1,0 +1,38 @@
+<UserControl
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  x:Class="UBot.Avalonia.Controls.ToggleSetting">
+
+  <!--
+    Mirrors ToggleSetting.tsx — a row with a label+description on the left
+    and a toggle (ToggleSwitch) on the right.
+  -->
+
+  <Border Classes="toggle-row">
+    <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+
+      <!-- Left: label + description -->
+      <StackPanel Grid.Column="0" Spacing="0" Margin="0,0,12,0">
+        <TextBlock
+          x:Name="LabelText"
+          Classes="toggle-label" />
+        <TextBlock
+          x:Name="DescriptionText"
+          Classes="toggle-description" />
+      </StackPanel>
+
+      <!-- Right: toggle switch -->
+      <ToggleSwitch
+        x:Name="Toggle"
+        Grid.Column="1"
+        VerticalAlignment="Center"
+        OnContent=""
+        OffContent=""
+        Margin="0"
+        Checked="Toggle_Checked"
+        Unchecked="Toggle_Unchecked" />
+
+    </Grid>
+  </Border>
+
+</UserControl>

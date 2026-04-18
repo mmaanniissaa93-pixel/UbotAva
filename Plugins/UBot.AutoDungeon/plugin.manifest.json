@@ -1,0 +1,27 @@
+﻿{
+    "schemaVersion":  1,
+    "pluginName":  "UBot.AutoDungeon",
+    "pluginVersion":  "0.1.0",
+    "capabilities":  [
+                         "dungeon-routing",
+                         "dungeon-control"
+                     ],
+    "dependencies":  [
+
+                     ],
+    "hostCompatibility":  {
+                              "minVersion":  "1.0.0",
+                              "maxVersionExclusive":  "2.0.0"
+                          },
+    "isolation":  {
+                      "mode":  "outproc",
+                      "tier":  "experimental",
+                      "restartPolicy":  {
+                                            "enabled":  true,
+                                            "maxRestarts":  2,
+                                            "windowSeconds":  60,
+                                            "baseDelayMs":  250,
+                                            "maxDelayMs":  3000
+                                        }
+                  }
+}

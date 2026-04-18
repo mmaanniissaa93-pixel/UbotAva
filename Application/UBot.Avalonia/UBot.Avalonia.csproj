@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <PlatformTarget>x86</PlatformTarget>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+    <RootNamespace>UBot.Avalonia</RootNamespace>
+    <AssemblyName>UBot.Avalonia</AssemblyName>
+    <LangVersion>12</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia"                    Version="11.1.0" />
+    <PackageReference Include="Avalonia.Desktop"           Version="11.1.0" />
+    <PackageReference Include="Avalonia.Themes.Fluent"     Version="11.1.0" />
+    <PackageReference Include="Avalonia.Fonts.Inter"       Version="11.1.0" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.1.0" />
+    <PackageReference Include="CommunityToolkit.Mvvm"      Version="8.3.2"  />
+  </ItemGroup>
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\\..\\Library\\UBot.Core\\UBot.Core.csproj" />
+  </ItemGroup>
+</Project>

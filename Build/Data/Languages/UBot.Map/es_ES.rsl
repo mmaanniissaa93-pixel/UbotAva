@@ -1,0 +1,9 @@
+DisplayName="Mapa"
+UBot.Map.Main.label3="Esta opcion no funciona mientras el bot está activo.
+Si desea que el bot ataque automático mientras está activo,
+debe establecer en evitar."
+UBot.Map.Main.checkEnableCollisions="Habilitar la detección de colisiones"
+UBot.Map.Main.checkBoxAutoSelectUniques="Seleccionar únicos automáticamente"
+UBot.Map.Main.label4="Ver:"
+UBot.Map.Main.lblRegion="Desconectado"
+NoName="<No name>"

@@ -1,0 +1,26 @@
+<Application
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  x:Class="UBot.Avalonia.App"
+  RequestedThemeVariant="Dark">
+
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://UBot.Avalonia/Styles/Theme.axaml" />
+      </ResourceDictionary.MergedDictionaries>
+      <SolidColorBrush x:Key="RunningBgBrush"     Color="#2434D399" />
+      <SolidColorBrush x:Key="RunningBorderBrush"  Color="#5934D399" />
+      <SolidColorBrush x:Key="StoppedBgBrush"      Color="#1EF87171" />
+      <SolidColorBrush x:Key="StoppedBorderBrush"  Color="#59F87171" />
+      <SolidColorBrush x:Key="MetricGreenBrush"    Color="#4ADE80" />
+    </ResourceDictionary>
+  </Application.Resources>
+
+  <Application.Styles>
+    <FluentTheme />
+    <StyleInclude Source="avares://UBot.Avalonia/Styles/Controls.axaml" />
+    <StyleInclude Source="avares://UBot.Avalonia/Styles/Features.axaml" />
+  </Application.Styles>
+
+</Application>

@@ -1,0 +1,26 @@
+﻿{
+    "schemaVersion":  1,
+    "pluginName":  "UBot.QuestLog",
+    "pluginVersion":  "1.0.0",
+    "capabilities":  [
+                         "quest-tracking"
+                     ],
+    "dependencies":  [
+
+                     ],
+    "hostCompatibility":  {
+                              "minVersion":  "1.0.0",
+                              "maxVersionExclusive":  "2.0.0"
+                          },
+    "isolation":  {
+                      "mode":  "inproc",
+                      "tier":  "standard",
+                      "restartPolicy":  {
+                                            "enabled":  true,
+                                            "maxRestarts":  2,
+                                            "windowSeconds":  60,
+                                            "baseDelayMs":  250,
+                                            "maxDelayMs":  3000
+                                        }
+                  }
+}

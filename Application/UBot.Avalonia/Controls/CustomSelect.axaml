@@ -1,0 +1,95 @@
+<UserControl
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  x:Class="UBot.Avalonia.Controls.CustomSelect">
+
+  <!--
+    Mirrors CustomSelect.tsx — a styled combobox trigger + flyout menu.
+    Popup is handled via Avalonia Popup for proper viewport overflow handling.
+  -->
+
+  <Panel x:Name="RootPanel" MinWidth="110">
+
+    <!-- Trigger button -->
+    <Border
+      x:Name="Trigger"
+      Classes="select-trigger"
+      PointerPressed="Trigger_PointerPressed">
+
+      <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+
+        <!-- Selected label + icon -->
+        <StackPanel
+          x:Name="TriggerContent"
+          Grid.Column="0"
+          Orientation="Horizontal"
+          Spacing="6"
+          VerticalAlignment="Center">
+
+          <!-- Icon slot (shown when selected option has an icon) -->
+          <ContentPresenter
+            x:Name="TriggerIcon"
+            VerticalAlignment="Center"
+            IsVisible="False" />
+
+          <TextBlock
+            x:Name="TriggerLabel"
+            FontSize="11.5"
+            FontWeight="Medium"
+            Foreground="{DynamicResource TextPrimaryBrush}"
+            VerticalAlignment="Center"
+            TextTrimming="CharacterEllipsis" />
+
+        </StackPanel>
+
+        <!-- Chevron -->
+        <Path
+          x:Name="ChevronIcon"
+          Grid.Column="1"
+          Data="M0,0 L5,5 L10,0"
+          Stroke="{DynamicResource TextDimBrush}"
+          StrokeThickness="1.5"
+          Width="10"
+          Height="6"
+          Stretch="Uniform"
+          VerticalAlignment="Center"
+          Margin="8,0,0,0">
+          <Path.Transitions>
+            <Transitions>
+              <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.18" />
+            </Transitions>
+          </Path.Transitions>
+        </Path>
+
+      </Grid>
+    </Border>
+
+    <!-- Dropdown popup -->
+    <Popup
+      x:Name="DropdownPopup"
+      Placement="Bottom"
+      PlacementTarget="{Binding #Trigger}"
+      IsLightDismissEnabled="True"
+      Closed="Popup_Closed">
+
+      <Border
+        Classes="select-menu"
+        MinWidth="180"
+        MaxHeight="320"
+        BoxShadow="0 18 30 0 #66000000">
+
+        <ScrollViewer
+          VerticalScrollBarVisibility="Auto"
+          HorizontalScrollBarVisibility="Disabled">
+
+          <StackPanel
+            x:Name="MenuPanel"
+            Spacing="2" />
+
+        </ScrollViewer>
+      </Border>
+    </Popup>
+
+  </Panel>
+
+</UserControl>

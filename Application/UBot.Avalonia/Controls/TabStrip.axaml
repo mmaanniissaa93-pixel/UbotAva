@@ -1,0 +1,31 @@
+<UserControl
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  x:Class="UBot.Avalonia.Controls.TabStrip">
+
+  <!--
+    Mirrors TabStrip.tsx — a horizontal row of tab buttons.
+    Tabs are populated in code-behind by calling SetTabs().
+    Alternatively bind via TabsSource + ActiveTabId properties.
+  -->
+
+  <Border
+    Background="#0A0D1016"
+    BorderBrush="{DynamicResource StrokeSoftBrush}"
+    BorderThickness="1"
+    CornerRadius="10"
+    Padding="4">
+
+    <ScrollViewer
+      HorizontalScrollBarVisibility="Auto"
+      VerticalScrollBarVisibility="Disabled">
+
+      <StackPanel
+        x:Name="TabsPanel"
+        Orientation="Horizontal"
+        Spacing="4" />
+
+    </ScrollViewer>
+  </Border>
+
+</UserControl>

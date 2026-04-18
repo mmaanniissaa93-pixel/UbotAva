@@ -1,0 +1,57 @@
+<UserControl
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  x:Class="UBot.Avalonia.Controls.Sidebar"
+  Width="248">
+
+  <!--
+    Mirrors Sidebar.tsx:
+    - Top banner image (dark / light variant)
+    - Scrollable nav with 4 group sections (Core / Automation / Data / Other)
+  -->
+
+  <Border
+    Background="{DynamicResource SidebarBrush}"
+    BorderBrush="{DynamicResource StrokeSoftBrush}"
+    BorderThickness="1"
+    CornerRadius="{DynamicResource RadiusLg}"
+    Padding="10,10,9,10">
+
+    <Grid RowDefinitions="Auto,*">
+
+      <!-- ── Brand / Banner ── -->
+      <Border
+        Grid.Row="0"
+        BorderBrush="{DynamicResource StrokeSoftBrush}"
+        BorderThickness="1"
+        CornerRadius="{DynamicResource RadiusMd}"
+        ClipToBounds="True"
+        Margin="0,0,0,10"
+        Height="78">
+
+        <!-- Banner image — swap source in code-behind for theme switch -->
+        <Image
+          x:Name="BannerImage"
+          Stretch="UniformToFill"
+          HorizontalAlignment="Left" />
+
+      </Border>
+
+      <!-- ── Nav ── -->
+      <ScrollViewer
+        Grid.Row="1"
+        VerticalScrollBarVisibility="Auto"
+        HorizontalScrollBarVisibility="Disabled">
+
+        <StackPanel x:Name="NavPanel" Spacing="2">
+
+          <!-- Groups are injected by code-behind via BuildNav() -->
+
+        </StackPanel>
+
+      </ScrollViewer>
+
+    </Grid>
+  </Border>
+
+</UserControl>

@@ -1,0 +1,7 @@
+DisplayName="Журнал"
+UBot.Log.Main.Panel.checkNormal="Общий"
+UBot.Log.Main.Panel.checkError="Ошибка"
+UBot.Log.Main.Panel.checkWarning="Варнинг"
+UBot.Log.Main.Panel.checkDebug="Дебаг"
+UBot.Log.Main.Panel.btnReset="Очистить"
+UBot.Log.Main.Panel.checkEnabled="Включить"

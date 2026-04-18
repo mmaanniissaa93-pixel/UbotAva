@@ -1,0 +1,9 @@
+DisplayName="Hòm Đồ"
+UBot.Inventory.Main.Panel.buttonUseItem="Sử Dụng"
+UBot.Inventory.Main.Panel.label1="Thùng đồ:"
+UBot.Inventory.Main.Panel.label2="Ô trống:"
+UBot.Inventory.UseItemDialog.label2="Chọn lọc vật phẩm theo ý muốn của bạn. Một cửa số điều kiện sẽ mở ra từ đó hãy làm gì mà bạn muốn"
+UBot.Inventory.UseItemDialog.label1="Nếu bạn muốn sử dụng vật phẩm trực tiếp,
+  chỉ cần nhấp vào nút"
+UBot.Inventory.UseItemDialog.buttonCancel="Sử dụng với các điều kiện"
+UBot.Inventory.UseItemDialog.buttonOk="Sử dụng trực tiếp"

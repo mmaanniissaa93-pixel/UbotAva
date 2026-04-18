@@ -1,0 +1,35 @@
+﻿{
+    "schemaVersion":  1,
+    "pluginName":  "UBot.Items",
+    "pluginVersion":  "1.0.0",
+    "capabilities":  [
+                         "item-filtering",
+                         "autoloot-policy"
+                     ],
+    "dependencies":  [
+                         {
+                             "requiredCapabilities":  [
+
+                                                      ],
+                             "pluginName":  "UBot.Inventory",
+                             "maxVersionExclusive":  "2.0.0",
+                             "minVersion":  "1.0.0",
+                             "required":  true
+                         }
+                     ],
+    "hostCompatibility":  {
+                              "minVersion":  "1.0.0",
+                              "maxVersionExclusive":  "2.0.0"
+                          },
+    "isolation":  {
+                      "mode":  "inproc",
+                      "tier":  "standard",
+                      "restartPolicy":  {
+                                            "enabled":  true,
+                                            "maxRestarts":  2,
+                                            "windowSeconds":  60,
+                                            "baseDelayMs":  250,
+                                            "maxDelayMs":  3000
+                                        }
+                  }
+}

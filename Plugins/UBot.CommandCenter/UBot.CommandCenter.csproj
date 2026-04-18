@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>disable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <OutputPath>.\..\..\Build\Data\Plugins</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Description>A plugin to map ingame emoticon actions and chat commands to bot actions</Description>
+    <Copyright>Copyright Â©  2018 - 2026, UBot Team</Copyright>
+    <PackageProjectUrl>https://github.com/mmaanniissaa93-pixel/ubot</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/mmaanniissaa93-pixel/ubot</RepositoryUrl>
+    <OutputType>Library</OutputType>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Library\UBot.Core\UBot.Core.csproj" />
+</ItemGroup>
+</Project>
+

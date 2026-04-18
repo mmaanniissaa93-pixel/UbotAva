@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>disable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <OutputPath>.\..\..\Build\Data\Plugins</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Description>A open source bot for Silkroad Online</Description>
+    <Copyright>Copyright Â© 2018 - 2026, UBot Team</Copyright>
+    <PackageProjectUrl>https://github.com/mmaanniissaa93-pixel/ubot</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/mmaanniissaa93-pixel/ubot</RepositoryUrl>
+    <OutputType>Library</OutputType>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
+    <ProjectReference Include="..\..\Library\UBot.Core\UBot.Core.csproj" />
+<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+
+</Project>
+

@@ -1,0 +1,107 @@
+﻿<UserControl
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  x:Class="UBot.Avalonia.Features.Training.TrainingFeatureView">
+
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" Margin="0,0,0,12">
+
+      <!-- â”€â”€ Training Area â”€â”€ -->
+      <Border Grid.Row="0" Grid.Column="0" Classes="section-panel">
+        <StackPanel Spacing="8">
+          <TextBlock x:Name="AreaTitle" Classes="section-title" />
+          <Grid ColumnDefinitions="*,Auto">
+            <StackPanel Grid.Column="0" Spacing="6">
+              <Grid ColumnDefinitions="Auto,*">
+                <TextBlock Grid.Column="0" Text="Region" Classes="form-label" VerticalAlignment="Center" />
+                <TextBox  Grid.Column="1" x:Name="RegionBox" Classes="legacy-input" Tag="areaRegion" TextChanged="NumBox_Changed" />
+              </Grid>
+              <Grid ColumnDefinitions="Auto,*">
+                <TextBlock Grid.Column="0" Text="Radius" Classes="form-label" VerticalAlignment="Center" />
+                <TextBox  Grid.Column="1" x:Name="RadiusBox" Classes="legacy-input" Tag="areaRadius" TextChanged="NumBox_Changed" />
+              </Grid>
+              <Grid ColumnDefinitions="*,*,*">
+                <TextBox Grid.Column="0" x:Name="AreaXBox" Watermark="X" Classes="legacy-input" Tag="areaX" TextChanged="NumBox_Changed" />
+                <TextBox Grid.Column="1" x:Name="AreaYBox" Watermark="Y" Classes="legacy-input" Tag="areaY" TextChanged="NumBox_Changed" />
+                <TextBox Grid.Column="2" x:Name="AreaZBox" Watermark="Z" Classes="legacy-input" Tag="areaZ" TextChanged="NumBox_Changed" />
+              </Grid>
+            </StackPanel>
+          </Grid>
+          <Grid ColumnDefinitions="Auto,*" Margin="0,4,0,0">
+            <Button Grid.Column="0" Classes="legacy-btn primary" x:Name="SetCurrentBtn" Click="SetCurrent_Click" />
+            <Border Grid.Column="1" Background="#1289ACC8" CornerRadius="6" Padding="8,4">
+              <TextBlock x:Name="CurrentPositionLabel" FontSize="11" FontFamily="Consolas,Monospace" Foreground="{DynamicResource TextDimBrush}" />
+            </Border>
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <!-- â”€â”€ Back to Training â”€â”€ -->
+      <Border Grid.Row="0" Grid.Column="1" Classes="section-panel">
+        <StackPanel Spacing="8">
+          <TextBlock x:Name="BackTitle" Classes="section-title" />
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBox Grid.Column="0" x:Name="WalkScriptBox" Classes="legacy-input" Tag="walkScript" TextChanged="TextBox_Changed" />
+            <Button  Grid.Column="1" Classes="legacy-btn compact" Content="..." Click="BrowseWalkScript_Click" />
+          </Grid>
+          <WrapPanel Orientation="Horizontal">
+            <CheckBox x:Name="UseMountCheck"    Classes="legacy-check" Tag="useMount"      IsCheckedChanged="Check_Changed" Margin="0,0,10,4" />
+            <CheckBox x:Name="CastBuffsCheck"   Classes="legacy-check" Tag="castBuffs"     IsCheckedChanged="Check_Changed" Margin="0,0,10,4" />
+            <CheckBox x:Name="UseSpeedCheck"    Classes="legacy-check" Tag="useSpeedDrug"  IsCheckedChanged="Check_Changed" Margin="0,0,10,4" />
+            <CheckBox x:Name="UseReverseCheck"  Classes="legacy-check" Tag="useReverse"    IsCheckedChanged="Check_Changed" Margin="0,0,10,4" />
+          </WrapPanel>
+        </StackPanel>
+      </Border>
+
+      <!-- â”€â”€ Berserk â”€â”€ -->
+      <Border Grid.Row="1" Grid.Column="0" Classes="section-panel">
+        <StackPanel Spacing="6">
+          <TextBlock x:Name="BerserkTitle" Classes="section-title" />
+          <CheckBox x:Name="BerserkFullCheck"    Classes="legacy-check" Tag="berserkWhenFull"       IsCheckedChanged="Check_Changed" />
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <CheckBox x:Name="BerserkCountCheck" Classes="legacy-check" Tag="berserkByMonsterAmount" IsCheckedChanged="Check_Changed" />
+            <TextBox  x:Name="BerserkCountBox"   Width="60" Classes="legacy-input" Tag="berserkMonsterAmount" TextChanged="NumBox_Changed" />
+            <TextBlock x:Name="MonstersLabel"    Classes="form-label" VerticalAlignment="Center" />
+          </StackPanel>
+          <CheckBox x:Name="BerserkAvoidCheck"   Classes="legacy-check" Tag="berserkByAvoidance"      IsCheckedChanged="Check_Changed" />
+          <CheckBox x:Name="BerserkRarityCheck"  Classes="legacy-check" Tag="berserkByMonsterRarity"  IsCheckedChanged="Check_Changed" />
+        </StackPanel>
+      </Border>
+
+      <!-- â”€â”€ Advanced â”€â”€ -->
+      <Border Grid.Row="1" Grid.Column="1" Classes="section-panel">
+        <StackPanel Spacing="6">
+          <TextBlock x:Name="AdvancedTitle" Classes="section-title" />
+          <CheckBox x:Name="IgnorePillarCheck" Classes="legacy-check" Tag="ignoreDimensionPillar" IsCheckedChanged="Check_Changed" />
+          <CheckBox x:Name="WeakerFirstCheck"  Classes="legacy-check" Tag="attackWeakerFirst"    IsCheckedChanged="Check_Changed" />
+          <CheckBox x:Name="NoFollowCheck"     Classes="legacy-check" Tag="dontFollowMobs"       IsCheckedChanged="Check_Changed" />
+        </StackPanel>
+      </Border>
+
+      <!-- â”€â”€ Avoidance Table (full width) â”€â”€ -->
+      <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Classes="section-panel">
+        <StackPanel Spacing="8">
+          <TextBlock x:Name="AvoidTitle" Classes="section-title" />
+          <DataGrid
+            x:Name="AvoidanceGrid"
+            Classes="legacy-table"
+            AutoGenerateColumns="False"
+            CanUserSortColumns="False"
+            IsReadOnly="False"
+            CanUserResizeColumns="True"
+            MinHeight="180">
+            <DataGrid.Columns>
+              <DataGridTextColumn   Header="Rarity"  Binding="{Binding Rarity}"  Width="*"  IsReadOnly="True" />
+              <DataGridCheckBoxColumn Header="Avoid"  Binding="{Binding Avoid}"   Width="80" />
+              <DataGridCheckBoxColumn Header="Prefer" Binding="{Binding Prefer}"  Width="80" />
+              <DataGridCheckBoxColumn Header="Berserk" Binding="{Binding Berserk}" Width="80" />
+            </DataGrid.Columns>
+          </DataGrid>
+        </StackPanel>
+      </Border>
+
+    </Grid>
+  </ScrollViewer>
+
+</UserControl>
+

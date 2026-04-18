@@ -1,0 +1,8 @@
+UBot.CommandCenter.Main.TabControl.TabPage.label1="Пишите эти команды в чат игры"
+UBot.CommandCenter.Main.TabControl.TabPage.label2="<скоро>"
+UBot.CommandCenter.Main.TabControl.tabPage1="Команды эмоций"
+UBot.CommandCenter.Main.TabControl.tabPage2="Команды чата"
+UBot.CommandCenter.Main.TabControl.tabPage3="Уведомления"
+UBot.CommandCenter.Main.btnSave="Сохранить"
+UBot.CommandCenter.Main.btnResetToDefaults="По умолчанию"
+UBot.CommandCenter.Main.checkEnable="Включить Command center"

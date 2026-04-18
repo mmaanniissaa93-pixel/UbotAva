@@ -1,0 +1,130 @@
+{
+  "migrations": [
+    {
+      "id": "general_queue_notification_typo",
+      "from": "UBot.General.EnableQuqueNotification",
+      "to": "UBot.General.EnableQueueNotification",
+      "severity": "warning",
+      "configSeverity": "warning",
+      "allowCodeUsage": true,
+      "description": "Legacy typo key is kept for backward compatibility writes."
+    },
+    {
+      "id": "rusro_session_key",
+      "from": "UBot.RuSro.session",
+      "to": "UBot.RuSro.sessionId",
+      "severity": "error",
+      "configSeverity": "warning",
+      "allowCodeUsage": false,
+      "description": "Session key should use explicit sessionId suffix."
+    },
+    {
+      "id": "network_bind_key",
+      "from": "UBot.Network.Bind",
+      "to": "UBot.Network.BindIp",
+      "severity": "warning",
+      "configSeverity": "warning",
+      "allowCodeUsage": false,
+      "description": "Network bind key renamed to BindIp."
+    },
+    {
+      "id": "trade_selected_route_index_key",
+      "from": "UBot.Trade.SelectedRouteList",
+      "to": "UBot.Trade.SelectedRouteListIndex",
+      "severity": "warning",
+      "configSeverity": "warning",
+      "allowCodeUsage": false,
+      "description": "Trade route selection now uses explicit SelectedRouteListIndex key."
+    },
+    {
+      "id": "lure_stop_if_num_monster_type",
+      "from": "UBot.Lure.NumMonsterType",
+      "to": "UBot.Lure.StopIfNumMonsterType",
+      "severity": "warning",
+      "configSeverity": "warning",
+      "allowCodeUsage": false,
+      "description": "Lure threshold keys were renamed to StopIf* format."
+    },
+    {
+      "id": "lure_stop_if_num_party_member",
+      "from": "UBot.Lure.NumPartyMember",
+      "to": "UBot.Lure.StopIfNumPartyMember",
+      "severity": "warning",
+      "configSeverity": "warning",
+      "allowCodeUsage": false,
+      "description": "Lure threshold keys were renamed to StopIf* format."
+    },
+    {
+      "id": "lure_stop_if_num_party_member_dead",
+      "from": "UBot.Lure.NumPartyMemberDead",
+      "to": "UBot.Lure.StopIfNumPartyMemberDead",
+      "severity": "warning",
+      "configSeverity": "warning",
+      "allowCodeUsage": false,
+      "description": "Lure threshold keys were renamed to StopIf* format."
+    },
+    {
+      "id": "lure_stop_if_num_party_members_on_spot",
+      "from": "UBot.Lure.NumPartyMembersOnSpot",
+      "to": "UBot.Lure.StopIfNumPartyMembersOnSpot",
+      "severity": "warning",
+      "configSeverity": "warning",
+      "allowCodeUsage": false,
+      "description": "Lure threshold keys were renamed to StopIf* format."
+    },
+    {
+      "id": "sounds_alarm_unique_in_range_play",
+      "from": "UBot.Sounds.PlayAlarmUnique",
+      "to": "UBot.Sounds.PlayAlarmUniqueInRange",
+      "severity": "warning",
+      "configSeverity": "warning",
+      "allowCodeUsage": false,
+      "description": "Unique-in-range alarm keys were renamed with InRange suffix."
+    },
+    {
+      "id": "sounds_alarm_unique_in_range_path",
+      "from": "UBot.Sounds.PathAlarmUnique",
+      "to": "UBot.Sounds.PathAlarmUniqueInRange",
+      "severity": "warning",
+      "configSeverity": "warning",
+      "allowCodeUsage": false,
+      "description": "Unique-in-range alarm keys were renamed with InRange suffix."
+    },
+    {
+      "id": "sounds_unique_general_play",
+      "from": "UBot.Sounds.PlayUniqueAlarm",
+      "to": "UBot.Sounds.PlayUniqueAlarmGeneral",
+      "severity": "warning",
+      "configSeverity": "warning",
+      "allowCodeUsage": false,
+      "description": "Generic unique alarm keys were renamed with General suffix."
+    },
+    {
+      "id": "sounds_unique_general_path",
+      "from": "UBot.Sounds.PathUniqueAlarm",
+      "to": "UBot.Sounds.PathUniqueAlarmGeneral",
+      "severity": "warning",
+      "configSeverity": "warning",
+      "allowCodeUsage": false,
+      "description": "Generic unique alarm keys were renamed with General suffix."
+    },
+    {
+      "id": "sounds_captain_ivy_play",
+      "from": "UBot.Sounds.PlayUniqueAlarmCaptain",
+      "to": "UBot.Sounds.PlayUniqueAlarmCaptainIvy",
+      "severity": "warning",
+      "configSeverity": "warning",
+      "allowCodeUsage": false,
+      "description": "Captain unique alarm key was renamed to CaptainIvy."
+    },
+    {
+      "id": "sounds_captain_ivy_path",
+      "from": "UBot.Sounds.PathUniqueAlarmCaptain",
+      "to": "UBot.Sounds.PathUniqueAlarmCaptainIvy",
+      "severity": "warning",
+      "configSeverity": "warning",
+      "allowCodeUsage": false,
+      "description": "Captain unique alarm key was renamed to CaptainIvy."
+    }
+  ]
+}

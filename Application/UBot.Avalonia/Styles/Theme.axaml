@@ -1,0 +1,93 @@
+<ResourceDictionary
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- ═══ DARK THEME (default) ═══ -->
+  <Color x:Key="Bg0">#020305</Color>
+  <Color x:Key="Bg1">#06090f</Color>
+  <Color x:Key="Bg2">#0b0e16</Color>
+  <Color x:Key="Surface0">#D409111A</Color>
+  <Color x:Key="Surface1">#E60C141F</Color>
+  <Color x:Key="Surface2">#F00F1828</Color>
+
+  <Color x:Key="StrokeSoft">#2E92A6BF</Color>
+  <Color x:Key="StrokeStrong">#4892A6BF</Color>
+
+  <Color x:Key="TextPrimary">#EEF4FF</Color>
+  <Color x:Key="TextMuted">#8FA8CC</Color>
+  <Color x:Key="TextDim">#5C7899</Color>
+
+  <Color x:Key="Accent">#5BA3F5</Color>
+  <Color x:Key="AccentSoft">#2A5BA3F5</Color>
+  <Color x:Key="Signal">#F59E0B</Color>
+  <Color x:Key="Danger">#F26C6C</Color>
+  <Color x:Key="Good">#34D399</Color>
+  <Color x:Key="GoodDim">#1A34D399</Color>
+
+  <!-- Sidebar bg -->
+  <LinearGradientBrush x:Key="SidebarBrush" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Offset="0" Color="#F00C1524"/>
+    <GradientStop Offset="1" Color="#F8070D1A"/>
+  </LinearGradientBrush>
+
+  <!-- Panel bg -->
+  <LinearGradientBrush x:Key="PanelBrush" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Offset="0" Color="#CC0D1422"/>
+    <GradientStop Offset="1" Color="#D8090E18"/>
+  </LinearGradientBrush>
+
+  <!-- Topbar bg -->
+  <LinearGradientBrush x:Key="TopbarBrush" StartPoint="0,0" EndPoint="1,0">
+    <GradientStop Offset="0" Color="#F00C1220"/>
+    <GradientStop Offset="1" Color="#F5080B16"/>
+  </LinearGradientBrush>
+
+  <!-- App background -->
+  <LinearGradientBrush x:Key="AppBg" StartPoint="0,0" EndPoint="0,1">
+    <GradientStop Offset="0"   Color="#0b0e16"/>
+    <GradientStop Offset="0.5" Color="#06090f"/>
+    <GradientStop Offset="1"   Color="#020305"/>
+  </LinearGradientBrush>
+
+  <!-- Button brushes -->
+  <LinearGradientBrush x:Key="BtnStartBrush" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Offset="0" Color="#CC0AB572"/>
+    <GradientStop Offset="1" Color="#CC0DD68C"/>
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="BtnDangerBrush" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Offset="0" Color="#EED43B4A"/>
+    <GradientStop Offset="1" Color="#EEF54F61"/>
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="BtnDefaultBrush" StartPoint="0,0" EndPoint="0,1">
+    <GradientStop Offset="0" Color="#DD142035"/>
+    <GradientStop Offset="1" Color="#DD0D1726"/>
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="BtnBlueBrush" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Offset="0" Color="#CC1565C0"/>
+    <GradientStop Offset="1" Color="#CC1E88E5"/>
+  </LinearGradientBrush>
+
+  <!-- Metric card accent brushes -->
+  <SolidColorBrush x:Key="MetricGreenBrush"  Color="#34D399"/>
+  <SolidColorBrush x:Key="MetricBlueBrush"   Color="#5BA3F5"/>
+  <SolidColorBrush x:Key="MetricAmberBrush"  Color="#F59E0B"/>
+  <SolidColorBrush x:Key="MetricPurpleBrush" Color="#A78BFA"/>
+
+  <!-- Common brushes -->
+  <SolidColorBrush x:Key="TextPrimaryBrush"  Color="#EEF4FF"/>
+  <SolidColorBrush x:Key="TextMutedBrush"    Color="#8FA8CC"/>
+  <SolidColorBrush x:Key="TextDimBrush"      Color="#5C7899"/>
+  <SolidColorBrush x:Key="AccentBrush"       Color="#5BA3F5"/>
+  <SolidColorBrush x:Key="DangerBrush"       Color="#F26C6C"/>
+  <SolidColorBrush x:Key="GoodBrush"         Color="#34D399"/>
+  <SolidColorBrush x:Key="SignalBrush"       Color="#F59E0B"/>
+  <SolidColorBrush x:Key="StrokeSoftBrush"   Color="#2E92A6BF"/>
+  <SolidColorBrush x:Key="StrokeStrongBrush" Color="#4892A6BF"/>
+  <SolidColorBrush x:Key="TransparentBrush"  Color="Transparent"/>
+
+  <CornerRadius x:Key="RadiusSm">8</CornerRadius>
+  <CornerRadius x:Key="RadiusMd">12</CornerRadius>
+  <CornerRadius x:Key="RadiusLg">16</CornerRadius>
+  <CornerRadius x:Key="RadiusFull">999</CornerRadius>
+
+</ResourceDictionary>

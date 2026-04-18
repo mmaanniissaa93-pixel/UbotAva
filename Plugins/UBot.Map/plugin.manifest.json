@@ -1,0 +1,28 @@
+﻿{
+    "schemaVersion":  1,
+    "pluginName":  "UBot.Map",
+    "pluginVersion":  "1.0.0",
+    "capabilities":  [
+                         "world-map",
+                         "spawn-visualization",
+                         "route-helpers"
+                     ],
+    "dependencies":  [
+
+                     ],
+    "hostCompatibility":  {
+                              "minVersion":  "1.0.0",
+                              "maxVersionExclusive":  "2.0.0"
+                          },
+    "isolation":  {
+                      "mode":  "inproc",
+                      "tier":  "standard",
+                      "restartPolicy":  {
+                                            "enabled":  true,
+                                            "maxRestarts":  2,
+                                            "windowSeconds":  60,
+                                            "baseDelayMs":  250,
+                                            "maxDelayMs":  3000
+                                        }
+                  }
+}
