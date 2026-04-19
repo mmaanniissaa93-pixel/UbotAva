@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
   xmlns="https://github.com/avaloniaui"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:controls="clr-namespace:UBot.Avalonia.Controls"
@@ -29,14 +29,14 @@
               </StackPanel>
             </Grid>
 
-            <Grid ColumnDefinitions="*,*">
-              <Border Classes="section-panel">
+            <Grid ColumnDefinitions="*,10,*">
+              <Border Grid.Column="0" Classes="section-panel">
                 <StackPanel Spacing="6">
                   <Grid ColumnDefinitions="*,Auto">
                     <TextBlock Text="NAME" Classes="form-label" FontWeight="SemiBold" />
                     <TextBlock Grid.Column="1" Text="" Classes="form-label" />
                   </Grid>
-                  <ListBox x:Name="SourceItemsList" Height="190" SelectionChanged="SourceItemsList_SelectionChanged">
+                  <ListBox x:Name="SourceItemsList" Height="150" SelectionChanged="SourceItemsList_SelectionChanged">
                     <ListBox.ItemTemplate>
                       <DataTemplate>
                         <TextBlock Text="{Binding Display}" Classes="form-label" />
@@ -46,13 +46,13 @@
                 </StackPanel>
               </Border>
 
-              <Border Classes="section-panel">
+              <Border Grid.Column="2" Classes="section-panel">
                 <StackPanel Spacing="6">
                   <Grid ColumnDefinitions="*,70">
                     <TextBlock Text="NAME" Classes="form-label" FontWeight="SemiBold" />
                     <TextBlock Grid.Column="1" Text="AMOUNT" Classes="form-label" FontWeight="SemiBold" HorizontalAlignment="Right" />
                   </Grid>
-                  <ListBox x:Name="TargetItemsList" Height="190" SelectionChanged="TargetItemsList_SelectionChanged">
+                  <ListBox x:Name="TargetItemsList" Height="150" SelectionChanged="TargetItemsList_SelectionChanged">
                     <ListBox.ItemTemplate>
                       <DataTemplate>
                         <Grid ColumnDefinitions="*,70">
@@ -66,14 +66,14 @@
               </Border>
             </Grid>
 
-            <Grid ColumnDefinitions="*,*">
+            <Grid ColumnDefinitions="*,10,*">
               <Grid Grid.Column="0" ColumnDefinitions="*,82,120">
                 <controls:CustomSelect x:Name="ShoppingItemSelect" Grid.Column="0" Placeholder="Select item..." />
                 <TextBox x:Name="ShoppingAmountBox" Grid.Column="1" Classes="field number" Text="1" />
                 <Button Grid.Column="2" Classes="btn blue" Content="Add / Update" Click="AddOrUpdateShopping_Click" />
               </Grid>
 
-              <Grid Grid.Column="1" ColumnDefinitions="*,82,110">
+              <Grid Grid.Column="2" ColumnDefinitions="*,82,110">
                 <controls:CustomSelect x:Name="TargetItemSelect" Grid.Column="0" Placeholder="Select target item..." />
                 <TextBox x:Name="TargetAmountBox" Grid.Column="1" Classes="field number" Text="1" />
                 <Button Grid.Column="2" Classes="btn danger" Content="Remove" Click="RemoveShopping_Click" />
@@ -94,11 +94,11 @@
               </Grid>
             </Border>
 
-            <Grid ColumnDefinitions="*,*">
-              <Border Classes="section-panel">
+            <Grid ColumnDefinitions="*,10,*">
+              <Border Grid.Column="0" Classes="section-panel">
                 <StackPanel Spacing="6">
                   <TextBlock Text="SELL FILTER" Classes="form-label" FontWeight="SemiBold" />
-                  <ListBox x:Name="SellFilterList" Height="120">
+                  <ListBox x:Name="SellFilterList" Height="100">
                     <ListBox.ItemTemplate>
                       <DataTemplate>
                         <TextBlock Text="{Binding Display}" Classes="form-label" />
@@ -107,10 +107,10 @@
                   </ListBox>
                 </StackPanel>
               </Border>
-              <Border Classes="section-panel">
+              <Border Grid.Column="2" Classes="section-panel">
                 <StackPanel Spacing="6">
                   <TextBlock Text="STORE FILTER" Classes="form-label" FontWeight="SemiBold" />
-                  <ListBox x:Name="StoreFilterList" Height="120">
+                  <ListBox x:Name="StoreFilterList" Height="100">
                     <ListBox.ItemTemplate>
                       <DataTemplate>
                         <TextBlock Text="{Binding Display}" Classes="form-label" />
@@ -124,7 +124,7 @@
         </Grid>
       </Border>
 
-      <Grid x:Name="ItemFilterPanel" ColumnDefinitions="300,*" IsVisible="False">
+      <Grid x:Name="ItemFilterPanel" ColumnDefinitions="300,10,*" IsVisible="False">
         <StackPanel Grid.Column="0" Spacing="8">
           <Border Classes="section-card">
             <Grid RowDefinitions="Auto,*">
@@ -132,16 +132,14 @@
                 <TextBlock Text="Gender and Degree" Classes="section-header-text" />
               </Border>
               <StackPanel Grid.Row="1" Margin="10,8,10,10" Spacing="6">
-                <Grid ColumnDefinitions="*,*">
-                  <CheckBox x:Name="FilterMaleCheck" Grid.Column="0" Classes="check" Content="Male" IsCheckedChanged="FilterFlag_Changed" />
-                  <CheckBox x:Name="FilterFemaleCheck" Grid.Column="1" Classes="check" Content="Female" IsCheckedChanged="FilterFlag_Changed" />
-                </Grid>
-                <Grid ColumnDefinitions="*,*">
-                  <CheckBox x:Name="FilterChinaCheck" Grid.Column="0" Classes="check" Content="China" IsCheckedChanged="FilterFlag_Changed" />
-                  <CheckBox x:Name="FilterEuropeCheck" Grid.Column="1" Classes="check" Content="Europe" IsCheckedChanged="FilterFlag_Changed" />
-                </Grid>
-                <CheckBox x:Name="FilterSoxCheck" Classes="check" Content="Print (Sox)" IsCheckedChanged="FilterFlag_Changed" />
-                <Grid ColumnDefinitions="70,90,20,90" VerticalAlignment="Center">
+                <WrapPanel ItemWidth="130" ItemHeight="28">
+                  <CheckBox x:Name="FilterMaleCheck" Classes="check" Content="Male" IsCheckedChanged="FilterFlag_Changed" />
+                  <CheckBox x:Name="FilterFemaleCheck" Classes="check" Content="Female" IsCheckedChanged="FilterFlag_Changed" />
+                  <CheckBox x:Name="FilterChinaCheck" Classes="check" Content="China" IsCheckedChanged="FilterFlag_Changed" />
+                  <CheckBox x:Name="FilterEuropeCheck" Classes="check" Content="Europe" IsCheckedChanged="FilterFlag_Changed" />
+                </WrapPanel>
+                <CheckBox x:Name="FilterSoxCheck" Classes="check" Content="Print (Sox)" IsCheckedChanged="FilterFlag_Changed" Height="28" />
+                <Grid ColumnDefinitions="60,80,20,80" VerticalAlignment="Center" Margin="0,4,0,0">
                   <TextBlock Grid.Column="0" Text="Degree" Classes="form-label" VerticalAlignment="Center" />
                   <TextBox x:Name="DegreeMinBox" Grid.Column="1" Classes="field number" Text="0" />
                   <TextBlock Grid.Column="2" Text="~" Classes="form-label" VerticalAlignment="Center" HorizontalAlignment="Center" />
@@ -156,7 +154,7 @@
               <Border Grid.Row="0" Classes="section-header">
                 <TextBlock Text="Clothes" Classes="section-header-text" />
               </Border>
-              <WrapPanel Grid.Row="1" Margin="10,8,10,10">
+              <WrapPanel Grid.Row="1" Margin="10,8,10,10" ItemWidth="130" ItemHeight="28">
                 <CheckBox Classes="check" Content="Clothes" Tag="clothes" IsCheckedChanged="CategoryFlag_Changed" />
                 <CheckBox Classes="check" Content="Light" Tag="light" IsCheckedChanged="CategoryFlag_Changed" />
                 <CheckBox Classes="check" Content="Heavy" Tag="heavy" IsCheckedChanged="CategoryFlag_Changed" />
@@ -175,7 +173,7 @@
               <Border Grid.Row="0" Classes="section-header">
                 <TextBlock Text="Accessories" Classes="section-header-text" />
               </Border>
-              <WrapPanel Grid.Row="1" Margin="10,8,10,10">
+              <WrapPanel Grid.Row="1" Margin="10,8,10,10" ItemWidth="130" ItemHeight="28">
                 <CheckBox Classes="check" Content="Rings" Tag="rings" IsCheckedChanged="CategoryFlag_Changed" />
                 <CheckBox Classes="check" Content="Necklace" Tag="necklace" IsCheckedChanged="CategoryFlag_Changed" />
                 <CheckBox Classes="check" Content="Earrings" Tag="earrings" IsCheckedChanged="CategoryFlag_Changed" />
@@ -188,7 +186,7 @@
               <Border Grid.Row="0" Classes="section-header">
                 <TextBlock Text="Weapons" Classes="section-header-text" />
               </Border>
-              <WrapPanel Grid.Row="1" Margin="10,8,10,10">
+              <WrapPanel Grid.Row="1" Margin="10,8,10,10" ItemWidth="130" ItemHeight="28">
                 <CheckBox Classes="check" Content="Blade" Tag="blade" IsCheckedChanged="CategoryFlag_Changed" />
                 <CheckBox Classes="check" Content="Sword" Tag="sword" IsCheckedChanged="CategoryFlag_Changed" />
                 <CheckBox Classes="check" Content="Glaive" Tag="glaive" IsCheckedChanged="CategoryFlag_Changed" />
@@ -211,7 +209,7 @@
               <Border Grid.Row="0" Classes="section-header">
                 <TextBlock Text="Others" Classes="section-header-text" />
               </Border>
-              <WrapPanel Grid.Row="1" Margin="10,8,10,10">
+              <WrapPanel Grid.Row="1" Margin="10,8,10,10" ItemWidth="130" ItemHeight="28">
                 <CheckBox Classes="check" Content="Quest" Tag="quest" IsCheckedChanged="CategoryFlag_Changed" />
                 <CheckBox Classes="check" Content="Coins" Tag="coins" IsCheckedChanged="CategoryFlag_Changed" />
                 <CheckBox Classes="check" Content="Ammo" Tag="ammo" IsCheckedChanged="CategoryFlag_Changed" />
@@ -222,11 +220,11 @@
           </Border>
         </StackPanel>
 
-        <StackPanel Grid.Column="1" Spacing="8">
-          <Grid ColumnDefinitions="*,120,110">
+        <StackPanel Grid.Column="2" Spacing="8">
+          <Grid ColumnDefinitions="*,10,100,10,100">
             <TextBox x:Name="FilterSearchBox" Grid.Column="0" Classes="field" Watermark="Search..." />
-            <Button Grid.Column="1" Classes="btn blue" Content="Search" Click="RunItemSearch_Click" />
-            <Button Grid.Column="2" Classes="btn" Content="Reset" Click="ResetItemSearch_Click" />
+            <Button Grid.Column="2" Classes="btn blue" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Content="Search" Click="RunItemSearch_Click" />
+            <Button Grid.Column="4" Classes="btn" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Content="Reset" Click="ResetItemSearch_Click" />
           </Grid>
 
           <Border Classes="section-panel">
@@ -256,23 +254,23 @@
             </StackPanel>
           </Border>
 
-          <Grid ColumnDefinitions="*,340">
+          <Grid ColumnDefinitions="*,10,340">
             <StackPanel Grid.Column="0" Spacing="4">
               <controls:CustomSelect x:Name="FilterItemSelect" Placeholder="Select item..." />
               <TextBlock Text="P: Pickup, S: Sell, T: Store" Classes="help-text" />
             </StackPanel>
 
-            <Border Grid.Column="1" Classes="section-card">
+            <Border Grid.Column="2" Classes="section-card">
               <Grid RowDefinitions="Auto,*">
                 <Border Grid.Row="0" Classes="section-header">
                   <TextBlock Text="Apply selected item" Classes="section-header-text" />
                 </Border>
-                <StackPanel Grid.Row="1" Margin="10,8,10,10" Spacing="6">
-                  <Button Classes="btn blue" Content="Add Pickup" Click="AddPickupFilter_Click" />
-                  <Button Classes="btn blue" Content="Add Sell" Click="AddSellFilter_Click" />
-                  <Button Classes="btn blue" Content="Add Store" Click="AddStoreFilter_Click" />
-                  <Button Classes="btn danger" Content="Remove all" Click="RemoveAllFilters_Click" />
-                </StackPanel>
+                <Grid Grid.Row="1" Margin="10,8,10,10" ColumnDefinitions="*,10,*" RowDefinitions="Auto,10,Auto">
+                  <Button Grid.Row="0" Grid.Column="0" Classes="btn blue" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Content="Add Pickup" Click="AddPickupFilter_Click" />
+                  <Button Grid.Row="0" Grid.Column="2" Classes="btn blue" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Content="Add Sell" Click="AddSellFilter_Click" />
+                  <Button Grid.Row="2" Grid.Column="0" Classes="btn blue" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Content="Add Store" Click="AddStoreFilter_Click" />
+                  <Button Grid.Row="2" Grid.Column="2" Classes="btn danger" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Content="Remove all" Click="RemoveAllFilters_Click" />
+                </Grid>
               </Grid>
             </Border>
           </Grid>
