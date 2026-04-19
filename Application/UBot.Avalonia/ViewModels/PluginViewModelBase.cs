@@ -74,6 +74,9 @@ public abstract partial class PluginViewModelBase : ObservableObject
         return false;
     }
 
+    public Task<byte[]?> GetIconAsync(string iconFile)
+        => Core.GetSkillIconAsync(iconFile);
+
     public async Task LoadConfigAsync()
     {
         if (string.IsNullOrEmpty(PluginId)) return;

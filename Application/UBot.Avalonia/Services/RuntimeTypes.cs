@@ -44,6 +44,20 @@ public class PlayerStats
     [JsonPropertyName("inCombat")]          public bool?   InCombat         { get; set; }
     [JsonPropertyName("xOffset")]           public double? XOffset          { get; set; }
     [JsonPropertyName("yOffset")]           public double? YOffset          { get; set; }
+    [JsonPropertyName("inventory")]         public List<InventoryItemDto>? Inventory { get; set; }
+}
+
+public class InventoryItemDto
+{
+    [JsonPropertyName("slot")]   public int    Slot   { get; set; }
+    [JsonPropertyName("name")]   public string Name   { get; set; } = "";
+    [JsonPropertyName("amount")] public int    Amount { get; set; }
+    [JsonPropertyName("opt")]    public int    Opt    { get; set; }
+    [JsonPropertyName("icon")]   public string Icon   { get; set; } = "";
+    [JsonPropertyName("canUse")] public bool   CanUse { get; set; }
+    [JsonPropertyName("canDrop")]public bool   CanDrop{ get; set; }
+    [JsonPropertyName("isReverseReturnScroll")] public bool IsReverseReturnScroll { get; set; }
+    [JsonPropertyName("code")]   public string Code   { get; set; } = "";
 }
 
 // PluginDescriptor ──────────────────────────────────

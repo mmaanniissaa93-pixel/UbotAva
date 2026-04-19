@@ -225,6 +225,9 @@ public sealed class UbotCoreService : IUbotCoreService
         if (TryResolvePlugin(pluginId, out var plugin) && IsSkillsPlugin(plugin))
             state["skills"] = BuildSkillsPluginState();
 
+        if (TryResolvePlugin(pluginId, out plugin) && IsInventoryPlugin(plugin))
+            state["inventory"] = BuildInventoryPluginState();
+
         var dto = new PluginStateDto
         {
             Id = pluginId ?? string.Empty,
@@ -368,6 +371,10 @@ public sealed class UbotCoreService : IUbotCoreService
 
         if (normalized is "training.set-area-current" or "training.use-current-position")
             return HandleSetTrainingAreaToCurrentPosition();
+
+        if (normalized.StartsWith("inventory."))
+            return HandleInventoryAction(normalized, payload);
+
 
         return false;
     }
@@ -995,6 +1002,161 @@ public sealed class UbotCoreService : IUbotCoreService
     private static bool IsGeneralPlugin(IPlugin plugin) => ResolveModuleKey(plugin.Name) == "general";
     private static bool IsProtectionPlugin(IPlugin plugin) => ResolveModuleKey(plugin.Name) == "protection";
     private static bool IsMapPlugin(IPlugin plugin) => ResolveModuleKey(plugin.Name) == "map";
+    private static bool IsInventoryPlugin(IPlugin plugin) => plugin?.Name == "UBot.Inventory";
+
+    private static object BuildInventoryPluginState()
+    {
+        var player = Game.Player;
+        if (player == null) return new { selectedTab = "Inventory", items = new List<object>(), freeSlots = 0, totalSlots = 0 };
+
+        var type = PlayerConfig.Get("UBot.Desktop.Inventory.SelectedTab", "Inventory");
+        var items = new List<InventoryItemDto>();
+        var freeSlots = 0;
+        var totalSlots = 0;
+
+        try
+        {
+            switch (type)
+            {
+                case "Inventory":
+                    if (player.Inventory != null)
+                    {
+                        // Filter out equipment slots (0-12) for the main inventory tab
+                        items = player.Inventory.Where(x => x?.Record != null && x.Slot >= 13).Select(ToInventoryItemDto).ToList();
+                        freeSlots = player.Inventory.FreeSlots;
+                        totalSlots = player.Inventory.Capacity;
+                    }
+                    break;
+                case "Equipment":
+                    if (player.Inventory != null)
+                        items = player.Inventory.Where(x => x?.Record != null && x.Slot < 13).Select(ToInventoryItemDto).ToList();
+                    break;
+                case "Avatars":
+                    if (player.Avatars != null)
+                        items = player.Avatars.Where(x => x?.Record != null).Select(ToInventoryItemDto).ToList();
+                    break;
+                case "Storage":
+                    if (player.Storage != null)
+                    {
+                        items = player.Storage.Where(x => x?.Record != null).Select(ToInventoryItemDto).ToList();
+                        freeSlots = player.Storage.FreeSlots;
+                        totalSlots = player.Storage.Capacity;
+                    }
+                    break;
+                case "Guild Storage":
+                    if (player.GuildStorage != null)
+                    {
+                        items = player.GuildStorage.Where(x => x?.Record != null).Select(ToInventoryItemDto).ToList();
+                        freeSlots = player.GuildStorage.FreeSlots;
+                        totalSlots = player.GuildStorage.Capacity;
+                    }
+                    break;
+                case "Grab Pet":
+                    if (player.AbilityPet?.Inventory != null)
+                    {
+                        items = player.AbilityPet.Inventory.Where(x => x?.Record != null).Select(ToInventoryItemDto).ToList();
+                        freeSlots = player.AbilityPet.Inventory.FreeSlots;
+                        totalSlots = player.AbilityPet.Inventory.Capacity;
+                    }
+                    break;
+                case "Job Transport":
+                    if (player.JobTransport?.Inventory != null)
+                    {
+                        items = player.JobTransport.Inventory.Where(x => x?.Record != null).Select(ToInventoryItemDto).ToList();
+                        freeSlots = player.JobTransport.Inventory.FreeSlots;
+                        totalSlots = player.JobTransport.Inventory.Capacity;
+                    }
+                    break;
+                case "Specialty":
+                    if (player.Job2SpecialtyBag != null)
+                    {
+                        items = player.Job2SpecialtyBag.Where(x => x?.Record != null).Select(ToInventoryItemDto).ToList();
+                        freeSlots = player.Job2SpecialtyBag.FreeSlots;
+                        totalSlots = player.Job2SpecialtyBag.Capacity;
+                    }
+                    break;
+                case "Job Equipment":
+                    if (player.Job2 != null)
+                    {
+                        items = player.Job2.Where(x => x?.Record != null).Select(ToInventoryItemDto).ToList();
+                        freeSlots = player.Job2.FreeSlots;
+                        totalSlots = player.Job2.Capacity;
+                    }
+                    break;
+                case "Fellow Pet":
+                    if (player.Fellow?.Inventory != null)
+                    {
+                        items = player.Fellow.Inventory.Where(x => x?.Record != null).Select(ToInventoryItemDto).ToList();
+                        freeSlots = player.Fellow.Inventory.FreeSlots;
+                        totalSlots = player.Fellow.Inventory.Capacity;
+                    }
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error($"Error building inventory state: {ex.Message}");
+        }
+
+        return new
+        {
+            selectedTab = type,
+            items = items,
+            freeSlots = freeSlots,
+            totalSlots = totalSlots,
+            autoSort = PlayerConfig.Get("UBot.Inventory.AutoSort", false)
+        };
+    }
+
+    private static InventoryItemDto ToInventoryItemDto(InventoryItem item)
+    {
+        return new InventoryItemDto
+        {
+            Slot = item.Slot,
+            Name = item.Record?.GetRealName() ?? "Unknown",
+            Amount = item.Amount,
+            Opt = item.OptLevel,
+            Icon = item.Record?.AssocFileIcon ?? ""
+        };
+    }
+
+    private static bool HandleInventoryAction(string action, Dictionary<string, object?> payload)
+    {
+        if (action == "inventory.set-type")
+        {
+            if (TryGetStringValue(payload, "type", out var type))
+            {
+                PlayerConfig.Set("UBot.Desktop.Inventory.SelectedTab", type);
+                PlayerConfig.Save();
+                return true;
+            }
+        }
+
+        if (action == "inventory.sort")
+        {
+            var type = PlayerConfig.Get("UBot.Desktop.Inventory.SelectedTab", "Inventory");
+            if (type == "Inventory")
+            {
+                Game.Player?.Inventory?.Sort();
+                return true;
+            }
+            // Add other sort types if supported by backend
+            return false;
+        }
+
+        if (action == "inventory.set-auto-sort")
+        {
+            if (TryGetBoolValue(payload, "value", out var val))
+            {
+                PlayerConfig.Set("UBot.Inventory.AutoSort", val);
+                PlayerConfig.Save();
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static bool IsSkillsPlugin(IPlugin plugin) => ResolveModuleKey(plugin.Name) == "skills";
     private static bool IsItemsPlugin(IPlugin plugin) => ResolveModuleKey(plugin.Name) == "items";
 
