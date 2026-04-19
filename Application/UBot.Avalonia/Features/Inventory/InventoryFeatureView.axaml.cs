@@ -21,6 +21,11 @@ public partial class InventoryItemRow : ObservableObject
     [ObservableProperty] private string _icon = "";
     [ObservableProperty] private Bitmap? _iconBitmap;
 
+    [ObservableProperty] private bool _canUse;
+    [ObservableProperty] private bool _canDrop;
+    [ObservableProperty] private bool _isReverseReturnScroll;
+    [ObservableProperty] private string _code = "";
+
     public string OptDisplay => Opt > 0 ? $"+{Opt}" : "-";
     public IBrush OptColor => Opt > 0 ? Brushes.Gold : Brushes.Gray;
 }
@@ -39,6 +44,7 @@ public partial class InventoryFeatureView : UserControl
     };
 
     private readonly ObservableCollection<InventoryItemRow> _itemRows = new();
+    private List<MapLocationDto> _mapLocations = new();
 
     public InventoryFeatureView() 
     { 
@@ -46,13 +52,18 @@ public partial class InventoryFeatureView : UserControl
         InventoryGrid.ItemsSource = _itemRows;
     }
 
-    public void Initialize(PluginViewModelBase vm, AppState state)
+    public async void Initialize(PluginViewModelBase vm, AppState state)
     {
         _vm = vm; 
         _state = state;
 
         MainTabs.SetTabs(_tabs.Select(t => (t, t)));
         MainTabs.TabChanged += MainTabs_TabChanged;
+
+        if (_vm?.Core != null)
+        {
+            _mapLocations = (await _vm.Core.GetMapLocationsAsync()).ToList();
+        }
     }
 
     public void UpdateFromState(JsonElement moduleState)
@@ -121,7 +132,11 @@ public partial class InventoryFeatureView : UserControl
                     Name = dto.Name,
                     Amount = dto.Amount,
                     Opt = dto.Opt,
-                    Icon = dto.Icon
+                    Icon = dto.Icon,
+                    CanUse = dto.CanUse,
+                    CanDrop = dto.CanDrop,
+                    IsReverseReturnScroll = dto.IsReverseReturnScroll,
+                    Code = dto.Code
                 };
                 _itemRows.Add(row);
                 _ = LoadIconAsync(row);
@@ -133,12 +148,17 @@ public partial class InventoryFeatureView : UserControl
             {
                 var dto = dtos[i];
                 var row = _itemRows[i];
-                if (row.Slot != dto.Slot || row.Name != dto.Name || row.Amount != dto.Amount || row.Opt != dto.Opt || row.Icon != dto.Icon)
+                if (row.Slot != dto.Slot || row.Name != dto.Name || row.Amount != dto.Amount || row.Opt != dto.Opt || row.Icon != dto.Icon ||
+                    row.CanUse != dto.CanUse || row.CanDrop != dto.CanDrop || row.IsReverseReturnScroll != dto.IsReverseReturnScroll || row.Code != dto.Code)
                 {
                     row.Slot = dto.Slot;
                     row.Name = dto.Name;
                     row.Amount = dto.Amount;
                     row.Opt = dto.Opt;
+                    row.CanUse = dto.CanUse;
+                    row.CanDrop = dto.CanDrop;
+                    row.IsReverseReturnScroll = dto.IsReverseReturnScroll;
+                    row.Code = dto.Code;
                     bool iconChanged = row.Icon != dto.Icon;
                     row.Icon = dto.Icon;
                     if (iconChanged) _ = LoadIconAsync(row);
@@ -193,4 +213,84 @@ public partial class InventoryFeatureView : UserControl
         if (_vm == null) return;
         await _vm.PluginActionAsync("inventory.sort");
     }
+
+    private void PopulateMapSubMenu(MenuItem subMenu, InventoryItemRow row)
+    {
+        subMenu.Items.Clear();
+        if (_mapLocations.Count == 0)
+        {
+            subMenu.Items.Add(new MenuItem { Header = "No locations found", IsEnabled = false });
+            return;
+        }
+
+        foreach (var loc in _mapLocations)
+        {
+            var mi = new MenuItem { Header = loc.Name, Tag = loc.Id };
+            mi.Click += (s, e) => {
+                _ = InvokeAction("inventory.use-reverse", new Dictionary<string, object?> {
+                    { "source", GetCurrentSource() },
+                    { "slot", row.Slot },
+                    { "mode", 7 },
+                    { "mapId", loc.Id }
+                });
+            };
+            subMenu.Items.Add(mi);
+        }
+    }
+
+    private string GetCurrentSource()
+    {
+        return (MainTabs.ActiveTabId ?? "Inventory").ToLower().Replace(" ", "");
+    }
+
+    private async System.Threading.Tasks.Task InvokeAction(string action, Dictionary<string, object?> payload)
+    {
+        if (_vm == null) return;
+        await _vm.PluginActionAsync(action, payload);
+    }
+
+    private void OnUseClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is MenuItem mi && mi.DataContext is InventoryItemRow row)
+            _ = InvokeAction("inventory.use", new Dictionary<string, object?> { { "source", GetCurrentSource() }, { "slot", row.Slot } });
+    }
+
+    private void OnDropClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is MenuItem mi && mi.DataContext is InventoryItemRow row)
+            _ = InvokeAction("inventory.drop", new Dictionary<string, object?> { { "source", GetCurrentSource() }, { "slot", row.Slot } });
+    }
+
+    private void OnReverseDeathClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is MenuItem mi && mi.DataContext is InventoryItemRow row)
+            _ = InvokeAction("inventory.use-reverse", new Dictionary<string, object?> { { "source", GetCurrentSource() }, { "slot", row.Slot }, { "mode", 3 } });
+    }
+
+    private void OnReverseRecallClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is MenuItem mi && mi.DataContext is InventoryItemRow row)
+            _ = InvokeAction("inventory.use-reverse", new Dictionary<string, object?> { { "source", GetCurrentSource() }, { "slot", row.Slot }, { "mode", 2 } });
+    }
+
+    private void OnToggleTrainplaceClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is MenuItem mi && mi.DataContext is InventoryItemRow row)
+            _ = InvokeAction("inventory.toggle-trainplace", new Dictionary<string, object?> { { "source", GetCurrentSource() }, { "slot", row.Slot } });
+    }
+
+    private void OnToggleAutoUseClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is MenuItem mi && mi.DataContext is InventoryItemRow row)
+            _ = InvokeAction("inventory.toggle-auto-use", new Dictionary<string, object?> { { "source", GetCurrentSource() }, { "slot", row.Slot } });
+    }
+
+    private void OnMapSubMenuLoaded(object? sender, RoutedEventArgs e)
+    {
+        if (sender is MenuItem mi && mi.DataContext is InventoryItemRow row)
+        {
+            PopulateMapSubMenu(mi, row);
+        }
+    }
+
 }

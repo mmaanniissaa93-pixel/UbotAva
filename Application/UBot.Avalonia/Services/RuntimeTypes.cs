@@ -154,3 +154,9 @@ public class AutoLoginAccountDto
     public string SelectedCharacter { get; set; } = "";
     public List<string> Characters { get; set; } = new();
 }
+
+public class MapLocationDto
+{
+    [JsonPropertyName("id")]   public int    Id   { get; set; }
+    [JsonPropertyName("name")] public string Name { get; set; } = "";
+}

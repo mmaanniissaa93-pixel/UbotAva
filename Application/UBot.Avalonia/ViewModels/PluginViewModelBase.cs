@@ -7,7 +7,7 @@ namespace UBot.Avalonia.ViewModels;
 
 public abstract partial class PluginViewModelBase : ObservableObject
 {
-    protected readonly IUbotCoreService Core;
+    public readonly IUbotCoreService Core;
     protected readonly AppState State;
     protected string PluginId { get; private set; } = "";
 

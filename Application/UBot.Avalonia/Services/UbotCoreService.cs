@@ -45,6 +45,8 @@ public sealed class UbotCoreService : IUbotCoreService
         MonsterRarity.Unique
     };
 
+    private static readonly TypeIdFilter ReverseReturnScrollFilter = new(3, 3, 3, 3);
+
     private static readonly object InitLock = new();
     private static bool _initialized;
     private static bool _referenceLoading;
@@ -1116,7 +1118,11 @@ public sealed class UbotCoreService : IUbotCoreService
             Name = item.Record?.GetRealName() ?? "Unknown",
             Amount = item.Amount,
             Opt = item.OptLevel,
-            Icon = item.Record?.AssocFileIcon ?? ""
+            Icon = item.Record?.AssocFileIcon ?? "",
+            CanUse = item.Record != null && (item.Record.CanUse & ObjectUseType.Yes) != 0,
+            CanDrop = item.Record != null && item.Record.CanDrop != ObjectDropType.No,
+            IsReverseReturnScroll = item.Equals(ReverseReturnScrollFilter),
+            Code = item.Record?.CodeName ?? ""
         };
     }
 
@@ -1132,16 +1138,59 @@ public sealed class UbotCoreService : IUbotCoreService
             }
         }
 
-        if (action == "inventory.sort")
+        if (action == "inventory.use")
         {
-            var type = PlayerConfig.Get("UBot.Desktop.Inventory.SelectedTab", "Inventory");
-            if (type == "Inventory")
+            if (TryResolveActionItem(payload, out var item))
             {
-                Game.Player?.Inventory?.Sort();
-                return true;
+                return item.Use();
             }
-            // Add other sort types if supported by backend
-            return false;
+        }
+
+        if (action == "inventory.drop")
+        {
+            if (TryResolveActionItem(payload, out var item))
+            {
+                return item.Drop();
+            }
+        }
+
+        if (action == "inventory.use-reverse")
+        {
+            if (TryResolveActionItem(payload, out var item) && item.Equals(ReverseReturnScrollFilter))
+            {
+                if (TryGetIntValue(payload, "mode", out var mode))
+                {
+                    if (mode == 7) // Map location
+                    {
+                        if (TryGetIntValue(payload, "mapId", out var mapId))
+                            return item.UseTo((byte)mode, mapId);
+                    }
+                    else
+                    {
+                        return item.UseTo((byte)mode);
+                    }
+                }
+            }
+        }
+
+        if (action == "inventory.toggle-trainplace")
+        {
+            if (TryResolveActionItem(payload, out var item))
+            {
+                var code = item.Record?.CodeName;
+                if (!string.IsNullOrEmpty(code))
+                    return ToggleConfigArrayItem("UBot.Inventory.ItemsAtTrainplace", code);
+            }
+        }
+
+        if (action == "inventory.toggle-auto-use")
+        {
+            if (TryResolveActionItem(payload, out var item))
+            {
+                var code = item.Record?.CodeName;
+                if (!string.IsNullOrEmpty(code))
+                    return ToggleConfigArrayItem("UBot.Inventory.AutoUseAccordingToPurpose", code);
+            }
         }
 
         if (action == "inventory.set-auto-sort")
@@ -1155,6 +1204,74 @@ public sealed class UbotCoreService : IUbotCoreService
         }
 
         return false;
+    }
+
+    private static InventoryItem? ResolveInventoryItem(string source, byte slot)
+    {
+        var player = Game.Player;
+        if (player == null) return null;
+
+        return source.ToLower() switch
+        {
+            "inventory" => slot >= 13 ? player.Inventory?.GetItemAt(slot) : null,
+            "equipment" => slot < 13 ? player.Inventory?.GetItemAt(slot) : null,
+            "avatars" => player.Avatars?.GetItemAt(slot),
+            "storage" => player.Storage?.GetItemAt(slot),
+            "guildstorage" => player.GuildStorage?.GetItemAt(slot),
+            "grabpet" => player.AbilityPet?.Inventory?.GetItemAt(slot),
+            "jobtransport" => player.JobTransport?.Inventory?.GetItemAt(slot),
+            "specialty" => player.Job2SpecialtyBag?.GetItemAt(slot),
+            "jobequipment" => player.Job2?.GetItemAt(slot),
+            "fellowpet" => player.Fellow?.Inventory?.GetItemAt(slot),
+            _ => player.Inventory?.GetItemAt(slot)
+        };
+    }
+
+    private static bool TryResolveActionItem(Dictionary<string, object?> payload, out InventoryItem item)
+    {
+        item = null!;
+        if (TryGetStringValue(payload, "source", out var source) && TryGetIntValue(payload, "slot", out var slot))
+        {
+            item = ResolveInventoryItem(source, (byte)slot)!;
+        }
+        return item != null;
+    }
+
+    private static bool ToggleConfigArrayItem(string key, string value)
+    {
+        var list = PlayerConfig.GetArray<string>(key).ToList();
+        if (list.Contains(value, StringComparer.OrdinalIgnoreCase))
+            list.RemoveAll(x => x.Equals(value, StringComparison.OrdinalIgnoreCase));
+        else
+            list.Add(value);
+
+        PlayerConfig.Set(key, list.ToArray());
+        PlayerConfig.Save();
+        return true;
+    }
+
+    public Task<IReadOnlyList<MapLocationDto>> GetMapLocationsAsync()
+    {
+        var list = new List<MapLocationDto>();
+        var teleports = Game.ReferenceManager?.OptionalTeleports;
+        if (teleports != null)
+        {
+            foreach (var entry in teleports.Values)
+            {
+                if (entry == null || entry.Service == 0 || entry.ID <= 0) continue;
+                
+                var regionText = entry.Region.ToString();
+                var name = Game.ReferenceManager?.GetTranslation(regionText) ?? regionText;
+
+                list.Add(new MapLocationDto
+                {
+                    Id = entry.ID,
+                    Name = name
+                });
+            }
+        }
+
+        return Task.FromResult((IReadOnlyList<MapLocationDto>)list.OrderBy(x => x.Name).ToList());
     }
 
     private static bool IsSkillsPlugin(IPlugin plugin) => ResolveModuleKey(plugin.Name) == "skills";

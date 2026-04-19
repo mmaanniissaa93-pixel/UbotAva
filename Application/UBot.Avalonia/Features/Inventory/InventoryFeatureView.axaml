@@ -19,6 +19,7 @@
         <!-- The List -->
         <Grid Grid.Row="1" Margin="16,12">
           <DataGrid x:Name="InventoryGrid" 
+                    ItemsSource="{Binding Items}"
                     AutoGenerateColumns="False" 
                     IsReadOnly="True"
                     Background="Transparent"
@@ -28,6 +29,27 @@
                     GridLinesVisibility="Horizontal"
                     HorizontalGridLinesBrush="#1E293B"
                     RowHeight="42">
+            <DataGrid.Styles>
+              <Style Selector="DataGridRow">
+                <Setter Property="ContextMenu">
+                  <Setter.Value>
+                    <ContextMenu>
+                      <MenuItem Header="Use" Click="OnUseClick" IsVisible="{Binding CanUse}" />
+                      <MenuItem Header="Drop" Click="OnDropClick" IsVisible="{Binding CanDrop}" />
+                      <Separator IsVisible="{Binding IsReverseReturnScroll}" />
+                      <MenuItem Header="Move to last death position" Click="OnReverseDeathClick" IsVisible="{Binding IsReverseReturnScroll}" />
+                      <MenuItem Header="Move to last recall position" Click="OnReverseRecallClick" IsVisible="{Binding IsReverseReturnScroll}" />
+                      <MenuItem Header="Select Map Location" x:Name="MapLocationSubMenu" IsVisible="{Binding IsReverseReturnScroll}" Loaded="OnMapSubMenuLoaded">
+                        <!-- Populated in code-behind -->
+                      </MenuItem>
+                      <Separator />
+                      <MenuItem Header="Use item at training place" Click="OnToggleTrainplaceClick" />
+                      <MenuItem Header="Auto use according to purpose" Click="OnToggleAutoUseClick" />
+                    </ContextMenu>
+                  </Setter.Value>
+                </Setter>
+              </Style>
+            </DataGrid.Styles>
             <DataGrid.Columns>
               <DataGridTextColumn Header="SLOT" Binding="{Binding Slot}" Width="60" />
               
