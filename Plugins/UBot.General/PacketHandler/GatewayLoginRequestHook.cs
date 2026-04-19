@@ -12,6 +12,9 @@ namespace UBot.General.PacketHandler
         public Packet ReplacePacket(Packet packet)
         {
             AutoLogin.Cts?.Cancel();
+            AutoLogin.SetAgentCredentialRewrite(
+                AutoLogin.IsHandling || AutoLogin.IsAgentCredentialRewriteArmed
+            );
             return packet;
         }
     }

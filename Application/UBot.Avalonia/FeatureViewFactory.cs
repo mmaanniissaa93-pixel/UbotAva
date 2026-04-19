@@ -64,6 +64,8 @@ public sealed class FeatureViewFactory
         {
             if (cached.View is MapFeatureView   map)   map.UpdateFromState(state);
             if (cached.View is StatisticsFeatureView s) s.UpdateFromState(state);
+            if (cached.View is SkillsFeatureView skills) skills.UpdateFromState(state);
+            if (cached.View is ItemsFeatureView items) items.UpdateFromState(state);
         });
     }
 
@@ -115,7 +117,7 @@ public sealed class FeatureViewFactory
             }
             case "skills":
             {
-                var vm = new SimpleVm(_core, _state);
+                var vm = new SkillsViewModel(_core, _state);
                 var v  = new SkillsFeatureView();
                 v.Initialize(vm, _state);
                 return (v, vm);

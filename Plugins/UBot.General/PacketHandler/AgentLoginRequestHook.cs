@@ -30,7 +30,7 @@ internal class AgentLoginRequestHook : IPacketHook
     /// <returns></returns>
     public Packet ReplacePacket(Packet packet)
     {
-        if (!GlobalConfig.Get<bool>("UBot.General.EnableAutomatedLogin"))
+        if (!AutoLogin.ConsumeAgentCredentialRewrite())
             return packet;
 
         var username = GlobalConfig.Get<string>("UBot.General.AutoLoginAccountUsername");
@@ -41,6 +41,46 @@ internal class AgentLoginRequestHook : IPacketHook
 
         if (Game.Clientless)
             return packet;
+
+        // Preserve optional anti-cheat payload bytes (e.g. MaxiGuard variants)
+        // from the original client packet when present.
+        var locale = Game.ReferenceManager.DivisionInfo.Locale;
+        var macAddress = Game.MacAddress;
+        byte[] tailBytes = System.Array.Empty<byte>();
+
+        try
+        {
+            var original = new Packet(packet);
+            if (!original.Locked)
+                original.Lock();
+
+            if (original.Remaining >= 4)
+                original.ReadUInt(); // token
+
+            if (original.Remaining >= 2)
+                original.ReadString(); // username
+
+            if (original.Remaining >= 2)
+                original.ReadString(); // password
+
+            if (original.Remaining >= 1)
+                locale = original.ReadByte();
+
+            if (original.Remaining >= 6)
+                macAddress = original.ReadBytes(6);
+
+            if (original.Remaining > 0)
+                tailBytes = original.ReadBytes(original.Remaining);
+        }
+        catch
+        {
+            // Ignore parse failures; fallback to legacy behavior below.
+        }
+
+        if (macAddress == null || macAddress.Length != 6)
+            macAddress = Game.MacAddress;
+        if (macAddress == null || macAddress.Length != 6)
+            macAddress = new byte[6];
 
         packet = new Packet(packet.Opcode, packet.Encrypted);
         packet.WriteUInt(Kernel.Proxy.Token);
@@ -62,20 +102,16 @@ internal class AgentLoginRequestHook : IPacketHook
             else
                 packet.WriteString(selectedAccount.Username);
 
-            if (
-                Game.ClientType == GameClientType.Turkey
-                || Game.ClientType == GameClientType.VTC_Game
-                || Game.ClientType == GameClientType.Global
-                || Game.ClientType == GameClientType.Korean
-                || Game.ClientType == GameClientType.Taiwan
-            )
+            if (AutoLogin.ShouldHashPasswordForCurrentClient())
                 packet.WriteString(Sha256.ComputeHash(selectedAccount.Password));
             else
                 packet.WriteString(selectedAccount.Password);
         }
 
-        packet.WriteByte(Game.ReferenceManager.DivisionInfo.Locale);
-        packet.WriteBytes(Game.MacAddress);
+        packet.WriteByte(locale);
+        packet.WriteBytes(macAddress);
+        if (tailBytes.Length > 0)
+            packet.WriteBytes(tailBytes);
         packet.Lock();
 
         return packet;

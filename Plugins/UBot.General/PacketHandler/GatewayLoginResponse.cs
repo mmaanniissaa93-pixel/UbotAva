@@ -36,6 +36,7 @@ internal class GatewayLoginResponse : IPacketHandler
         if (packet.ReadByte() == 0x01)
         {
             Log.NotifyLang("AuthGetewaySuccess");
+            AutoLogin.MarkRigidAuthSuccess();
             AutoLogin.Pending = false;
             View.PendingWindow?.Hide();
             View.PendingWindow?.StopClientlessQueueTask();
@@ -53,7 +54,7 @@ internal class GatewayLoginResponse : IPacketHandler
                 p.Username == GlobalConfig.Get<string>("UBot.General.AutoLoginAccountUsername")
             );
 
-            if (Game.ClientType == GameClientType.Global && selectedAccount.Channel == 0x02)
+            if (Game.ClientType == GameClientType.Global && selectedAccount?.Channel == 0x02)
             {
                 packet.ReadUInt(); //Token
                 packet.ReadString(); //IP
@@ -66,10 +67,14 @@ internal class GatewayLoginResponse : IPacketHandler
         }
 
         var code = packet.ReadByte();
+        AutoLogin.SetAgentCredentialRewrite(false);
 
         switch (code)
         {
             case 1:
+                if (AutoLogin.TryScheduleRigidCredentialRetry("gateway"))
+                    break;
+
                 Log.NotifyLang("AuthGatewayWrongIdPw");
                 break;
 

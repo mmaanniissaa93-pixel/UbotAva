@@ -4,9 +4,197 @@
   xmlns:controls="clr-namespace:UBot.Avalonia.Controls"
   x:Class="UBot.Avalonia.Features.Skills.SkillsFeatureView">
   <ScrollViewer VerticalScrollBarVisibility="Auto">
-    <StackPanel Spacing="10" Margin="0,0,0,12">
-      <controls:TabStrip x:Name="TabStripCtrl" />
-      <StackPanel x:Name="ContentHost" Spacing="10" />
-    </StackPanel>
+    <Grid ColumnDefinitions="330,*" Margin="0,0,0,12">
+
+      <Border Grid.Column="0" Classes="section-panel" Padding="10">
+        <StackPanel Spacing="8">
+          <controls:TabStrip x:Name="LeftTabs" />
+
+          <Border x:Name="PlayerSkillsPanel" Classes="log-board" MinHeight="180">
+            <ListBox x:Name="PlayerSkillsList" BorderThickness="0" Background="Transparent">
+              <ListBox.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding Display}" Classes="form-label" Margin="4,2" />
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </Border>
+
+          <Border x:Name="ActiveBuffsPanel" Classes="log-board" MinHeight="180" IsVisible="False">
+            <ListBox x:Name="ActiveBuffsList" BorderThickness="0" Background="Transparent">
+              <ListBox.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding Display}" Classes="form-label" Margin="4,2" />
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </Border>
+
+          <WrapPanel Orientation="Horizontal" Margin="0,2,0,0">
+            <CheckBox x:Name="EnableAttacksCheck" Content="Attacks" Classes="legacy-check" Margin="0,0,12,4" IsCheckedChanged="SimpleCheck_Changed" Tag="enableAttacks" />
+            <CheckBox x:Name="EnableBuffsCheck" Content="Buffs" Classes="legacy-check" Margin="0,0,12,4" IsCheckedChanged="SimpleCheck_Changed" Tag="enableBuffs" />
+          </WrapPanel>
+        </StackPanel>
+      </Border>
+
+      <StackPanel Grid.Column="1" Spacing="10">
+        <controls:TabStrip x:Name="MainTabs" />
+
+        <StackPanel x:Name="GeneralSetupPanel" Spacing="10">
+          <Border Classes="section-card">
+            <DockPanel>
+              <Border DockPanel.Dock="Top" Classes="section-header">
+                <TextBlock Text="Attacking Skills" Classes="section-header-text" />
+              </Border>
+
+              <StackPanel Margin="10" Spacing="8">
+                <Grid ColumnDefinitions="*,Auto">
+                  <Border Grid.Column="0" Classes="log-board" MinHeight="168">
+                    <ListBox x:Name="AttackSkillsList" BorderThickness="0" Background="Transparent">
+                      <ListBox.ItemTemplate>
+                        <DataTemplate>
+                          <TextBlock Text="{Binding Display}" Classes="form-label" Margin="4,2" />
+                        </DataTemplate>
+                      </ListBox.ItemTemplate>
+                    </ListBox>
+                  </Border>
+
+                  <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Top">
+                    <Button Classes="browse-btn" Width="32" Content="+" Click="AddAttackSkill_Click" />
+                    <Button Classes="legacy-btn danger compact" Width="32" Content="x" Click="RemoveAttackSkill_Click" />
+                    <Button Classes="legacy-btn compact" Width="32" Content="^" Click="MoveAttackUp_Click" />
+                    <Button Classes="legacy-btn compact" Width="32" Content="v" Click="MoveAttackDown_Click" />
+                  </StackPanel>
+                </Grid>
+
+                <Grid ColumnDefinitions="Auto,220,16,Auto,Auto,Auto">
+                  <TextBlock Grid.Column="0" Text="Type" Classes="form-label" VerticalAlignment="Center" />
+                  <controls:CustomSelect Grid.Column="1" x:Name="AttackTypeSelect" Placeholder="Select attack type..." />
+                  <CheckBox Grid.Column="3" x:Name="UseInOrderCheck" Content="Use in order" Classes="legacy-check" IsCheckedChanged="SimpleCheck_Changed" Tag="useSkillsInOrder" VerticalAlignment="Center" />
+                  <CheckBox Grid.Column="4" x:Name="NoAttackCheck" Content="No attack" Classes="legacy-check" IsCheckedChanged="SimpleCheck_Changed" Tag="noAttack" VerticalAlignment="Center" />
+                </Grid>
+              </StackPanel>
+            </DockPanel>
+          </Border>
+
+          <Border Classes="section-card">
+            <DockPanel>
+              <Border DockPanel.Dock="Top" Classes="section-header">
+                <TextBlock Text="Buffing Skills" Classes="section-header-text" />
+              </Border>
+
+              <StackPanel Margin="10" Spacing="8">
+                <Grid ColumnDefinitions="*,Auto">
+                  <Border Grid.Column="0" Classes="log-board" MinHeight="168">
+                    <ListBox x:Name="BuffSkillsList" BorderThickness="0" Background="Transparent">
+                      <ListBox.ItemTemplate>
+                        <DataTemplate>
+                          <TextBlock Text="{Binding Display}" Classes="form-label" Margin="4,2" />
+                        </DataTemplate>
+                      </ListBox.ItemTemplate>
+                    </ListBox>
+                  </Border>
+
+                  <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Top">
+                    <Button Classes="browse-btn" Width="32" Content="+" Click="AddBuffSkill_Click" />
+                    <Button Classes="legacy-btn danger compact" Width="32" Content="x" Click="RemoveBuffSkill_Click" />
+                    <Button Classes="legacy-btn compact" Width="32" Content="^" Click="MoveBuffUp_Click" />
+                    <Button Classes="legacy-btn compact" Width="32" Content="v" Click="MoveBuffDown_Click" />
+                  </StackPanel>
+                </Grid>
+
+                <Grid ColumnDefinitions="Auto,220,Auto,220">
+                  <TextBlock Grid.Column="0" Text="Imbue" Classes="form-label" VerticalAlignment="Center" />
+                  <controls:CustomSelect Grid.Column="1" x:Name="ImbueSkillSelect" Placeholder="None" />
+                </Grid>
+              </StackPanel>
+            </DockPanel>
+          </Border>
+        </StackPanel>
+
+        <StackPanel x:Name="AdvancedSetupPanel" Spacing="10" IsVisible="False">
+          <Border Classes="section-card">
+            <DockPanel>
+              <Border DockPanel.Dock="Top" Classes="section-header">
+                <TextBlock Text="Automated Resurrection" Classes="section-header-text" />
+              </Border>
+
+              <StackPanel Margin="10" Spacing="6">
+                <Grid ColumnDefinitions="Auto,260">
+                  <TextBlock Grid.Column="0" Text="Resurrection skill" Classes="form-label" VerticalAlignment="Center" />
+                  <controls:CustomSelect Grid.Column="1" x:Name="ResurrectionSkillSelect" Placeholder="None" />
+                </Grid>
+
+                <CheckBox x:Name="AcceptResurrectionCheck" Content="Auto accept resurrection" Classes="legacy-check" IsCheckedChanged="SimpleCheck_Changed" Tag="acceptResurrection" />
+                <CheckBox x:Name="ResurrectPartyCheck" Content="Auto resurrect party members" Classes="legacy-check" IsCheckedChanged="SimpleCheck_Changed" Tag="resurrectParty" />
+
+                <Grid ColumnDefinitions="Auto,90,Auto">
+                  <TextBlock Grid.Column="0" Text="Don't resurrect char again within" Classes="form-label" VerticalAlignment="Center" />
+                  <TextBox Grid.Column="1" x:Name="ResDelayBox" Classes="compact-num" TextChanged="NumericBox_Changed" Tag="resDelay" />
+                  <TextBlock Grid.Column="2" Text="sec" Classes="unit-label" VerticalAlignment="Center" />
+                </Grid>
+
+                <Grid ColumnDefinitions="Auto,90,Auto">
+                  <TextBlock Grid.Column="0" Text="Resurrection radius" Classes="form-label" VerticalAlignment="Center" />
+                  <TextBox Grid.Column="1" x:Name="ResRadiusBox" Classes="compact-num" TextChanged="NumericBox_Changed" Tag="resRadius" />
+                  <TextBlock Grid.Column="2" Text="m" Classes="unit-label" VerticalAlignment="Center" />
+                </Grid>
+              </StackPanel>
+            </DockPanel>
+          </Border>
+
+          <Border Classes="section-card">
+            <DockPanel>
+              <Border DockPanel.Dock="Top" Classes="section-header">
+                <TextBlock Text="Advanced Buff Configuration" Classes="section-header-text" />
+              </Border>
+
+              <StackPanel Margin="10" Spacing="6">
+                <CheckBox x:Name="CastBuffsInTownsCheck" Content="Cast buffs in towns" Classes="legacy-check" IsCheckedChanged="SimpleCheck_Changed" Tag="castBuffsInTowns" />
+                <CheckBox x:Name="CastBuffsWalkBackCheck" Content="Cast buffs while walk-back" Classes="legacy-check" IsCheckedChanged="SimpleCheck_Changed" Tag="castBuffsDuringWalkBack" />
+                <CheckBox x:Name="CastBuffsBetweenAttacksCheck" Content="Cast buffs between attack skills" Classes="legacy-check" IsCheckedChanged="SimpleCheck_Changed" Tag="castBuffsBetweenAttacks" />
+              </StackPanel>
+            </DockPanel>
+          </Border>
+
+          <Border Classes="section-card">
+            <DockPanel>
+              <Border DockPanel.Dock="Top" Classes="section-header">
+                <TextBlock Text="Mastery Update" Classes="section-header-text" />
+              </Border>
+
+              <StackPanel Margin="10" Spacing="6">
+                <Grid ColumnDefinitions="Auto,220,Auto,86">
+                  <CheckBox Grid.Column="0" x:Name="LearnMasteryCheck" Content="Mastery" Classes="legacy-check" IsCheckedChanged="SimpleCheck_Changed" Tag="learnMastery" VerticalAlignment="Center" />
+                  <controls:CustomSelect Grid.Column="1" x:Name="MasterySelect" Placeholder="Not selected" />
+                  <TextBlock Grid.Column="2" Text="Gap" Classes="form-label" VerticalAlignment="Center" />
+                  <TextBox Grid.Column="3" x:Name="MasteryGapBox" Classes="compact-num" TextChanged="NumericBox_Changed" Tag="masteryGap" />
+                </Grid>
+
+                <CheckBox x:Name="LearnMasteryStoppedCheck" Content="Increase even if bot is stopped" Classes="legacy-check" IsCheckedChanged="SimpleCheck_Changed" Tag="learnMasteryBotStopped" />
+              </StackPanel>
+            </DockPanel>
+          </Border>
+
+          <Border Classes="section-card">
+            <DockPanel>
+              <Border DockPanel.Dock="Top" Classes="section-header">
+                <TextBlock Text="Advanced Setup" Classes="section-header-text" />
+              </Border>
+
+              <StackPanel Margin="10" Spacing="6">
+                <CheckBox x:Name="WarlockModeCheck" Content="Change target after 2 DoTs" Classes="legacy-check" IsCheckedChanged="SimpleCheck_Changed" Tag="warlockMode" />
+                <CheckBox x:Name="UseDefaultAttackCheck" Content="Use normal attack if no skill is available" Classes="legacy-check" IsCheckedChanged="SimpleCheck_Changed" Tag="useDefaultAttack" />
+
+                <Grid ColumnDefinitions="Auto,220,Auto">
+                  <CheckBox Grid.Column="0" x:Name="UseTeleportSkillCheck" Content="Use teleport skill" Classes="legacy-check" IsCheckedChanged="SimpleCheck_Changed" Tag="useTeleportSkill" VerticalAlignment="Center" />
+                  <controls:CustomSelect Grid.Column="1" x:Name="TeleportSkillSelect" Placeholder="None" />
+                </Grid>
+              </StackPanel>
+            </DockPanel>
+          </Border>
+        </StackPanel>
+      </StackPanel>
+    </Grid>
   </ScrollViewer>
 </UserControl>

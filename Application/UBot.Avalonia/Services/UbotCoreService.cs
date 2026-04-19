@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using UBot.Core.Client.ReferenceObjects;
 using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Event;
@@ -15,6 +16,7 @@ using UBot.Core.Extensions;
 using UBot.Core.Network;
 using UBot.Core.Network.Protocol;
 using UBot.Core.Objects;
+using UBot.Core.Objects.Skill;
 using UBot.Core.Plugins;
 using Forms = System.Windows.Forms;
 
@@ -26,7 +28,22 @@ public sealed class UbotCoreService : IUbotCoreService
     private const string MapPluginName = "UBot.Map";
     private const string QuestPluginAlias = "UBot.Quest";
     private const string QuestRuntimePlugin = "UBot.QuestLog";
+    private const string SkillsPluginName = "UBot.Skills";
+    private const string ItemsPluginName = "UBot.Items";
     private const double MapClickMaxStepDistance = 145.0;
+
+    private static readonly MonsterRarity[] AttackRarityByIndex =
+    {
+        MonsterRarity.General,
+        MonsterRarity.Champion,
+        MonsterRarity.Giant,
+        MonsterRarity.GeneralParty,
+        MonsterRarity.ChampionParty,
+        MonsterRarity.GiantParty,
+        MonsterRarity.Elite,
+        MonsterRarity.EliteStrong,
+        MonsterRarity.Unique
+    };
 
     private static readonly object InitLock = new();
     private static bool _initialized;
@@ -205,6 +222,9 @@ public sealed class UbotCoreService : IUbotCoreService
             ["player"] = BuildStatusSnapshot().Player
         };
 
+        if (TryResolvePlugin(pluginId, out var plugin) && IsSkillsPlugin(plugin))
+            state["skills"] = BuildSkillsPluginState();
+
         var dto = new PluginStateDto
         {
             Id = pluginId ?? string.Empty,
@@ -231,6 +251,10 @@ public sealed class UbotCoreService : IUbotCoreService
                 return Task.FromResult(BuildProtectionPluginConfig());
             if (IsMapPlugin(plugin))
                 return Task.FromResult(BuildMapPluginConfig());
+            if (IsSkillsPlugin(plugin))
+                return Task.FromResult(BuildSkillsPluginConfig());
+            if (IsItemsPlugin(plugin))
+                return Task.FromResult(BuildItemsPluginConfig());
         }
 
         var loaded = LoadPluginJsonConfig(pluginId);
@@ -256,6 +280,10 @@ public sealed class UbotCoreService : IUbotCoreService
                 changed = ApplyProtectionPluginPatch(patch);
             else if (IsMapPlugin(plugin))
                 changed = ApplyMapPluginPatch(patch);
+            else if (IsSkillsPlugin(plugin))
+                changed = ApplySkillsPluginPatch(patch);
+            else if (IsItemsPlugin(plugin))
+                changed = ApplyItemsPluginPatch(patch);
             else
                 changed = ApplyGenericPluginPatch(plugin.Name, patch);
         }
@@ -923,12 +951,15 @@ public sealed class UbotCoreService : IUbotCoreService
     private static bool IsGeneralPlugin(IPlugin plugin) => ResolveModuleKey(plugin.Name) == "general";
     private static bool IsProtectionPlugin(IPlugin plugin) => ResolveModuleKey(plugin.Name) == "protection";
     private static bool IsMapPlugin(IPlugin plugin) => ResolveModuleKey(plugin.Name) == "map";
+    private static bool IsSkillsPlugin(IPlugin plugin) => ResolveModuleKey(plugin.Name) == "skills";
+    private static bool IsItemsPlugin(IPlugin plugin) => ResolveModuleKey(plugin.Name) == "items";
 
     private static string ResolveModuleKey(string id)
     {
         var value = (id ?? string.Empty).ToLowerInvariant();
         if (value.Contains("general")) return "general";
         if (value.Contains("training")) return "training";
+        if (value.Contains("skills")) return "skills";
         if (value.Contains("protection")) return "protection";
         if (value.Contains("inventory")) return "inventory";
         if (value.Contains("items")) return "items";
@@ -1096,6 +1127,477 @@ public sealed class UbotCoreService : IUbotCoreService
             ["mpSkillId"] = PlayerConfig.Get("UBot.Protection.MpSkill", 0U).ToString(),
             ["badStatusSkillId"] = PlayerConfig.Get("UBot.Protection.BadStatusSkill", 0U).ToString()
         };
+    }
+
+    private static Dictionary<string, object?> BuildSkillsPluginConfig()
+    {
+        var config = LoadPluginJsonConfig(SkillsPluginName);
+        config["enableAttacks"] = PlayerConfig.Get("UBot.Desktop.Skills.EnableAttacks", true);
+        config["enableBuffs"] = PlayerConfig.Get("UBot.Desktop.Skills.EnableBuffs", true);
+        config["attackTypeIndex"] = Math.Clamp(
+            PlayerConfig.Get("UBot.Desktop.Skills.AttackTypeIndex", 0),
+            0,
+            AttackRarityByIndex.Length - 1);
+        config["noAttack"] = PlayerConfig.Get("UBot.Skills.checkBoxNoAttack", false);
+        config["useSkillsInOrder"] = PlayerConfig.Get("UBot.Skills.checkUseSkillsInOrder", false);
+        config["useDefaultAttack"] = PlayerConfig.Get("UBot.Skills.checkUseDefaultAttack", true);
+        config["useTeleportSkill"] = PlayerConfig.Get("UBot.Skills.checkUseTeleportSkill", false);
+        config["castBuffsInTowns"] = PlayerConfig.Get("UBot.Skills.checkCastBuffsInTowns", false);
+        config["castBuffsDuringWalkBack"] = PlayerConfig.Get("UBot.Skills.checkCastBuffsDuringWalkBack", true);
+        config["castBuffsBetweenAttacks"] = PlayerConfig.Get("UBot.Skills.checkCastBuffsBetweenAttacks", false);
+        config["acceptResurrection"] = PlayerConfig.Get("UBot.Skills.checkAcceptResurrection", false);
+        config["resurrectParty"] = PlayerConfig.Get("UBot.Skills.checkResurrectParty", false);
+        config["resDelay"] = Math.Clamp(PlayerConfig.Get("UBot.Skills.numResDelay", 120), 1, 3600);
+        config["resRadius"] = Math.Clamp(PlayerConfig.Get("UBot.Skills.numResRadius", 100), 1, 500);
+        config["learnMastery"] = PlayerConfig.Get("UBot.Skills.checkLearnMastery", false);
+        config["learnMasteryBotStopped"] = PlayerConfig.Get("UBot.Skills.checkLearnMasteryBotStopped", false);
+        config["masteryGap"] = Math.Clamp(PlayerConfig.Get("UBot.Skills.numMasteryGap", 0), 0, 120);
+        config["warlockMode"] = PlayerConfig.Get("UBot.Skills.checkWarlockMode", false);
+        config["imbueSkillId"] = PlayerConfig.Get("UBot.Desktop.Skills.ImbueSkillId", 0U);
+        config["resurrectionSkillId"] = PlayerConfig.Get("UBot.Skills.ResurrectionSkill", 0U);
+        config["teleportSkillId"] = PlayerConfig.Get("UBot.Skills.TeleportSkill", 0U);
+        config["selectedMasteryId"] = PlayerConfig.Get("UBot.Skills.selectedMastery", 0U);
+
+        for (var i = 0; i < AttackRarityByIndex.Length; i++)
+            config[$"attackSkills_{i}"] = PlayerConfig.GetArray<uint>($"UBot.Skills.Attacks_{i}").Distinct().ToList();
+
+        config["buffSkills"] = PlayerConfig.GetArray<uint>("UBot.Skills.Buffs").Distinct().ToList();
+        config["skillCatalog"] = BuildSkillCatalog();
+        config["masteryCatalog"] = BuildMasteryCatalog();
+        config["activeBuffs"] = BuildActiveBuffSnapshot();
+        return config;
+    }
+
+    private sealed class ItemsShoppingTarget
+    {
+        public string ShopCodeName { get; set; } = string.Empty;
+        public string ItemCodeName { get; set; } = string.Empty;
+        public int Amount { get; set; }
+    }
+
+    private static Dictionary<string, object?> BuildItemsPluginConfig()
+    {
+        var config = LoadPluginJsonConfig(ItemsPluginName);
+
+        var shoppingEnabled = PlayerConfig.Get("UBot.Shopping.Enabled", true);
+        var repairGear = PlayerConfig.Get("UBot.Shopping.RepairGear", true);
+        var sellPetItems = PlayerConfig.Get("UBot.Shopping.SellPet", true);
+        var storePetItems = PlayerConfig.Get("UBot.Shopping.StorePet", true);
+
+        ShoppingManager.Enabled = shoppingEnabled;
+        ShoppingManager.RepairGear = repairGear;
+        ShoppingManager.SellPetItems = sellPetItems;
+        ShoppingManager.StorePetItems = storePetItems;
+        ShoppingManager.SellFilter ??= new List<string>();
+        ShoppingManager.StoreFilter ??= new List<string>();
+        ShoppingManager.ShoppingList ??= new Dictionary<RefShopGood, int>();
+        ShoppingManager.LoadFilters();
+        PickupManager.LoadFilter();
+
+        config["shoppingEnabled"] = shoppingEnabled;
+        config["repairGear"] = repairGear;
+        config["sellPetItems"] = sellPetItems;
+        config["storePetItems"] = storePetItems;
+        config["pickupUseAbilityPet"] = PlayerConfig.Get("UBot.Items.Pickup.EnableAbilityPet", true);
+        config["pickupJustMyItems"] = PlayerConfig.Get("UBot.Items.Pickup.JustPickMyItems", false);
+        config["pickupDontInBerzerk"] = PlayerConfig.Get("UBot.Items.Pickup.DontPickupInBerzerk", true);
+        config["pickupDontWhileBotting"] = PlayerConfig.Get("UBot.Items.Pickup.DontPickupWhileBotting", false);
+        config["pickupGold"] = PlayerConfig.Get("UBot.Items.Pickup.Gold", true);
+        config["pickupBlueItems"] = PlayerConfig.Get("UBot.Items.Pickup.Blue", true);
+        config["pickupQuestItems"] = PlayerConfig.Get("UBot.Items.Pickup.Quest", true);
+        config["pickupRareItems"] = PlayerConfig.Get("UBot.Items.Pickup.Rare", true);
+        config["pickupAnyEquips"] = PlayerConfig.Get("UBot.Items.Pickup.AnyEquips", true);
+        config["pickupEverything"] = PlayerConfig.Get("UBot.Items.Pickup.Everything", true);
+        config["sellFilter"] = ShoppingManager.SellFilter.Where(item => !string.IsNullOrWhiteSpace(item)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        config["storeFilter"] = ShoppingManager.StoreFilter.Where(item => !string.IsNullOrWhiteSpace(item)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        config["pickupFilter"] = BuildPickupFilterSnapshot();
+
+        if (!config.TryGetValue("shoppingShopCodeName", out _))
+            config["shoppingShopCodeName"] = string.Empty;
+
+        var showEquipmentOnShopping = false;
+        if (config.TryGetValue("showEquipmentOnShopping", out var showEquipmentRaw)
+            && TryConvertBool(showEquipmentRaw, out var parsedShowEquipment))
+            showEquipmentOnShopping = parsedShowEquipment;
+        config["showEquipmentOnShopping"] = showEquipmentOnShopping;
+
+        var shoppingTargets = ParseShoppingTargets(config.TryGetValue("shoppingTargets", out var shoppingTargetsRaw)
+            ? shoppingTargetsRaw
+            : null);
+        config["shoppingTargets"] = shoppingTargets
+            .Select(ToShoppingTargetDictionary)
+            .Cast<object?>()
+            .ToList();
+
+        SyncShoppingTargetsRuntime(shoppingTargets);
+
+        config["shopCatalog"] = BuildItemsShopCatalog();
+        config["itemCatalog"] = BuildItemsItemCatalog();
+
+        return config;
+    }
+
+    private static List<Dictionary<string, object?>> BuildPickupFilterSnapshot()
+    {
+        return PickupManager.PickupFilter
+            .Where(item => !string.IsNullOrWhiteSpace(item.CodeName))
+            .GroupBy(item => item.CodeName, StringComparer.OrdinalIgnoreCase)
+            .Select(group => group.Last())
+            .OrderBy(item => item.CodeName, StringComparer.OrdinalIgnoreCase)
+            .Select(item => new Dictionary<string, object?>
+            {
+                ["codeName"] = item.CodeName,
+                ["pickOnlyChar"] = item.PickOnlyChar
+            })
+            .ToList();
+    }
+
+    private static List<Dictionary<string, object?>> BuildItemsShopCatalog()
+    {
+        var result = new List<Dictionary<string, object?>>();
+        if (Game.ReferenceManager?.ShopGroups == null)
+            return result;
+
+        foreach (var shopGroup in Game.ReferenceManager.ShopGroups.Values)
+        {
+            if (shopGroup == null || string.IsNullOrWhiteSpace(shopGroup.RefNpcCodeName))
+                continue;
+
+            var items = new List<Dictionary<string, object?>>();
+            var itemCodeNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var good in Game.ReferenceManager.GetRefShopGoods(shopGroup))
+            {
+                var package = Game.ReferenceManager.GetRefPackageItem(good.RefPackageItemCodeName);
+                var itemCodeName = package?.RefItemCodeName;
+                if (string.IsNullOrWhiteSpace(itemCodeName) || !itemCodeNames.Add(itemCodeName))
+                    continue;
+
+                var refItem = Game.ReferenceManager.GetRefItem(itemCodeName);
+                if (refItem == null)
+                    continue;
+
+                items.Add(new Dictionary<string, object?>
+                {
+                    ["codeName"] = refItem.CodeName,
+                    ["name"] = ResolveItemDisplayName(refItem),
+                    ["isEquip"] = refItem.IsEquip,
+                    ["level"] = refItem.ReqLevel1,
+                    ["country"] = (int)refItem.Country
+                });
+            }
+
+            items = items
+                .OrderBy(row => row.TryGetValue("name", out var value) ? value?.ToString() : string.Empty, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            result.Add(new Dictionary<string, object?>
+            {
+                ["codeName"] = shopGroup.RefNpcCodeName,
+                ["name"] = ResolveShopDisplayName(shopGroup),
+                ["items"] = items
+            });
+        }
+
+        return result
+            .GroupBy(row => row.TryGetValue("codeName", out var value) ? value?.ToString() : string.Empty, StringComparer.OrdinalIgnoreCase)
+            .Select(group => group.First())
+            .OrderBy(row => row.TryGetValue("name", out var value) ? value?.ToString() : string.Empty, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private static List<Dictionary<string, object?>> BuildItemsItemCatalog()
+    {
+        var result = new List<Dictionary<string, object?>>();
+        if (Game.ReferenceManager?.ItemData == null)
+            return result;
+
+        foreach (var refItem in Game.ReferenceManager.ItemData.Values)
+        {
+            if (refItem == null || refItem.TypeID1 != 3 || refItem.IsGold)
+                continue;
+
+            result.Add(new Dictionary<string, object?>
+            {
+                ["codeName"] = refItem.CodeName,
+                ["name"] = ResolveItemDisplayName(refItem),
+                ["level"] = (int)refItem.ReqLevel1,
+                ["degree"] = refItem.Degree,
+                ["gender"] = (int)refItem.ReqGender,
+                ["country"] = (int)refItem.Country,
+                ["rarity"] = (int)(byte)refItem.Rarity,
+                ["isEquip"] = refItem.IsEquip,
+                ["isQuest"] = refItem.IsQuest,
+                ["isAmmunition"] = refItem.IsAmmunition,
+                ["typeId2"] = (int)refItem.TypeID2,
+                ["typeId3"] = (int)refItem.TypeID3,
+                ["typeId4"] = (int)refItem.TypeID4
+            });
+        }
+
+        return result
+            .OrderBy(row => row.TryGetValue("name", out var value) ? value?.ToString() : string.Empty, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private static string ResolveShopDisplayName(RefShopGroup shopGroup)
+    {
+        var npc = Game.ReferenceManager?.GetRefObjChar(shopGroup.RefNpcCodeName);
+        var translated = npc?.GetRealName();
+        if (!string.IsNullOrWhiteSpace(translated))
+            return translated;
+
+        return FormatCodeName(shopGroup.RefNpcCodeName);
+    }
+
+    private static string ResolveItemDisplayName(RefObjItem item)
+    {
+        var translated = item.GetRealName();
+        if (!string.IsNullOrWhiteSpace(translated))
+            return translated;
+
+        return FormatCodeName(item.CodeName);
+    }
+
+    private static string FormatCodeName(string? codeName)
+    {
+        if (string.IsNullOrWhiteSpace(codeName))
+            return string.Empty;
+
+        var normalized = codeName.Replace('_', ' ').Trim();
+        normalized = normalized.ToLowerInvariant();
+        return CultureInfo.InvariantCulture.TextInfo.ToTitleCase(normalized);
+    }
+
+    private static Dictionary<string, object?> ToShoppingTargetDictionary(ItemsShoppingTarget target)
+    {
+        return new Dictionary<string, object?>
+        {
+            ["shopCodeName"] = target.ShopCodeName,
+            ["itemCodeName"] = target.ItemCodeName,
+            ["amount"] = Math.Max(target.Amount, 1)
+        };
+    }
+
+    private static List<ItemsShoppingTarget> ParseShoppingTargets(object? rawTargets)
+    {
+        var result = new List<ItemsShoppingTarget>();
+        if (rawTargets == null || rawTargets is string || rawTargets is not IEnumerable enumerable)
+            return result;
+
+        foreach (var rawEntry in enumerable)
+        {
+            if (!TryConvertObjectToDictionary(rawEntry, out var entry))
+                continue;
+
+            if (!TryGetStringValue(entry, "shopCodeName", out var shopCodeName))
+                continue;
+            if (!TryGetStringValue(entry, "itemCodeName", out var itemCodeName))
+                continue;
+
+            if (!TryGetIntValue(entry, "amount", out var amount))
+                amount = 1;
+
+            if (string.IsNullOrWhiteSpace(shopCodeName) || string.IsNullOrWhiteSpace(itemCodeName))
+                continue;
+
+            result.Add(new ItemsShoppingTarget
+            {
+                ShopCodeName = shopCodeName.Trim(),
+                ItemCodeName = itemCodeName.Trim(),
+                Amount = Math.Clamp(amount, 1, 50000)
+            });
+        }
+
+        return result
+            .GroupBy(item => $"{item.ShopCodeName}|{item.ItemCodeName}", StringComparer.OrdinalIgnoreCase)
+            .Select(group => group.Last())
+            .ToList();
+    }
+
+    private static void SyncShoppingTargetsRuntime(List<ItemsShoppingTarget> targets)
+    {
+        ShoppingManager.ShoppingList ??= new Dictionary<RefShopGood, int>();
+        ShoppingManager.ShoppingList.Clear();
+
+        if (Game.ReferenceManager == null || targets.Count == 0)
+            return;
+
+        foreach (var target in targets)
+        {
+            var shopGroup = Game.ReferenceManager.GetRefShopGroup(target.ShopCodeName);
+            if (shopGroup == null)
+                continue;
+
+            RefShopGood? matchedGood = null;
+            foreach (var good in Game.ReferenceManager.GetRefShopGoods(shopGroup))
+            {
+                var package = Game.ReferenceManager.GetRefPackageItem(good.RefPackageItemCodeName);
+                if (package == null || string.IsNullOrWhiteSpace(package.RefItemCodeName))
+                    continue;
+
+                if (string.Equals(package.RefItemCodeName, target.ItemCodeName, StringComparison.OrdinalIgnoreCase))
+                {
+                    matchedGood = good;
+                    break;
+                }
+            }
+
+            if (matchedGood == null)
+                continue;
+
+            ShoppingManager.ShoppingList[matchedGood] = Math.Clamp(target.Amount, 1, 50000);
+        }
+    }
+
+    private static Dictionary<string, object?> BuildSkillsPluginState()
+    {
+        return new Dictionary<string, object?>
+        {
+            ["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            ["playerReady"] = Game.Player != null,
+            ["skillCatalog"] = BuildSkillCatalog(),
+            ["masteryCatalog"] = BuildMasteryCatalog(),
+            ["activeBuffs"] = BuildActiveBuffSnapshot()
+        };
+    }
+
+    private static List<Dictionary<string, object?>> BuildSkillCatalog()
+    {
+        var entries = new List<Dictionary<string, object?>>();
+        foreach (var skill in CollectKnownAndAbilitySkills())
+        {
+            var record = skill.Record;
+            if (record == null)
+                continue;
+
+            var name = record.GetRealName();
+            if (string.IsNullOrWhiteSpace(name))
+                name = record.Basic_Code;
+            if (string.IsNullOrWhiteSpace(name))
+                name = $"Skill {skill.Id}";
+
+            var isPassive = skill.IsPassive;
+            var isAttack = skill.IsAttack;
+            var isImbue = skill.IsImbue;
+            bool isLowLevel;
+            try
+            {
+                isLowLevel = skill.IsLowLevel();
+            }
+            catch
+            {
+                isLowLevel = false;
+            }
+
+            entries.Add(new Dictionary<string, object?>
+            {
+                ["id"] = skill.Id,
+                ["name"] = name,
+                ["isPassive"] = isPassive,
+                ["isAttack"] = isAttack,
+                ["isBuff"] = !isPassive && !isAttack,
+                ["isImbue"] = isImbue,
+                ["isLowLevel"] = isLowLevel
+            });
+        }
+
+        return entries
+            .OrderBy(row => row.TryGetValue("name", out var n) ? n?.ToString() : string.Empty, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(row => row.TryGetValue("id", out var id) && id is uint u ? u : 0)
+            .ToList();
+    }
+
+    private static List<Dictionary<string, object?>> BuildMasteryCatalog()
+    {
+        var result = new List<Dictionary<string, object?>>();
+        var masteries = Game.Player?.Skills?.Masteries;
+        if (masteries == null)
+            return result;
+
+        foreach (var mastery in masteries)
+        {
+            var record = mastery.Record;
+            if (record == null)
+                continue;
+
+            var name = record.Name;
+            if (string.IsNullOrWhiteSpace(name))
+                name = $"Mastery {mastery.Id}";
+
+            result.Add(new Dictionary<string, object?>
+            {
+                ["id"] = mastery.Id,
+                ["name"] = name,
+                ["level"] = mastery.Level
+            });
+        }
+
+        return result
+            .OrderBy(row => row.TryGetValue("name", out var n) ? n?.ToString() : string.Empty, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private static List<Dictionary<string, object?>> BuildActiveBuffSnapshot()
+    {
+        var result = new List<Dictionary<string, object?>>();
+        var buffs = Game.Player?.State?.ActiveBuffs;
+        if (buffs == null)
+            return result;
+
+        foreach (var buff in buffs)
+        {
+            var record = buff.Record;
+            if (record == null)
+                continue;
+
+            var name = record.GetRealName();
+            if (string.IsNullOrWhiteSpace(name))
+                name = record.Basic_Code;
+            if (string.IsNullOrWhiteSpace(name))
+                name = $"Buff {buff.Id}";
+
+            result.Add(new Dictionary<string, object?>
+            {
+                ["id"] = buff.Id,
+                ["token"] = buff.Token,
+                ["name"] = name,
+                ["remainingMs"] = buff.RemainingMilliseconds,
+                ["remainingPercent"] = Math.Round(buff.RemainingPercent * 100d, 2)
+            });
+        }
+
+        return result
+            .OrderBy(row => row.TryGetValue("name", out var n) ? n?.ToString() : string.Empty, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private static List<SkillInfo> CollectKnownAndAbilitySkills()
+    {
+        var result = new Dictionary<uint, SkillInfo>();
+        var knownSkills = Game.Player?.Skills?.KnownSkills;
+        if (knownSkills != null)
+        {
+            foreach (var known in knownSkills)
+            {
+                if (known?.Record == null || result.ContainsKey(known.Id))
+                    continue;
+
+                result[known.Id] = known;
+            }
+        }
+
+        if (Game.Player != null && Game.Player.TryGetAbilitySkills(out var abilitySkills))
+        {
+            foreach (var ability in abilitySkills)
+            {
+                if (ability?.Record == null || result.ContainsKey(ability.Id))
+                    continue;
+
+                result[ability.Id] = ability;
+            }
+        }
+
+        return result.Values.ToList();
     }
     private static bool ApplyGeneralPluginPatch(Dictionary<string, object?> patch)
     {
@@ -1330,6 +1832,229 @@ public sealed class UbotCoreService : IUbotCoreService
         }
 
         return changed;
+    }
+
+    private static bool ApplySkillsPluginPatch(Dictionary<string, object?> patch)
+    {
+        var changed = false;
+        changed |= SetPlayerBool("UBot.Desktop.Skills.EnableAttacks", patch, "enableAttacks");
+        changed |= SetPlayerBool("UBot.Desktop.Skills.EnableBuffs", patch, "enableBuffs");
+        changed |= SetPlayerInt("UBot.Desktop.Skills.AttackTypeIndex", patch, "attackTypeIndex", 0, AttackRarityByIndex.Length - 1);
+        changed |= SetPlayerBool("UBot.Skills.checkBoxNoAttack", patch, "noAttack");
+        changed |= SetPlayerBool("UBot.Skills.checkUseSkillsInOrder", patch, "useSkillsInOrder");
+        changed |= SetPlayerBool("UBot.Skills.checkUseDefaultAttack", patch, "useDefaultAttack");
+        changed |= SetPlayerBool("UBot.Skills.checkUseTeleportSkill", patch, "useTeleportSkill");
+        changed |= SetPlayerBool("UBot.Skills.checkCastBuffsInTowns", patch, "castBuffsInTowns");
+        changed |= SetPlayerBool("UBot.Skills.checkCastBuffsDuringWalkBack", patch, "castBuffsDuringWalkBack");
+        changed |= SetPlayerBool("UBot.Skills.checkCastBuffsBetweenAttacks", patch, "castBuffsBetweenAttacks");
+        changed |= SetPlayerBool("UBot.Skills.checkAcceptResurrection", patch, "acceptResurrection");
+        changed |= SetPlayerBool("UBot.Skills.checkResurrectParty", patch, "resurrectParty");
+        changed |= SetPlayerInt("UBot.Skills.numResDelay", patch, "resDelay", 1, 3600);
+        changed |= SetPlayerInt("UBot.Skills.numResRadius", patch, "resRadius", 1, 500);
+        changed |= SetPlayerBool("UBot.Skills.checkLearnMastery", patch, "learnMastery");
+        changed |= SetPlayerBool("UBot.Skills.checkLearnMasteryBotStopped", patch, "learnMasteryBotStopped");
+        changed |= SetPlayerInt("UBot.Skills.numMasteryGap", patch, "masteryGap", 0, 120);
+        changed |= SetPlayerBool("UBot.Skills.checkWarlockMode", patch, "warlockMode");
+
+        if (TryGetUIntValue(patch, "imbueSkillId", out var imbueSkillId))
+        {
+            PlayerConfig.Set("UBot.Desktop.Skills.ImbueSkillId", imbueSkillId);
+            changed = true;
+        }
+
+        if (TryGetUIntValue(patch, "resurrectionSkillId", out var resurrectionSkillId))
+        {
+            PlayerConfig.Set("UBot.Skills.ResurrectionSkill", resurrectionSkillId);
+            changed = true;
+        }
+
+        if (TryGetUIntValue(patch, "teleportSkillId", out var teleportSkillId))
+        {
+            PlayerConfig.Set("UBot.Skills.TeleportSkill", teleportSkillId);
+            changed = true;
+        }
+
+        if (TryGetUIntValue(patch, "selectedMasteryId", out var masteryId))
+        {
+            PlayerConfig.Set("UBot.Skills.selectedMastery", masteryId);
+            changed = true;
+        }
+
+        if (TryGetUIntListValue(patch, "buffSkills", out var buffs))
+        {
+            PlayerConfig.SetArray("UBot.Skills.Buffs", buffs);
+            changed = true;
+        }
+
+        for (var i = 0; i < AttackRarityByIndex.Length; i++)
+        {
+            if (!TryGetUIntListValue(patch, $"attackSkills_{i}", out var attackSkills))
+                continue;
+
+            PlayerConfig.SetArray($"UBot.Skills.Attacks_{i}", attackSkills);
+            changed = true;
+        }
+
+        if (changed)
+            RefreshLiveSkillsFromConfig();
+
+        return changed;
+    }
+
+    private static bool ApplyItemsPluginPatch(Dictionary<string, object?> patch)
+    {
+        var changed = false;
+        ShoppingManager.SellFilter ??= new List<string>();
+        ShoppingManager.StoreFilter ??= new List<string>();
+        ShoppingManager.ShoppingList ??= new Dictionary<RefShopGood, int>();
+
+        if (TryGetBoolValue(patch, "shoppingEnabled", out var shoppingEnabled))
+        {
+            PlayerConfig.Set("UBot.Shopping.Enabled", shoppingEnabled);
+            ShoppingManager.Enabled = shoppingEnabled;
+            changed = true;
+        }
+
+        if (TryGetBoolValue(patch, "repairGear", out var repairGear))
+        {
+            PlayerConfig.Set("UBot.Shopping.RepairGear", repairGear);
+            ShoppingManager.RepairGear = repairGear;
+            changed = true;
+        }
+
+        if (TryGetBoolValue(patch, "sellPetItems", out var sellPetItems))
+        {
+            PlayerConfig.Set("UBot.Shopping.SellPet", sellPetItems);
+            ShoppingManager.SellPetItems = sellPetItems;
+            changed = true;
+        }
+
+        if (TryGetBoolValue(patch, "storePetItems", out var storePetItems))
+        {
+            PlayerConfig.Set("UBot.Shopping.StorePet", storePetItems);
+            ShoppingManager.StorePetItems = storePetItems;
+            changed = true;
+        }
+
+        changed |= SetPlayerBool("UBot.Items.Pickup.EnableAbilityPet", patch, "pickupUseAbilityPet");
+        changed |= SetPlayerBool("UBot.Items.Pickup.JustPickMyItems", patch, "pickupJustMyItems");
+        changed |= SetPlayerBool("UBot.Items.Pickup.DontPickupInBerzerk", patch, "pickupDontInBerzerk");
+        changed |= SetPlayerBool("UBot.Items.Pickup.DontPickupWhileBotting", patch, "pickupDontWhileBotting");
+        changed |= SetPlayerBool("UBot.Items.Pickup.Gold", patch, "pickupGold");
+        changed |= SetPlayerBool("UBot.Items.Pickup.Blue", patch, "pickupBlueItems");
+        changed |= SetPlayerBool("UBot.Items.Pickup.Quest", patch, "pickupQuestItems");
+        changed |= SetPlayerBool("UBot.Items.Pickup.Rare", patch, "pickupRareItems");
+        changed |= SetPlayerBool("UBot.Items.Pickup.AnyEquips", patch, "pickupAnyEquips");
+        changed |= SetPlayerBool("UBot.Items.Pickup.Everything", patch, "pickupEverything");
+
+        if (TryGetStringListValue(patch, "sellFilter", out var sellFilter))
+        {
+            ShoppingManager.SellFilter.Clear();
+            ShoppingManager.SellFilter.AddRange(sellFilter);
+            ShoppingManager.SaveFilters();
+            changed = true;
+        }
+
+        if (TryGetStringListValue(patch, "storeFilter", out var storeFilter))
+        {
+            ShoppingManager.StoreFilter.Clear();
+            ShoppingManager.StoreFilter.AddRange(storeFilter);
+            ShoppingManager.SaveFilters();
+            changed = true;
+        }
+
+        if (TryGetPickupFilterValue(patch, "pickupFilter", out var pickupFilter))
+        {
+            PickupManager.PickupFilter.Clear();
+            foreach (var item in pickupFilter)
+                PickupManager.PickupFilter.Add(item);
+            PickupManager.SaveFilter();
+            changed = true;
+        }
+
+        var pluginConfig = LoadPluginJsonConfig(ItemsPluginName);
+        var pluginConfigChanged = false;
+
+        if (TryGetShoppingTargetsValue(patch, "shoppingTargets", out var shoppingTargets))
+        {
+            pluginConfig["shoppingTargets"] = shoppingTargets
+                .Select(ToShoppingTargetDictionary)
+                .Cast<object?>()
+                .ToList();
+            SyncShoppingTargetsRuntime(shoppingTargets);
+            pluginConfigChanged = true;
+            changed = true;
+        }
+
+        if (TryGetStringValue(patch, "shoppingShopCodeName", out var shoppingShopCodeName))
+        {
+            pluginConfig["shoppingShopCodeName"] = shoppingShopCodeName?.Trim() ?? string.Empty;
+            pluginConfigChanged = true;
+            changed = true;
+        }
+
+        if (TryGetBoolValue(patch, "showEquipmentOnShopping", out var showEquipmentOnShopping))
+        {
+            pluginConfig["showEquipmentOnShopping"] = showEquipmentOnShopping;
+            pluginConfigChanged = true;
+            changed = true;
+        }
+
+        if (pluginConfigChanged)
+            SavePluginJsonConfig(ItemsPluginName, pluginConfig);
+
+        return changed;
+    }
+
+    private static void RefreshLiveSkillsFromConfig()
+    {
+        if (Game.Player?.Skills == null || SkillManager.Skills == null || SkillManager.Buffs == null)
+            return;
+
+        Game.Player.TryGetAbilitySkills(out var abilitySkills);
+
+        SkillManager.Buffs.Clear();
+        foreach (var rarity in SkillManager.Skills.Keys.ToArray())
+            SkillManager.Skills[rarity].Clear();
+
+        var imbueSkillId = PlayerConfig.Get("UBot.Desktop.Skills.ImbueSkillId", 0U);
+        SkillManager.ImbueSkill = ResolveSkillInfoById(imbueSkillId, abilitySkills);
+
+        var resurrectionSkillId = PlayerConfig.Get("UBot.Skills.ResurrectionSkill", 0U);
+        SkillManager.ResurrectionSkill = ResolveSkillInfoById(resurrectionSkillId, abilitySkills);
+
+        var teleportSkillId = PlayerConfig.Get("UBot.Skills.TeleportSkill", 0U);
+        SkillManager.TeleportSkill = ResolveSkillInfoById(teleportSkillId, abilitySkills);
+
+        foreach (var buffId in PlayerConfig.GetArray<uint>("UBot.Skills.Buffs").Distinct())
+        {
+            var skill = ResolveSkillInfoById(buffId, abilitySkills);
+            if (skill != null)
+                SkillManager.Buffs.Add(skill);
+        }
+
+        for (var i = 0; i < AttackRarityByIndex.Length; i++)
+        {
+            var rarity = AttackRarityByIndex[i];
+            foreach (var attackSkillId in PlayerConfig.GetArray<uint>($"UBot.Skills.Attacks_{i}").Distinct())
+            {
+                var skill = ResolveSkillInfoById(attackSkillId, abilitySkills);
+                if (skill != null)
+                    SkillManager.Skills[rarity].Add(skill);
+            }
+        }
+    }
+
+    private static SkillInfo? ResolveSkillInfoById(uint skillId, List<SkillInfo> abilitySkills)
+    {
+        if (skillId == 0)
+            return null;
+
+        var knownSkill = Game.Player?.Skills?.GetSkillInfoById(skillId);
+        if (knownSkill != null)
+            return knownSkill;
+
+        return abilitySkills?.FirstOrDefault(skill => skill.Id == skillId);
     }
 
     private static bool ApplyGenericPluginPatch(string pluginId, Dictionary<string, object?> patch)
@@ -1859,6 +2584,88 @@ public sealed class UbotCoreService : IUbotCoreService
         return false;
     }
 
+    private static bool TryGetUIntListValue(IDictionary<string, object?> payload, string key, out List<uint> values)
+    {
+        values = new List<uint>();
+        if (!payload.TryGetValue(key, out var raw) || raw == null)
+            return false;
+
+        if (raw is string text)
+        {
+            foreach (var part in text.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                if (uint.TryParse(part, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed))
+                    values.Add(parsed);
+            }
+
+            values = values.Distinct().ToList();
+            return true;
+        }
+
+        if (raw is IEnumerable<uint> uintValues)
+        {
+            values = uintValues.Distinct().ToList();
+            return true;
+        }
+
+        if (raw is IEnumerable<int> intValues)
+        {
+            values = intValues.Where(item => item >= 0).Select(item => (uint)item).Distinct().ToList();
+            return true;
+        }
+
+        if (raw is IEnumerable<long> longValues)
+        {
+            values = longValues.Where(item => item >= 0 && item <= uint.MaxValue).Select(item => (uint)item).Distinct().ToList();
+            return true;
+        }
+
+        if (raw is IEnumerable<double> doubleValues)
+        {
+            values = doubleValues
+                .Where(item => item >= 0 && item <= uint.MaxValue)
+                .Select(item => (uint)Math.Round(item))
+                .Distinct()
+                .ToList();
+            return true;
+        }
+
+        if (raw is IEnumerable enumerable)
+        {
+            foreach (var item in enumerable)
+            {
+                if (item == null)
+                    continue;
+
+                if (item is uint uintItem)
+                {
+                    values.Add(uintItem);
+                    continue;
+                }
+
+                if (item is int intItem && intItem >= 0)
+                {
+                    values.Add((uint)intItem);
+                    continue;
+                }
+
+                if (item is long longItem && longItem >= 0 && longItem <= uint.MaxValue)
+                {
+                    values.Add((uint)longItem);
+                    continue;
+                }
+
+                if (uint.TryParse(item.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed))
+                    values.Add(parsed);
+            }
+
+            values = values.Distinct().ToList();
+            return true;
+        }
+
+        return false;
+    }
+
     private static bool TryGetStringListValue(IDictionary<string, object?> payload, string key, out List<string> values)
     {
         values = new List<string>();
@@ -1890,6 +2697,101 @@ public sealed class UbotCoreService : IUbotCoreService
             return true;
         }
 
+        return false;
+    }
+
+    private static bool TryGetIntValue(IDictionary<string, object?> payload, string key, out int value)
+    {
+        value = 0;
+        return payload.TryGetValue(key, out var raw) && TryConvertInt(raw, out value);
+    }
+
+    private static bool TryGetPickupFilterValue(
+        IDictionary<string, object?> payload,
+        string key,
+        out List<(string CodeName, bool PickOnlyChar)> values)
+    {
+        values = new List<(string CodeName, bool PickOnlyChar)>();
+        if (!payload.TryGetValue(key, out var raw))
+            return false;
+
+        if (raw == null || raw is string || raw is not IEnumerable enumerable)
+            return false;
+
+        foreach (var entryRaw in enumerable)
+        {
+            if (!TryConvertObjectToDictionary(entryRaw, out var entry))
+                continue;
+            if (!TryGetStringValue(entry, "codeName", out var codeName))
+                continue;
+
+            var pickOnlyChar = false;
+            if (entry.TryGetValue("pickOnlyChar", out var pickOnlyCharRaw))
+                _ = TryConvertBool(pickOnlyCharRaw, out pickOnlyChar);
+
+            if (string.IsNullOrWhiteSpace(codeName))
+                continue;
+
+            values.Add((codeName.Trim(), pickOnlyChar));
+        }
+
+        values = values
+            .GroupBy(item => item.CodeName, StringComparer.OrdinalIgnoreCase)
+            .Select(group => group.Last())
+            .ToList();
+        return true;
+    }
+
+    private static bool TryGetShoppingTargetsValue(
+        IDictionary<string, object?> payload,
+        string key,
+        out List<ItemsShoppingTarget> values)
+    {
+        values = new List<ItemsShoppingTarget>();
+        if (!payload.TryGetValue(key, out var raw))
+            return false;
+
+        values = ParseShoppingTargets(raw);
+        return true;
+    }
+
+    private static bool TryConvertObjectToDictionary(object? value, out Dictionary<string, object?> result)
+    {
+        if (value is Dictionary<string, object?> dict)
+        {
+            result = new Dictionary<string, object?>(dict, StringComparer.OrdinalIgnoreCase);
+            return true;
+        }
+
+        if (value is IDictionary<string, object?> typedDict)
+        {
+            result = new Dictionary<string, object?>(typedDict, StringComparer.OrdinalIgnoreCase);
+            return true;
+        }
+
+        if (value is IDictionary untypedDict)
+        {
+            result = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+            foreach (DictionaryEntry entry in untypedDict)
+            {
+                if (entry.Key == null)
+                    continue;
+                var key = entry.Key.ToString();
+                if (string.IsNullOrWhiteSpace(key))
+                    continue;
+                result[key] = entry.Value;
+            }
+
+            return result.Count > 0;
+        }
+
+        if (value is JsonElement element && element.ValueKind == JsonValueKind.Object)
+        {
+            result = JsonObjectToDictionary(element);
+            return true;
+        }
+
+        result = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
         return false;
     }
 

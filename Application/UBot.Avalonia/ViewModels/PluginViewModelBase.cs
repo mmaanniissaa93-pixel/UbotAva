@@ -29,15 +29,25 @@ public abstract partial class PluginViewModelBase : ObservableObject
         if (Config.TryGetValue(key, out var v))
         {
             if (v is double d) return d;
+            if (v is float f)  return f;
             if (v is int i)    return i;
             if (v is long l)   return l;
-            if (v is string s && double.TryParse(s, out var p)) return p;
+            if (v is uint ui)  return ui;
+            if (v is ulong ul) return ul;
+            if (v is short sh)  return sh;
+            if (v is ushort us) return us;
+            if (v is byte b)   return b;
+            if (v is sbyte sb) return sb;
+            if (v is string text && double.TryParse(text, out var p)) return p;
         }
         return fb;
     }
 
     public string TextCfg(string key, string fb = "")
         => Config.TryGetValue(key, out var v) ? v?.ToString() ?? fb : fb;
+
+    public object? ObjCfg(string key)
+        => Config.TryGetValue(key, out var v) ? v : null;
 
     public List<string> ListCfg(string key)
     {

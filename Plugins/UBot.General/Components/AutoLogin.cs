@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using UBot.Core;
 using UBot.Core.Components;
+using UBot.Core.Cryptography;
 using UBot.Core.Event;
 using UBot.Core.Network;
 using UBot.Core.Network.Protocol;
@@ -28,6 +29,12 @@ internal static class AutoLogin
     ///     Is the auto login handling <c>true</c> otherwise; <c>false</c>
     /// </summary>
     private static bool _busy;
+    private static int _agentCredentialRewriteArmed;
+    private static bool _rigidUseHashedPassword = true;
+    private static bool _rigidCredentialRetryUsed;
+
+    internal static bool IsHandling => _busy;
+    internal static bool IsAgentCredentialRewriteArmed => Volatile.Read(ref _agentCredentialRewriteArmed) == 1;
 
     /// <summary>
     ///     Does the automatic login.
@@ -120,6 +127,61 @@ internal static class AutoLogin
         }
     }
 
+    internal static bool ShouldHashPasswordForCurrentClient()
+    {
+        if (Game.ClientType == GameClientType.Rigid)
+            return _rigidUseHashedPassword;
+
+        return Game.ClientType == GameClientType.Turkey
+            || Game.ClientType == GameClientType.VTC_Game
+            || Game.ClientType == GameClientType.Global
+            || Game.ClientType == GameClientType.Korean
+            || Game.ClientType == GameClientType.Taiwan;
+    }
+
+    internal static void MarkRigidAuthSuccess()
+    {
+        if (Game.ClientType != GameClientType.Rigid)
+            return;
+
+        _rigidCredentialRetryUsed = false;
+    }
+
+    internal static bool TryScheduleRigidCredentialRetry(string stage)
+    {
+        if (Game.ClientType != GameClientType.Rigid)
+            return false;
+
+        if (!GlobalConfig.Get("UBot.General.EnableAutomatedLogin", false))
+            return false;
+
+        if (_rigidCredentialRetryUsed)
+            return false;
+
+        _rigidCredentialRetryUsed = true;
+        _rigidUseHashedPassword = !_rigidUseHashedPassword;
+
+        var mode = _rigidUseHashedPassword ? "SHA256" : "PLAIN";
+        Log.Warn($"Rigid auto-login retry ({stage}): switching password mode to {mode}.");
+        Task.Delay(1000).ContinueWith(_ => Handle());
+        return true;
+    }
+
+    internal static void ArmAgentCredentialRewrite()
+    {
+        Interlocked.Exchange(ref _agentCredentialRewriteArmed, 1);
+    }
+
+    internal static void SetAgentCredentialRewrite(bool enabled)
+    {
+        Interlocked.Exchange(ref _agentCredentialRewriteArmed, enabled ? 1 : 0);
+    }
+
+    internal static bool ConsumeAgentCredentialRewrite()
+    {
+        return Interlocked.Exchange(ref _agentCredentialRewriteArmed, 0) == 1;
+    }
+
     /// <summary>
     ///     Sends the secondary password if have.
     /// </summary>
@@ -181,7 +243,11 @@ internal static class AutoLogin
         else
         {
             loginPacket.WriteString(account.Username);
-            loginPacket.WriteString(account.Password);
+            loginPacket.WriteString(
+                ShouldHashPasswordForCurrentClient()
+                    ? Sha256.ComputeHash(account.Password)
+                    : account.Password
+            );
         }
 
         Game.MacAddress = GenerateMacAddress();
@@ -201,6 +267,7 @@ internal static class AutoLogin
         if (opcode == 0x610A)
             loginPacket.WriteByte(account.Channel);
 
+        ArmAgentCredentialRewrite();
         PacketManager.SendPacket(loginPacket, PacketDestination.Server);
 
         Accounts.Joined = account;

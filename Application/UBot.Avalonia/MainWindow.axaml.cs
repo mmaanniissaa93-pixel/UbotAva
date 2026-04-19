@@ -151,6 +151,13 @@ public partial class MainWindow : Window
             _state.ConnectionOptions = options;
             RebuildDivisionSelects(options);
         }
+
+        if (_factory != null && !string.IsNullOrWhiteSpace(_activeId))
+        {
+            var pluginState = await _core.GetPluginStateAsync(_activeId);
+            if (pluginState.State is { } moduleState)
+                _factory.UpdateState(_activeId, moduleState);
+        }
     }
 
     // â”€â”€â”€ Sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

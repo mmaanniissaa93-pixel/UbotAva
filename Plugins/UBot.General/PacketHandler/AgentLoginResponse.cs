@@ -1,5 +1,6 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Network;
+using UBot.General.Components;
 
 namespace UBot.General.PacketHandler;
 
@@ -33,6 +34,8 @@ internal class AgentLoginResponse : IPacketHandler
 
         if (flag == 0x01)
         {
+            AutoLogin.MarkRigidAuthSuccess();
+
             if (!Game.Clientless)
                 return;
 
@@ -48,6 +51,9 @@ internal class AgentLoginResponse : IPacketHandler
         switch (code)
         {
             case 1:
+                if (AutoLogin.TryScheduleRigidCredentialRetry("agent"))
+                    break;
+
                 Log.WarnLang("C9");
                 break;
 
@@ -72,3 +78,4 @@ internal class AgentLoginResponse : IPacketHandler
         }
     }
 }
+
