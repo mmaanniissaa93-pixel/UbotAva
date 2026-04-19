@@ -17,7 +17,7 @@ using UBot.Core.Network;
 using UBot.Core.Network.Protocol;
 using UBot.Core.Objects;
 using UBot.Core.Objects.Skill;
-using UBot.Core.Plugins;
+ using UBot.Core.Plugins;
 using Forms = System.Windows.Forms;
 
 namespace UBot.Avalonia.Services;
@@ -46,6 +46,17 @@ public sealed class UbotCoreService : IUbotCoreService
     };
 
     private static readonly TypeIdFilter ReverseReturnScrollFilter = new(3, 3, 3, 3);
+    // Mapping of emoticon names to their icon paths (local to this project to avoid internals visibility issues)
+    private static readonly Dictionary<string, string> EmoteIconPaths = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["emoticon.hi"] = "icon\\action\\emot_act_greeting.ddj",
+        ["emoticon.smile"] = "icon\\action\\emot_act_laugh.ddj",
+        ["emoticon.greeting"] = "icon\\action\\emot_act_pokun.ddj",
+        ["emoticon.yes"] = "icon\\action\\emot_act_yes.ddj",
+        ["emoticon.rush"] = "icon\\action\\emot_act_rush.ddj",
+        ["emoticon.joy"] = "icon\\action\\emot_act_joy.ddj",
+        ["emoticon.no"] = "icon\\action\\emot_act_no.ddj"
+    };
 
     private static readonly object InitLock = new();
     private static bool _initialized;
@@ -562,6 +573,53 @@ public sealed class UbotCoreService : IUbotCoreService
         {
             return null;
         }
+    }
+
+    // Emote icon retrieval (simple internal mapping to avoid cross-assembly internals)
+    public Task<byte[]?> GetEmoteIconAsync(string emoteName)
+    {
+        if (string.IsNullOrWhiteSpace(emoteName))
+            return Task.FromResult<byte[]>(null);
+
+        if (!EmoteIconPaths.TryGetValue(emoteName, out var iconPath))
+            return Task.FromResult<byte[]>(null);
+
+        try
+        {
+            if (Game.MediaPk2 == null) return Task.FromResult<byte[]>(null);
+            if (!Game.MediaPk2.TryGetFile(iconPath, out var file))
+            {
+                // Fallback: try as-is added by default
+                if (!Game.MediaPk2.TryGetFile(iconPath, out file))
+                    return Task.FromResult<byte[]>(null);
+            }
+
+            using var drawingImage = file.ToImage();
+            if (drawingImage == null)
+                return Task.FromResult<byte[]>(null);
+
+            using var ms = new MemoryStream();
+            drawingImage.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+            return Task.FromResult<byte[]>(ms.ToArray());
+        }
+        catch
+        {
+            return Task.FromResult<byte[]>(null);
+        }
+    }
+
+    private static Dictionary<string, object?> BuildCommandCenterConfig()
+    {
+        return LoadPluginJsonConfig("UBot.CommandCenter");
+    }
+
+    private static bool ApplyCommandCenterPatch(Dictionary<string, object?> patch)
+    {
+        var current = LoadPluginJsonConfig("UBot.CommandCenter");
+        foreach (var kv in patch)
+            current[kv.Key] = kv.Value;
+        SavePluginJsonConfig("UBot.CommandCenter", current);
+        return true;
     }
 
     public Task<IReadOnlyList<AutoLoginAccountDto>> GetAutoLoginAccountsAsync()
