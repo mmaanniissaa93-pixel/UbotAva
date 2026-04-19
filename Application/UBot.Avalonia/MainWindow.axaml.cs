@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using UBot.Avalonia.Controls;
 using UBot.Avalonia.Services;
+using UBot.Avalonia.Dialogs;
 
 namespace UBot.Avalonia;
 
@@ -102,6 +103,7 @@ public partial class MainWindow : Window
             _state.Plugins.Clear();
             foreach (var p in plugins) _state.Plugins.Add(p);
             BuildSidebar();
+            BuildMenu();
         }
 
         Navigate("UBot.General");
@@ -160,7 +162,7 @@ public partial class MainWindow : Window
         }
     }
 
-    // â”€â”€â”€ Sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ——————————————————————————————————————————————————————————————————————————
 
     private string? _activeId;
     private readonly Dictionary<string, Button> _navBtns = new();
@@ -171,11 +173,9 @@ public partial class MainWindow : Window
         _navBtns.Clear();
 
         var coreIds    = new HashSet<string> { "general","skills","protection","party","training" };
-        var autoIds    = new HashSet<string> { "alchemy","trade","lure","quest","quests","autodungeon","targetassist" };
         var dataIds    = new HashSet<string> { "inventory","items","map","stats","statistics","chat","log","command","server","packet" };
 
         var coreItems = new List<(string id, string label, string icon)>();
-        var autoItems = new List<(string id, string label, string icon)>();
         var dataItems = new List<(string id, string label, string icon)>();
 
         IEnumerable<(string, string, string)> source;
@@ -195,14 +195,49 @@ public partial class MainWindow : Window
         {
             var k = NormKey(icon);
             if (coreIds.Contains(k))   coreItems.Add((id, label, k));
-            else if (autoIds.Contains(k)) autoItems.Add((id, label, k));
-            else                          dataItems.Add((id, label, k));
+            // Removed from sidebar: else if (autoIds.Contains(k)) autoItems.Add((id, label, k));
+            else if (dataIds.Contains(k)) dataItems.Add((id, label, k));
         }
 
         AddGroup("CORE", coreItems, isFirst: true);
-        AddGroup("AUTOMATION", autoItems);
+        // Removed from sidebar: AddGroup("AUTOMATION", autoItems);
         AddGroup("DATA & TOOLS", dataItems);
     }
+
+    private void BuildMenu()
+    {
+        if (PluginsMenu == null || AutomationMenu == null) return;
+
+        PluginsMenu.Items.Clear();
+        AutomationMenu.Items.Clear();
+
+        // Plugins Menu: Quests, Command center, Target Assist
+        var questsMi = new MenuItem { Header = "Quests" };
+        questsMi.Click += (_, _) => Navigate("UBot.Quest");
+        PluginsMenu.Items.Add(questsMi);
+
+        var commandMi = new MenuItem { Header = "Command center" };
+        commandMi.Click += (_, _) => Navigate("UBot.CommandCenter");
+        PluginsMenu.Items.Add(commandMi);
+
+        var assistMi = new MenuItem { Header = "Target Assist" };
+        assistMi.Click += (_, _) => Navigate("UBot.TargetAssist");
+        PluginsMenu.Items.Add(assistMi);
+
+        // Automation Menu: Alchemy, Lure, Trade
+        var alchemyMi = new MenuItem { Header = "Alchemy" };
+        alchemyMi.Click += (_, _) => Navigate("UBot.Alchemy");
+        AutomationMenu.Items.Add(alchemyMi);
+
+        var lureMi = new MenuItem { Header = "Lure" };
+        lureMi.Click += (_, _) => Navigate("UBot.Lure");
+        AutomationMenu.Items.Add(lureMi);
+
+        var tradeMi = new MenuItem { Header = "Trade" };
+        tradeMi.Click += (_, _) => Navigate("UBot.Trade");
+        AutomationMenu.Items.Add(tradeMi);
+    }
+
 
     private void AddGroup(string label, List<(string id, string lbl, string icon)> items, bool isFirst = false)
     {
@@ -250,7 +285,7 @@ public partial class MainWindow : Window
         if (_factory != null) ContentHost.Content = _factory.GetView(id);
     }
 
-    // â”€â”€â”€ Topbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ────────────────────────────────────────────────────────────────────────────
 
     private void InitTopbar()
     {
@@ -495,7 +530,7 @@ public partial class MainWindow : Window
         return false;
     }
 
-    // â”€â”€â”€ State events â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ——————————————————————————————————————————————————————————————————————————
 
     private void BindStateEvents()
     {
@@ -529,7 +564,7 @@ public partial class MainWindow : Window
         };
     }
 
-    // â”€â”€â”€ Button handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ——————————————————————————————————————————————————————————————————————————
 
     private async void BtnToggle_Click(object? s, RoutedEventArgs e)
     {
@@ -564,6 +599,23 @@ public partial class MainWindow : Window
         await RefreshRuntimeStatusAsync();
     }
 
+    private void OnAboutClick(object? s, RoutedEventArgs e)
+    {
+        // Placeholder for About dialog
+    }
+
+    private async void OnSelectProfileClick(object? s, RoutedEventArgs e)
+    {
+        var dlg = new ProfileSelectionWindow();
+        await dlg.ShowDialog(this);
+    }
+
+    private async void OnProxyConfigClick(object? s, RoutedEventArgs e)
+    {
+        var dlg = new ProxyConfigWindow();
+        await dlg.ShowDialog(this);
+    }
+
     private void BtnEn_Click(object? s, RoutedEventArgs e)
     {
         _lang = "English"; BtnEn.Classes.Add("active"); BtnTr.Classes.Remove("active");
@@ -582,6 +634,7 @@ public partial class MainWindow : Window
             ? Geometry.Parse("M12,3 C9.1,3 6.4,4.5 4.8,7 C3.2,9.5 3.2,12.5 4.8,15 C6.4,17.5 9.1,19 12,19 C16,19 19,16 19,12 A9,9 0 0,0 12,3 Z")
             : Geometry.Parse("M12,2 L12,4 M12,20 L12,22 M4.22,4.22 L5.64,5.64 M18.36,18.36 L19.78,19.78 M2,12 L4,12 M20,12 L22,12 M4.22,19.78 L5.64,18.36 M18.36,5.64 L19.78,4.22 M12,17 A5,5 0 1,0 12,7 A5,5 0 0,0 12,17 Z");
     }
+
 
     private void ApplyTranslations()
     {

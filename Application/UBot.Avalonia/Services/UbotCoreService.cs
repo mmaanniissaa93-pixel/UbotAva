@@ -260,6 +260,8 @@ public sealed class UbotCoreService : IUbotCoreService
                 return Task.FromResult(BuildSkillsPluginConfig());
             if (IsItemsPlugin(plugin))
                 return Task.FromResult(BuildItemsPluginConfig());
+            if (plugin.Name == "UBot.CommandCenter")
+                return Task.FromResult(BuildCommandCenterConfig());
         }
 
         var loaded = LoadPluginJsonConfig(pluginId);
@@ -289,6 +291,8 @@ public sealed class UbotCoreService : IUbotCoreService
                 changed = ApplySkillsPluginPatch(patch);
             else if (IsItemsPlugin(plugin))
                 changed = ApplyItemsPluginPatch(patch);
+            else if (plugin.Name == "UBot.CommandCenter")
+                changed = ApplyCommandCenterPatch(patch);
             else
                 changed = ApplyGenericPluginPatch(plugin.Name, patch);
         }

@@ -1,0 +1,61 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="UBot.Avalonia.Dialogs.ProxyConfigWindow"
+        Title="PROXY CONFIG"
+        Width="500" Height="420"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource PanelBrush}"
+        CanResize="False"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="NoChrome">
+
+    <Border BorderBrush="{DynamicResource StrokeSoftBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
+        <StackPanel Spacing="12">
+            <TextBlock Text="PROXY CONFIG" 
+                       FontSize="18" 
+                       FontWeight="Bold" 
+                       Foreground="{DynamicResource AccentBrush}"
+                       Margin="0,0,0,5"/>
+
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <ToggleSwitch x:Name="ProxyActiveToggle" OnContent="Activate" OffContent="Activate" Classes="switch"/>
+            </StackPanel>
+
+            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" Margin="0,5">
+                <StackPanel Grid.Row="0" Grid.Column="0" Spacing="5" Margin="0,0,10,10">
+                    <TextBlock Text="Proxy IP" Classes="label"/>
+                    <TextBox x:Name="ProxyIpBox" Classes="field"/>
+                </StackPanel>
+                <StackPanel Grid.Row="0" Grid.Column="1" Spacing="5" Margin="0,0,0,10">
+                    <TextBlock Text="Proxy Port" Classes="label"/>
+                    <TextBox x:Name="ProxyPortBox" Classes="field"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="1" Grid.Column="0" Spacing="5" Margin="0,0,10,10">
+                    <TextBlock Text="Proxy Username" Classes="label"/>
+                    <TextBox x:Name="ProxyUserBox" Classes="field"/>
+                </StackPanel>
+                <StackPanel Grid.Row="1" Grid.Column="1" Spacing="5" Margin="0,0,0,10">
+                    <TextBlock Text="Proxy Password" Classes="label" />
+                    <TextBox x:Name="ProxyPassBox" Classes="field" PasswordChar="*"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="2" Grid.Column="0" Spacing="5" Margin="0,0,10,10">
+                    <TextBlock Text="Proxy Type" Classes="label"/>
+                    <ComboBox x:Name="ProxyTypeSelect" Classes="field" HorizontalAlignment="Stretch">
+                        <ComboBoxItem Content="SOCKS5" IsSelected="True"/>
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel Grid.Row="2" Grid.Column="1" Spacing="5" Margin="0,0,0,10">
+                    <TextBlock Text="IP Bind" Classes="label"/>
+                    <TextBox x:Name="IpBindBox" Classes="field"/>
+                </StackPanel>
+            </Grid>
+
+            <StackPanel Orientation="Horizontal" Margin="0,15,0,0" Spacing="10">
+                <Button Classes="btn secondary" Content="Cancel" Width="215" Click="Cancel_Click"/>
+                <Button Classes="btn primary" Content="Confirm" Width="215" Click="Confirm_Click"/>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

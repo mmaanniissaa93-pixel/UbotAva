@@ -27,8 +27,31 @@
                 HorizontalAlignment="Right" 
                 VerticalAlignment="Top" 
                 ZIndex="50"
-                Margin="0,0,0,0"
+                Margin="0,0,4,0"
                 Spacing="0">
+      
+      <!-- Hamburger Menu -->
+      <Button Classes="window-btn" ToolTip.Tip="Menu" VerticalAlignment="Center">
+        <shapes:Path Data="M3,6 L21,6 M3,12 L21,12 M3,18 L21,18" 
+                     Stroke="White" 
+                     StrokeThickness="2" 
+                     Width="18" Height="18" 
+                     Stretch="Uniform"
+                     HorizontalAlignment="Center"
+                     VerticalAlignment="Center"/>
+        <Button.Flyout>
+          <MenuFlyout Placement="BottomEdgeAlignedRight">
+            <MenuItem Header="File">
+              <MenuItem Header="Select Profile..." Click="OnSelectProfileClick" />
+              <MenuItem Header="Proxy Config" Click="OnProxyConfigClick" />
+            </MenuItem>
+            <MenuItem Header="Plugins" x:Name="PluginsMenu" />
+            <MenuItem Header="Automation" x:Name="AutomationMenu" />
+            <MenuItem Header="About" Click="OnAboutClick" />
+          </MenuFlyout>
+        </Button.Flyout>
+      </Button>
+
       <Button Classes="window-btn" Click="MinimizeWindow_Click">
         <Grid Width="46" Height="36">
           <Border Width="18" Height="18" CornerRadius="4" Background="#22FFFFFF" VerticalAlignment="Center" HorizontalAlignment="Center">
@@ -44,6 +67,7 @@
         </Grid>
       </Button>
     </StackPanel>
+
 
     <Grid ColumnDefinitions="250,*"
           Margin="6,36,6,6">

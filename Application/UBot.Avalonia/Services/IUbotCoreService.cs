@@ -35,5 +35,6 @@ public interface IUbotCoreService
     Task<string> PickExecutableAsync();
     Task<string> PickScriptFileAsync();
     Task<byte[]?> GetSkillIconAsync(string iconFile);
+    Task<byte[]?> GetEmoteIconAsync(string emoteName);
     Task<IReadOnlyList<MapLocationDto>> GetMapLocationsAsync();
 }

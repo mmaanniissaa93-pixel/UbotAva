@@ -1,0 +1,38 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="UBot.Avalonia.Dialogs.ProfileSelectionWindow"
+        Title="SELECT PROFILE..."
+        Width="450" Height="280"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource PanelBrush}"
+        CanResize="False"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="NoChrome">
+
+    <Border BorderBrush="{DynamicResource StrokeSoftBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
+        <StackPanel Spacing="15">
+            <TextBlock Text="SELECT PROFILE..." 
+                       FontSize="18" 
+                       FontWeight="Bold" 
+                       Foreground="{DynamicResource AccentBrush}"
+                       Margin="0,0,0,10"/>
+
+            <StackPanel Spacing="5">
+                <TextBlock Text="Select a profile" Classes="label"/>
+                <Grid ColumnDefinitions="*,Auto,Auto">
+                    <ComboBox x:Name="ProfileList" Grid.Column="0" HorizontalAlignment="Stretch" Classes="field">
+                        <ComboBoxItem Content="Default"/>
+                    </ComboBox>
+                    <Button Grid.Column="1" Classes="btn secondary" Content="+" Width="32" Margin="5,0,0,0" Click="AddProfile_Click"/>
+                    <Button Grid.Column="2" Classes="btn secondary danger" Content="x" Width="32" Margin="5,0,0,0" Click="DeleteProfile_Click"/>
+                </Grid>
+            </StackPanel>
+
+            <CheckBox x:Name="SaveSelectionCheck" Content="Save selection" IsChecked="True" Classes="check"/>
+
+            <Grid ColumnDefinitions="*,*" Margin="0,10,0,0">
+                <Button Grid.Column="1" Classes="btn primary" Content="CONTINUE" Width="140" HorizontalAlignment="Right" Click="Continue_Click"/>
+            </Grid>
+        </StackPanel>
+    </Border>
+</Window>
