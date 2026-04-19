@@ -1,103 +1,178 @@
-﻿<UserControl
+<UserControl
   xmlns="https://github.com/avaloniaui"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   x:Class="UBot.Avalonia.Features.Training.TrainingFeatureView">
 
   <ScrollViewer VerticalScrollBarVisibility="Auto">
-    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" Margin="0,0,0,12">
+    <Grid ColumnDefinitions="*,10,*" RowDefinitions="Auto,10,Auto,10,Auto" Margin="0,0,0,12">
+      
+      <!-- ═══ Area ═══ -->
+      <Border Grid.Row="0" Grid.Column="0" Classes="section-card">
+        <Grid RowDefinitions="Auto,*">
+          <Border Grid.Row="0" Classes="section-header">
+            <TextBlock x:Name="AreaTitle" Classes="section-header-text" />
+          </Border>
+          <StackPanel Grid.Row="1" Margin="16,12,16,16" Spacing="12">
+            <!-- Row 1: Global Coordinates -->
+            <Grid ColumnDefinitions="*,12,*">
+              <StackPanel Grid.Column="0" Spacing="4">
+                <TextBlock Text="Global X" Classes="label" FontSize="10" Opacity="0.6" />
+                <TextBox x:Name="GlobalXBox" Classes="field" TextAlignment="Center" TextChanged="GlobalNumBox_Changed" Watermark="X" />
+              </StackPanel>
+              <StackPanel Grid.Column="2" Spacing="4">
+                <TextBlock Text="Global Y" Classes="label" FontSize="10" Opacity="0.6" />
+                <TextBox x:Name="GlobalYBox" Classes="field" TextAlignment="Center" TextChanged="GlobalNumBox_Changed" Watermark="Y" />
+              </StackPanel>
+            </Grid>
 
-      <!-- â”€â”€ Training Area â”€â”€ -->
-      <Border Grid.Row="0" Grid.Column="0" Classes="section-panel">
-        <StackPanel Spacing="8">
-          <TextBlock x:Name="AreaTitle" Classes="section-title" />
-          <Grid ColumnDefinitions="*,Auto">
-            <StackPanel Grid.Column="0" Spacing="6">
-              <Grid ColumnDefinitions="Auto,*">
-                <TextBlock Grid.Column="0" Text="Region" Classes="form-label" VerticalAlignment="Center" />
-                <TextBox  Grid.Column="1" x:Name="RegionBox" Classes="legacy-input" Tag="areaRegion" TextChanged="NumBox_Changed" />
-              </Grid>
-              <Grid ColumnDefinitions="Auto,*">
-                <TextBlock Grid.Column="0" Text="Radius" Classes="form-label" VerticalAlignment="Center" />
-                <TextBox  Grid.Column="1" x:Name="RadiusBox" Classes="legacy-input" Tag="areaRadius" TextChanged="NumBox_Changed" />
-              </Grid>
-              <Grid ColumnDefinitions="*,*,*">
-                <TextBox Grid.Column="0" x:Name="AreaXBox" Watermark="X" Classes="legacy-input" Tag="areaX" TextChanged="NumBox_Changed" />
-                <TextBox Grid.Column="1" x:Name="AreaYBox" Watermark="Y" Classes="legacy-input" Tag="areaY" TextChanged="NumBox_Changed" />
-                <TextBox Grid.Column="2" x:Name="AreaZBox" Watermark="Z" Classes="legacy-input" Tag="areaZ" TextChanged="NumBox_Changed" />
-              </Grid>
-            </StackPanel>
-          </Grid>
-          <Grid ColumnDefinitions="Auto,*" Margin="0,4,0,0">
-            <Button Grid.Column="0" Classes="legacy-btn primary" x:Name="SetCurrentBtn" Click="SetCurrent_Click" />
-            <Border Grid.Column="1" Background="#1289ACC8" CornerRadius="6" Padding="8,4">
-              <TextBlock x:Name="CurrentPositionLabel" FontSize="11" FontFamily="Consolas,Monospace" Foreground="{DynamicResource TextDimBrush}" />
+            <!-- Row 2: Radius and Set Current -->
+            <Grid ColumnDefinitions="*,12,Auto">
+              <StackPanel Grid.Column="0" Spacing="4">
+                <TextBlock Text="Radius" Classes="label" FontSize="10" Opacity="0.6" />
+                <TextBox x:Name="RadiusBox" Classes="field" TextAlignment="Center" Tag="areaRadius" TextChanged="NumBox_Changed" Watermark="Radius" />
+              </StackPanel>
+              <Button Grid.Column="2" Classes="btn blue" x:Name="SetCurrentBtn" Click="SetCurrent_Click" VerticalAlignment="Bottom" Height="32" Padding="16,0" />
+            </Grid>
+
+            <!-- Status Row -->
+            <Border Background="#0DFFFFFF" CornerRadius="4" Padding="10,6">
+              <TextBlock x:Name="CurrentPositionLabel" FontSize="10" FontFamily="Consolas,Monospace" Foreground="{DynamicResource TextDimBrush}" HorizontalAlignment="Center" />
             </Border>
-          </Grid>
-        </StackPanel>
-      </Border>
-
-      <!-- â”€â”€ Back to Training â”€â”€ -->
-      <Border Grid.Row="0" Grid.Column="1" Classes="section-panel">
-        <StackPanel Spacing="8">
-          <TextBlock x:Name="BackTitle" Classes="section-title" />
-          <Grid ColumnDefinitions="*,Auto">
-            <TextBox Grid.Column="0" x:Name="WalkScriptBox" Classes="legacy-input" Tag="walkScript" TextChanged="TextBox_Changed" />
-            <Button  Grid.Column="1" Classes="legacy-btn compact" Content="..." Click="BrowseWalkScript_Click" />
-          </Grid>
-          <WrapPanel Orientation="Horizontal">
-            <CheckBox x:Name="UseMountCheck"    Classes="legacy-check" Tag="useMount"      IsCheckedChanged="Check_Changed" Margin="0,0,10,4" />
-            <CheckBox x:Name="CastBuffsCheck"   Classes="legacy-check" Tag="castBuffs"     IsCheckedChanged="Check_Changed" Margin="0,0,10,4" />
-            <CheckBox x:Name="UseSpeedCheck"    Classes="legacy-check" Tag="useSpeedDrug"  IsCheckedChanged="Check_Changed" Margin="0,0,10,4" />
-            <CheckBox x:Name="UseReverseCheck"  Classes="legacy-check" Tag="useReverse"    IsCheckedChanged="Check_Changed" Margin="0,0,10,4" />
-          </WrapPanel>
-        </StackPanel>
-      </Border>
-
-      <!-- â”€â”€ Berserk â”€â”€ -->
-      <Border Grid.Row="1" Grid.Column="0" Classes="section-panel">
-        <StackPanel Spacing="6">
-          <TextBlock x:Name="BerserkTitle" Classes="section-title" />
-          <CheckBox x:Name="BerserkFullCheck"    Classes="legacy-check" Tag="berserkWhenFull"       IsCheckedChanged="Check_Changed" />
-          <StackPanel Orientation="Horizontal" Spacing="8">
-            <CheckBox x:Name="BerserkCountCheck" Classes="legacy-check" Tag="berserkByMonsterAmount" IsCheckedChanged="Check_Changed" />
-            <TextBox  x:Name="BerserkCountBox"   Width="60" Classes="legacy-input" Tag="berserkMonsterAmount" TextChanged="NumBox_Changed" />
-            <TextBlock x:Name="MonstersLabel"    Classes="form-label" VerticalAlignment="Center" />
+            
+            <!-- Hidden Region for bindings -->
+            <TextBox x:Name="RegionBox" IsVisible="False" Tag="areaRegion" />
           </StackPanel>
-          <CheckBox x:Name="BerserkAvoidCheck"   Classes="legacy-check" Tag="berserkByAvoidance"      IsCheckedChanged="Check_Changed" />
-          <CheckBox x:Name="BerserkRarityCheck"  Classes="legacy-check" Tag="berserkByMonsterRarity"  IsCheckedChanged="Check_Changed" />
-        </StackPanel>
+        </Grid>
       </Border>
 
-      <!-- â”€â”€ Advanced â”€â”€ -->
-      <Border Grid.Row="1" Grid.Column="1" Classes="section-panel">
-        <StackPanel Spacing="6">
-          <TextBlock x:Name="AdvancedTitle" Classes="section-title" />
-          <CheckBox x:Name="IgnorePillarCheck" Classes="legacy-check" Tag="ignoreDimensionPillar" IsCheckedChanged="Check_Changed" />
-          <CheckBox x:Name="WeakerFirstCheck"  Classes="legacy-check" Tag="attackWeakerFirst"    IsCheckedChanged="Check_Changed" />
-          <CheckBox x:Name="NoFollowCheck"     Classes="legacy-check" Tag="dontFollowMobs"       IsCheckedChanged="Check_Changed" />
-        </StackPanel>
+      <!-- ═══ Back to Training ═══ -->
+      <Border Grid.Row="0" Grid.Column="2" Classes="section-card">
+        <Grid RowDefinitions="Auto,*">
+          <Border Grid.Row="0" Classes="section-header">
+            <TextBlock x:Name="BackTitle" Classes="section-header-text" />
+          </Border>
+          <StackPanel Grid.Row="1" Margin="16,12,16,16" Spacing="16">
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBox x:Name="WalkScriptBox" Grid.Column="0" Classes="field" Tag="walkScript" TextChanged="TextBox_Changed" Watermark="Walkscript Path" />
+              <Button Grid.Column="1" Classes="browse-btn" Content="..." Click="BrowseWalkScript_Click" Margin="8,0,0,0" Width="36" />
+            </Grid>
+            
+            <WrapPanel Margin="0,8,0,0">
+              <StackPanel Orientation="Horizontal" Margin="0,0,16,8">
+                <ToggleSwitch x:Name="UseMountCheck" Tag="useMount" OnContent="" OffContent="" Checked="Toggle_Changed" Unchecked="Toggle_Changed" Margin="0,0,8,0" />
+                <TextBlock Text="Use mount if available" Classes="label" VerticalAlignment="Center" />
+              </StackPanel>
+              <StackPanel Orientation="Horizontal" Margin="0,0,16,8">
+                <ToggleSwitch x:Name="CastBuffsCheck" Tag="castBuffs" OnContent="" OffContent="" Checked="Toggle_Changed" Unchecked="Toggle_Changed" Margin="0,0,8,0" />
+                <TextBlock Text="Cast buffs" Classes="label" VerticalAlignment="Center" />
+              </StackPanel>
+              <StackPanel Orientation="Horizontal" Margin="0,0,16,8">
+                <ToggleSwitch x:Name="UseSpeedCheck" Tag="useSpeedDrug" OnContent="" OffContent="" Checked="Toggle_Changed" Unchecked="Toggle_Changed" Margin="0,0,8,0" />
+                <TextBlock Text="Use speed drug" Classes="label" VerticalAlignment="Center" />
+              </StackPanel>
+              <StackPanel Orientation="Horizontal" Margin="0,0,16,8">
+                <ToggleSwitch x:Name="UseReverseCheck" Tag="useReverse" OnContent="" OffContent="" Checked="Toggle_Changed" Unchecked="Toggle_Changed" Margin="0,0,8,0" />
+                <TextBlock Text="Use reverse" Classes="label" VerticalAlignment="Center" />
+              </StackPanel>
+            </WrapPanel>
+          </StackPanel>
+        </Grid>
       </Border>
 
-      <!-- â”€â”€ Avoidance Table (full width) â”€â”€ -->
-      <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Classes="section-panel">
-        <StackPanel Spacing="8">
-          <TextBlock x:Name="AvoidTitle" Classes="section-title" />
-          <DataGrid
-            x:Name="AvoidanceGrid"
-            Classes="legacy-table"
-            AutoGenerateColumns="False"
-            CanUserSortColumns="False"
-            IsReadOnly="False"
-            CanUserResizeColumns="True"
-            MinHeight="180">
-            <DataGrid.Columns>
-              <DataGridTextColumn   Header="Rarity"  Binding="{Binding Rarity}"  Width="*"  IsReadOnly="True" />
-              <DataGridCheckBoxColumn Header="Avoid"  Binding="{Binding Avoid}"   Width="80" />
-              <DataGridCheckBoxColumn Header="Prefer" Binding="{Binding Prefer}"  Width="80" />
-              <DataGridCheckBoxColumn Header="Berserk" Binding="{Binding Berserk}" Width="80" />
-            </DataGrid.Columns>
-          </DataGrid>
-        </StackPanel>
+      <!-- ═══ Berserk ═══ -->
+      <Border Grid.Row="2" Grid.Column="0" Classes="section-card">
+        <Grid RowDefinitions="Auto,*">
+          <Border Grid.Row="0" Classes="section-header">
+            <TextBlock x:Name="BerserkTitle" Classes="section-header-text" />
+          </Border>
+          <StackPanel Grid.Row="1" Margin="16,12,16,16" Spacing="12">
+            <StackPanel Orientation="Horizontal">
+              <ToggleSwitch x:Name="BerserkFullCheck" Tag="berserkWhenFull" OnContent="" OffContent="" Checked="Toggle_Changed" Unchecked="Toggle_Changed" Margin="0,0,8,0" />
+              <TextBlock Text="Enter berserk mode when full" Classes="label" VerticalAlignment="Center" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <ToggleSwitch x:Name="BerserkCountCheck" Tag="berserkByMonsterAmount" OnContent="" OffContent="" Checked="Toggle_Changed" Unchecked="Toggle_Changed" />
+              <TextBlock Text="When attacked by more than" Classes="label" VerticalAlignment="Center" />
+              <TextBox x:Name="BerserkCountBox" Classes="field compact-num" Width="60" Tag="berserkMonsterAmount" TextChanged="NumBox_Changed" />
+              <TextBlock x:Name="MonstersLabel" Classes="label" VerticalAlignment="Center" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+              <ToggleSwitch x:Name="BerserkAvoidCheck" Tag="berserkByAvoidance" OnContent="" OffContent="" Checked="Toggle_Changed" Unchecked="Toggle_Changed" Margin="0,0,8,0" />
+              <TextBlock Text="If being attacked by a monster type that should be avoided" Classes="label" VerticalAlignment="Center" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+              <ToggleSwitch x:Name="BerserkRarityCheck" Tag="berserkByMonsterRarity" OnContent="" OffContent="" Checked="Toggle_Changed" Unchecked="Toggle_Changed" Margin="0,0,8,0" />
+              <TextBlock Text="Use berserk on selected monster rarities" Classes="label" VerticalAlignment="Center" />
+            </StackPanel>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <!-- ═══ Advanced ═══ -->
+      <Border Grid.Row="2" Grid.Column="2" Classes="section-card">
+        <Grid RowDefinitions="Auto,*">
+          <Border Grid.Row="0" Classes="section-header">
+            <TextBlock x:Name="AdvancedTitle" Classes="section-header-text" />
+          </Border>
+          <StackPanel Grid.Row="1" Margin="16,12,16,16" Spacing="12">
+            <StackPanel Orientation="Horizontal">
+              <ToggleSwitch x:Name="IgnorePillarCheck" Tag="ignoreDimensionPillar" OnContent="" OffContent="" Checked="Toggle_Changed" Unchecked="Toggle_Changed" Margin="0,0,8,0" />
+              <TextBlock Text="Ignore Dimension Pillar" Classes="label" VerticalAlignment="Center" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+              <ToggleSwitch x:Name="WeakerFirstCheck" Tag="attackWeakerFirst" OnContent="" OffContent="" Checked="Toggle_Changed" Unchecked="Toggle_Changed" Margin="0,0,8,0" />
+              <TextBlock Text="If avoided: counter attack weaker mobs first" Classes="label" VerticalAlignment="Center" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+              <ToggleSwitch x:Name="NoFollowCheck" Tag="dontFollowMobs" OnContent="" OffContent="" Checked="Toggle_Changed" Unchecked="Toggle_Changed" Margin="0,0,8,0" />
+              <TextBlock Text="Don't follow mobs outside the training area" Classes="label" VerticalAlignment="Center" />
+            </StackPanel>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <!-- ═══ Avoidance ═══ -->
+      <Border Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Classes="section-card">
+        <Grid RowDefinitions="Auto,*">
+          <Border Grid.Row="0" Classes="section-header">
+            <TextBlock x:Name="AvoidTitle" Classes="section-header-text" />
+          </Border>
+          <StackPanel Grid.Row="1" Margin="16,12,16,16">
+            <DataGrid x:Name="AvoidanceGrid"
+                      AutoGenerateColumns="False"
+                      CanUserSortColumns="False"
+                      IsReadOnly="False"
+                      CanUserResizeColumns="True"
+                      MinHeight="380"
+                      GridLinesVisibility="Horizontal"
+                      RowBackground="Transparent">
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="Rarity" Binding="{Binding Rarity}" Width="*" IsReadOnly="True" />
+                <DataGridTemplateColumn Header="Avoid" Width="80">
+                  <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                      <ToggleSwitch IsChecked="{Binding Avoid}" OnContent="" OffContent="" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                    </DataTemplate>
+                  </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Prefer" Width="80">
+                  <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                      <ToggleSwitch IsChecked="{Binding Prefer}" OnContent="" OffContent="" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                    </DataTemplate>
+                  </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Berserk" Width="80">
+                  <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                      <ToggleSwitch IsChecked="{Binding Berserk}" OnContent="" OffContent="" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                    </DataTemplate>
+                  </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+              </DataGrid.Columns>
+            </DataGrid>
+          </StackPanel>
+        </Grid>
       </Border>
 
     </Grid>

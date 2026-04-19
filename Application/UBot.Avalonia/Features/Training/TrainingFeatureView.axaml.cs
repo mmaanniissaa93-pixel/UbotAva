@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using UBot.Avalonia.Services;
 using UBot.Avalonia.ViewModels;
+using UBot.Core.Objects;
 
 namespace UBot.Avalonia.Features.Training;
 
@@ -45,18 +46,6 @@ public partial class TrainingFeatureView : UserControl
         AvoidTitle.Text     = "Avoidance";
         SetCurrentBtn.Content = "Set Current";
         MonstersLabel.Text  = "monsters";
-        UseMountCheck.Content    = "Use mount";
-        CastBuffsCheck.Content   = "Cast buffs";
-        UseSpeedCheck.Content    = "Use speed drug";
-        UseReverseCheck.Content  = "Use reverse scroll";
-        BerserkFullCheck.Content    = "Berserk when full";
-        BerserkCountCheck.Content   = "Berserk by monster amount";
-        BerserkAvoidCheck.Content   = "Berserk by avoidance";
-        BerserkRarityCheck.Content  = "Berserk by monster rarity";
-        IgnorePillarCheck.Content   = "Ignore dimension pillar";
-        WeakerFirstCheck.Content    = "Attack weaker first";
-        NoFollowCheck.Content       = "Don't follow mobs";
-
         // Build rarity rows
         _rarityRows.Clear();
         var avoidList   = vm.ListCfg("avoidanceList");
@@ -85,11 +74,19 @@ public partial class TrainingFeatureView : UserControl
         if (_vm is null) return;
         _syncing = true;
 
-        RegionBox.Text = _vm.NumCfg("areaRegion").ToString("F0");
+        var region = (ushort)_vm.NumCfg("areaRegion");
+        var xOffset = (float)_vm.NumCfg("areaX");
+        var yOffset = (float)_vm.NumCfg("areaY");
+        var zOffset = (float)_vm.NumCfg("areaZ");
+
+        var pos = new Position { Region = region, XOffset = xOffset, YOffset = yOffset, ZOffset = zOffset };
+        
+        RegionBox.Text = region.ToString("F0");
         RadiusBox.Text = _vm.NumCfg("areaRadius", 50).ToString("F0");
-        AreaXBox.Text  = _vm.NumCfg("areaX").ToString("F0");
-        AreaYBox.Text  = _vm.NumCfg("areaY").ToString("F0");
-        AreaZBox.Text  = _vm.NumCfg("areaZ").ToString("F0");
+        GlobalXBox.Text = pos.X.ToString("F2");
+        GlobalYBox.Text = pos.Y.ToString("F2");
+
+        CurrentPositionLabel.Text = $"Region: {region} | Local: {xOffset:F0}, {yOffset:F0}";
         WalkScriptBox.Text       = _vm.TextCfg("walkScript");
         UseMountCheck.IsChecked  = _vm.BoolCfg("useMount", true);
         CastBuffsCheck.IsChecked = _vm.BoolCfg("castBuffs", true);
@@ -127,10 +124,10 @@ public partial class TrainingFeatureView : UserControl
         });
     }
 
-    private void Check_Changed(object? s, RoutedEventArgs e)
+    private void Toggle_Changed(object? s, RoutedEventArgs e)
     {
-        if (_syncing || _vm is null || s is not CheckBox cb || cb.Tag is not string key) return;
-        _ = _vm.PatchConfigAsync(new Dictionary<string, object?> { [key] = cb.IsChecked == true });
+        if (_syncing || _vm is null || s is not ToggleSwitch ts || ts.Tag is not string key) return;
+        _ = _vm.PatchConfigAsync(new Dictionary<string, object?> { [key] = ts.IsChecked == true });
     }
 
     private void NumBox_Changed(object? s, TextChangedEventArgs e)
@@ -146,8 +143,33 @@ public partial class TrainingFeatureView : UserControl
         _ = _vm.PatchConfigAsync(new Dictionary<string, object?> { [key] = tb.Text ?? "" });
     }
 
-    private void SetCurrent_Click(object? s, RoutedEventArgs e)
-        => _vm?.PluginActionAsync("training.set-area-current");
+    private void GlobalNumBox_Changed(object? s, TextChangedEventArgs e)
+    {
+        if (_syncing || _vm is null) return;
+        if (!double.TryParse(GlobalXBox.Text, out var gx) || !double.TryParse(GlobalYBox.Text, out var gy)) return;
+
+        // Convert global to region/offset
+        var region = (ushort)_vm.NumCfg("areaRegion");
+        var pos = new Position((float)gx, (float)gy, region);
+
+        _ = _vm.PatchConfigAsync(new Dictionary<string, object?>
+        {
+            ["areaRegion"] = (double)pos.Region.Id,
+            ["areaX"] = (double)pos.XOffset,
+            ["areaY"] = (double)pos.YOffset
+        });
+        
+        // Update the small label to show what's happening behind the scenes
+        CurrentPositionLabel.Text = $"Region: {pos.Region.Id} | Local: {pos.XOffset:F0}, {pos.YOffset:F0}";
+    }
+
+    private async void SetCurrent_Click(object? s, RoutedEventArgs e)
+    {
+        if (_vm == null) return;
+        await _vm.PluginActionAsync("training.set-area-current");
+        await _vm.LoadConfigAsync();
+        RefreshFromConfig();
+    }
 
     private void BrowseWalkScript_Click(object? s, RoutedEventArgs e)
         => _ = _vm?.BrowseScriptFileAsync("walkScript");
