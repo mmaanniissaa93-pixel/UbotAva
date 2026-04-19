@@ -507,6 +507,50 @@ public sealed class UbotCoreService : IUbotCoreService
         return Task.FromResult(Path.Combine(directory, executable));
     }
 
+    public async Task<byte[]?> GetSkillIconAsync(string iconFile)
+    {
+        if (string.IsNullOrWhiteSpace(iconFile)) return null;
+
+        try
+        {
+            // Normalize path
+            var cleanPath = iconFile.Replace("/", "\\").TrimStart('\\');
+            if (!cleanPath.StartsWith("icon\\", StringComparison.OrdinalIgnoreCase))
+                cleanPath = Path.Combine("icon", cleanPath);
+
+            // Avoid double icon\icon\
+            if (cleanPath.StartsWith("icon\\icon\\", StringComparison.OrdinalIgnoreCase))
+                cleanPath = cleanPath.Substring(5);
+
+            if (Game.MediaPk2 == null) return null;
+
+            if (!Game.MediaPk2.TryGetFile(cleanPath, out var file))
+            {
+                // Try just the filename in icon folder as fallback
+                var fileName = Path.GetFileName(cleanPath);
+                var fallbackPath = Path.Combine("icon", fileName);
+                if (!Game.MediaPk2.TryGetFile(fallbackPath, out file))
+                {
+                    // Last resort: default icon
+                    if (!Game.MediaPk2.TryGetFile("icon\\icon_default.ddj", out file))
+                        return null;
+                }
+            }
+
+            using var drawingImage = file.ToImage();
+            if (drawingImage == null || (drawingImage.Width <= 16 && drawingImage.Height <= 16)) 
+                return null; // Don't return the 16x16 placeholder from Pk2Extensions
+
+            using var ms = new MemoryStream();
+            drawingImage.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+            return ms.ToArray();
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     public Task<IReadOnlyList<AutoLoginAccountDto>> GetAutoLoginAccountsAsync()
     {
         var accounts = LoadAutoLoginAccountsFromFile()
@@ -1497,7 +1541,8 @@ public sealed class UbotCoreService : IUbotCoreService
                 ["isAttack"] = isAttack,
                 ["isBuff"] = !isPassive && !isAttack,
                 ["isImbue"] = isImbue,
-                ["isLowLevel"] = isLowLevel
+                ["isLowLevel"] = isLowLevel,
+                ["icon"] = record.UI_IconFile
             });
         }
 

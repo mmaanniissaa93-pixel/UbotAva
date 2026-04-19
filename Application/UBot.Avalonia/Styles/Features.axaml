@@ -58,6 +58,7 @@
     <Setter Property="FontSize"   Value="12" />
     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
     <Setter Property="Margin"     Value="0,1" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
   </Style>
 
   <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• LEGACY TABLE â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->

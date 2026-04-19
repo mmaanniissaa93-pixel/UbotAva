@@ -16,6 +16,7 @@ public sealed class SkillCatalogEntry
     public bool IsBuff { get; set; }
     public bool IsImbue { get; set; }
     public bool IsLowLevel { get; set; }
+    public string Icon { get; set; } = string.Empty;
 }
 
 public sealed class MasteryCatalogEntry
@@ -39,6 +40,9 @@ public sealed class SkillsViewModel : PluginViewModelBase
     public SkillsViewModel(IUbotCoreService core, AppState state) : base(core, state)
     {
     }
+
+    public Task<byte[]?> GetSkillIconAsync(string iconFile)
+        => Core.GetSkillIconAsync(iconFile);
 
     protected override async void OnAttached()
     {
@@ -146,7 +150,8 @@ public sealed class SkillsViewModel : PluginViewModelBase
                 IsAttack = TryReadBool(item, "isAttack", out var isAttack) && isAttack,
                 IsBuff = TryReadBool(item, "isBuff", out var isBuff) && isBuff,
                 IsImbue = TryReadBool(item, "isImbue", out var isImbue) && isImbue,
-                IsLowLevel = TryReadBool(item, "isLowLevel", out var isLowLevel) && isLowLevel
+                IsLowLevel = TryReadBool(item, "isLowLevel", out var isLowLevel) && isLowLevel,
+                Icon = TryReadString(item, "icon", out var icon) ? icon : string.Empty
             });
         }
 

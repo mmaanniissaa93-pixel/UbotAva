@@ -1,85 +1,108 @@
-﻿<UserControl
+<UserControl
   xmlns="https://github.com/avaloniaui"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:protection="clr-namespace:UBot.Avalonia.Features.Protection"
   x:Class="UBot.Avalonia.Features.Protection.ProtectionFeatureView">
 
   <ScrollViewer VerticalScrollBarVisibility="Auto">
-    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" Margin="0,0,0,12">
-
-      <!-- Recovery -->
-      <Border Grid.Row="0" Grid.Column="0" Classes="section-panel">
-        <StackPanel Spacing="4">
-          <TextBlock Text="Recovery" Classes="section-title" />
-          <ItemsControl x:Name="RecoveryList">
-            <ItemsControl.ItemTemplate>
-              <DataTemplate>
-                <Grid ColumnDefinitions="*,Auto,Auto,Auto" Margin="0,3">
-                  <CheckBox Grid.Column="0" Content="{Binding Label}" IsChecked="{Binding Enabled}" Classes="legacy-check" />
-                  <TextBlock Grid.Column="1" Text="&lt;" VerticalAlignment="Center" />
-                  <TextBox  Grid.Column="2" Text="{Binding Value}" Width="56" Classes="legacy-input" />
-                  <TextBlock Grid.Column="3" Text="%" VerticalAlignment="Center" />
-                </Grid>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
-        </StackPanel>
-      </Border>
-
-      <!-- Back to Town -->
-      <Border Grid.Row="0" Grid.Column="1" Classes="section-panel">
-        <StackPanel Spacing="4">
-          <TextBlock Text="Back to Town" Classes="section-title" />
-          <ItemsControl x:Name="BackToTownList">
-            <ItemsControl.ItemTemplate>
-              <DataTemplate>
-                <CheckBox Content="{Binding Label}" IsChecked="{Binding Enabled}" Classes="legacy-check" Margin="0,2" />
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
-        </StackPanel>
-      </Border>
-
-      <!-- Bad Status -->
-      <Border Grid.Row="1" Grid.Column="0" Classes="section-panel">
-        <StackPanel Spacing="6">
-          <TextBlock Text="Bad Status" Classes="section-title" />
-          <CheckBox x:Name="UseUniversalPillsCheck" Classes="legacy-check" Tag="useUniversalPills" IsCheckedChanged="Check_Changed" />
-          <CheckBox x:Name="UseBadStatusSkillCheck" Classes="legacy-check" Tag="useBadStatusSkill" IsCheckedChanged="Check_Changed" />
-        </StackPanel>
-      </Border>
-
-      <!-- Stat Points -->
-      <Border Grid.Row="1" Grid.Column="1" Classes="section-panel">
-        <StackPanel Spacing="8">
-          <TextBlock Text="Stat Points" Classes="section-title" />
-          <Grid ColumnDefinitions="*,Auto">
-            <TextBlock Grid.Column="0" Text="Increase INT" Classes="form-label" VerticalAlignment="Center" />
-            <TextBox   Grid.Column="1" x:Name="IncIntBox" Width="60" Classes="legacy-input" Tag="increaseInt" TextChanged="NumBox_Changed" />
+    <Grid ColumnDefinitions="*,12,*" Margin="0,0,0,12">
+      
+      <!-- Column 0 -->
+      <StackPanel Grid.Column="0" Spacing="10">
+        <!-- Recovery Card -->
+        <Border Classes="section-card">
+          <Grid RowDefinitions="Auto,*">
+            <Border Grid.Row="0" Classes="section-header">
+              <TextBlock Text="Health / Mana Recovery" Classes="section-header-text" />
+            </Border>
+            <StackPanel Grid.Row="1" Margin="12,8" Spacing="4">
+              <ItemsControl x:Name="RecoveryList">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="protection:ThresholdRow">
+                    <Grid ColumnDefinitions="*,Auto,Auto,Auto" Margin="0,1">
+                      <CheckBox Grid.Column="0" Content="{Binding Label}" IsChecked="{Binding Enabled}" Classes="legacy-check" VerticalAlignment="Center" FontSize="11.5" />
+                      <TextBlock Grid.Column="1" Text="&lt;" VerticalAlignment="Center" Margin="6,0" Opacity="0.5" FontSize="11" />
+                      <TextBox  Grid.Column="2" Text="{Binding Value}" Classes="field" Width="46" Height="26" Padding="4,0" TextAlignment="Center" VerticalContentAlignment="Center" FontSize="11.5" />
+                      <TextBlock Grid.Column="3" Text="%" VerticalAlignment="Center" Margin="6,0,0,0" Opacity="0.5" FontSize="10.5" />
+                    </Grid>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
           </Grid>
-          <Grid ColumnDefinitions="*,Auto">
-            <TextBlock Grid.Column="0" Text="Increase STR" Classes="form-label" VerticalAlignment="Center" />
-            <TextBox   Grid.Column="1" x:Name="IncStrBox" Width="60" Classes="legacy-input" Tag="increaseStr" TextChanged="NumBox_Changed" />
-          </Grid>
-          <Button x:Name="ApplyStatBtn" Classes="legacy-btn primary" Content="Apply" HorizontalAlignment="Left" Click="ApplyStat_Click" />
-        </StackPanel>
-      </Border>
+        </Border>
 
-      <!-- Pet Recovery -->
-      <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Classes="section-panel">
-        <StackPanel Spacing="4">
-          <TextBlock Text="Pet Recovery" Classes="section-title" />
-          <WrapPanel Orientation="Horizontal">
-            <CheckBox x:Name="PetHpCheck"      Classes="legacy-check" Tag="petHpPotionEnabled"           IsCheckedChanged="Check_Changed" Margin="0,0,16,4" />
-            <CheckBox x:Name="PetHungerCheck"  Classes="legacy-check" Tag="petHgpPotionEnabled"          IsCheckedChanged="Check_Changed" Margin="0,0,16,4" />
-            <CheckBox x:Name="PetAbnormCheck"  Classes="legacy-check" Tag="petAbnormalRecoveryEnabled"   IsCheckedChanged="Check_Changed" Margin="0,0,16,4" />
-            <CheckBox x:Name="PetReviveCheck"  Classes="legacy-check" Tag="reviveGrowthFellow"           IsCheckedChanged="Check_Changed" Margin="0,0,16,4" />
-            <CheckBox x:Name="PetSummonCheck"  Classes="legacy-check" Tag="autoSummonGrowthFellow"       IsCheckedChanged="Check_Changed" Margin="0,0,16,4" />
-          </WrapPanel>
-        </StackPanel>
-      </Border>
+        <!-- Bad Status Card -->
+        <Border Classes="section-card">
+          <Grid RowDefinitions="Auto,*">
+            <Border Grid.Row="0" Classes="section-header">
+              <TextBlock Text="Bad Status" Classes="section-header-text" />
+            </Border>
+            <StackPanel Grid.Row="1" Margin="12,8" Spacing="4">
+              <CheckBox x:Name="UseUniversalPillsCheck" Classes="legacy-check" Tag="useUniversalPills" IsCheckedChanged="Check_Changed" FontSize="11.5" />
+              <CheckBox x:Name="UseBadStatusSkillCheck" Classes="legacy-check" Tag="useBadStatusSkill" IsCheckedChanged="Check_Changed" FontSize="11.5" />
+            </StackPanel>
+          </Grid>
+        </Border>
+
+        <!-- Pet Recovery Card -->
+        <Border Classes="section-card">
+          <Grid RowDefinitions="Auto,*">
+            <Border Grid.Row="0" Classes="section-header">
+              <TextBlock Text="Recovery - Pet" Classes="section-header-text" />
+            </Border>
+            <StackPanel Grid.Row="1" Margin="12,8" Spacing="4">
+              <CheckBox x:Name="PetHpCheck"      Classes="legacy-check" Tag="petHpPotionEnabled"           IsCheckedChanged="Check_Changed" FontSize="11.5" />
+              <CheckBox x:Name="PetHungerCheck"  Classes="legacy-check" Tag="petHgpPotionEnabled"          IsCheckedChanged="Check_Changed" FontSize="11.5" />
+              <CheckBox x:Name="PetAbnormCheck"  Classes="legacy-check" Tag="petAbnormalRecoveryEnabled"   IsCheckedChanged="Check_Changed" FontSize="11.5" />
+              <CheckBox x:Name="PetReviveCheck"  Classes="legacy-check" Tag="reviveGrowthFellow"           IsCheckedChanged="Check_Changed" FontSize="11.5" />
+              <CheckBox x:Name="PetSummonCheck"  Classes="legacy-check" Tag="autoSummonGrowthFellow"       IsCheckedChanged="Check_Changed" FontSize="11.5" />
+            </StackPanel>
+          </Grid>
+        </Border>
+      </StackPanel>
+
+      <!-- Column 2 (Right) -->
+      <StackPanel Grid.Column="2" Spacing="10">
+        <!-- Back to Town Card -->
+        <Border Classes="section-card">
+          <Grid RowDefinitions="Auto,*">
+            <Border Grid.Row="0" Classes="section-header">
+              <TextBlock Text="Back to Town" Classes="section-header-text" />
+            </Border>
+            <StackPanel Grid.Row="1" Margin="12,8" Spacing="2">
+              <ItemsControl x:Name="BackToTownList">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="protection:CheckRow">
+                    <CheckBox Content="{Binding Label}" IsChecked="{Binding Enabled}" Classes="legacy-check" Margin="0,0" FontSize="11.5" />
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </Grid>
+        </Border>
+
+        <!-- Stat Points Card -->
+        <Border Classes="section-card">
+          <Grid RowDefinitions="Auto,*">
+            <Border Grid.Row="0" Classes="section-header">
+              <TextBlock Text="Stat Points" Classes="section-header-text" />
+            </Border>
+            <StackPanel Grid.Row="1" Margin="12,10" Spacing="8">
+              <Grid ColumnDefinitions="*,Auto" Margin="0,1">
+                <TextBlock Grid.Column="0" Text="Increase INT" Classes="label" VerticalAlignment="Center" FontSize="11.5" />
+                <TextBox   Grid.Column="1" x:Name="IncIntBox" Width="50" Height="26" Classes="field" TextAlignment="Center" Tag="increaseInt" TextChanged="NumBox_Changed" FontSize="11.5" />
+              </Grid>
+              <Grid ColumnDefinitions="*,Auto" Margin="0,1">
+                <TextBlock Grid.Column="0" Text="Increase STR" Classes="label" VerticalAlignment="Center" FontSize="11.5" />
+                <TextBox   Grid.Column="1" x:Name="IncStrBox" Width="50" Height="26" Classes="field" TextAlignment="Center" Tag="increaseStr" TextChanged="NumBox_Changed" FontSize="11.5" />
+              </Grid>
+              <Button x:Name="ApplyStatBtn" Classes="btn blue" Content="Run" HorizontalAlignment="Stretch" Height="32" Click="ApplyStat_Click" FontWeight="SemiBold" FontSize="12" />
+            </StackPanel>
+          </Grid>
+        </Border>
+      </StackPanel>
 
     </Grid>
   </ScrollViewer>
-
 </UserControl>
-

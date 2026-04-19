@@ -301,12 +301,7 @@
               </Border>
             </Grid>
 
-            <ScrollViewer Grid.Row="1"
-                          VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Disabled"
-                          Padding="12,10,12,12">
-              <ContentControl x:Name="ContentHost"/>
-            </ScrollViewer>
+            <ContentControl Grid.Row="1" x:Name="ContentHost" Padding="12,10,12,12"/>
           </Grid>
         </Border>
       </Grid>

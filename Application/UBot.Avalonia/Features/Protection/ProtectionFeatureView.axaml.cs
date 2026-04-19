@@ -36,13 +36,13 @@ public partial class ProtectionFeatureView : UserControl
     public void Initialize(PluginViewModelBase vm)
     {
         _vm = vm;
-        UseUniversalPillsCheck.Content = "Use universal pills";
-        UseBadStatusSkillCheck.Content = "Use bad status skill";
-        PetHpCheck.Content     = "Pet HP potions";
-        PetHungerCheck.Content = "Pet hunger potions";
-        PetAbnormCheck.Content = "Pet abnormal recovery";
-        PetReviveCheck.Content = "Revive fellow pet";
-        PetSummonCheck.Content = "Auto-summon fellow pet";
+        UseUniversalPillsCheck.Content = "Use Universal Pills";
+        UseBadStatusSkillCheck.Content = "Use Skill";
+        PetHpCheck.Content     = "Use HP potions if HP";
+        PetHungerCheck.Content = "Use HGP potions if hunger";
+        PetAbnormCheck.Content = "Use abnormal state recovery potions";
+        PetReviveCheck.Content = "Revive growth / fellow pet";
+        PetSummonCheck.Content = "Auto summon growth & fellow pet";
         RefreshFromConfig();
     }
 
@@ -54,28 +54,28 @@ public partial class ProtectionFeatureView : UserControl
         // Recovery rows
         var recovRows = new ObservableCollection<ThresholdRow>
         {
-            MakeThresh("HP Potion",       "hpPotionEnabled",  "hpPotionThreshold",  75),
-            MakeThresh("MP Potion",       "mpPotionEnabled",  "mpPotionThreshold",  75),
-            MakeThresh("Vigor HP",        "vigorHpEnabled",   "vigorHpThreshold",   50),
-            MakeThresh("Vigor MP",        "vigorMpEnabled",   "vigorMpThreshold",   50),
-            MakeThresh("Skill HP",        "skillHpEnabled",   "skillHpThreshold",   50),
-            MakeThresh("Skill MP",        "mpSkillEnabled",   "mpSkillThreshold",   50),
+            MakeThresh("Use HP potions if HP",       "hpPotionEnabled",  "hpPotionThreshold",  75),
+            MakeThresh("Use MP potions if MP",       "mpPotionEnabled",  "mpPotionThreshold",  75),
+            MakeThresh("Use Vigor Potions if HP",    "vigorHpEnabled",   "vigorHpThreshold",   50),
+            MakeThresh("Use Vigor Potions if MP",    "vigorMpEnabled",   "vigorMpThreshold",   50),
+            MakeThresh("Use skill if HP",            "skillHpEnabled",   "skillHpThreshold",   50),
+            MakeThresh("Use skill if MP",            "mpSkillEnabled",   "mpSkillThreshold",   50),
         };
         RecoveryList.ItemsSource = recovRows;
 
         // Back to town
         var backRows = new ObservableCollection<CheckRow>
         {
-            MakeCheck("Dead delay enabled",   "deadDelayEnabled"),
-            MakeCheck("Stop in town",         "stopInTown"),
-            MakeCheck("No arrows",            "noArrows"),
-            MakeCheck("Full inventory",       "fullInventory"),
-            MakeCheck("Full pet inventory",   "fullPetInventory"),
-            MakeCheck("Low HP potions",       "hpPotionsLow"),
-            MakeCheck("Low MP potions",       "mpPotionsLow"),
-            MakeCheck("Low durability",       "lowDurability"),
-            MakeCheck("Level up",             "levelUp"),
-            MakeCheck("Shard fatigue",        "shardFatigue"),
+            MakeCheck("Dead with delay",             "deadDelayEnabled"),
+            MakeCheck("Stop bot when back in town",  "stopInTown"),
+            MakeCheck("No arrows / bolts left",      "noArrows"),
+            MakeCheck("Full inventory",              "fullInventory"),
+            MakeCheck("Full pet inventory",          "fullPetInventory"),
+            MakeCheck("HP Potions left",             "hpPotionsLow"),
+            MakeCheck("MP Potions left",             "mpPotionsLow"),
+            MakeCheck("Equipment durability low",    "lowDurability"),
+            MakeCheck("Level up",                    "levelUp"),
+            MakeCheck("Shard fatigue",               "shardFatigue"),
         };
         BackToTownList.ItemsSource = backRows;
 

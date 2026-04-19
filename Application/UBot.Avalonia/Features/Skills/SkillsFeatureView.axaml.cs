@@ -1,4 +1,4 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
 using Avalonia.Interactivity;
 using System;
 using System.Collections.Generic;
@@ -9,6 +9,7 @@ using System.Text.Json;
 using UBot.Avalonia.Controls;
 using UBot.Avalonia.Services;
 using UBot.Avalonia.ViewModels;
+using Avalonia.Media.Imaging;
 
 namespace UBot.Avalonia.Features.Skills;
 
@@ -16,6 +17,8 @@ public sealed class SkillListRow
 {
     public uint Id { get; set; }
     public string Display { get; set; } = string.Empty;
+    public string Icon { get; set; } = string.Empty;
+    public Bitmap? IconBitmap { get; set; }
 }
 
 public partial class SkillsFeatureView : UserControl
@@ -256,30 +259,91 @@ public partial class SkillsFeatureView : UserControl
 
     private void RefreshAvailableRows()
     {
-        _availableRows.Clear();
+        var selectedId = (PlayerSkillsList.SelectedItem as SkillListRow)?.Id ?? 0;
         var showAttacks = EnableAttacksCheck.IsChecked == true;
         var showBuffs = EnableBuffsCheck.IsChecked == true;
 
         var filtered = _catalog.Where(skill =>
             (showAttacks && skill.IsAttack && !skill.IsPassive && !skill.IsImbue)
-            || (showBuffs && skill.IsBuff && !skill.IsImbue));
+            || (showBuffs && skill.IsBuff && !skill.IsImbue))
+            .OrderBy(skill => skill.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
 
+        if (IsCollectionIdentical(_availableRows, filtered))
+            return;
+
+        _availableRows.Clear();
+        SkillListRow? nextSelection = null;
         foreach (var skill in filtered.OrderBy(skill => skill.Name, StringComparer.OrdinalIgnoreCase))
-            _availableRows.Add(new SkillListRow { Id = skill.Id, Display = skill.Name });
+        {
+            var row = new SkillListRow { Id = skill.Id, Display = skill.Name, Icon = skill.Icon };
+            _availableRows.Add(row);
+            if (row.Id == selectedId) nextSelection = row;
+            _ = LoadIconAsync(row);
+        }
+
+        if (nextSelection != null)
+            PlayerSkillsList.SelectedItem = nextSelection;
     }
 
     private void RefreshAttackRows()
     {
+        var selectedId = (AttackSkillsList.SelectedItem as SkillListRow)?.Id ?? 0;
+        var skillIds = GetCurrentAttackSkills();
+
+        if (IsCollectionIdentical(_attackRows, skillIds))
+            return;
+
         _attackRows.Clear();
-        foreach (var skillId in GetCurrentAttackSkills())
-            _attackRows.Add(new SkillListRow { Id = skillId, Display = ResolveSkillName(skillId) });
+        SkillListRow? nextSelection = null;
+        foreach (var skillId in skillIds)
+        {
+            var row = new SkillListRow { Id = skillId, Display = ResolveSkillName(skillId), Icon = ResolveSkillIcon(skillId) };
+            _attackRows.Add(row);
+            if (row.Id == selectedId) nextSelection = row;
+            _ = LoadIconAsync(row);
+        }
+
+        if (nextSelection != null)
+            AttackSkillsList.SelectedItem = nextSelection;
     }
 
     private void RefreshBuffRows()
     {
+        var selectedId = (BuffSkillsList.SelectedItem as SkillListRow)?.Id ?? 0;
+        var skillIds = _buffSkillIds;
+
+        if (IsCollectionIdentical(_buffRows, skillIds))
+            return;
+
         _buffRows.Clear();
-        foreach (var skillId in _buffSkillIds)
-            _buffRows.Add(new SkillListRow { Id = skillId, Display = ResolveSkillName(skillId) });
+        SkillListRow? nextSelection = null;
+        foreach (var skillId in skillIds)
+        {
+            var row = new SkillListRow { Id = skillId, Display = ResolveSkillName(skillId), Icon = ResolveSkillIcon(skillId) };
+            _buffRows.Add(row);
+            if (row.Id == selectedId) nextSelection = row;
+            _ = LoadIconAsync(row);
+        }
+
+        if (nextSelection != null)
+            BuffSkillsList.SelectedItem = nextSelection;
+    }
+
+    private static bool IsCollectionIdentical(ObservableCollection<SkillListRow> current, List<SkillCatalogEntry> next)
+    {
+        if (current.Count != next.Count) return false;
+        for (int i = 0; i < current.Count; i++)
+            if (current[i].Id != next[i].Id) return false;
+        return true;
+    }
+
+    private static bool IsCollectionIdentical(ObservableCollection<SkillListRow> current, List<uint> next)
+    {
+        if (current.Count != next.Count) return false;
+        for (int i = 0; i < current.Count; i++)
+            if (current[i].Id != next[i]) return false;
+        return true;
     }
 
     private void RefreshActiveBuffRows()
@@ -313,6 +377,34 @@ public partial class SkillsFeatureView : UserControl
     {
         var skill = _catalog.FirstOrDefault(entry => entry.Id == skillId);
         return skill?.Name ?? $"Unknown ({skillId})";
+    }
+
+    private string ResolveSkillIcon(uint skillId)
+    {
+        var skill = _catalog.FirstOrDefault(entry => entry.Id == skillId);
+        return skill?.Icon ?? string.Empty;
+    }
+
+    private readonly Dictionary<string, Bitmap> _iconCache = new();
+    
+    private async System.Threading.Tasks.Task LoadIconAsync(SkillListRow row)
+    {
+        if (string.IsNullOrWhiteSpace(row.Icon) || _vm == null) return;
+
+        if (_iconCache.TryGetValue(row.Icon, out var cached))
+        {
+            row.IconBitmap = cached;
+            return;
+        }
+
+        var bytes = await _vm.GetSkillIconAsync(row.Icon);
+        if (bytes != null)
+        {
+            using var ms = new System.IO.MemoryStream(bytes);
+            var bitmap = new Bitmap(ms);
+            _iconCache[row.Icon] = bitmap;
+            row.IconBitmap = bitmap;
+        }
     }
 
     private void AttackTypeSelect_Changed(object value)
@@ -596,7 +688,8 @@ public partial class SkillsFeatureView : UserControl
                 IsAttack = TryReadBool(item, "isAttack", out var isAttack) && isAttack,
                 IsBuff = TryReadBool(item, "isBuff", out var isBuff) && isBuff,
                 IsImbue = TryReadBool(item, "isImbue", out var isImbue) && isImbue,
-                IsLowLevel = TryReadBool(item, "isLowLevel", out var isLowLevel) && isLowLevel
+                IsLowLevel = TryReadBool(item, "isLowLevel", out var isLowLevel) && isLowLevel,
+                Icon = TryReadString(item, "icon", out var icon) ? icon : string.Empty
             });
         }
 

@@ -34,4 +34,5 @@ public interface IUbotCoreService
     Task<bool> SaveAutoLoginAccountsAsync(IReadOnlyList<AutoLoginAccountDto> accounts);
     Task<string> PickExecutableAsync();
     Task<string> PickScriptFileAsync();
+    Task<byte[]?> GetSkillIconAsync(string iconFile);
 }
