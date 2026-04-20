@@ -4,6 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PlatformTarget>x86</PlatformTarget>
+    <NoWarn>CS8618;CS8619;CS8625;CS8602;CS8601;CS8604;CS8600;CS8603;CS8765;CS0219</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

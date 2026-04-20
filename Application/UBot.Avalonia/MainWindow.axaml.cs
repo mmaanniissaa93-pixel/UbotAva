@@ -51,27 +51,7 @@ public partial class MainWindow : Window
         ("UBot.TargetAssist","Target Assist","targetassist"),
     };
 
-    // Icon path geometry per key
-    private static readonly Dictionary<string,string> IconGeo = new()
-    {
-        ["general"]     = "M3,12 L12,3 L21,12 L21,21 L15,21 L15,15 L9,15 L9,21 Z",
-        ["training"]    = "M12,2 L15,8 L22,9 L17,14 L18,21 L12,18 L6,21 L7,14 L2,9 L9,8 Z",
-        ["skills"]      = "M14.5,2.5 C14.5,2.5 18,6 18,10 C18,14 14,16 12,20 C10,16 6,14 6,10 C6,6 9.5,2.5 9.5,2.5 M12,10 A2,2 0 1,0 12,14 A2,2 0 0,0 12,10",
-        ["protection"]  = "M12,2 L20,6 L20,12 C20,17 16,21 12,22 C8,21 4,17 4,12 L4,6 Z",
-        ["party"]       = "M17,21 L17,19 A4,4 0 0,0 13,15 L5,15 A4,4 0 0,0 1,19 L1,21 M23,21 L23,19 A4,4 0 0,0 19,15 M16,3 A4,4 0 0,1 16,11 M9,11 A4,4 0 1,0 9,3 A4,4 0 0,0 9,11 Z",
-        ["alchemy"]     = "M9,3 L9,10 L4,19 A1,1 0 0,0 5,21 L19,21 A1,1 0 0,0 20,19 L15,10 L15,3 M6,3 L18,3",
-        ["trade"]       = "M17,2 L21,6 L17,10 M3,6 L21,6 M7,22 L3,18 L7,14 M21,18 L3,18",
-        ["lure"]        = "M12,2 C7,2 2,7 2,12 C2,17 7,20 12,22 C17,20 22,17 22,12 C22,7 17,2 12,2 M12,8 L12,16 M8,12 L16,12",
-        ["quest"]       = "M9,5 L4,5 L4,19 L20,19 L20,5 L15,5 M9,5 A3,3 0 0,1 15,5 M9,12 L15,12 M9,16 L13,16",
-        ["inventory"]   = "M20,7 L4,7 L4,19 A2,2 0 0,0 6,21 L18,21 A2,2 0 0,0 20,19 Z M16,7 L16,5 A2,2 0 0,0 14,3 L10,3 A2,2 0 0,0 8,5 L8,7",
-        ["items"]       = "M9,5 L9,3 L15,3 L15,5 M4,5 L20,5 L19,19 A2,2 0 0,1 17,21 L7,21 A2,2 0 0,1 5,19 Z",
-        ["map"]         = "M3,7 L9,4 L15,7 L21,4 L21,17 L15,20 L9,17 L3,20 Z M9,4 L9,17 M15,7 L15,20",
-        ["stats"]       = "M18,20 L18,10 M12,20 L12,4 M6,20 L6,14",
-        ["chat"]        = "M21,15 A2,2 0 0,1 19,17 L7,17 L3,21 L3,5 A2,2 0 0,1 5,3 L19,3 A2,2 0 0,1 21,5 Z",
-        ["log"]         = "M4,6 L20,6 M4,12 L20,12 M4,18 L14,18",
-        ["autodungeon"] = "M12,2 A10,10 0 1,0 12,22 A10,10 0 0,0 12,2 Z M12,6 L12,12 L16,14",
-        ["targetassist"]= "M12,2 A10,10 0 1,0 12,22 A10,10 0 0,0 12,2 Z M12,7 A5,5 0 1,0 12,17 A5,5 0 0,0 12,7 Z M12,2 L12,5 M12,19 L12,22 M2,12 L5,12 M19,12 L22,12",
-    };
+    private static Dictionary<string, string> IconGeo => IconPaths.Geometries;
 
     public MainWindow()
     {

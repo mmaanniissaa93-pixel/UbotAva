@@ -11,6 +11,7 @@
     <RootNamespace>UBot.Avalonia</RootNamespace>
     <AssemblyName>UBot.Avalonia</AssemblyName>
     <LangVersion>12</LangVersion>
+    <NoWarn>CS8618;CS8619;CS8625;CS8602;CS8601;CS8604;CS8600</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia"                    Version="11.1.0" />

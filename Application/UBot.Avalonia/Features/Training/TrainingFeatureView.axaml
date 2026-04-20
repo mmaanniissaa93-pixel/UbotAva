@@ -55,19 +55,19 @@
             <WrapPanel Margin="0,8,0,0">
               <StackPanel Orientation="Horizontal" Margin="0,0,16,8">
                 <CheckBox x:Name="UseMountCheck" Tag="useMount"  Checked="Toggle_Changed" Unchecked="Toggle_Changed" Margin="0,0,8,0" />
-                <TextBlock Text="Mount" Classes="label" VerticalAlignment="Center" FontSize="10" />
+                <TextBlock Text="Mount" Classes="label" VerticalAlignment="Center" FontSize="10" ToolTip.Tip="Use mount if available" />
               </StackPanel>
               <StackPanel Orientation="Horizontal" Margin="0,0,16,8">
                 <CheckBox x:Name="CastBuffsCheck" Tag="castBuffs"  Checked="Toggle_Changed" Unchecked="Toggle_Changed" Margin="0,0,8,0" />
-                <TextBlock Text="Buffs" Classes="label" VerticalAlignment="Center" FontSize="10" />
+                <TextBlock Text="Buffs" Classes="label" VerticalAlignment="Center" FontSize="10" ToolTip.Tip="Cast buffs when starting training" />
               </StackPanel>
               <StackPanel Orientation="Horizontal" Margin="0,0,16,8">
                 <CheckBox x:Name="UseSpeedCheck" Tag="useSpeedDrug"  Checked="Toggle_Changed" Unchecked="Toggle_Changed" Margin="0,0,8,0" />
-                <TextBlock Text="Speed" Classes="label" VerticalAlignment="Center" FontSize="10" />
+                <TextBlock Text="Speed" Classes="label" VerticalAlignment="Center" FontSize="10" ToolTip.Tip="Use speed drug if available" />
               </StackPanel>
               <StackPanel Orientation="Horizontal" Margin="0,0,16,8">
                 <CheckBox x:Name="UseReverseCheck" Tag="useReverse"  Checked="Toggle_Changed" Unchecked="Toggle_Changed" Margin="0,0,8,0" />
-                <TextBlock Text="Reverse" Classes="label" VerticalAlignment="Center" FontSize="10" />
+                <TextBlock Text="Reverse" Classes="label" VerticalAlignment="Center" FontSize="10" ToolTip.Tip="Reverse walking direction when reaching area boundary" />
               </StackPanel>
             </WrapPanel>
           </StackPanel>
@@ -83,11 +83,11 @@
           <StackPanel Grid.Row="1" Margin="4,4,4,4" Spacing="4">
             <StackPanel Orientation="Horizontal">
               <CheckBox x:Name="BerserkFullCheck" Tag="berserkWhenFull"  Checked="Toggle_Changed" Unchecked="Toggle_Changed" Margin="0,0,8,0" />
-              <TextBlock Text="Full" Classes="label" VerticalAlignment="Center" FontSize="10" />
+              <TextBlock Text="Full HP" Classes="label" VerticalAlignment="Center" FontSize="10" ToolTip.Tip="Enter berserk mode when HP is full" />
             </StackPanel>
             <StackPanel Orientation="Horizontal" Spacing="8">
               <CheckBox x:Name="BerserkCountCheck" Tag="berserkByMonsterAmount"  Checked="Toggle_Changed" Unchecked="Toggle_Changed" />
-              <TextBlock Text="Count" Classes="label" VerticalAlignment="Center" FontSize="10" />
+              <TextBlock Text="At least" Classes="label" VerticalAlignment="Center" FontSize="10" ToolTip.Tip="Enter berserk when attacked by this many monsters" />
               <TextBox x:Name="BerserkCountBox" Classes="field compact-num" Width="60" Tag="berserkMonsterAmount" TextChanged="NumBox_Changed" />
               <TextBlock x:Name="MonstersLabel" Classes="label" VerticalAlignment="Center" />
             </StackPanel>
@@ -97,7 +97,7 @@
             </StackPanel>
             <StackPanel Orientation="Horizontal">
               <CheckBox x:Name="BerserkRarityCheck" Tag="berserkByMonsterRarity"  Checked="Toggle_Changed" Unchecked="Toggle_Changed" Margin="0,0,8,0" />
-              <TextBlock Text="Rarity" Classes="label" VerticalAlignment="Center" FontSize="10" />
+              <TextBlock Text="Rarity" Classes="label" VerticalAlignment="Center" FontSize="10" ToolTip.Tip="Enter berserk when rare monster type is nearby" />
             </StackPanel>
           </StackPanel>
         </Grid>
@@ -112,15 +112,15 @@
           <StackPanel Grid.Row="1" Margin="4,4,4,4" Spacing="4">
             <StackPanel Orientation="Horizontal">
               <CheckBox x:Name="IgnorePillarCheck" Tag="ignoreDimensionPillar"  Checked="Toggle_Changed" Unchecked="Toggle_Changed" Margin="0,0,8,0" />
-              <TextBlock Text="Pillar" Classes="label" VerticalAlignment="Center" FontSize="10" />
+              <TextBlock Text="Pillar" Classes="label" VerticalAlignment="Center" FontSize="10" ToolTip.Tip="Ignore dimension pillars as obstacles" />
             </StackPanel>
             <StackPanel Orientation="Horizontal">
               <CheckBox x:Name="WeakerFirstCheck" Tag="attackWeakerFirst"  Checked="Toggle_Changed" Unchecked="Toggle_Changed" Margin="0,0,8,0" />
-              <TextBlock Text="Weaker" Classes="label" VerticalAlignment="Center" FontSize="10" />
+              <TextBlock Text="Weaker first" Classes="label" VerticalAlignment="Center" FontSize="10" ToolTip.Tip="Attack weaker monsters first" />
             </StackPanel>
             <StackPanel Orientation="Horizontal">
               <CheckBox x:Name="NoFollowCheck" Tag="dontFollowMobs"  Checked="Toggle_Changed" Unchecked="Toggle_Changed" Margin="0,0,8,0" />
-              <TextBlock Text="No follow" Classes="label" VerticalAlignment="Center" FontSize="10" />
+              <TextBlock Text="No follow" Classes="label" VerticalAlignment="Center" FontSize="10" ToolTip.Tip="Don't chase monsters outside training area" />
             </StackPanel>
           </StackPanel>
         </Grid>
@@ -144,6 +144,11 @@
               <DataGrid.Columns>
                 <DataGridTextColumn Header="Rarity" Binding="{Binding Rarity}" Width="*" IsReadOnly="True" />
                 <DataGridTemplateColumn Header="Avoid" Width="80">
+                  <DataGridTemplateColumn.HeaderTemplate>
+                    <DataTemplate>
+                      <TextBlock Text="Avoid" ToolTip.Tip="Avoid this monster type" />
+                    </DataTemplate>
+                  </DataGridTemplateColumn.HeaderTemplate>
                   <DataGridTemplateColumn.CellTemplate>
                     <DataTemplate>
                       <CheckBox IsChecked="{Binding Avoid}"  VerticalAlignment="Center" HorizontalAlignment="Center" />
@@ -151,6 +156,11 @@
                   </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <DataGridTemplateColumn Header="Prefer" Width="80">
+                  <DataGridTemplateColumn.HeaderTemplate>
+                    <DataTemplate>
+                      <TextBlock Text="Prefer" ToolTip.Tip="Target this monster type first" />
+                    </DataTemplate>
+                  </DataGridTemplateColumn.HeaderTemplate>
                   <DataGridTemplateColumn.CellTemplate>
                     <DataTemplate>
                       <CheckBox IsChecked="{Binding Prefer}"  VerticalAlignment="Center" HorizontalAlignment="Center" />
@@ -158,6 +168,11 @@
                   </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <DataGridTemplateColumn Header="Berserk" Width="80">
+                  <DataGridTemplateColumn.HeaderTemplate>
+                    <DataTemplate>
+                      <TextBlock Text="Berserk" ToolTip.Tip="Enter berserk mode for this monster type" />
+                    </DataTemplate>
+                  </DataGridTemplateColumn.HeaderTemplate>
                   <DataGridTemplateColumn.CellTemplate>
                     <DataTemplate>
                       <CheckBox IsChecked="{Binding Berserk}"  VerticalAlignment="Center" HorizontalAlignment="Center" />
