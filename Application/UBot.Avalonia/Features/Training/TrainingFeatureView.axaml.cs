@@ -67,6 +67,8 @@ public partial class TrainingFeatureView : UserControl
         RefreshFromConfig();
     }
 
+    
+
     private bool _syncing;
 
     public void RefreshFromConfig()
@@ -124,11 +126,17 @@ public partial class TrainingFeatureView : UserControl
         });
     }
 
-    private void Toggle_Changed(object? s, RoutedEventArgs e)
+private void Toggle_Changed(object? s, RoutedEventArgs e)
     {
-        if (_syncing || _vm is null || s is not ToggleSwitch ts || ts.Tag is not string key) return;
-        _ = _vm.PatchConfigAsync(new Dictionary<string, object?> { [key] = ts.IsChecked == true });
+        if (_syncing || _vm is null) return;
+        bool? isChecked = null;
+        if (s is ToggleSwitch ts) isChecked = ts.IsChecked;
+        else if (s is CheckBox cb) isChecked = cb.IsChecked;
+        if (isChecked is not null && s is Control c && c.Tag is string key)
+            _ = _vm.PatchConfigAsync(new Dictionary<string, object?> { [key] = isChecked });
     }
+
+
 
     private void NumBox_Changed(object? s, TextChangedEventArgs e)
     {
