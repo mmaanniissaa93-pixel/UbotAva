@@ -152,6 +152,33 @@ internal static class PluginContractManifestLoader
         if (!string.IsNullOrWhiteSpace(pluginName))
             candidates.Add(Path.Combine(directory, $"{pluginName}.manifest.json"));
 
+        // Development fallback:
+        // If manifests were not copied next to runtime assemblies, walk parent directories
+        // and probe repository-style plugin folders (Plugins/<PluginFolder>/plugin.manifest.json).
+        if (!string.IsNullOrWhiteSpace(directory) && !string.IsNullOrWhiteSpace(assemblyName))
+        {
+            var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var candidate in candidates)
+                visited.Add(candidate);
+
+            var current = new DirectoryInfo(directory);
+            while (current != null)
+            {
+                var byAssemblyName = Path.Combine(current.FullName, "Plugins", assemblyName, "plugin.manifest.json");
+                if (visited.Add(byAssemblyName))
+                    candidates.Add(byAssemblyName);
+
+                if (!string.IsNullOrWhiteSpace(pluginName))
+                {
+                    var byPluginName = Path.Combine(current.FullName, "Plugins", pluginName, "plugin.manifest.json");
+                    if (visited.Add(byPluginName))
+                        candidates.Add(byPluginName);
+                }
+
+                current = current.Parent;
+            }
+        }
+
         return candidates.FirstOrDefault(File.Exists) ?? string.Empty;
     }
 }
