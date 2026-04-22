@@ -5,8 +5,70 @@
   x:Class="UBot.Avalonia.Features.Statistics.StatisticsFeatureView">
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Spacing="10" Margin="0,0,0,12">
-      <controls:TabStrip x:Name="TabStripCtrl" />
-      <StackPanel x:Name="ContentHost" Spacing="10" />
+      <controls:TabStrip x:Name="StatsTabs" />
+
+      <Grid ColumnDefinitions="1*,1.1*">
+        <StackPanel Grid.Column="0" Spacing="10" Margin="0,0,5,0">
+          <Border Classes="section-card">
+            <Grid RowDefinitions="Auto,*">
+              <Border Grid.Row="0" Classes="section-header">
+                <TextBlock Text="Prognosis" Classes="section-header-text"/>
+              </Border>
+              <StackPanel Grid.Row="1" Margin="10,10,10,10" Spacing="4">
+                <CheckBox x:Name="ProgExperiencePerHour" Classes="legacy-check" Content="Experience / hour" Tag="prog_Experience / hour" IsCheckedChanged="TrackingOption_CheckedChanged"/>
+                <CheckBox x:Name="ProgGoldPerHour" Classes="legacy-check" Content="Gold / hour" Tag="prog_Gold / hour" IsCheckedChanged="TrackingOption_CheckedChanged"/>
+                <CheckBox x:Name="ProgKillsPerHour" Classes="legacy-check" Content="Kills / hour" Tag="prog_Kills / hour" IsCheckedChanged="TrackingOption_CheckedChanged"/>
+                <CheckBox x:Name="ProgItemsPerHour" Classes="legacy-check" Content="Items / hour" Tag="prog_Items / hour" IsCheckedChanged="TrackingOption_CheckedChanged"/>
+                <CheckBox x:Name="ProgSkillPointsPerHour" Classes="legacy-check" Content="Skill points / hour" Tag="prog_Skill points / hour" IsCheckedChanged="TrackingOption_CheckedChanged"/>
+              </StackPanel>
+            </Grid>
+          </Border>
+
+          <Border Classes="section-card">
+            <Grid RowDefinitions="Auto,*">
+              <Border Grid.Row="0" Classes="section-header">
+                <TextBlock Text="Tracking" Classes="section-header-text"/>
+              </Border>
+              <StackPanel Grid.Row="1" Margin="10,10,10,10" Spacing="4">
+                <CheckBox x:Name="TrackExperienceGained" Classes="legacy-check" Content="Experience gained" Tag="track_Experience gained" IsCheckedChanged="TrackingOption_CheckedChanged"/>
+                <CheckBox x:Name="TrackGoldGained" Classes="legacy-check" Content="Gold Gained" Tag="track_Gold Gained" IsCheckedChanged="TrackingOption_CheckedChanged"/>
+                <CheckBox x:Name="TrackKills" Classes="legacy-check" Content="Kills" Tag="track_Kills" IsCheckedChanged="TrackingOption_CheckedChanged"/>
+                <CheckBox x:Name="TrackLevelUps" Classes="legacy-check" Content="Level ups" Tag="track_Level ups" IsCheckedChanged="TrackingOption_CheckedChanged"/>
+                <CheckBox x:Name="TrackItemsLooted" Classes="legacy-check" Content="Items looted" Tag="track_Items looted" IsCheckedChanged="TrackingOption_CheckedChanged"/>
+                <CheckBox x:Name="TrackSkillPointsGained" Classes="legacy-check" Content="Skill points gained" Tag="track_Skill points gained" IsCheckedChanged="TrackingOption_CheckedChanged"/>
+              </StackPanel>
+            </Grid>
+          </Border>
+        </StackPanel>
+
+        <Border Grid.Column="1" Classes="section-card" Margin="5,0,0,0">
+          <Grid RowDefinitions="Auto,*,Auto">
+            <Border Grid.Row="0" Classes="section-header">
+              <TextBlock Text="Name / Value" Classes="section-header-text"/>
+            </Border>
+
+            <DataGrid x:Name="StatsGrid"
+                      Grid.Row="1"
+                      Margin="10,10,10,10"
+                      Classes="legacy-table"
+                      AutoGenerateColumns="False"
+                      CanUserSortColumns="False"
+                      CanUserResizeColumns="True"
+                      IsReadOnly="True"
+                      MinHeight="360">
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="1.5*"/>
+                <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="1*"/>
+              </DataGrid.Columns>
+            </DataGrid>
+
+            <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="10,0,10,10">
+              <TextBlock x:Name="StatusTextBlock" Grid.Column="0" Classes="form-label" Text="Status: Ready" VerticalAlignment="Center"/>
+              <Button Grid.Column="1" Classes="legacy-btn primary" Content="Reset" Width="100" Click="Reset_Click"/>
+            </Grid>
+          </Grid>
+        </Border>
+      </Grid>
     </StackPanel>
   </ScrollViewer>
 </UserControl>
