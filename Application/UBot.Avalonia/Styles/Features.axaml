@@ -4,7 +4,7 @@
 
   <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• SECTION PANEL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
   <Style Selector="Border.section-panel">
-    <Setter Property="Background"       Value="#CC0D1016" />
+    <Setter Property="Background"       Value="{DynamicResource CardSurfaceBrush}" />
     <Setter Property="BorderBrush"      Value="{DynamicResource StrokeSoftBrush}" />
     <Setter Property="BorderThickness"  Value="1" />
     <Setter Property="CornerRadius"     Value="12" />
@@ -21,7 +21,7 @@
 
   <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• LEGACY INPUT â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
   <Style Selector="TextBox.legacy-input">
-    <Setter Property="Background"      Value="#E0122740" />
+    <Setter Property="Background"      Value="{DynamicResource FieldBgBrush}" />
     <Setter Property="BorderBrush"     Value="{DynamicResource StrokeSoftBrush}" />
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="CornerRadius"    Value="8" />
@@ -75,9 +75,34 @@
     <Setter Property="HeadersVisibility" Value="Column" />
   </Style>
 
+  <Style Selector="DataGrid.legacy-table DataGridColumnHeader">
+    <Setter Property="Background" Value="{DynamicResource SectionHeaderBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource SectionHeaderTextBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource SectionHeaderBorderBrush}" />
+    <Setter Property="BorderThickness" Value="0,0,1,1" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style Selector="DataGrid.legacy-table DataGridCell">
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}" />
+  </Style>
+
+  <Style Selector="Border.section-panel ListBox">
+    <Setter Property="Background" Value="{DynamicResource FieldBgBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="Border.section-panel ListBoxItem">
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+  </Style>
+
   <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• LEGACY CHIP â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
   <Style Selector="Border.metric-chip">
-    <Setter Property="Background"      Value="#1889ACC8" />
+    <Setter Property="Background"      Value="{DynamicResource AccentSoftBrush}" />
     <Setter Property="BorderBrush"     Value="{DynamicResource StrokeSoftBrush}" />
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="CornerRadius"    Value="6" />
@@ -95,7 +120,7 @@
     <Setter Property="MinWidth"        Value="70" />
     <Setter Property="Padding"         Value="10,0" />
     <Setter Property="CornerRadius"    Value="8" />
-    <Setter Property="Background"      Value="#CC122740" />
+    <Setter Property="Background"      Value="{DynamicResource BtnDefaultBrush}" />
     <Setter Property="BorderBrush"     Value="{DynamicResource StrokeSoftBrush}" />
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="Foreground"      Value="{DynamicResource TextPrimaryBrush}" />
@@ -106,7 +131,7 @@
 
   <Style Selector="Button.legacy-btn:pointerover">
     <Setter Property="BorderBrush" Value="{DynamicResource StrokeStrongBrush}" />
-    <Setter Property="Background"  Value="#E0122740" />
+    <Setter Property="Background"  Value="{DynamicResource SecondaryBtnHoverBgBrush}" />
   </Style>
 
   <Style Selector="Button.legacy-btn.primary">
@@ -134,7 +159,7 @@
 
   <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• LOG BOARD â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
   <Style Selector="Border.log-board">
-    <Setter Property="Background"      Value="#0A0D1016" />
+    <Setter Property="Background"      Value="{DynamicResource LogBoardBrush}" />
     <Setter Property="BorderBrush"     Value="{DynamicResource StrokeSoftBrush}" />
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="CornerRadius"    Value="8" />
@@ -165,7 +190,7 @@
 
   <!-- ═══════════════ COMPACT NUMERIC FIELD ═══════════════ -->
   <Style Selector="TextBox.compact-num">
-    <Setter Property="Background"      Value="#0A0D13" />
+    <Setter Property="Background"      Value="{DynamicResource FieldBgBrush}" />
     <Setter Property="BorderBrush"     Value="{DynamicResource StrokeSoftBrush}" />
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="CornerRadius"    Value="6" />

@@ -81,7 +81,7 @@ public partial class CustomSelect : UserControl
 
         if (e.Property == IsDisabledProperty)
         {
-            Trigger.Opacity = IsDisabled ? 0.5 : 1.0;
+            Trigger.Opacity = IsDisabled ? 0.75 : 1.0;
             Trigger.IsHitTestVisible = !IsDisabled;
         }
     }
@@ -137,7 +137,7 @@ public partial class CustomSelect : UserControl
             {
                 Text = "No options available",
                 FontSize = 11,
-                Foreground = new SolidColorBrush(Color.Parse("#7C92B4")),
+                Foreground = GetHintBrush(),
                 Margin = new Thickness(9, 7)
             });
             return;
@@ -180,7 +180,7 @@ public partial class CustomSelect : UserControl
                 Text = opt.Name,
                 FontSize = 12,
                 FontWeight = FontWeight.Medium,
-                Foreground = new SolidColorBrush(Color.Parse("#ECF4FF")),
+                Foreground = GetPrimaryBrush(),
                 VerticalAlignment = VerticalAlignment.Center
             });
 
@@ -190,7 +190,7 @@ public partial class CustomSelect : UserControl
                 {
                     Text = opt.Hint,
                     FontSize = 10,
-                    Foreground = new SolidColorBrush(Color.Parse("#7C92B4")),
+                    Foreground = GetHintBrush(),
                     VerticalAlignment = VerticalAlignment.Center,
                     Margin = new Thickness(4, 0, 0, 0)
                 });
@@ -205,7 +205,7 @@ public partial class CustomSelect : UserControl
                 var check = new Path
                 {
                     Data = Geometry.Parse("M0,5 L3,8 L9,2"),
-                    Stroke = new SolidColorBrush(Color.Parse("#60A5FA")),
+                    Stroke = GetAccentBrush(),
                     StrokeThickness = 1.8,
                     Width = 12,
                     Height = 10,
@@ -242,12 +242,12 @@ public partial class CustomSelect : UserControl
         {
             TriggerIcon.IsVisible = false;
             TriggerLabel.Text = Placeholder;
-            TriggerLabel.Foreground = new SolidColorBrush(Color.Parse("#7C92B4"));
+            TriggerLabel.Foreground = GetHintBrush();
         }
         else
         {
             TriggerLabel.Text = selected.Name;
-            TriggerLabel.Foreground = new SolidColorBrush(Color.Parse("#ECF4FF"));
+            TriggerLabel.Foreground = GetPrimaryBrush();
 
             if (selected.Icon != null)
             {
@@ -268,4 +268,15 @@ public partial class CustomSelect : UserControl
                 return opt;
         return null;
     }
+
+    private bool IsDarkTheme => ActualThemeVariant == global::Avalonia.Styling.ThemeVariant.Dark;
+
+    private IBrush GetPrimaryBrush()
+        => new SolidColorBrush(IsDarkTheme ? Color.Parse("#ECF4FF") : Color.Parse("#17385E"));
+
+    private IBrush GetHintBrush()
+        => new SolidColorBrush(IsDarkTheme ? Color.Parse("#7C92B4") : Color.Parse("#58779A"));
+
+    private IBrush GetAccentBrush()
+        => new SolidColorBrush(IsDarkTheme ? Color.Parse("#60A5FA") : Color.Parse("#2F7FE6"));
 }

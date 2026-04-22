@@ -4,27 +4,52 @@
   xmlns:ctrls="clr-namespace:UBot.Avalonia.Controls"
   x:Class="UBot.Avalonia.Features.General.GeneralFeatureView">
 
-  <StackPanel Spacing="10">
+  <UserControl.Styles>
+    <Style Selector="CheckBox.check.general-compact">
+      <Setter Property="Margin" Value="0,1"/>
+      <Setter Property="MinHeight" Value="24"/>
+      <Setter Property="FontSize" Value="12"/>
+    </Style>
 
-    <!-- ═══ SRO Client Path ═══ -->
+    <Style Selector="RadioButton.general-compact">
+      <Setter Property="Margin" Value="0,1"/>
+      <Setter Property="MinHeight" Value="24"/>
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+      <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="TextBlock.compact-label">
+      <Setter Property="FontSize" Value="12"/>
+    </Style>
+
+    <Style Selector="TextBlock.compact-unit">
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+  </UserControl.Styles>
+
+  <StackPanel Spacing="8">
+
     <Border Classes="section-card">
       <Grid RowDefinitions="Auto,*">
         <Border Grid.Row="0" Classes="section-header">
           <TextBlock Text="SRO Client Path" Classes="section-header-text"/>
         </Border>
 
-        <Grid Grid.Row="1" ColumnDefinitions="*,180,Auto" Margin="16,12,16,16">
+        <Grid Grid.Row="1" ColumnDefinitions="*,170,Auto" Margin="14,10,14,12">
           <TextBox x:Name="SroBox"
                    Grid.Column="0"
                    Classes="field"
-                   Watermark="C:\\Path\\sro_client.exe"
+                   Watermark="C:\Path\sro_client.exe"
                    TextChanged="SroBox_Changed"
                    LostFocus="SroBox_LostFocus"/>
 
           <ctrls:CustomSelect x:Name="ClientTypeSelect"
                               Grid.Column="1"
                               Placeholder="Client Type"
-                              MinWidth="150"
+                              MinWidth="145"
                               Margin="8,0,0,0"/>
 
           <Button Grid.Column="2"
@@ -38,169 +63,158 @@
       </Grid>
     </Border>
 
-    <Grid ColumnDefinitions="1.05*,0.95*">
+    <Grid ColumnDefinitions="1.08*,0.92*">
 
-      <!-- ═══ Automated Login ═══ -->
       <Border Grid.Column="0" Classes="section-card">
         <Grid RowDefinitions="Auto,*">
           <Border Grid.Row="0" Classes="section-header">
             <TextBlock Text="Automated Login" Classes="section-header-text"/>
           </Border>
 
-          <StackPanel Grid.Row="1" Spacing="6" Margin="16,12,16,16">
+          <StackPanel Grid.Row="1" Spacing="5" Margin="14,10,14,12">
 
-            <!-- Account row -->
-            <Grid ColumnDefinitions="66,*,90">
-              <TextBlock Grid.Column="0" Text="Account" Classes="label"/>
+            <Grid ColumnDefinitions="80,*,88">
+              <TextBlock Grid.Column="0" Text="Account" Classes="label compact-label"/>
               <ctrls:CustomSelect x:Name="AccountSelect" Grid.Column="1" Placeholder="Not Selected" Margin="6,0"/>
               <Button Grid.Column="2" Classes="btn" Content="Setup" Click="AccountSetup_Click"/>
             </Grid>
 
-            <!-- Player row -->
-            <Grid ColumnDefinitions="66,*">
-              <TextBlock Grid.Column="0" Text="Player" Classes="label"/>
+            <Grid ColumnDefinitions="80,*">
+              <TextBlock Grid.Column="0" Text="Player" Classes="label compact-label"/>
               <ctrls:CustomSelect x:Name="CharacterSelect" Grid.Column="1" Placeholder="Not Selected" Margin="6,0,0,0"/>
             </Grid>
 
-            <!-- Captcha row -->
-            <Grid ColumnDefinitions="66,*">
-              <TextBlock Grid.Column="0" Text="Captcha" Classes="label"/>
+            <Grid ColumnDefinitions="80,*">
+              <TextBlock Grid.Column="0" Text="Captcha" Classes="label compact-label"/>
               <TextBox Grid.Column="1" x:Name="CaptchaBox" Classes="field" LostFocus="Captcha_LostFocus" Margin="6,0,0,0"/>
             </Grid>
 
-            <Border Classes="section-separator"/>
+            <Border Classes="section-separator" Margin="0,6,0,4"/>
 
-
-            <!-- Checkbox columns — tightened spacing for compact modern look -->
-            <Grid ColumnDefinitions="*,*" Margin="0,4,0,0">
+            <Grid ColumnDefinitions="*,*,*" Margin="0,2,0,0">
               <StackPanel Grid.Column="0" Spacing="2">
-                <CheckBox x:Name="EnableAutoLoginCheck" Classes="check" Content="Enable automated login"
+                <TextBlock Text="Login Flow" Classes="group-caption"/>
+                <CheckBox x:Name="EnableAutoLoginCheck" Classes="check general-compact" Content="Enable automated login"
                           IsCheckedChanged="Check_Changed" Tag="enableAutomatedLogin"/>
-                <CheckBox x:Name="EnableStaticCaptchaCheck" Classes="check" Content="Enable static captcha"
+                <CheckBox x:Name="EnableStaticCaptchaCheck" Classes="check general-compact" Content="Enable static captcha"
                           IsCheckedChanged="Check_Changed" Tag="enableStaticCaptcha"/>
-                <CheckBox x:Name="EnableLoginDelayCheck" Classes="check" Content="Enable login delay"
+                <CheckBox x:Name="EnableLoginDelayCheck" Classes="check general-compact" Content="Enable login delay"
                           IsCheckedChanged="Check_Changed" Tag="enableLoginDelay"/>
-                <CheckBox x:Name="WaitAfterDcCheck" Classes="check" Content="Wait after DC"
-                          IsCheckedChanged="Check_Changed" Tag="enableWaitAfterDc"/>
-                <CheckBox x:Name="AutoStartBotCheck" Classes="check" Content="Auto start bot"
-                          IsCheckedChanged="Check_Changed" Tag="autoStartBot"/>
-                <CheckBox x:Name="UseReturnScrollCheck" Classes="check" Content="Use return scroll"
-                          IsCheckedChanged="Check_Changed" Tag="useReturnScroll"/>
               </StackPanel>
 
               <StackPanel Grid.Column="1" Spacing="2">
-                <CheckBox x:Name="AutoCharSelectCheck" Classes="check" Content="Auto Char Select"
+                <TextBlock Text="Recovery" Classes="group-caption"/>
+                <CheckBox x:Name="WaitAfterDcCheck" Classes="check general-compact" Content="Wait after DC"
+                          IsCheckedChanged="Check_Changed" Tag="enableWaitAfterDc"/>
+                <CheckBox x:Name="AutoStartBotCheck" Classes="check general-compact" Content="Auto start bot"
+                          IsCheckedChanged="Check_Changed" Tag="autoStartBot"/>
+                <CheckBox x:Name="UseReturnScrollCheck" Classes="check general-compact" Content="Use return scroll"
+                          IsCheckedChanged="Check_Changed" Tag="useReturnScroll"/>
+              </StackPanel>
+
+              <StackPanel Grid.Column="2" Spacing="2">
+                <TextBlock Text="Character Flow" Classes="group-caption"/>
+                <CheckBox x:Name="AutoCharSelectCheck" Classes="check general-compact" Content="Auto Char Select"
                           IsCheckedChanged="Check_Changed" Tag="autoCharSelect"/>
-                <CheckBox x:Name="AutoHideClientCheck" Classes="check" Content="Auto Hide Client"
+                <CheckBox x:Name="AutoHideClientCheck" Classes="check general-compact" Content="Auto Hide Client"
                           IsCheckedChanged="Check_Changed" Tag="autoHideClient"/>
                 <RadioButton x:Name="FirstFoundRadio"
                              Content="First Found"
                              GroupName="charSelect"
                              Checked="RadioFirstFound_Checked"
-                             Foreground="{DynamicResource TextPrimaryBrush}"
-                             Classes="check"/>
+                             Classes="general-compact"/>
                 <RadioButton x:Name="HighestLevelRadio"
                              Content="Highest Level"
                              GroupName="charSelect"
                              Checked="RadioHighest_Checked"
-                             Foreground="{DynamicResource TextPrimaryBrush}"
-                             Classes="check"/>
+                             Classes="general-compact"/>
               </StackPanel>
             </Grid>
 
             <TextBlock Classes="hint"
                        Text="Please use this only if the captcha never changes."
                        TextWrapping="Wrap"
-                       Margin="0,2,0,4"/>
+                       Margin="0,0,0,2"/>
 
-            <Border Classes="section-separator"/>
+            <Border Classes="section-separator" Margin="0,6,0,4"/>
 
-
-            <!-- Compact numeric rows logic refined -->
-            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-              <TextBlock Text="Login delay" Classes="label" Width="74"/>
-              <TextBox x:Name="LoginDelayBox" Classes="compact-num"
+            <Grid ColumnDefinitions="84,64,Auto,14,84,64,Auto" VerticalAlignment="Center">
+              <TextBlock Grid.Column="0" Text="Login delay" Classes="label compact-label" VerticalAlignment="Center"/>
+              <TextBox Grid.Column="1" x:Name="LoginDelayBox" Classes="compact-num"
                        TextChanged="NumBox_Changed" Tag="loginDelay"/>
-              <TextBlock Text="sec" Classes="unit-label"/>
-            </StackPanel>
+              <TextBlock Grid.Column="2" Text="sec" Classes="compact-unit"/>
 
-            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-              <TextBlock Text="Wait after DC" Classes="label" Width="74"/>
-              <TextBox x:Name="WaitAfterDcBox" Classes="compact-num"
+              <TextBlock Grid.Column="4" Text="Wait after DC" Classes="label compact-label" VerticalAlignment="Center"/>
+              <TextBox Grid.Column="5" x:Name="WaitAfterDcBox" Classes="compact-num"
                        TextChanged="NumBox_Changed" Tag="waitAfterDc"/>
-              <TextBlock Text="min" Classes="unit-label"/>
-            </StackPanel>
+              <TextBlock Grid.Column="6" Text="min" Classes="compact-unit"/>
+            </Grid>
           </StackPanel>
         </Grid>
       </Border>
 
-      <!-- ═══ Right column ═══ -->
-      <StackPanel Grid.Column="1" Spacing="10">
+      <StackPanel Grid.Column="1" Spacing="8">
 
-        <!-- Client / Bot Settings -->
         <Border Classes="section-card">
           <Grid RowDefinitions="Auto,*">
             <Border Grid.Row="0" Classes="section-header">
               <TextBlock Text="Client Settings / Bot Settings" Classes="section-header-text"/>
             </Border>
 
-            <StackPanel Grid.Row="1" Spacing="4" Margin="16,12,16,16">
-              <CheckBox x:Name="StayConnectedCheck" Classes="check"
+            <StackPanel Grid.Row="1" Spacing="2" Margin="12,10,12,12">
+              <CheckBox x:Name="StayConnectedCheck" Classes="check general-compact"
                         Content="Stay connected if client exits unexpectedly"
                         IsCheckedChanged="Check_Changed" Tag="stayConnectedAfterClientExit"/>
-              <CheckBox x:Name="MoveToTrayCheck" Classes="check"
+              <CheckBox x:Name="MoveToTrayCheck" Classes="check general-compact"
                         Content="Move bot to system tray when minimized"
                         IsCheckedChanged="Check_Changed" Tag="moveToTrayOnMinimize"/>
-              <Border Classes="section-separator" Margin="0,6,0,4"/>
+              <Border Classes="section-separator" Margin="0,4,0,2"/>
               <TextBlock Classes="hint"
                          Text="If the client exits due to a crash, the bot will automatically switch."
-                         Margin="0,4,0,0"/>
+                         Margin="0,2,0,0"/>
             </StackPanel>
           </Grid>
         </Border>
 
-        <!-- Server Pending -->
         <Border Classes="section-card">
           <Grid RowDefinitions="Auto,*">
             <Border Grid.Row="0" Classes="section-header">
               <TextBlock Text="Server Pending" Classes="section-header-text"/>
             </Border>
 
-            <StackPanel Grid.Row="1" Spacing="4" Margin="16,12,16,16">
-              <CheckBox x:Name="AutoHidePendingCheck" Classes="check" Content="Auto hide the pending window"
+            <StackPanel Grid.Row="1" Spacing="2" Margin="12,10,12,12">
+              <CheckBox x:Name="AutoHidePendingCheck" Classes="check general-compact" Content="Auto hide the pending window"
                         IsCheckedChanged="Check_Changed" Tag="autoHidePendingWindow"/>
-              <CheckBox x:Name="EnablePendingLogsCheck" Classes="check" Content="Enable pending queue logs"
+              <CheckBox x:Name="EnablePendingLogsCheck" Classes="check general-compact" Content="Enable pending queue logs"
                         IsCheckedChanged="Check_Changed" Tag="enablePendingQueueLogs"/>
 
-              <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="0,4,0,0">
-                <CheckBox x:Name="EnableQueueNotifCheck" Classes="check"
+              <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="0,2,0,0">
+                <CheckBox x:Name="EnableQueueNotifCheck" Classes="check general-compact"
                           Content="Notify on"
                           IsCheckedChanged="Check_Changed" Tag="enableQueueNotification"/>
                 <TextBox x:Name="PeopleLeftBox" Classes="compact-num"
                          TextChanged="NumBox_Changed" Tag="queuePeopleLeft"/>
-                <TextBlock Text="people left" Classes="unit-label"/>
+                <TextBlock Text="people left" Classes="compact-unit"/>
               </StackPanel>
 
-              <Border Classes="section-separator"/>
-
+              <Border Classes="section-separator" Margin="0,4,0,2"/>
 
               <Button Classes="btn"
                       Content="Toggle Pending Window"
                       HorizontalAlignment="Stretch"
-                      Margin="0,8,0,0"
+                      Margin="0,4,0,0"
                       Click="TogglePendingWindow_Click"/>
             </StackPanel>
           </Grid>
         </Border>
 
-        <!-- Sound Notifications -->
         <Border Classes="section-card">
           <Grid RowDefinitions="Auto,*">
             <Border Grid.Row="0" Classes="section-header">
               <TextBlock Text="Sound Notifications" Classes="section-header-text"/>
             </Border>
 
-            <StackPanel Grid.Row="1" Spacing="4" Margin="16,12,16,16">
+            <StackPanel Grid.Row="1" Spacing="2" Margin="12,10,12,12">
               <Button Classes="btn"
                       Content="Open Settings..."
                       HorizontalAlignment="Stretch"

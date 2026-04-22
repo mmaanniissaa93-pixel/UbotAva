@@ -15,7 +15,7 @@
         <TextBlock Grid.Column="0" x:Name="ChannelLabel" Classes="form-label" VerticalAlignment="Center" />
         <TextBox   Grid.Column="1" x:Name="MessageBox" Classes="legacy-input" Watermark="Message..." />
         <TextBox   Grid.Column="2" x:Name="TargetBox"  Classes="legacy-input" Width="120" Watermark="Target..." IsVisible="False" />
-        <Button    Grid.Column="3" x:Name="SendBtn" Classes="action-btn primary" Content="Send" Click="Send_Click" />
+        <Button    Grid.Column="3" x:Name="SendBtn" Classes="btn blue" Content="Send" Click="Send_Click" Height="30" MinWidth="72" Margin="8,0,0,0" />
       </Grid>
     </Border>
 

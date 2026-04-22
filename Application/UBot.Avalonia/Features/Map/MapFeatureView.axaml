@@ -13,7 +13,7 @@
 
       <!-- Left: Map Viewport -->
       <Border Grid.Column="0"
-              Background="#0A0D1016"
+              Background="{DynamicResource LogBoardBrush}"
               BorderBrush="{DynamicResource StrokeSoftBrush}"
               BorderThickness="1"
               CornerRadius="12"
@@ -30,7 +30,7 @@
 
           <!-- Overlay stats -->
           <Border Grid.Row="1"
-                  Background="#CC0D1016"
+                  Background="{DynamicResource TopbarPillBgBrush}"
                   Padding="8,4">
             <TextBlock x:Name="MapOverlayText"
                        FontFamily="Consolas,Monospace"

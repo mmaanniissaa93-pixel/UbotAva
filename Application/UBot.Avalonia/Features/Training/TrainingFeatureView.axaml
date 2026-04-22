@@ -32,7 +32,7 @@
                 </StackPanel>
                 <Button Grid.Column="2" Classes="btn blue" x:Name="SetCurrentBtn" Click="SetCurrent_Click" VerticalAlignment="Bottom" Height="28" Padding="12,0" />
               </Grid>
-              <Border Background="#0DFFFFFF" CornerRadius="4" Padding="10,6">
+              <Border Background="{DynamicResource TopbarPillBgBrush}" CornerRadius="4" Padding="10,6">
                 <TextBlock x:Name="CurrentPositionLabel" FontSize="10" FontFamily="Consolas,Monospace" Foreground="{DynamicResource TextDimBrush}" HorizontalAlignment="Center" />
               </Border>
             </StackPanel>

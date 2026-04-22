@@ -19,15 +19,16 @@
         <!-- The List -->
         <Grid Grid.Row="1" Margin="16,12">
           <DataGrid x:Name="InventoryGrid" 
+                    Classes="legacy-table"
                     ItemsSource="{Binding Items}"
                     AutoGenerateColumns="False" 
                     IsReadOnly="True"
                     Background="Transparent"
                     BorderThickness="1"
-                    BorderBrush="#1E293B"
+                    BorderBrush="{DynamicResource StrokeSoftBrush}"
                     CornerRadius="8"
                     GridLinesVisibility="Horizontal"
-                    HorizontalGridLinesBrush="#1E293B"
+                    HorizontalGridLinesBrush="{DynamicResource StrokeSoftBrush}"
                     RowHeight="42">
             <DataGrid.Styles>
               <Style Selector="DataGridRow">
@@ -58,7 +59,7 @@
                   <DataTemplate>
                     <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center" Margin="8,0">
                       <Image Width="24" Height="24" Source="{Binding IconBitmap}" Stretch="Uniform" />
-                      <TextBlock Text="{Binding Name}" VerticalAlignment="Center" Foreground="#EEF4FF" />
+                      <TextBlock Text="{Binding Name}" VerticalAlignment="Center" Foreground="{DynamicResource TextPrimaryBrush}" />
                     </StackPanel>
                   </DataTemplate>
                 </DataGridTemplateColumn.CellTemplate>

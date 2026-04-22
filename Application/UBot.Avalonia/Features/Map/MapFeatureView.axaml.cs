@@ -4,6 +4,7 @@ using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Styling;
 using global::Avalonia.Media.Imaging;
 using System;
 using System.Collections.Generic;
@@ -168,7 +169,8 @@ public partial class MapFeatureView : UserControl
         }
         else
         {
-            MapCanvas.Background = new SolidColorBrush(Color.Parse("#0B1322"));
+            var fallback = ActualThemeVariant == ThemeVariant.Dark ? "#0B1322" : "#EAF1FB";
+            MapCanvas.Background = new SolidColorBrush(Color.Parse(fallback));
         }
 
         RedrawMapDots();

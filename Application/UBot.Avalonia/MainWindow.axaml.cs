@@ -79,7 +79,6 @@ public partial class MainWindow : Window
             _state.AddChatMessage(channel, sender, message);
         };
 
-        LoadBanner();
         BuildSidebar();
         InitTopbar();
         BindStateEvents();
@@ -248,8 +247,9 @@ public partial class MainWindow : Window
             stack.Children.Add(new Path
             {
                 Data = Geometry.Parse(geo),
-                Stroke = new SolidColorBrush(Color.Parse("#6688AACC")),
-                StrokeThickness = 1.5,
+                Stroke = new SolidColorBrush(Color.Parse("#7FA4CC")),
+                StrokeThickness = 1.6,
+                StrokeLineCap = PenLineCap.Round,
                 Width = 16, Height = 16, Stretch = Stretch.Uniform,
                 VerticalAlignment = global::Avalonia.Layout.VerticalAlignment.Center
             });
@@ -279,6 +279,7 @@ public partial class MainWindow : Window
 
     private void InitTopbar()
     {
+        _isDark = ActualThemeVariant == ThemeVariant.Dark;
         LblToggle.Text     = "START";
         LblDisconnect.Text = "Disconnect";
         LblStartClient.Text = "Start Client";
@@ -287,6 +288,8 @@ public partial class MainWindow : Window
         BtnEn.Classes.Add("active");
         DivisionSelect.SelectionChanged += DivisionSelect_SelectionChanged;
         GatewaySelect.SelectionChanged += GatewaySelect_SelectionChanged;
+        UpdateThemeIcon();
+        LoadBanner();
         SyncTopbar();
     }
 
@@ -323,18 +326,19 @@ public partial class MainWindow : Window
             StatusIcon.IsVisible = true;
             StatusChipBorder.Classes.Add("status-waiting");
             StatusText.Text = "Waiting for Character";
-            StatusText.Foreground = new SolidColorBrush(Color.Parse("#F59E0B"));
-            StatusIcon.Stroke = new SolidColorBrush(Color.Parse("#F59E0B"));
+            var waitingColor = _isDark ? Color.Parse("#F59E0B") : Color.Parse("#A66A00");
+            StatusText.Foreground = new SolidColorBrush(waitingColor);
+            StatusIcon.Stroke = new SolidColorBrush(waitingColor);
             StatusIcon.Data = Geometry.Parse("M12,2 A10,10 0 1,0 12,22 A10,10 0 0,0 12,2 M12,6 L12,12 L16,14"); // clock
         }
         else if (connected)
         {
-            StartStatusPulse(Color.Parse("#34D399"));
+            StartStatusPulse(_isDark ? Color.Parse("#34D399") : Color.Parse("#0A6A4A"));
             StatusPulseDot.IsVisible = true;
             StatusIcon.IsVisible = false;
             StatusChipBorder.Classes.Add("status-connected");
             StatusText.Text = "Connected";
-            StatusText.Foreground = new SolidColorBrush(Color.Parse("#34D399"));
+            StatusText.Foreground = new SolidColorBrush(_isDark ? Color.Parse("#34D399") : Color.Parse("#0A6A4A"));
         }
         else
         {
@@ -343,8 +347,9 @@ public partial class MainWindow : Window
             StatusIcon.IsVisible = true;
             StatusChipBorder.Classes.Add("status-stopped");
             StatusText.Text = "Off";
-            StatusText.Foreground = new SolidColorBrush(Color.Parse("#F26C6C"));
-            StatusIcon.Stroke = new SolidColorBrush(Color.Parse("#F26C6C"));
+            var stopColor = _isDark ? Color.Parse("#F26C6C") : Color.Parse("#B7485A");
+            StatusText.Foreground = new SolidColorBrush(stopColor);
+            StatusIcon.Stroke = new SolidColorBrush(stopColor);
             StatusIcon.Data = Geometry.Parse("M18,6 L6,18 M6,6 L18,18"); // X
         }
 
@@ -385,10 +390,10 @@ public partial class MainWindow : Window
             CharIcon.Content = new Path
             {
                 Data = Geometry.Parse("M12,2 L20,6 L20,12 C20,17 16,21 12,22 C8,21 4,17 4,12 L4,6 Z"),
-                Stroke = new SolidColorBrush(Color.Parse("#64F3D0")),
+                Stroke = new SolidColorBrush(_isDark ? Color.Parse("#64F3D0") : Color.Parse("#2E6E5C")),
                 StrokeThickness = 1.4, Width = 13, Height = 13, Stretch = Stretch.Uniform
             };
-            CharLabel.Foreground = new SolidColorBrush(Color.Parse("#EEF4FF"));
+            CharLabel.Foreground = new SolidColorBrush(_isDark ? Color.Parse("#EEF4FF") : Color.Parse("#17385E"));
         }
 
         // Metrics
@@ -629,10 +634,29 @@ public partial class MainWindow : Window
     private void BtnTheme_Click(object? s, RoutedEventArgs e)
     {
         _isDark = !_isDark;
-        RequestedThemeVariant = _isDark ? global::Avalonia.Styling.ThemeVariant.Dark : global::Avalonia.Styling.ThemeVariant.Light;
-        ThemeIcon.Data = _isDark
-            ? Geometry.Parse("M12,3 C9.1,3 6.4,4.5 4.8,7 C3.2,9.5 3.2,12.5 4.8,15 C6.4,17.5 9.1,19 12,19 C16,19 19,16 19,12 A9,9 0 0,0 12,3 Z")
-            : Geometry.Parse("M12,2 L12,4 M12,20 L12,22 M4.22,4.22 L5.64,5.64 M18.36,18.36 L19.78,19.78 M2,12 L4,12 M20,12 L22,12 M4.22,19.78 L5.64,18.36 M18.36,5.64 L19.78,4.22 M12,17 A5,5 0 1,0 12,7 A5,5 0 0,0 12,17 Z");
+        var target = _isDark ? ThemeVariant.Dark : ThemeVariant.Light;
+        RequestedThemeVariant = target;
+        if (Application.Current is { } app)
+            app.RequestedThemeVariant = target;
+        UpdateThemeIcon();
+        LoadBanner();
+    }
+
+    private void UpdateThemeIcon()
+    {
+        IBrush iconBrush = new SolidColorBrush(_isDark ? Color.Parse("#5C7899") : Color.Parse("#5D7A9B"));
+        if (_isDark)
+        {
+            ThemeIcon.Stroke = null;
+            ThemeIcon.Fill = iconBrush;
+            ThemeIcon.Data = Geometry.Parse("M9.37,5.51 C9.19,6.15 9.1,6.82 9.1,7.5 C9.1,11.08 12.02,14 15.6,14 C16.28,14 16.95,13.91 17.59,13.73 C16.67,16.42 14.11,18.3 11.1,18.3 C7.3,18.3 4.2,15.2 4.2,11.4 C4.2,8.39 6.08,5.83 8.77,4.91 Z");
+        }
+        else
+        {
+            ThemeIcon.Fill = null;
+            ThemeIcon.Stroke = iconBrush;
+            ThemeIcon.Data = Geometry.Parse("M12,2 L12,4 M12,20 L12,22 M4.22,4.22 L5.64,5.64 M18.36,18.36 L19.78,19.78 M2,12 L4,12 M20,12 L22,12 M4.22,19.78 L5.64,18.36 M18.36,5.64 L19.78,4.22 M12,17 A5,5 0 1,0 12,7 A5,5 0 0,0 12,17 Z");
+        }
     }
 
 
@@ -653,7 +677,8 @@ public partial class MainWindow : Window
     {
         try
         {
-            var bmp = new Bitmap(AssetLoader.Open(new Uri("avares://UBot.Avalonia/Assets/ubot_banner_night.png")));
+            var bannerFile = _isDark ? "ubot_banner_night.png" : "ubot_banner_day.png";
+            var bmp = new Bitmap(AssetLoader.Open(new Uri($"avares://UBot.Avalonia/Assets/{bannerFile}")));
             BannerImage.Source = bmp;
         }
         catch { /* banner not yet added */ }
@@ -727,4 +752,5 @@ public partial class MainWindow : Window
         StatusPulseDot.Opacity = 1;
     }
 }
+
 

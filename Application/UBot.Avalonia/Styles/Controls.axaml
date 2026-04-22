@@ -6,7 +6,7 @@
     <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="16"/>
-    <Setter Property="BoxShadow" Value="0 18 36 0 #3A000000"/>
+    <Setter Property="BoxShadow" Value="0 20 44 0 #40000000"/>
   </Style>
 
   <Style Selector="Button.sidebar-item">
@@ -26,26 +26,26 @@
   </Style>
 
   <Style Selector="Button.sidebar-item:pointerover">
-    <Setter Property="Background" Value="#1A4D6B94"/>
+    <Setter Property="Background" Value="{DynamicResource SidebarItemHoverBgBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}"/>
     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
   </Style>
 
   <Style Selector="Button.sidebar-item.active">
-    <Setter Property="Background" Value="#1A2035"/>
+    <Setter Property="Background" Value="{DynamicResource SidebarItemActiveBgBrush}"/>
     <Setter Property="BorderBrush" Value="Transparent"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="8"/>
-    <Setter Property="Foreground" Value="#93C5FD"/>
+    <Setter Property="Foreground" Value="{DynamicResource SidebarItemActiveFgBrush}"/>
   </Style>
 
   <Style Selector="Button.sidebar-item.active /template/ ContentPresenter">
-    <Setter Property="Foreground" Value="#93C5FD"/>
+    <Setter Property="Foreground" Value="{DynamicResource SidebarItemActiveFgBrush}"/>
   </Style>
 
   <!-- Active nav icon turns accent blue -->
   <Style Selector="Button.sidebar-item.active Path">
-    <Setter Property="Stroke" Value="#93C5FD"/>
+    <Setter Property="Stroke" Value="{DynamicResource SidebarItemActiveFgBrush}"/>
   </Style>
 
   <Style Selector="TextBlock.sidebar-group">
@@ -67,8 +67,8 @@
   <Style Selector="Button.tab-btn">
     <Setter Property="Height" Value="28"/>
     <Setter Property="Padding" Value="16,0"/>
-    <Setter Property="Background" Value="#1A0F172A"/>
-    <Setter Property="BorderBrush" Value="#2E475569"/>
+    <Setter Property="Background" Value="{DynamicResource TabBtnBgBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource TabBtnBorderBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="14"/>
     <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
@@ -86,13 +86,13 @@
   </Style>
 
   <Style Selector="Button.tab-btn:pointerover">
-    <Setter Property="Background" Value="#22334155"/>
-    <Setter Property="BorderBrush" Value="#4464748B"/>
+    <Setter Property="Background" Value="{DynamicResource TabBtnHoverBgBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource TabBtnHoverBorderBrush}"/>
     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
   </Style>
 
   <Style Selector="Button.tab-btn.active">
-    <Setter Property="Background" Value="#331E293B"/>
+    <Setter Property="Background" Value="{DynamicResource TabBtnActiveBgBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
   </Style>
@@ -116,13 +116,13 @@
   </Style>
 
   <Style Selector="Button.lang-btn:pointerover">
-    <Setter Property="Background" Value="#22476688"/>
+    <Setter Property="Background" Value="{DynamicResource LangBtnHoverBgBrush}"/>
     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
     <Setter Property="Opacity" Value="1"/>
   </Style>
 
   <Style Selector="Button.lang-btn.active">
-    <Setter Property="Background" Value="#355BA3F5"/>
+    <Setter Property="Background" Value="{DynamicResource LangBtnActiveBgBrush}"/>
     <Setter Property="Foreground" Value="White"/>
     <Setter Property="Opacity" Value="1"/>
     <Setter Property="Transitions">
@@ -141,8 +141,8 @@
   </Style>
 
   <Style Selector="Border.status-running">
-    <Setter Property="Background" Value="#1E34D399"/>
-    <Setter Property="BorderBrush" Value="#5534D399"/>
+    <Setter Property="Background" Value="{DynamicResource StatusRunningBgBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource StatusRunningBorderBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="999"/>
     <Setter Property="Padding" Value="10,0"/>
@@ -150,8 +150,8 @@
   </Style>
 
   <Style Selector="Border.status-stopped">
-    <Setter Property="Background" Value="#1AF26C6C"/>
-    <Setter Property="BorderBrush" Value="#50F26C6C"/>
+    <Setter Property="Background" Value="{DynamicResource StatusStoppedBgBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource StatusStoppedBorderBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="999"/>
     <Setter Property="Padding" Value="10,0"/>
@@ -159,8 +159,8 @@
   </Style>
 
   <Style Selector="Border.status-waiting">
-    <Setter Property="Background" Value="#1EF59E0B"/>
-    <Setter Property="BorderBrush" Value="#56F59E0B"/>
+    <Setter Property="Background" Value="{DynamicResource StatusWaitingBgBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource StatusWaitingBorderBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="999"/>
     <Setter Property="Padding" Value="10,0"/>
@@ -168,8 +168,8 @@
   </Style>
 
   <Style Selector="Border.status-connected">
-    <Setter Property="Background" Value="#1A5BA3F5"/>
-    <Setter Property="BorderBrush" Value="#505BA3F5"/>
+    <Setter Property="Background" Value="{DynamicResource StatusConnectedBgBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource StatusConnectedBorderBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="999"/>
     <Setter Property="Padding" Value="10,0"/>
@@ -177,7 +177,7 @@
   </Style>
 
   <Style Selector="Border.topbar-pill">
-    <Setter Property="Background" Value="#10314B6D"/>
+    <Setter Property="Background" Value="{DynamicResource TopbarPillBgBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="999"/>
@@ -186,8 +186,8 @@
   </Style>
 
   <Style Selector="Border.topbar-pill.waiting">
-    <Setter Property="Background" Value="#1EF59E0B"/>
-    <Setter Property="BorderBrush" Value="#56F59E0B"/>
+    <Setter Property="Background" Value="{DynamicResource StatusWaitingBgBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource StatusWaitingBorderBrush}"/>
   </Style>
 
   <Style Selector="Button.btn">
@@ -204,10 +204,19 @@
     <Setter Property="Cursor" Value="Hand"/>
     <Setter Property="HorizontalContentAlignment" Value="Center"/>
     <Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="RenderTransform" Value="translate(0px,0px)"/>
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.14"/>
+        <BrushTransition Property="BorderBrush" Duration="0:0:0.14"/>
+        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.14"/>
+      </Transitions>
+    </Setter>
   </Style>
 
   <Style Selector="Button.btn:pointerover">
     <Setter Property="BorderBrush" Value="{DynamicResource StrokeStrongBrush}"/>
+    <Setter Property="RenderTransform" Value="translate(0px,-1px)"/>
   </Style>
 
   <Style Selector="Button.btn:disabled">
@@ -249,14 +258,14 @@
     <Setter Property="MinWidth" Value="0"/>
     <Setter Property="FontSize" Value="11"/>
     <Setter Property="Padding" Value="10,0"/>
-    <Setter Property="Background" Value="#18FFFFFF"/>
+    <Setter Property="Background" Value="{DynamicResource SecondaryBtnBgBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}"/>
     <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
     <Setter Property="CornerRadius" Value="8"/>
   </Style>
 
   <Style Selector="Button.btn.secondary:pointerover">
-    <Setter Property="Background" Value="#28FFFFFF"/>
+    <Setter Property="Background" Value="{DynamicResource SecondaryBtnHoverBgBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource StrokeStrongBrush}"/>
     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
   </Style>
@@ -267,19 +276,19 @@
     <Setter Property="FontSize" Value="11"/>
     <Setter Property="Padding" Value="10,0"/>
     <Setter Property="Background" Value="Transparent"/>
-    <Setter Property="BorderBrush" Value="#2F4B63"/>
-    <Setter Property="Foreground" Value="#9FB6D8"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource GhostBtnBorderBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource GhostBtnFgBrush}"/>
     <Setter Property="CornerRadius" Value="8"/>
   </Style>
 
   <Style Selector="Button.btn.ghost-outline:pointerover">
-    <Setter Property="Background" Value="#141D32"/>
-    <Setter Property="BorderBrush" Value="#4E6D96"/>
-    <Setter Property="Foreground" Value="#D6E6FF"/>
+    <Setter Property="Background" Value="{DynamicResource GhostBtnHoverBgBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource GhostBtnHoverBorderBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource GhostBtnHoverFgBrush}"/>
   </Style>
 
   <Style Selector="Button.btn.ghost-outline Path">
-    <Setter Property="Stroke" Value="#9FB6D8"/>
+    <Setter Property="Stroke" Value="{DynamicResource GhostBtnFgBrush}"/>
   </Style>
 
   <Style Selector="Button.btn.start">
@@ -313,26 +322,21 @@
   </Style>
 
   <Style Selector="Border.metric-card">
-    <Setter Property="Background">
-      <Setter.Value>
-        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-          <GradientStop Offset="0" Color="#BC11192A"/>
-          <GradientStop Offset="1" Color="#99080E18"/>
-        </LinearGradientBrush>
-      </Setter.Value>
-    </Setter>
+    <Setter Property="Background" Value="{DynamicResource MetricCardBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="12"/>
     <Setter Property="Padding" Value="14,12"/>
     <Setter Property="Height" Value="100"/>
+    <Setter Property="BoxShadow" Value="0 10 22 0 #2A000000"/>
   </Style>
 
+
   <Style Selector="TextBlock.metric-label">
-    <Setter Property="FontSize" Value="10"/>
+    <Setter Property="FontSize" Value="10.5"/>
     <Setter Property="FontWeight" Value="Bold"/>
     <Setter Property="LetterSpacing" Value="1.2"/>
-    <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource MetricLabelBrush}"/>
   </Style>
 
   <Style Selector="TextBlock.metric-value">
@@ -342,28 +346,29 @@
   </Style>
 
   <Style Selector="TextBlock.metric-value.green">
-    <Setter Property="Foreground" Value="{DynamicResource MetricGreenBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource MetricValueGreenBrush}"/>
   </Style>
 
   <Style Selector="TextBlock.metric-value.blue">
-    <Setter Property="Foreground" Value="{DynamicResource MetricBlueBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource MetricValueBlueBrush}"/>
   </Style>
 
   <Style Selector="TextBlock.metric-value.amber">
-    <Setter Property="Foreground" Value="{DynamicResource MetricAmberBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource MetricValueAmberBrush}"/>
   </Style>
 
   <Style Selector="TextBlock.metric-value.purple">
-    <Setter Property="Foreground" Value="{DynamicResource MetricPurpleBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource MetricValuePurpleBrush}"/>
   </Style>
 
   <Style Selector="TextBlock.metric-subtext">
     <Setter Property="FontSize" Value="12"/>
-    <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Foreground" Value="{DynamicResource MetricSubtextBrush}"/>
   </Style>
 
   <Style Selector="TextBox.field">
-    <Setter Property="Background" Value="#0A0D13"/>
+    <Setter Property="Background" Value="{DynamicResource FieldBgBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="9"/>
@@ -380,6 +385,7 @@
 
   <Style Selector="TextBox.field:focus /template/ Border#PART_BorderElement">
     <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+    <Setter Property="Background" Value="{DynamicResource FieldBgFocusBrush}"/>
   </Style>
 
   <Style Selector="Border.panel">
@@ -391,42 +397,38 @@
   </Style>
 
   <Style Selector="Border.section-card">
-    <Setter Property="Background" Value="#CF070F1A"/>
+    <Setter Property="Background" Value="{DynamicResource CardSurfaceBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="12"/>
     <Setter Property="ClipToBounds" Value="True"/>
+    <Setter Property="BoxShadow" Value="0 12 24 0 #25000000"/>
   </Style>
 
+
   <Style Selector="Border.metric-card.empty TextBlock.metric-label">
-    <Setter Property="Opacity" Value="0.4"/>
+    <Setter Property="Opacity" Value="0.95"/>
   </Style>
   <Style Selector="Border.metric-card.empty TextBlock.metric-value">
-    <Setter Property="Opacity" Value="0.2"/>
+    <Setter Property="Opacity" Value="0.9"/>
   </Style>
   <Style Selector="Border.metric-card.empty TextBlock.metric-subtext">
-    <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource MetricSubtextBrush}"/>
     <Setter Property="FontWeight" Value="SemiBold"/>
   </Style>
 
   <Style Selector="Border.section-header">
-    <Setter Property="Background">
-      <Setter.Value>
-        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-          <GradientStop Offset="0" Color="#D31A2842"/>
-          <GradientStop Offset="1" Color="#C70D1831"/>
-        </LinearGradientBrush>
-      </Setter.Value>
-    </Setter>
-    <Setter Property="BorderBrush" Value="#2B4E6A8C"/>
+    <Setter Property="Background" Value="{DynamicResource SectionHeaderBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource SectionHeaderBorderBrush}"/>
     <Setter Property="BorderThickness" Value="0,0,0,1"/>
-    <Setter Property="Padding" Value="10,8"/>
+    <Setter Property="Padding" Value="11,9"/>
   </Style>
 
   <Style Selector="TextBlock.section-header-text">
-    <Setter Property="FontSize" Value="12"/>
-    <Setter Property="FontWeight" Value="SemiBold"/>
-    <Setter Property="Foreground" Value="#D8E8FF"/>
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="FontWeight" Value="Bold"/>
+    <Setter Property="LetterSpacing" Value="0.25"/>
+    <Setter Property="Foreground" Value="{DynamicResource SectionHeaderTextBrush}"/>
   </Style>
 
   <Style Selector="Border.section-pill">
@@ -448,7 +450,7 @@
 
   <Style Selector="Border.section-separator">
     <Setter Property="Height" Value="1"/>
-    <Setter Property="Background" Value="#1E2433"/>
+    <Setter Property="Background" Value="{DynamicResource SectionSeparatorBrush}"/>
     <Setter Property="HorizontalAlignment" Value="Stretch"/>
     <Setter Property="Margin" Value="0,8"/>
   </Style>
@@ -462,15 +464,25 @@
   </Style>
 
   <Style Selector="TextBlock.label">
-    <Setter Property="FontSize" Value="12"/>
+    <Setter Property="FontSize" Value="12.5"/>
     <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
     <Setter Property="VerticalAlignment" Value="Center"/>
+  </Style>
+
+  <Style Selector="TextBlock.group-caption">
+    <Setter Property="FontSize" Value="11"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Foreground" Value="{DynamicResource GroupCaptionBrush}"/>
+    <Setter Property="LetterSpacing" Value="0.25"/>
+    <Setter Property="Margin" Value="0,0,0,4"/>
   </Style>
 
   <Style Selector="TextBlock.hint">
     <Setter Property="FontSize" Value="11"/>
     <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}"/>
     <Setter Property="FontStyle" Value="Italic"/>
+    <Setter Property="LineHeight" Value="17"/>
+    <Setter Property="Opacity" Value="0.92"/>
   </Style>
 
   <Style Selector="TextBlock.sidebar-group">
@@ -485,7 +497,8 @@
   <Style Selector="CheckBox.check">
     <Setter Property="FontSize" Value="12.5"/>
     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
-    <Setter Property="Margin" Value="0,2"/>
+    <Setter Property="Margin" Value="0,3"/>
+    <Setter Property="MinHeight" Value="28"/>
     <Setter Property="VerticalContentAlignment" Value="Center"/>
   </Style>
 
@@ -501,7 +514,7 @@
   <Style Selector="Border.select-trigger">
     <Setter Property="Height" Value="32"/>
     <Setter Property="MinWidth" Value="110"/>
-    <Setter Property="Background" Value="#0A0D13"/>
+    <Setter Property="Background" Value="{DynamicResource FieldBgBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="9"/>
@@ -513,8 +526,13 @@
     <Setter Property="BorderBrush" Value="{DynamicResource StrokeStrongBrush}"/>
   </Style>
 
+  <Style Selector="Border.select-trigger:focus-within">
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+    <Setter Property="Background" Value="{DynamicResource FieldBgFocusBrush}"/>
+  </Style>
+
   <Style Selector="Border.select-menu">
-    <Setter Property="Background" Value="#FC070D16"/>
+    <Setter Property="Background" Value="{DynamicResource SelectMenuBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="10"/>
@@ -541,7 +559,7 @@
   </Style>
 
 <Style Selector="Border.log-board">
-    <Setter Property="Background" Value="#0A0B1020"/>
+    <Setter Property="Background" Value="{DynamicResource LogBoardBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="8"/>
@@ -557,11 +575,11 @@
   </Style>
 
   <Style Selector="Button.window-btn:pointerover">
-    <Setter Property="Background" Value="#1AFFFFFF"/>
+    <Setter Property="Background" Value="{DynamicResource WindowButtonHoverBrush}"/>
   </Style>
 
   <Style Selector="Button.window-btn.close:pointerover">
-    <Setter Property="Background" Value="#E81123"/>
+    <Setter Property="Background" Value="{DynamicResource WindowButtonCloseHoverBrush}"/>
   </Style>
 
 </Styles>
