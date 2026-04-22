@@ -1,267 +1,146 @@
-# UBOT - Agent Guide
+# AGENTS Guide (UBot)
 
-Bu dosya, `C:\Users\auguu\Desktop\UbotAva` repository'si uzerinde calisan AI agent'lar icin operasyon kilavuzudur.
+Bu dosya, [UbotAva](https://github.com/mmaanniissaa93-pixel/UbotAva) repository'sinde calisan AI agent ve contributor'lar icin operasyon rehberidir.
 
-Kapsam: build, test, mimari, config, plugin/botbase gelistirme akisi.
+Amac: degisikliklerin build/runtime uyumlulugunu korumak, plugin kontratlarini bozmamak, UI-core entegrasyonunu stabil tutmak.
 
----
+## 1) Kesin Kurallar
 
-## 1) Zorunlu Kurallar
+- Cozum derlemesi icin canonical yol: `build.ps1`.
+- Cozumu `dotnet build UBot.sln` ile degil, MSBuild/x86 akisi ile derleyin.
+- Platform varsayimi x86'dir; csproj/loader ayarlari buna baglidir.
+- Kullanici degisikliklerini geri alma (`reset --hard`, `checkout --`) yasak.
+- `*.Designer.cs`, `.sln`, `*.csproj`, `*.vcxproj` dosyalarina sadece zorunlu ise dokunun.
+- Plugin manifest ve runtime plugin metadata (`Name`, `Version`) tutarliligini bozmayin.
 
-- Derleme araci: `MSBuild` (x86).
-- `dotnet build` kullanma.
-- `dotnet` komutlari yalnizca paket/test gibi ihtiyaclar icin kullanilabilir (`dotnet restore`, `dotnet test`, `dotnet add`).
-- Cozum dosyasi: `UBot.sln`.
+## 2) Hizli Komut Referansi
 
-Kullanici onayi olmadan dokunma:
-- `.sln`
-- `.csproj` / `.vcxproj`
-- `*.Designer.cs`
-
-Git/safety:
-- Kullanici tarafindan yapilan mevcut degisiklikleri geri alma.
-- `git reset --hard` / `git checkout --` gibi yikici komutlar kullanma.
-
----
-
-## 2) Canonical Build Komutlari
-
-### Ana build
+Ana build:
 
 ```powershell
 powershell.exe -ExecutionPolicy Bypass .\build.ps1 -Configuration Debug
 ```
 
-Parametreler:
-- `-Configuration Debug|Release`
-- `-Clean`
-- `-DoNotStart`
-- `-SkipIconCacheRefresh`
+Temiz build:
 
-Debug flag:
-- `/p:Configuration=Debug /p:Platform=x86`
-
-Release flag:
-- `/p:Configuration=Release /p:Platform=x86`
-
----
-
-## 3) Cozum Haritasi (Guncel)
-
-### Application
-- `Application\UBot` - Ana exe (net8.0-windows, WinForms bootstrap)
-- `Application\UBot.Avalonia` - Avalonia UI katmani (net8.0-windows)
-- `Application\UBot.Updater` - updater exe
-
-### Library
-- `Library\UBot.Core` - Core runtime, Kernel, Game, Network, Plugins
-- `Library\UBot.FileSystem` - Dosya sistemi yardimcilari
-- `Library\UBot.NavMeshApi` - NavMesh collision detection
-- `Library\UBot.Loader.Library` - C++ detours DLL (vcxproj)
-
-### Botbases
-- `Botbases\UBot.Training` - leveling bot
-- `Botbases\UBot.Alchemy` - alchemy bot
-- `Botbases\UBot.Trade` - trade bot
-- `Botbases\UBot.Lure` - lure bot
-
-### Plugins (16 adet)
-- `Plugins\UBot.General` - baglanti, login, client control
-- `Plugins\UBot.Skills` - skill yonetimi
-- `Plugins\UBot.Protection` - HP/MP pot, ölme, envanter kontrolü
-- `Plugins\UBot.Party` - party yonetimi
-- `Plugins\UBot.Inventory` - envanter islemleri
-- `Plugins\UBot.Items` - item yonetimi
-- `Plugins\UBot.Map` - harita, NavMesh entity render
-- `Plugins\UBot.Statistics` - istatistikler
-- `Plugins\UBot.Chat` - chat islemleri
-- `Plugins\UBot.Log` - log görüntüleyici
-- `Plugins\UBot.ServerInfo` - server bilgileri
-- `Plugins\UBot.CommandCenter` - komut merkezi
-- `Plugins\UBot.Quest` (runtime plugin id: `UBot.QuestLog`)
-- `Plugins\UBot.AutoDungeon` - auto dungeon
-- `Plugins\UBot.PacketInspector` - packet inceleyici
-- `Plugins\UBot.TargetAssist` - target yardimcisi
-
-### Test/Tooling
-- `Tests\UBot.Core.Tests` - Core unit testleri
-- `tools\config\Export-UsedConfigKeyInventory.ps1` - config key envanteri
-- `tools\config\Test-ConfigKeyMigrations.ps1` - key migration testi
-
----
-
-## 4) Build Cikti Yapisi
-
-- `Build\UBot.exe` - Ana executable
-- `Build\UBot.Updater.exe` - Updater
-- `Build\UBot.Avalonia.dll` - UI katmani
-- `Build\Client.Library.dll` - ClientLibrary native wrapper
-- `Build\Data\Bots\*.dll` - Botbase assemblyler
-- `Build\Data\Plugins\*.dll` - Plugin assemblyler
-- `Build\Data\Plugins\*.manifest.json` - Plugin manifestler
-- `Build\Data\Languages\*` - Dil dosyalari
-- `Build\Data\Scripts\*` - Script dosyalari
-- `Build\User\*` - Kullanici profilleri
-
-Notlar:
-- Plugin manifest dosyalari build script tarafindan `plugin.manifest.json` => `<AssemblyName>.manifest.json` olarak kopyalanir.
-- Build script runtime dosyalari eksikse `git restore Build/Data/Languages Build/Data/Scripts/Towns` dener.
-
----
-
-## 5) Mimari (Avalonia UI)
-
-### Bootstrap Akisi
-
-```
-UBot.exe (WinForms entry)
-    |
-    +-> Program.Main()
-    |       |
-    |       +-> AvaloniaHost.Run(args)
-    |               |
-    |               +-> App.OnFrameworkInitializationCompleted()
-    |                       |
-    |                       +-> MainWindow (creates UbotCoreService)
-    |                               |
-    |                               +-> UbotCoreService (IBotCoreService)
-    |
-    +-> Kernel.Initialize() (UBot.Core)
-            |
-            +-> Bot instance
-            +-> Network handlers/hooks
-            +-> ExtensionManager.LoadAssemblies<IPlugin>()
-            +-> ExtensionManager.LoadAssemblies<IBotbase>()
+```powershell
+powershell.exe -ExecutionPolicy Bypass .\build.ps1 -Clean -Configuration Debug -DoNotStart
 ```
 
-### Katmanlar
-
-1. **UBot.exe** (Bootstrap)
-   - WinForms Application (net8.0-windows)
-   - Command-line parsing
-   - Profile management
-   - Final shutdown sequence
-
-2. **UBot.Avalonia** (UI)
-   - Avalonia 11.1.0 (Fluent theme)
-   - MVVM with CommunityToolkit.Mvvm
-   - Feature-based views (Features\Training, Protection, Map, etc.)
-   - ViewModels: MainWindowViewModel, PluginViewModelBase
-
-3. **UBot.Core** (Runtime)
-   - Kernel (static) - Proxy, Bot, Language, LaunchMode
-   - Game - Player, ReferenceManager, Clientless, Started, Ready
-   - ExtensionManager - Plugin/Botbase loading
-   - ClientManager - Client lifecycle
-   - Proxy - Network proxy
-   - GlobalConfig / PlayerConfig - Settings
-
----
-
-## 6) Config Yonetimi
-
-Bu kod tabaninda config key'ler runtime'da string key ile kullanilir.
-
-- `GlobalConfig.Get/Set/...` - Genel ayarlar (profile bazli degil)
-- `PlayerConfig.Get/Set/...` - Karakter bazli ayarlar
-
-Ornek:
-
-```csharp
-var enabled = PlayerConfig.Get("UBot.Protection.checkUseHPPotionsPlayer", true);
-GlobalConfig.Set("UBot.SilkroadDirectory", path);
-PlayerConfig.Set("UBot.Area.Region", (ushort)region);
-```
-
-Notlar:
-- Central `ConfigKeys` static sinifi bulunmuyor.
-- Key referans listesi: `ubot_keys.txt`
-- Key governance scriptleri:
-  - `powershell.exe -ExecutionPolicy Bypass .\tools\config\Export-UsedConfigKeyInventory.ps1`
-  - `powershell.exe -ExecutionPolicy Bypass .\tools\config\Test-ConfigKeyMigrations.ps1 -RefreshInventory`
-- Profil dosyalari:
-  - `User\Profiles.rs`
-  - `User\<Profile>.rs`
-  - `User\<Profile>\<Character>.rs`
-
----
-
-## 7) Plugin/Botbase Sozlesmesi
-
-### IPlugin
-- `Name`, `Title`, `Version`, `Enabled`
-- `DisplayAsTab`, `Index`, `RequireIngame`
-- `Initialize`, `Enable`, `Disable`, `Translate`, `OnLoadCharacter`
-
-### IBotbase
-- `Name`, `Title`, `Version`, `Enabled`
-- `Area`
-- `Start`, `Tick`, `Stop`
-
-### Plugin manifest
-Her plugin klasorunde `plugin.manifest.json` olmalidir.
-
-Ornek (`Plugins\UBot.General\plugin.manifest.json`):
-
-```json
-{
-    "schemaVersion": 1,
-    "pluginName": "UBot.General",
-    "pluginVersion": "1.0.0",
-    "capabilities": ["connection-control", "client-launch", "session-bootstrap"],
-    "dependencies": [],
-    "hostCompatibility": { "minVersion": "1.0.0", "maxVersionExclusive": "2.0.0" },
-    "isolation": {
-        "mode": "inproc",
-        "tier": "critical",
-        "restartPolicy": { "enabled": true, "maxRestarts": 2, "windowSeconds": 60 }
-    }
-}
-```
-
-Yukleme sirasinda `ExtensionManager`:
-- manifest parse/validate
-- host compatibility kontrolu
-- dependency + capability kontrolu
-- isolation mode (`inproc`/`outproc`) kaydi
-
----
-
-## 8) Test Calisma Noktalari
-
-### Core test
+Unit test:
 
 ```powershell
 dotnet test .\Tests\UBot.Core.Tests\UBot.Core.Tests.csproj
 ```
 
-Mevcut test odagi:
-- `ScriptManagerValidationTests` (lint + dry-run davranisi)
+Config key envanter/migration:
 
----
+```powershell
+powershell.exe -ExecutionPolicy Bypass .\tools\config\Export-UsedConfigKeyInventory.ps1
+powershell.exe -ExecutionPolicy Bypass .\tools\config\Test-ConfigKeyMigrations.ps1 -RefreshInventory
+```
 
-## 9) Agent Uygulama Checklist
+## 3) Mimari Yol Haritasi
 
-Kod degisikligi oncesi:
-- Hedef dosyalar generated mi kontrol et (yoksa zaten yok)
-- UI katmani degisikliginde `Application\UBot.Avalonia\` altina bak
+### Application
 
-Kod degisikligi sonrasi:
-- Etkilenen modulde compile path'i dogrula
-- Yeni plugin ekleme: csproj olustur, UBot.sln'e ekle, manifest json ekle
-- Yeni botbase ekleme: csproj olustur, UBot.sln'e ekle
+- `Application/UBot`: process entrypoint, CLI options, shutdown orchestration
+- `Application/UBot.Avalonia`: aktif masaustu UI
+- `Application/UBot.Updater`: update zip uygulayici
 
-Cevaplama tarzi:
-- Bulgulari dosya/akis referansli ver.
-- Varsayimlari acik yaz.
-- Build/test kosulamadiysa acikca belirt.
+### Core ve Library
 
----
+- `Library/UBot.Core`: Kernel, Game, network handlers/hooks, extension manager
+- `Library/UBot.FileSystem`: dosya/arsiv yardimcilari
+- `Library/UBot.NavMeshApi`: navmesh/pathfinding
+- `Library/UBot.Loader.Library`: native detours DLL (`Client.Library.dll`)
 
-## 10) Faydali Dosyalar
+### Extension katmani
 
-- `build.ps1`
-- `build.log`
-- `client-signatures.cfg`
-- `ubot_keys.txt`
-- `Application\UBot.Avalonia\README.md` (mevcutsa)
+- Botbase DLL hedefi: `Build/Data/Bots`
+- Plugin DLL hedefi: `Build/Data/Plugins`
+- Manifestler: `Plugins/<PluginName>/plugin.manifest.json`
+
+## 4) Plugin ve Botbase Gelistirme Kurallari
+
+### Plugin eklenecekse
+
+1. `Plugins/<YeniPlugin>/<YeniPlugin>.csproj` olustur.
+2. `IPlugin` implement eden public class ekle.
+3. `plugin.manifest.json` olustur ve runtime metadata ile eslestir.
+4. Output path'i `Build/Data/Plugins` olacak sekilde ayarla.
+5. `UBot.sln` icine projeyi ekle.
+6. Gerekirse Avalonia tarafinda `Features/<YeniFeature>` ve service mapping ekle.
+
+### Botbase eklenecekse
+
+1. `Botbases/<YeniBot>/<YeniBot>.csproj` olustur.
+2. `IBotbase` implement eden class ekle.
+3. Output path'i `Build/Data/Bots` olacak sekilde ayarla.
+4. `UBot.sln` icine ekle.
+5. `UbotCoreService.GetPluginsAsync()` botbase listesine dahil olmasi gerektigini unutma.
+
+### Manifest uyumluluk
+
+`PluginContractManifestLoader` asagidaki tutarliliklari zorlar:
+
+- `pluginName` == runtime `IPlugin.Name`
+- `pluginVersion` == runtime `IPlugin.Version`
+- `isolation.mode` sadece `inproc` veya `outproc`
+- dependency + capability kontrolleri
+- hostCompatibility version range kontrolleri
+
+Zorunlu out-of-proc pluginler:
+
+- `UBot.PacketInspector`
+- `UBot.AutoDungeon`
+
+Bu pluginlerde `isolation.mode` degeri `outproc` kalmalidir.
+
+## 5) UI Degisikliklerinde Dikkat
+
+- UI shell `MainWindow.axaml` sabit 1440x900 pencere varsayimina gore tasarlanmis.
+- Yeni feature eklerken `FeatureViewFactory` ve ilgili service/config/state katmanlarini birlikte guncelleyin.
+- UI, core ile `IUbotCoreService` uzerinden in-process bagli calisir; dogrudan core static sinif cagrilarini view code-behind'e dagitmayin.
+- Tema/language gibi global davranislari `MainWindowViewModel` + `AppState` modeliyle uyumlu tutun.
+
+## 6) Config ve Veri Kurallari
+
+- Config formati: satir bazli `key{value}`.
+- Profile dosyalari `Build/User` altinda tutulur.
+- Yeni config key ekliyorsaniz naming'i `UBot.<Module>.<Key>` kalibinda tutun.
+- Migration gerekiyorsa `tools/config/config-key-migrations.json` guncellemesini degerlendirin.
+
+## 7) Build Cikti ve Runtime Asset Notlari
+
+- `Dependencies/**` build sirasinda `Build/Data/**` altina kopyalanir.
+- Build script gerekli runtime data eksiginde `git restore Build/Data/Languages Build/Data/Scripts/Towns` dener.
+- Plugin manifestleri build sonunda `Build/Data/Plugins/<AssemblyName>.manifest.json` olarak yazilir.
+
+## 8) Test ve Validation Beklentisi
+
+Kod degisikligi tamamlandiginda minimum:
+
+1. Build komutu calismali (`build.ps1`).
+2. Etkilenen alan core ise unit test calisimi kontrol edilmeli.
+3. Plugin/botbase degisikliginde load/enable/disable akisi gozden gecirilmeli.
+4. UI degisikliginde feature acilisi ve temel aksiyon butonlari manuel test edilmeli.
+
+## 9) Dokumantasyon Politikasi
+
+Asagidaki degisikliklerde README/AGENTS guncellemesi beklenir:
+
+- Yeni plugin/botbase ekleme veya silme
+- Plugin isolation/dependency model degisikligi
+- Build script davranis degisikligi
+- UI shell veya service bridge mimarisinde buyuk degisim
+- Config depolama veya migration model degisikligi
+
+## 10) Sık Hata Kaynakları
+
+- Manifest dosyasi var ama runtime DLL yanina kopyalanmamis olmasi
+- Plugin `Name` ve manifest `pluginName` mismatch
+- x86 yerine farkli platform hedefi ile build denemek
+- `build.ps1` atlanip dogrudan farkli build yolu kullanmak
+- UI feature eklendiginde service/action router baglantilarinin unutulmasi
+
