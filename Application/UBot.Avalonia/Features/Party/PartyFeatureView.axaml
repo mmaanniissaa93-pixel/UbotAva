@@ -3,10 +3,250 @@
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:controls="clr-namespace:UBot.Avalonia.Controls"
   x:Class="UBot.Avalonia.Features.Party.PartyFeatureView">
-  <ScrollViewer VerticalScrollBarVisibility="Auto">
+  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <StackPanel Spacing="10" Margin="0,0,0,12">
-      <controls:TabStrip x:Name="TabStripCtrl" />
-      <StackPanel x:Name="ContentHost" Spacing="10" />
+      <controls:TabStrip x:Name="MainTabs" />
+
+      <Border x:Name="PartySettingsCard" Classes="section-card">
+        <Grid RowDefinitions="Auto,*">
+          <Border Grid.Row="0" Classes="section-header">
+            <TextBlock Text="Party settings" Classes="section-header-text"/>
+          </Border>
+          <Grid Grid.Row="1" ColumnDefinitions="Auto,Auto,*,Auto" Margin="10,10,10,10">
+            <ToggleSwitch x:Name="ExpAutoShareToggle" Grid.Column="0" OnContent="EXP Auto share" OffContent="EXP Auto share" IsCheckedChanged="PartySetting_Toggled" Tag="expAutoShare" Margin="0,0,10,0"/>
+            <ToggleSwitch x:Name="ItemAutoShareToggle" Grid.Column="1" OnContent="Item auto share" OffContent="Item auto share" IsCheckedChanged="PartySetting_Toggled" Tag="itemAutoShare"/>
+            <Border Grid.Column="2" />
+            <ToggleSwitch x:Name="AllowInvitationsToggle" Grid.Column="3" OnContent="Allow invitations" OffContent="Allow invitations" IsCheckedChanged="PartySetting_Toggled" Tag="allowInvitations"/>
+          </Grid>
+        </Grid>
+      </Border>
+
+      <Border x:Name="PartyPanel" Classes="section-card">
+        <Grid RowDefinitions="*,Auto" Margin="0,2,0,0">
+          <DataGrid x:Name="PartyMembersGrid"
+                    Grid.Row="0"
+                    Classes="legacy-table"
+                    AutoGenerateColumns="False"
+                    CanUserResizeColumns="True"
+                    CanUserSortColumns="False"
+                    MinHeight="230">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="NAME" Binding="{Binding Name}" Width="1.3*"/>
+              <DataGridTextColumn Header="LEVEL" Binding="{Binding Level}" Width="0.6*"/>
+              <DataGridTextColumn Header="GUILD" Binding="{Binding Guild}" Width="1.2*"/>
+              <DataGridTextColumn Header="HP/MP" Binding="{Binding HpMp}" Width="0.8*"/>
+              <DataGridTextColumn Header="POSITION" Binding="{Binding Position}" Width="1.2*"/>
+            </DataGrid.Columns>
+          </DataGrid>
+
+          <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="10,10,10,0">
+            <TextBlock x:Name="LeaderText"
+                       Grid.Column="0"
+                       VerticalAlignment="Center"
+                       Classes="form-label"
+                       Text="Leader: Not in a party"/>
+            <Button x:Name="LeavePartyBtn"
+                    Grid.Column="1"
+                    Classes="btn danger"
+                    Content="Leave party"
+                    Width="105"
+                    Click="LeaveParty_Click"/>
+          </Grid>
+        </Grid>
+      </Border>
+
+      <Grid x:Name="AutoPartyPanel" IsVisible="False" ColumnDefinitions="1.05*,1*">
+        <StackPanel Grid.Column="0" Spacing="10">
+          <Border Classes="section-card">
+            <Grid RowDefinitions="Auto,*,Auto" Margin="0,2,0,0">
+              <Border Grid.Row="0" Classes="section-header">
+                <TextBlock Text="Auto party players" Classes="section-header-text"/>
+              </Border>
+              <ListBox x:Name="AutoPartyPlayersList"
+                       Grid.Row="1"
+                       Margin="10,10,10,10"
+                       MinHeight="160"
+                       Background="Transparent"/>
+              <Grid Grid.Row="2" ColumnDefinitions="*,*" Margin="10,0,10,10">
+                <Button Grid.Column="0" Classes="btn" Content="Add" Click="AutoPartyPlayerAdd_Click"/>
+                <Button Grid.Column="1" Classes="btn danger" Content="Remove" Click="AutoPartyPlayerRemove_Click"/>
+              </Grid>
+            </Grid>
+          </Border>
+
+          <Border Classes="section-card">
+            <Grid RowDefinitions="Auto,*,Auto" Margin="0,2,0,0">
+              <Border Grid.Row="0" Classes="section-header">
+                <TextBlock Text="Their commands will be listened to" Classes="section-header-text"/>
+              </Border>
+              <ListBox x:Name="CommandPlayersList"
+                       Grid.Row="1"
+                       Margin="10,10,10,10"
+                       MinHeight="160"
+                       Background="Transparent"/>
+              <Grid Grid.Row="2" ColumnDefinitions="*,*" Margin="10,0,10,10">
+                <Button Grid.Column="0" Classes="btn" Content="Add" Click="CommandPlayerAdd_Click"/>
+                <Button Grid.Column="1" Classes="btn danger" Content="Remove" Click="CommandPlayerRemove_Click"/>
+              </Grid>
+            </Grid>
+          </Border>
+        </StackPanel>
+
+        <Border Grid.Column="1" Classes="section-card">
+          <Grid RowDefinitions="Auto,*,Auto" Margin="0,2,0,0">
+            <Border Grid.Row="0" Classes="section-header">
+              <TextBlock Text="Auto party settings" Classes="section-header-text"/>
+            </Border>
+
+            <StackPanel Grid.Row="1" Margin="10,10,10,10" Spacing="8">
+              <Grid ColumnDefinitions="*,*">
+                <ToggleSwitch x:Name="AcceptAllInvitationsToggle" Grid.Column="0" OnContent="Accept all invitations" OffContent="Accept all invitations" IsCheckedChanged="AutoPartySetting_Toggled" Tag="acceptAllInvitations" Margin="0,0,8,0"/>
+                <ToggleSwitch x:Name="AlwaysFollowMasterToggle" Grid.Column="1" OnContent="Always follow the party master" OffContent="Always follow the party master" IsCheckedChanged="AutoPartySetting_Toggled" Tag="alwaysFollowPartyMaster"/>
+              </Grid>
+              <ToggleSwitch x:Name="AcceptInvitationsFromListToggle" OnContent="Accept invitations from player list" OffContent="Accept invitations from player list" IsCheckedChanged="AutoPartySetting_Toggled" Tag="acceptInvitationsFromList"/>
+              <ToggleSwitch x:Name="AutoInviteAllPlayersToggle" OnContent="Auto invite all players" OffContent="Auto invite all players" IsCheckedChanged="AutoPartySetting_Toggled" Tag="autoInviteAllPlayers"/>
+              <ToggleSwitch x:Name="AutoInviteAllPlayersFromListToggle" OnContent="Auto invite all players from player list" OffContent="Auto invite all players from player list" IsCheckedChanged="AutoPartySetting_Toggled" Tag="autoInviteAllPlayersFromList"/>
+              <ToggleSwitch x:Name="AcceptInviteOnlyTrainingToggle" OnContent="Accept/Invite only at training place" OffContent="Accept/Invite only at training place" IsCheckedChanged="AutoPartySetting_Toggled" Tag="acceptInviteOnlyTrainingPlace"/>
+              <ToggleSwitch x:Name="AcceptIfBotStoppedToggle" OnContent="Accept if the bot is stopped" OffContent="Accept if the bot is stopped" IsCheckedChanged="AutoPartySetting_Toggled" Tag="acceptIfBotStopped"/>
+
+              <Grid ColumnDefinitions="Auto,*" Margin="0,8,0,0">
+                <ToggleSwitch x:Name="LeaveIfMasterNotToggle" Grid.Column="0" OnContent="Leave, if master not:" OffContent="Leave, if master not:" IsCheckedChanged="AutoPartySetting_Toggled" Tag="leaveIfMasterNot" Margin="0,0,8,0"/>
+                <TextBox x:Name="LeaveIfMasterNotNameBox" Grid.Column="1" Classes="field" LostFocus="LeaveIfMasterNotNameBox_LostFocus"/>
+              </Grid>
+
+              <ToggleSwitch x:Name="ListenPartyMasterCommandsToggle" OnContent="Listen party master commands" OffContent="Listen party master commands" IsCheckedChanged="AutoPartySetting_Toggled" Tag="listenPartyMasterCommands"/>
+              <ToggleSwitch x:Name="ListenCommandsInListToggle" OnContent="Listen commands in list" OffContent="Listen commands in list" IsCheckedChanged="AutoPartySetting_Toggled" Tag="listenCommandsInList"/>
+            </StackPanel>
+
+            <TextBlock Grid.Row="2"
+                       Margin="10,0,10,10"
+                       Text="* Commands only using in the game chat window!"
+                       Classes="help-text"/>
+          </Grid>
+        </Border>
+      </Grid>
+
+      <Border x:Name="PartyMatchingPanel" Classes="section-card" IsVisible="False">
+        <StackPanel Margin="10,8,10,10" Spacing="10">
+          <Grid ColumnDefinitions="160,110,70,20,70,100,100,100">
+            <TextBox x:Name="MatchingNameBox" Grid.Column="0" Classes="field" Watermark="Name"/>
+            <controls:CustomSelect x:Name="MatchingPurposeSelect" Grid.Column="1" Placeholder="Purpose"/>
+            <TextBox x:Name="MatchingLevelFromBox" Grid.Column="2" Classes="field number" Text="1"/>
+            <TextBlock Grid.Column="3" Text="~" Classes="form-label" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+            <TextBox x:Name="MatchingLevelToBox" Grid.Column="4" Classes="field number" Text="140"/>
+            <Button Grid.Column="5" Classes="btn blue" Content="Search" Click="MatchingSearch_Click"/>
+            <Button Grid.Column="6" Classes="btn" Content="Refresh" Click="MatchingRefresh_Click"/>
+            <Button Grid.Column="7" Classes="btn blue" Content="Add" Click="MatchingAdd_Click"/>
+          </Grid>
+
+          <Grid ColumnDefinitions="Auto,*">
+            <ToggleSwitch x:Name="AutoJoinByNameToggle" Grid.Column="0" OnContent="Auto join by name" OffContent="Auto join by name" IsCheckedChanged="AutoJoinSetting_Toggled" Tag="autoJoinByName" Margin="0,0,8,0"/>
+            <TextBox x:Name="AutoJoinByNameBox" Grid.Column="1" Classes="field" LostFocus="AutoJoinByNameBox_LostFocus"/>
+          </Grid>
+
+          <Grid ColumnDefinitions="Auto,*,100">
+            <ToggleSwitch x:Name="AutoJoinByTitleToggle" Grid.Column="0" OnContent="Auto join by title" OffContent="Auto join by title" IsCheckedChanged="AutoJoinSetting_Toggled" Tag="autoJoinByTitle" Margin="0,0,8,0"/>
+            <TextBox x:Name="AutoJoinByTitleBox" Grid.Column="1" Classes="field"/>
+            <Button Grid.Column="2" Classes="btn blue" Content="Confirm" Click="AutoJoinTitleConfirm_Click"/>
+          </Grid>
+
+          <DataGrid x:Name="MatchingGrid"
+                    Classes="legacy-table"
+                    AutoGenerateColumns="False"
+                    MinHeight="230"
+                    SelectionChanged="MatchingGrid_SelectionChanged">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="NO" Binding="{Binding No}" Width="0.45*"/>
+              <DataGridTextColumn Header="RACE" Binding="{Binding Race}" Width="0.8*"/>
+              <DataGridTextColumn Header="NAME" Binding="{Binding Name}" Width="1.1*"/>
+              <DataGridTextColumn Header="TITLE" Binding="{Binding Title}" Width="1.7*"/>
+              <DataGridTextColumn Header="PURPOSE" Binding="{Binding Purpose}" Width="0.9*"/>
+              <DataGridTextColumn Header="MEMBER" Binding="{Binding Member}" Width="0.8*"/>
+              <DataGridTextColumn Header="RANGE" Binding="{Binding Range}" Width="0.9*"/>
+            </DataGrid.Columns>
+          </DataGrid>
+
+          <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+            <Button Grid.Column="0" Classes="btn" Content="Join Party" Width="105" Click="MatchingJoin_Click"/>
+            <Border Grid.Column="1"/>
+            <Button Grid.Column="2" Classes="btn" Content="Form Party" Width="105" Click="MatchingFormParty_Click"/>
+            <Button Grid.Column="3" Classes="btn danger" Content="Delete Entry" Width="110" Click="MatchingDelete_Click"/>
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <Grid x:Name="PartyBuffPanel" IsVisible="False" ColumnDefinitions="1.2*,1.05*,1.05*">
+        <Border Grid.Column="0" Classes="section-card">
+          <Grid RowDefinitions="Auto,*,Auto" Margin="0,2,0,0">
+            <Border Grid.Row="0" Classes="section-header">
+              <TextBlock Text="Buffs" Classes="section-header-text"/>
+            </Border>
+            <ListBox x:Name="BuffSkillsList"
+                     Grid.Row="1"
+                     Margin="10,10,10,10"
+                     MinHeight="270"
+                     Background="Transparent"/>
+            <ToggleSwitch x:Name="HideLowerLevelSkillsToggle"
+                          Grid.Row="2"
+                          Margin="10,0,10,10"
+                          OnContent="Hide lower level skills"
+                          OffContent="Hide lower level skills"
+                          IsCheckedChanged="HideLowerLevelSkillsToggle_Toggled"/>
+          </Grid>
+        </Border>
+
+        <StackPanel Grid.Column="1" Spacing="10">
+          <Border Classes="section-card">
+            <Grid RowDefinitions="Auto,*,Auto" Margin="0,2,0,0">
+              <Border Grid.Row="0" Classes="section-header">
+                <TextBlock Text="Groups" Classes="section-header-text"/>
+              </Border>
+              <ListBox x:Name="BuffGroupsList"
+                       Grid.Row="1"
+                       Margin="10,10,10,10"
+                       MinHeight="130"
+                       Background="Transparent"/>
+              <Grid Grid.Row="2" ColumnDefinitions="*,*" Margin="10,0,10,10">
+                <Button Grid.Column="0" Classes="btn" Content="Create" Click="BuffGroupCreate_Click"/>
+                <Button Grid.Column="1" Classes="btn danger" Content="Remove" Click="BuffGroupRemove_Click"/>
+              </Grid>
+            </Grid>
+          </Border>
+
+          <Border Classes="section-card">
+            <Grid RowDefinitions="Auto,*,Auto" Margin="0,2,0,0">
+              <Border Grid.Row="0" Classes="section-header">
+                <TextBlock Text="Party Members" Classes="section-header-text"/>
+              </Border>
+              <ListBox x:Name="BuffPartyMembersList"
+                       Grid.Row="1"
+                       Margin="10,10,10,10"
+                       MinHeight="130"
+                       Background="Transparent"
+                       SelectionChanged="BuffPartyMembersList_SelectionChanged"/>
+              <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto,*" Margin="10,0,10,10">
+                <Button Grid.Column="0" Classes="btn" Content="Add Buff" Click="MemberAddBuff_Click"/>
+                <Button Grid.Column="1" Classes="btn" Content="Assign" Click="MemberAssignGroup_Click"/>
+                <Button Grid.Column="2" Classes="btn danger" Content="Clear" Click="MemberClearBuffs_Click"/>
+                <Button Grid.Column="3" Classes="btn danger" Content="Remove Buff" Click="MemberRemoveSelectedBuff_Click"/>
+              </Grid>
+            </Grid>
+          </Border>
+        </StackPanel>
+
+        <Border Grid.Column="2" Classes="section-card">
+          <Grid RowDefinitions="Auto,*" Margin="0,2,0,0">
+            <Border Grid.Row="0" Classes="section-header">
+              <TextBlock Text="Member Buffs" Classes="section-header-text"/>
+            </Border>
+            <ListBox x:Name="MemberBuffsList"
+                     Grid.Row="1"
+                     Margin="10,10,10,10"
+                     MinHeight="310"
+                     Background="Transparent"/>
+          </Grid>
+        </Border>
+      </Grid>
     </StackPanel>
   </ScrollViewer>
 </UserControl>

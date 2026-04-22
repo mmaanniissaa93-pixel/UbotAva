@@ -9,6 +9,7 @@ namespace UBot.Avalonia.Features.Chat;
 public partial class ChatFeatureView : UserControl
 {
     private PluginViewModelBase? _vm;
+    private AppState? _state;
     private string _activeChannel = "all";
     private readonly ObservableCollection<string> _lines = new();
 
@@ -31,25 +32,45 @@ public partial class ChatFeatureView : UserControl
                 "guild"   => "guild",
                 "global"  => "global",
                 "stall"   => "stall",
+                "unique"  => "unique",
                 _         => "all"
             };
             TargetBox.IsVisible = t == "private";
             ChannelLabel.Text   = $"Channel: {_activeChannel}";
+            Sync();
         };
     }
 
     public void Initialize(PluginViewModelBase vm, AppState state)
     {
         _vm = vm;
+        _state = state;
         ChannelLabel.Text = "Channel: all";
-        state.LogLines.CollectionChanged += (_, _) => Sync(state);
-        Sync(state);
+        state.ChatMessages.CollectionChanged += (_, _) => Sync();
+        Sync();
     }
 
-    private void Sync(AppState state)
+    private void Sync()
     {
+        if (_state == null)
+            return;
+
         _lines.Clear();
-        foreach (var l in state.LogLines) _lines.Add(l);
+        foreach (var entry in _state.ChatMessages)
+        {
+            if (!ShouldInclude(entry.Channel))
+                continue;
+
+            _lines.Add(entry.DisplayText);
+        }
+    }
+
+    private bool ShouldInclude(string channel)
+    {
+        if (_activeChannel == "all")
+            return true;
+
+        return string.Equals(channel, _activeChannel, System.StringComparison.OrdinalIgnoreCase);
     }
 
     private void Send_Click(object? s, RoutedEventArgs e)

@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -25,6 +26,13 @@ public class MapEntityRow
 
 public partial class MapFeatureView : UserControl
 {
+    private sealed class MapRenderDot
+    {
+        public string Type { get; init; } = string.Empty;
+        public double XOffset { get; init; }
+        public double YOffset { get; init; }
+    }
+
     private PluginViewModelBase? _vm;
     private string _activeTab = "minimap";
 
@@ -34,18 +42,20 @@ public partial class MapFeatureView : UserControl
     private double _playerX, _playerY;
 
     private readonly ObservableCollection<MapEntityRow> _entityRows = new();
+    private readonly List<MapRenderDot> _renderDots = new();
 
     public MapFeatureView()
     {
         InitializeComponent();
         EntityGrid.ItemsSource = _entityRows;
+        MapCanvas.SizeChanged += (_, _) => RedrawMapDots();
 
         MapTabs.SetTabs(new[] { ("minimap", "Minimap"), ("navmesh", "NavMesh Viewer") });
         MapTabs.TabChanged += t =>
         {
             _activeTab = t;
             ResetToPlayerBtn.IsVisible = t == "navmesh";
-            MapCanvas.InvalidateVisual();
+            ApplyMapPresentation();
         };
 
         var filterOpts = new List<SelectOption>();
@@ -64,6 +74,8 @@ public partial class MapFeatureView : UserControl
         _vm = vm;
         CollisionCheck.IsChecked        = vm.BoolCfg("collisionDetection");
         AutoSelectUniqueCheck.IsChecked = vm.BoolCfg("autoSelectUniques");
+        ShowFilterSelect.SelectedValue  = vm.TextCfg("showFilter", "All");
+        ApplyMapPresentation();
     }
 
     public void UpdateFromState(JsonElement moduleState)
@@ -79,27 +91,47 @@ public partial class MapFeatureView : UserControl
         if (map.TryGetProperty("mapHeight", out var mh)) _mapH = N(mh, 1920);
         if (map.TryGetProperty("playerXOffset", out var px)) _playerX = N(px, 0);
         if (map.TryGetProperty("playerYOffset", out var py)) _playerY = N(py, 0);
+        if (map.TryGetProperty("showFilter", out var sf))
+        {
+            var selectedFilter = S(sf, "All");
+            var currentFilter = ShowFilterSelect.SelectedValue?.ToString() ?? string.Empty;
+            if (!string.Equals(currentFilter, selectedFilter, StringComparison.OrdinalIgnoreCase))
+                ShowFilterSelect.SelectedValue = selectedFilter;
+        }
 
         var total = map.TryGetProperty("total",    out var t)  ? N(t, 0).ToString("F0") : "0";
         var mons  = map.TryGetProperty("monsters", out var mo) ? N(mo, 0).ToString("F0") : "0";
         var plrs  = map.TryGetProperty("players",  out var pl) ? N(pl, 0).ToString("F0") : "0";
-        MapOverlayText.Text = $"Entities: {total}  |  Monsters: {mons}  |  Players: {plrs}";
+        var source = map.TryGetProperty("mapImageSource", out var ms) ? S(ms, "unknown") : "unknown";
+        MapOverlayText.Text = $"Entities: {total}  |  Monsters: {mons}  |  Players: {plrs}  |  Source: {source}";
 
         _entityRows.Clear();
+        _renderDots.Clear();
         if (map.TryGetProperty("entities", out var ents) && ents.ValueKind == JsonValueKind.Array)
             foreach (var e in ents.EnumerateArray())
             {
                 var lvl = e.TryGetProperty("level", out var lv) ? N(lv, 0) : 0;
+                var typ = e.TryGetProperty("type", out var ty) ? S(ty, "-") : "-";
                 _entityRows.Add(new MapEntityRow
                 {
                     Name     = e.TryGetProperty("name",     out var n)  ? S(n, "-")  : "-",
-                    Type     = e.TryGetProperty("type",     out var ty) ? S(ty, "-") : "-",
+                    Type     = typ,
                     Level    = lvl > 0 ? lvl.ToString("F0") : "-",
                     Position = e.TryGetProperty("position", out var po) ? S(po, "")  : ""
                 });
+
+                if (e.TryGetProperty("xOffset", out var xo) && e.TryGetProperty("yOffset", out var yo))
+                {
+                    _renderDots.Add(new MapRenderDot
+                    {
+                        Type = typ,
+                        XOffset = N(xo, 0),
+                        YOffset = N(yo, 0)
+                    });
+                }
             }
 
-        MapCanvas.InvalidateVisual();
+        ApplyMapPresentation();
     }
 
     private void MapCanvas_PointerPressed(object? s, PointerPressedEventArgs e)
@@ -123,6 +155,85 @@ public partial class MapFeatureView : UserControl
     private void ResetToPlayer_Click(object? s, RoutedEventArgs e)
         => _ = _vm?.InvokeActionCandidatesAsync(
             new[] { "map.reset-to-player", "map.center-on-player", "map.navmesh.reset-to-player" });
+
+    private void ApplyMapPresentation()
+    {
+        var activeBitmap = _activeTab == "navmesh"
+            ? (_navmeshBmp ?? _minimapBmp)
+            : (_minimapBmp ?? _navmeshBmp);
+
+        if (activeBitmap != null)
+        {
+            MapCanvas.Background = new ImageBrush(activeBitmap) { Stretch = Stretch.Fill };
+        }
+        else
+        {
+            MapCanvas.Background = new SolidColorBrush(Color.Parse("#0B1322"));
+        }
+
+        RedrawMapDots();
+    }
+
+    private void RedrawMapDots()
+    {
+        var bounds = MapCanvas.Bounds;
+        if (bounds.Width <= 0 || bounds.Height <= 0 || _mapW <= 0 || _mapH <= 0)
+            return;
+
+        MapCanvas.Children.Clear();
+
+        foreach (var dot in _renderDots)
+        {
+            var x = Math.Clamp(dot.XOffset / _mapW * bounds.Width, 0, bounds.Width);
+            var y = Math.Clamp(dot.YOffset / _mapH * bounds.Height, 0, bounds.Height);
+            var marker = new Ellipse
+            {
+                Width = 5,
+                Height = 5,
+                Fill = DotBrush(dot.Type),
+                Stroke = Brushes.Black,
+                StrokeThickness = 1
+            };
+
+            Canvas.SetLeft(marker, x - marker.Width / 2);
+            Canvas.SetTop(marker, y - marker.Height / 2);
+            MapCanvas.Children.Add(marker);
+        }
+
+        if (_playerX <= 0 && _playerY <= 0)
+            return;
+
+        var px = Math.Clamp(_playerX / _mapW * bounds.Width, 0, bounds.Width);
+        var py = Math.Clamp(_playerY / _mapH * bounds.Height, 0, bounds.Height);
+        var playerMarker = new Ellipse
+        {
+            Width = 10,
+            Height = 10,
+            Fill = new SolidColorBrush(Color.Parse("#FFCD4C")),
+            Stroke = new SolidColorBrush(Color.Parse("#4A3412")),
+            StrokeThickness = 2
+        };
+
+        Canvas.SetLeft(playerMarker, px - playerMarker.Width / 2);
+        Canvas.SetTop(playerMarker, py - playerMarker.Height / 2);
+        MapCanvas.Children.Add(playerMarker);
+    }
+
+    private static IBrush DotBrush(string type)
+    {
+        return type.ToLowerInvariant() switch
+        {
+            "unique" => new SolidColorBrush(Color.Parse("#F87171")),
+            "monster" => new SolidColorBrush(Color.Parse("#FB923C")),
+            "party" => new SolidColorBrush(Color.Parse("#34D399")),
+            "player" => new SolidColorBrush(Color.Parse("#60A5FA")),
+            "npc" => new SolidColorBrush(Color.Parse("#A78BFA")),
+            "cos" => new SolidColorBrush(Color.Parse("#38BDF8")),
+            "item" => new SolidColorBrush(Color.Parse("#FACC15")),
+            "portal" => new SolidColorBrush(Color.Parse("#E879F9")),
+            _ => new SolidColorBrush(Color.Parse("#CBD5E1"))
+        };
+    }
 
     private static void TryLoadBmp(string? b64, ref Bitmap? bmp)
     {

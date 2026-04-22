@@ -4,6 +4,14 @@ using System.Collections.ObjectModel;
 
 namespace UBot.Avalonia.Services;
 
+public sealed class ChatMessageEntry
+{
+    public string Channel { get; init; } = "all";
+    public string Sender { get; init; } = string.Empty;
+    public string Message { get; init; } = string.Empty;
+    public string DisplayText { get; init; } = string.Empty;
+}
+
 public partial class AppState : ObservableObject
 {
     [ObservableProperty] private bool   _botRunning;
@@ -48,6 +56,7 @@ public partial class AppState : ObservableObject
     }
 
     public ObservableCollection<string> LogLines { get; } = new();
+    public ObservableCollection<ChatMessageEntry> ChatMessages { get; } = new();
 
     public void AddLog(string message)
     {
@@ -55,6 +64,33 @@ public partial class AppState : ObservableObject
         {
             LogLines.Insert(0, message);
             if (LogLines.Count > 800) LogLines.RemoveAt(LogLines.Count - 1);
+        });
+    }
+
+    public void AddChatMessage(string channel, string sender, string message)
+    {
+        var normalizedChannel = string.IsNullOrWhiteSpace(channel) ? "all" : channel.Trim().ToLowerInvariant();
+        var normalizedSender = sender?.Trim() ?? string.Empty;
+        var normalizedMessage = message?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(normalizedMessage))
+            return;
+
+        var display = string.IsNullOrWhiteSpace(normalizedSender)
+            ? $"[{normalizedChannel.ToUpperInvariant()}] {normalizedMessage}"
+            : $"[{normalizedChannel.ToUpperInvariant()}] {normalizedSender}: {normalizedMessage}";
+
+        global::Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            ChatMessages.Insert(0, new ChatMessageEntry
+            {
+                Channel = normalizedChannel,
+                Sender = normalizedSender,
+                Message = normalizedMessage,
+                DisplayText = display
+            });
+
+            if (ChatMessages.Count > 800)
+                ChatMessages.RemoveAt(ChatMessages.Count - 1);
         });
     }
 

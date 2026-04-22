@@ -2,12 +2,21 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using UBot.FileSystem;
+using UBot.NavMeshApi;
+using UBot.NavMeshApi.Dungeon;
+using UBot.NavMeshApi.Edges;
+using UBot.NavMeshApi.Extensions;
+using UBot.NavMeshApi.Terrain;
 using UBot.Core.Client.ReferenceObjects;
 using UBot.Core;
 using UBot.Core.Components;
@@ -16,9 +25,12 @@ using UBot.Core.Extensions;
 using UBot.Core.Network;
 using UBot.Core.Network.Protocol;
 using UBot.Core.Objects;
+using UBot.Core.Objects.Party;
+using UBot.Core.Objects.Spawn;
 using UBot.Core.Objects.Skill;
- using UBot.Core.Plugins;
+using UBot.Core.Plugins;
 using Forms = System.Windows.Forms;
+using CoreRegion = UBot.Core.Objects.Region;
 
 namespace UBot.Avalonia.Services;
 
@@ -30,7 +42,12 @@ public sealed class UbotCoreService : IUbotCoreService
     private const string QuestRuntimePlugin = "UBot.QuestLog";
     private const string SkillsPluginName = "UBot.Skills";
     private const string ItemsPluginName = "UBot.Items";
+    private const string PartyPluginName = "UBot.Party";
     private const double MapClickMaxStepDistance = 145.0;
+    private const int MapSectorGridSize = 3;
+    private const float MapSectorSpan = 1920f;
+    private const int MinimapSectorPixels = 256;
+    private const int NavMeshSectorPixels = 512;
 
     private static readonly MonsterRarity[] AttackRarityByIndex =
     {
@@ -59,10 +76,15 @@ public sealed class UbotCoreService : IUbotCoreService
     };
 
     private static readonly object InitLock = new();
+    private static readonly object MapRenderSync = new();
+    private static readonly Dictionary<string, (string minimap, string navmesh, string source, float width, float height)> MapRenderCache = new();
     private static bool _initialized;
     private static bool _referenceLoading;
     private static bool _referenceLoaded;
     private static bool _clientVisible = true;
+    private static string _mapLastRenderContextKey = string.Empty;
+    private static int _mapLastImagePushTick = -1;
+    private static int _mapAutoSelectUniqueLastTick = -1;
     private static string _statusText = "Ready";
     private static bool _eventsSubscribed;
     private static readonly JsonSerializerOptions AutoLoginReadOptions = new()
@@ -71,11 +93,18 @@ public sealed class UbotCoreService : IUbotCoreService
     };
 
     private static event Action<string, string>? GlobalLogReceived;
+    private static event Action<string, string, string>? GlobalChatMessageReceived;
 
     public event Action<string, string>? LogReceived
     {
         add => GlobalLogReceived += value;
         remove => GlobalLogReceived -= value;
+    }
+
+    public event Action<string, string, string>? ChatMessageReceived
+    {
+        add => GlobalChatMessageReceived += value;
+        remove => GlobalChatMessageReceived -= value;
     }
 
     public UbotCoreService()
@@ -241,6 +270,12 @@ public sealed class UbotCoreService : IUbotCoreService
         if (TryResolvePlugin(pluginId, out plugin) && IsInventoryPlugin(plugin))
             state["inventory"] = BuildInventoryPluginState();
 
+        if (TryResolvePlugin(pluginId, out plugin) && IsMapPlugin(plugin))
+            state["map"] = BuildMapPluginState();
+
+        if (TryResolvePlugin(pluginId, out plugin) && IsPartyPlugin(plugin))
+            state["party"] = BuildPartyPluginState();
+
         var dto = new PluginStateDto
         {
             Id = pluginId ?? string.Empty,
@@ -271,6 +306,8 @@ public sealed class UbotCoreService : IUbotCoreService
                 return Task.FromResult(BuildSkillsPluginConfig());
             if (IsItemsPlugin(plugin))
                 return Task.FromResult(BuildItemsPluginConfig());
+            if (IsPartyPlugin(plugin))
+                return Task.FromResult(BuildPartyPluginConfig());
             if (plugin.Name == "UBot.CommandCenter")
                 return Task.FromResult(BuildCommandCenterConfig());
         }
@@ -302,6 +339,8 @@ public sealed class UbotCoreService : IUbotCoreService
                 changed = ApplySkillsPluginPatch(patch);
             else if (IsItemsPlugin(plugin))
                 changed = ApplyItemsPluginPatch(patch);
+            else if (IsPartyPlugin(plugin))
+                changed = ApplyPartyPluginPatch(patch);
             else if (plugin.Name == "UBot.CommandCenter")
                 changed = ApplyCommandCenterPatch(patch);
             else
@@ -391,6 +430,9 @@ public sealed class UbotCoreService : IUbotCoreService
 
         if (normalized.StartsWith("inventory."))
             return HandleInventoryAction(normalized, payload);
+
+        if (normalized.StartsWith("party."))
+            return HandlePartyAction(normalized, payload);
 
 
         return false;
@@ -729,6 +771,8 @@ public sealed class UbotCoreService : IUbotCoreService
                 _eventsSubscribed = true;
                 EventManager.SubscribeEvent("OnAddLog", new Action<string, LogLevel>(OnLog));
                 EventManager.SubscribeEvent("OnChangeStatusText", new Action<string>(status => _statusText = status ?? string.Empty));
+                EventManager.SubscribeEvent("OnChatMessage", new Action<string, string, ChatType>(OnChatMessage));
+                EventManager.SubscribeEvent("OnUniqueMessage", new Action<string>(OnUniqueMessage));
             }
 
             BeginReferenceDataLoad();
@@ -1034,6 +1078,27 @@ public sealed class UbotCoreService : IUbotCoreService
         GlobalLogReceived?.Invoke(level.ToString().ToLowerInvariant(), message);
     }
 
+    private static void OnChatMessage(string sender, string message, ChatType type)
+    {
+        var channel = type switch
+        {
+            ChatType.Private => "private",
+            ChatType.Party => "party",
+            ChatType.Guild => "guild",
+            ChatType.Global => "global",
+            ChatType.Notice => "global",
+            ChatType.Stall => "stall",
+            _ => "all"
+        };
+
+        GlobalChatMessageReceived?.Invoke(channel, sender ?? string.Empty, message ?? string.Empty);
+    }
+
+    private static void OnUniqueMessage(string message)
+    {
+        GlobalChatMessageReceived?.Invoke("unique", "Unique", message ?? string.Empty);
+    }
+
     private static bool ResolveEnabledState(string pluginId)
     {
         if (TryResolvePlugin(pluginId, out var plugin))
@@ -1067,6 +1132,913 @@ public sealed class UbotCoreService : IUbotCoreService
     private static bool IsProtectionPlugin(IPlugin plugin) => ResolveModuleKey(plugin.Name) == "protection";
     private static bool IsMapPlugin(IPlugin plugin) => ResolveModuleKey(plugin.Name) == "map";
     private static bool IsInventoryPlugin(IPlugin plugin) => plugin?.Name == "UBot.Inventory";
+    private static bool IsPartyPlugin(IPlugin plugin) => ResolveModuleKey(plugin.Name) == "party";
+
+    private readonly struct MapRenderContext
+    {
+        public MapRenderContext(CoreRegion playerRegion, byte centerX, byte centerY, string dungeonName, string floorName)
+        {
+            PlayerRegion = playerRegion;
+            CenterX = centerX;
+            CenterY = centerY;
+            DungeonName = dungeonName ?? string.Empty;
+            FloorName = floorName ?? string.Empty;
+        }
+
+        public CoreRegion PlayerRegion { get; }
+        public byte CenterX { get; }
+        public byte CenterY { get; }
+        public string DungeonName { get; }
+        public string FloorName { get; }
+        public bool IsDungeon => PlayerRegion.IsDungeon;
+        public string CacheKey => $"{PlayerRegion.Id}:{CenterX}:{CenterY}:{DungeonName}:{FloorName}";
+    }
+
+    private sealed class MapEntityState
+    {
+        public string Name { get; init; } = string.Empty;
+        public string Type { get; init; } = string.Empty;
+        public string Category { get; init; } = string.Empty;
+        public bool IsUnique { get; init; }
+        public bool IsParty { get; init; }
+        public int Level { get; init; }
+        public double Distance { get; init; }
+        public string Position { get; init; } = string.Empty;
+        public double XOffset { get; init; }
+        public double YOffset { get; init; }
+    }
+
+    private static Dictionary<string, object?> BuildMapPluginState()
+    {
+        var showFilter = NormalizeMapShowFilter(
+            PlayerConfig.Get("UBot.Desktop.Map.ShowFilter",
+                PlayerConfig.Get("UBot.Desktop.Map.EntityFilter", "All")));
+
+        SpawnManager.TryGetEntities<SpawnedEntity>(out var spawnedEntities);
+        var all = spawnedEntities?.Where(entity => entity != null).ToArray() ?? Array.Empty<SpawnedEntity>();
+        var player = Game.Player;
+        var playerPosition = player?.Position ?? default;
+        var playerRegion = playerPosition.Region;
+
+        var partyMemberNames = new HashSet<string>(
+            (Game.Party?.Members ?? new List<PartyMember>())
+                .Select(member => member?.Name ?? string.Empty)
+                .Where(name => !string.IsNullOrWhiteSpace(name)),
+            StringComparer.OrdinalIgnoreCase);
+
+        if (!string.IsNullOrWhiteSpace(player?.Name))
+            partyMemberNames.Add(player.Name);
+
+        var renderContext = default(MapRenderContext);
+        var hasRenderContext = player != null && TryBuildMapRenderContext(playerPosition, out renderContext);
+
+        var minimapImage = string.Empty;
+        var navmeshImage = string.Empty;
+        var imageSource = "none";
+        var mapWidth = 1920f;
+        var mapHeight = 1920f;
+        var mapImageVersion = string.Empty;
+        var playerMapX = playerPosition.XSectorOffset;
+        var playerMapY = playerPosition.YSectorOffset;
+
+        if (hasRenderContext)
+        {
+            var renderCache = GetOrCreateMapRenderCache(renderContext);
+            mapImageVersion = renderContext.CacheKey;
+            var hasRenderableImage = !string.IsNullOrWhiteSpace(renderCache.minimap) || !string.IsNullOrWhiteSpace(renderCache.navmesh);
+            var includeImages = false;
+
+            lock (MapRenderSync)
+            {
+                var contextChanged = !string.Equals(_mapLastRenderContextKey, renderContext.CacheKey, StringComparison.Ordinal);
+                var elapsed = _mapLastImagePushTick < 0 ? int.MaxValue : Kernel.TickCount - _mapLastImagePushTick;
+                if (elapsed < 0)
+                    elapsed = int.MaxValue;
+
+                includeImages = !hasRenderableImage || contextChanged || elapsed >= 1000;
+                if (contextChanged)
+                    _mapLastRenderContextKey = renderContext.CacheKey;
+                if (includeImages && hasRenderableImage)
+                    _mapLastImagePushTick = Kernel.TickCount;
+            }
+
+            if (includeImages)
+            {
+                minimapImage = renderCache.minimap;
+                navmeshImage = renderCache.navmesh;
+            }
+
+            imageSource = renderCache.source;
+            mapWidth = renderCache.width;
+            mapHeight = renderCache.height;
+
+            if (TryProjectPositionToMap(playerPosition, renderContext, out var projectedPlayerX, out var projectedPlayerY))
+            {
+                playerMapX = projectedPlayerX;
+                playerMapY = projectedPlayerY;
+            }
+        }
+
+        var rows = new List<MapEntityState>(all.Length);
+        foreach (var entity in all)
+        {
+            if (entity == null)
+                continue;
+
+            var projectedX = entity.Position.XSectorOffset;
+            var projectedY = entity.Position.YSectorOffset;
+            if (hasRenderContext && TryProjectPositionToMap(entity.Position, renderContext, out var mapX, out var mapY))
+            {
+                projectedX = mapX;
+                projectedY = mapY;
+            }
+
+            var distance = player != null ? player.Position.DistanceTo(entity.Position) : 0;
+            if (!TryBuildMapEntityState(entity, projectedX, projectedY, partyMemberNames, distance, out var entry))
+                continue;
+
+            if (!MatchesMapFilter(showFilter, entry.Category, entry.IsUnique, entry.IsParty))
+                continue;
+
+            rows.Add(entry);
+        }
+
+        TryAutoSelectUniqueMonster(player, all);
+
+        var payload = rows
+            .OrderBy(item => item.Distance)
+            .Select(item => new Dictionary<string, object?>
+            {
+                ["name"] = item.Name,
+                ["type"] = item.Type,
+                ["category"] = item.Category,
+                ["level"] = item.Level,
+                ["position"] = item.Position,
+                ["xOffset"] = item.XOffset,
+                ["yOffset"] = item.YOffset
+            })
+            .Cast<object?>()
+            .ToList();
+
+        return new Dictionary<string, object?>
+        {
+            ["showFilter"] = showFilter,
+            ["total"] = all.Length,
+            ["players"] = all.OfType<SpawnedPlayer>().Count(),
+            ["party"] = all.OfType<SpawnedPlayer>().Count(spawnedPlayer =>
+                !string.IsNullOrWhiteSpace(spawnedPlayer.Name) && partyMemberNames.Contains(spawnedPlayer.Name)),
+            ["monsters"] = all.OfType<SpawnedMonster>().Count(),
+            ["npcs"] = all.OfType<SpawnedNpc>().Count(entity => entity is not SpawnedMonster && entity is not SpawnedCos),
+            ["cos"] = all.OfType<SpawnedCos>().Count(),
+            ["items"] = all.OfType<SpawnedItem>().Count(),
+            ["portals"] = all.OfType<SpawnedPortal>().Count(),
+            ["uniques"] = all.OfType<SpawnedMonster>().Count(IsUniqueMonster),
+            ["collisionDetection"] = Kernel.EnableCollisionDetection,
+            ["autoSelectUniques"] = PlayerConfig.Get("UBot.Map.AutoSelectUnique", false),
+            ["resetToPlayerAt"] = PlayerConfig.Get("UBot.Desktop.Map.ResetToPlayerAt", 0L),
+            ["mapRegion"] = (int)playerRegion.Id,
+            ["mapWidth"] = mapWidth,
+            ["mapHeight"] = mapHeight,
+            ["mapImageSource"] = imageSource,
+            ["mapImageVersion"] = mapImageVersion,
+            ["playerXOffset"] = Math.Round(playerMapX, 2),
+            ["playerYOffset"] = Math.Round(playerMapY, 2),
+            ["entities"] = payload,
+            ["minimapImage"] = minimapImage,
+            ["navmeshImage"] = navmeshImage
+        };
+    }
+
+    private static bool TryBuildMapEntityState(
+        SpawnedEntity entity,
+        float mapX,
+        float mapY,
+        HashSet<string> partyMemberNames,
+        double distance,
+        out MapEntityState entry)
+    {
+        entry = new MapEntityState();
+        var name = ResolveMapEntityName(entity);
+        var category = ResolveMapEntityCategory(entity);
+        var isUnique = entity is SpawnedMonster spawnedMonster && IsUniqueMonster(spawnedMonster);
+        var isParty = entity is SpawnedPlayer spawnedPlayer
+            && !string.IsNullOrWhiteSpace(spawnedPlayer.Name)
+            && partyMemberNames.Contains(spawnedPlayer.Name);
+
+        string type;
+        var level = ResolveMapEntityLevel(entity);
+        switch (entity)
+        {
+            case SpawnedMonster:
+                type = isUnique ? "Unique" : "Monster";
+                break;
+            case SpawnedPlayer:
+                type = isParty ? "Party" : "Player";
+                break;
+            case SpawnedCos:
+                type = "COS";
+                break;
+            case SpawnedNpc:
+                type = "NPC";
+                break;
+            case SpawnedItem:
+                type = "Item";
+                break;
+            case SpawnedPortal:
+                type = "Portal";
+                break;
+            default:
+                return false;
+        }
+
+        entry = new MapEntityState
+        {
+            Name = name,
+            Type = type,
+            Category = category,
+            IsUnique = isUnique,
+            IsParty = isParty,
+            Level = level,
+            Distance = distance,
+            Position = $"X:{entity.Position.X:0.0} Y:{entity.Position.Y:0.0}",
+            XOffset = Math.Round(mapX, 2),
+            YOffset = Math.Round(mapY, 2)
+        };
+
+        return true;
+    }
+
+    private static byte ResolveMapEntityLevel(SpawnedEntity entity)
+    {
+        return entity switch
+        {
+            SpawnedItem spawnedItem => spawnedItem.Record?.ReqLevel1 ?? 0,
+            _ => entity.Record?.Level ?? 0
+        };
+    }
+
+    private static bool IsUniqueMonster(SpawnedMonster monster)
+    {
+        return monster.Rarity is MonsterRarity.Unique
+            or MonsterRarity.Unique2
+            or MonsterRarity.UniqueParty
+            or MonsterRarity.Unique2Party;
+    }
+
+    private static string ResolveMapEntityName(SpawnedEntity entity)
+    {
+        var rawName = entity switch
+        {
+            SpawnedPlayer spawnedPlayer => spawnedPlayer.Name,
+            SpawnedMonster spawnedMonster => spawnedMonster.Record?.GetRealName(),
+            SpawnedCos spawnedCos => spawnedCos.Name ?? spawnedCos.Record?.GetRealName(),
+            SpawnedNpc spawnedNpc => spawnedNpc.Record?.GetRealName(),
+            SpawnedItem spawnedItem => spawnedItem.Record?.GetRealName(true),
+            SpawnedPortal spawnedPortal => spawnedPortal.Record?.GetRealName(),
+            _ => entity.Record?.GetRealName()
+        };
+
+        return string.IsNullOrWhiteSpace(rawName) ? "<No name>" : rawName;
+    }
+
+    private static string ResolveMapEntityCategory(SpawnedEntity entity)
+    {
+        return entity switch
+        {
+            SpawnedPlayer => "Players",
+            SpawnedMonster => "Monsters",
+            SpawnedCos => "COS",
+            SpawnedNpc => "NPC",
+            SpawnedItem => "Items",
+            SpawnedPortal => "Portals",
+            _ => "All"
+        };
+    }
+
+    private static bool MatchesMapFilter(string showFilter, string category, bool isUnique, bool isParty)
+    {
+        return showFilter switch
+        {
+            "Monsters" => string.Equals(category, "Monsters", StringComparison.OrdinalIgnoreCase),
+            "Players" => string.Equals(category, "Players", StringComparison.OrdinalIgnoreCase),
+            "Party" => isParty,
+            "NPC" => string.Equals(category, "NPC", StringComparison.OrdinalIgnoreCase),
+            "COS" => string.Equals(category, "COS", StringComparison.OrdinalIgnoreCase),
+            "Items" => string.Equals(category, "Items", StringComparison.OrdinalIgnoreCase),
+            "Portals" => string.Equals(category, "Portals", StringComparison.OrdinalIgnoreCase),
+            "Uniques" => isUnique,
+            _ => true
+        };
+    }
+
+    private static string NormalizeMapShowFilter(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return "All";
+
+        return value.Trim().ToLowerInvariant() switch
+        {
+            "all" or "*" => "All",
+            "monster" or "monsters" => "Monsters",
+            "player" or "players" => "Players",
+            "party" => "Party",
+            "npc" or "npcs" => "NPC",
+            "cos" => "COS",
+            "item" or "items" => "Items",
+            "portal" or "portals" => "Portals",
+            "unique" or "uniques" => "Uniques",
+            _ => "All"
+        };
+    }
+
+    private static void TryAutoSelectUniqueMonster(Player? player, IReadOnlyCollection<SpawnedEntity> entities)
+    {
+        if (player == null || Kernel.Bot?.Running == true)
+            return;
+
+        if (!PlayerConfig.Get("UBot.Map.AutoSelectUnique", false))
+            return;
+
+        if (Kernel.TickCount - _mapAutoSelectUniqueLastTick < 1250)
+            return;
+
+        _mapAutoSelectUniqueLastTick = Kernel.TickCount;
+
+        if (Game.SelectedEntity is SpawnedMonster selectedMonster && IsUniqueMonster(selectedMonster))
+            return;
+
+        var nearestUnique = entities
+            .OfType<SpawnedMonster>()
+            .Where(monster => monster.State.LifeState != LifeState.Dead && IsUniqueMonster(monster))
+            .OrderBy(monster => monster.DistanceToPlayer)
+            .FirstOrDefault();
+
+        nearestUnique?.TrySelect();
+    }
+
+    private static bool TryBuildMapRenderContext(Position playerPosition, out MapRenderContext context)
+    {
+        context = default;
+        if (playerPosition.Region.Id == 0)
+            return false;
+
+        var centerX = playerPosition.Region.IsDungeon
+            ? playerPosition.GetSectorFromOffset(playerPosition.XOffset)
+            : playerPosition.Region.X;
+        var centerY = playerPosition.Region.IsDungeon
+            ? playerPosition.GetSectorFromOffset(playerPosition.YOffset)
+            : playerPosition.Region.Y;
+
+        var dungeonName = string.Empty;
+        var floorName = string.Empty;
+        if (playerPosition.Region.IsDungeon)
+        {
+            dungeonName = UBot.Core.Client.RegionInfoManager.GetDungeonName(playerPosition.Region) ?? string.Empty;
+
+            if (playerPosition.TryGetNavMeshTransform(out var playerTransform)
+                && playerTransform.Instance is NavMeshInstBlock dungeonBlock
+                && dungeonBlock.Parent is NavMeshDungeon dungeon
+                && dungeon.FloorStringIDs.TryGetValue(dungeonBlock.FloorIndex, out var floor))
+            {
+                floorName = floor ?? string.Empty;
+            }
+        }
+
+        context = new MapRenderContext(playerPosition.Region, centerX, centerY, dungeonName, floorName);
+        return true;
+    }
+
+    private static (string minimap, string navmesh, string source, float width, float height) GetOrCreateMapRenderCache(MapRenderContext context)
+    {
+        lock (MapRenderSync)
+        {
+            if (MapRenderCache.TryGetValue(context.CacheKey, out var cached))
+            {
+                if (!string.IsNullOrWhiteSpace(cached.minimap) || !string.IsNullOrWhiteSpace(cached.navmesh))
+                    return cached;
+
+                MapRenderCache.Remove(context.CacheKey);
+            }
+        }
+
+        var minimap = BuildMinimapImage(context, out var minimapSource);
+        var navmesh = BuildNavMeshImage(context);
+        var source = minimapSource;
+
+        if (string.IsNullOrWhiteSpace(minimap) && !string.IsNullOrWhiteSpace(navmesh))
+        {
+            minimap = navmesh;
+            source = "navmesh-fallback";
+        }
+
+        if (string.IsNullOrWhiteSpace(navmesh))
+            navmesh = minimap;
+
+        var created = (
+            minimap,
+            navmesh,
+            source,
+            MapSectorSpan * MapSectorGridSize,
+            MapSectorSpan * MapSectorGridSize);
+
+        if (string.IsNullOrWhiteSpace(created.minimap) && string.IsNullOrWhiteSpace(created.navmesh))
+            return created;
+
+        lock (MapRenderSync)
+        {
+            if (MapRenderCache.Count > 64)
+                MapRenderCache.Clear();
+
+            MapRenderCache[context.CacheKey] = created;
+        }
+
+        return created;
+    }
+
+    private static string BuildMinimapImage(MapRenderContext context, out string source)
+    {
+        if (Game.MediaPk2 == null)
+        {
+            source = "none";
+            return string.Empty;
+        }
+
+        var side = MinimapSectorPixels * MapSectorGridSize;
+        using var bitmap = new Bitmap(side, side, PixelFormat.Format32bppArgb);
+        using var graphics = Graphics.FromImage(bitmap);
+        graphics.Clear(Color.Black);
+        graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+        graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+        graphics.SmoothingMode = SmoothingMode.HighQuality;
+
+        var loadedSectorCount = 0;
+        for (var x = 0; x < MapSectorGridSize; x++)
+        {
+            for (var z = 0; z < MapSectorGridSize; z++)
+            {
+                var sectorX = context.CenterX + x - 1;
+                var sectorY = context.CenterY + z - 1;
+                if (sectorX is < byte.MinValue or > byte.MaxValue || sectorY is < byte.MinValue or > byte.MaxValue)
+                    continue;
+
+                var sectorPath = GetMinimapFileName(new CoreRegion((byte)sectorX, (byte)sectorY), context.DungeonName, context.FloorName);
+                if (!TryLoadImage(Game.MediaPk2, sectorPath, out var sectorImage))
+                    continue;
+
+                using (sectorImage)
+                {
+                    loadedSectorCount++;
+                    var drawX = x * MinimapSectorPixels;
+                    var drawY = (MapSectorGridSize - 1 - z) * MinimapSectorPixels;
+                    graphics.DrawImage(sectorImage, drawX, drawY, MinimapSectorPixels, MinimapSectorPixels);
+                }
+            }
+        }
+
+        if (loadedSectorCount > 0)
+        {
+            source = "pk2-sectors";
+            return ToPngDataUri(bitmap);
+        }
+
+        source = "navmesh-fallback";
+        return BuildFallbackMinimapImage(context.PlayerRegion);
+    }
+
+    private static string GetMinimapFileName(CoreRegion region, string dungeonName, string floorName)
+    {
+        if (!string.IsNullOrWhiteSpace(dungeonName) && !string.IsNullOrWhiteSpace(floorName))
+            return $"minimap_d\\{dungeonName}\\{floorName}_{region.X}x{region.Y}.ddj";
+
+        return $"minimap\\{region.X}x{region.Y}.ddj";
+    }
+
+    private static string BuildFallbackMinimapImage(CoreRegion region)
+    {
+        if (!NavMeshManager.TryGetNavMeshTerrain(region.Id, out var terrain) || terrain == null)
+            return string.Empty;
+
+        var side = MinimapSectorPixels * MapSectorGridSize;
+        using var bitmap = new Bitmap(side, side, PixelFormat.Format32bppArgb);
+        using var graphics = Graphics.FromImage(bitmap);
+        graphics.Clear(Color.FromArgb(8, 14, 22));
+
+        var tileWidth = bitmap.Width / (float)NavMeshTerrain.TILES_X;
+        var tileHeight = bitmap.Height / (float)NavMeshTerrain.TILES_Z;
+
+        for (var z = 0; z < NavMeshTerrain.TILES_Z; z++)
+        {
+            for (var x = 0; x < NavMeshTerrain.TILES_X; x++)
+            {
+                var tile = terrain.GetTile(x, z);
+                var color = ResolveFallbackMinimapTileColor(tile.TextureID, tile.IsBlocked);
+                using var brush = new SolidBrush(color);
+                graphics.FillRectangle(
+                    brush,
+                    x * tileWidth,
+                    z * tileHeight,
+                    Math.Max(1f, tileWidth + 0.4f),
+                    Math.Max(1f, tileHeight + 0.4f));
+            }
+        }
+
+        using var gridPen = new Pen(Color.FromArgb(30, 180, 210, 255), 1f);
+        for (var step = 0; step <= 6; step++)
+        {
+            var px = step * (bitmap.Width / 6f);
+            graphics.DrawLine(gridPen, px, 0, px, bitmap.Height);
+            graphics.DrawLine(gridPen, 0, px, bitmap.Width, px);
+        }
+
+        return ToPngDataUri(bitmap);
+    }
+
+    private static string BuildNavMeshImage(MapRenderContext context)
+    {
+        var side = NavMeshSectorPixels * MapSectorGridSize;
+        using var bitmap = new Bitmap(side, side, PixelFormat.Format32bppArgb);
+        using var graphics = Graphics.FromImage(bitmap);
+        graphics.Clear(Color.FromArgb(4, 8, 12));
+        graphics.SmoothingMode = SmoothingMode.HighSpeed;
+        graphics.PixelOffsetMode = PixelOffsetMode.HighSpeed;
+
+        var mapSpan = MapSectorSpan * MapSectorGridSize;
+        var scaleX = bitmap.Width / mapSpan;
+        var scaleY = bitmap.Height / mapSpan;
+        DrawNavMeshGrid(graphics, scaleX, scaleY);
+
+        if (context.IsDungeon)
+        {
+            if (!NavMeshManager.TryGetNavMesh(context.PlayerRegion.Id, out var navMesh) || navMesh == null)
+                return string.Empty;
+
+            if (navMesh is NavMeshDungeon dungeon)
+                DrawDungeonEdges(graphics, dungeon, context, scaleX, scaleY);
+            else if (navMesh is NavMeshTerrain terrain)
+            {
+                DrawTerrainEdges(graphics, terrain, context, scaleX, scaleY);
+                DrawTerrainObjectEdges(graphics, terrain, context, scaleX, scaleY);
+            }
+        }
+        else
+        {
+            for (var rz = context.CenterY - 1; rz <= context.CenterY + 1; rz++)
+            {
+                for (var rx = context.CenterX - 1; rx <= context.CenterX + 1; rx++)
+                {
+                    if (rx is < byte.MinValue or > byte.MaxValue || rz is < byte.MinValue or > byte.MaxValue)
+                        continue;
+
+                    var rid = new UBot.NavMeshApi.Mathematics.RID((byte)rx, (byte)rz);
+                    if (!NavMeshManager.TryGetNavMeshTerrain(rid, out var terrain) || terrain == null)
+                        continue;
+
+                    foreach (var edge in terrain.GlobalEdges)
+                    {
+                        try
+                        {
+                            edge.Link();
+                        }
+                        catch
+                        {
+                            // ignored
+                        }
+                    }
+
+                    DrawTerrainEdges(graphics, terrain, context, scaleX, scaleY);
+                    DrawTerrainObjectEdges(graphics, terrain, context, scaleX, scaleY);
+                }
+            }
+        }
+
+        using var stream = new MemoryStream();
+        bitmap.Save(stream, ImageFormat.Png);
+        return $"data:image/png;base64,{Convert.ToBase64String(stream.ToArray())}";
+    }
+
+    private static void DrawNavMeshGrid(Graphics graphics, float scaleX, float scaleY)
+    {
+        var mapSpan = MapSectorSpan * MapSectorGridSize;
+        using var majorPen = new Pen(Color.FromArgb(125, 0, 255, 64), 1.1f);
+        using var minorPen = new Pen(Color.FromArgb(65, 0, 120, 70), 1f);
+
+        var minorStep = MapSectorSpan / 4f;
+        for (var offset = 0f; offset <= mapSpan; offset += minorStep)
+        {
+            var x = offset * scaleX;
+            var y = offset * scaleY;
+            graphics.DrawLine(minorPen, x, 0, x, mapSpan * scaleY);
+            graphics.DrawLine(minorPen, 0, y, mapSpan * scaleX, y);
+        }
+
+        for (var offset = 0f; offset <= mapSpan; offset += MapSectorSpan)
+        {
+            var x = offset * scaleX;
+            var y = offset * scaleY;
+            graphics.DrawLine(majorPen, x, 0, x, mapSpan * scaleY);
+            graphics.DrawLine(majorPen, 0, y, mapSpan * scaleX, y);
+        }
+    }
+
+    private static void DrawTerrainEdges(
+        Graphics graphics,
+        NavMeshTerrain terrain,
+        MapRenderContext context,
+        float scaleX,
+        float scaleY)
+    {
+        using var blockedPen = new Pen(Color.FromArgb(220, 255, 70, 70), 1.15f);
+        using var railingPen = new Pen(Color.FromArgb(220, 70, 160, 255), 1.1f);
+        using var openPen = new Pen(Color.FromArgb(210, 90, 255, 120), 1.05f);
+        using var globalPen = new Pen(Color.FromArgb(210, 255, 180, 64), 1.1f);
+
+        foreach (var edge in terrain.InternalEdges)
+            DrawProjectedNavMeshEdge(
+                graphics,
+                terrain.Region.X,
+                terrain.Region.Z,
+                edge.Line.Min.X,
+                edge.Line.Min.Z,
+                edge.Line.Max.X,
+                edge.Line.Max.Z,
+                ResolveEdgePen(edge.IsBlocked, edge.IsRailing, blockedPen, railingPen, openPen),
+                context,
+                scaleX,
+                scaleY);
+
+        foreach (var edge in terrain.GlobalEdges)
+            DrawProjectedNavMeshEdge(
+                graphics,
+                terrain.Region.X,
+                terrain.Region.Z,
+                edge.Line.Min.X,
+                edge.Line.Min.Z,
+                edge.Line.Max.X,
+                edge.Line.Max.Z,
+                edge.IsBlocked ? blockedPen : globalPen,
+                context,
+                scaleX,
+                scaleY);
+    }
+
+    private static void DrawTerrainObjectEdges(
+        Graphics graphics,
+        NavMeshTerrain terrain,
+        MapRenderContext context,
+        float scaleX,
+        float scaleY)
+    {
+        using var blockedPen = new Pen(Color.FromArgb(220, 255, 90, 90), 1f);
+        using var railingPen = new Pen(Color.FromArgb(220, 85, 170, 255), 1f);
+        using var openPen = new Pen(Color.FromArgb(170, 120, 255, 130), 1f);
+
+        foreach (var instance in terrain.Instances)
+        {
+            if (instance?.NavMeshObj == null)
+                continue;
+
+            foreach (var edge in instance.NavMeshObj.InternalEdges)
+            {
+                var worldLine = instance.LocalToWorld.MultiplyLine(edge.Line);
+                DrawProjectedNavMeshEdge(
+                    graphics,
+                    terrain.Region.X,
+                    terrain.Region.Z,
+                    worldLine.Min.X,
+                    worldLine.Min.Z,
+                    worldLine.Max.X,
+                    worldLine.Max.Z,
+                    ResolveEdgePen(edge.IsBlocked, edge.IsRailing, blockedPen, railingPen, openPen),
+                    context,
+                    scaleX,
+                    scaleY);
+            }
+
+            foreach (var edge in instance.NavMeshObj.GlobalEdges)
+            {
+                var worldLine = instance.LocalToWorld.MultiplyLine(edge.Line);
+                DrawProjectedNavMeshEdge(
+                    graphics,
+                    terrain.Region.X,
+                    terrain.Region.Z,
+                    worldLine.Min.X,
+                    worldLine.Min.Z,
+                    worldLine.Max.X,
+                    worldLine.Max.Z,
+                    ResolveEdgePen(edge.IsBlocked, edge.IsRailing, blockedPen, railingPen, openPen),
+                    context,
+                    scaleX,
+                    scaleY);
+            }
+        }
+    }
+
+    private static void DrawDungeonEdges(
+        Graphics graphics,
+        NavMeshDungeon dungeon,
+        MapRenderContext context,
+        float scaleX,
+        float scaleY)
+    {
+        using var blockedPen = new Pen(Color.FromArgb(220, 255, 90, 90), 1f);
+        using var railingPen = new Pen(Color.FromArgb(220, 85, 170, 255), 1f);
+        using var openPen = new Pen(Color.FromArgb(170, 120, 255, 130), 1f);
+
+        foreach (var block in dungeon.Blocks)
+        {
+            if (block?.NavMeshObj == null)
+                continue;
+
+            foreach (var edge in block.NavMeshObj.InternalEdges)
+            {
+                var worldLine = block.LocalToWorld.MultiplyLine(edge.Line);
+                DrawProjectedNavMeshEdge(
+                    graphics,
+                    context.CenterX,
+                    context.CenterY,
+                    worldLine.Min.X,
+                    worldLine.Min.Z,
+                    worldLine.Max.X,
+                    worldLine.Max.Z,
+                    ResolveEdgePen(edge.IsBlocked, edge.IsRailing, blockedPen, railingPen, openPen),
+                    context,
+                    scaleX,
+                    scaleY);
+            }
+
+            foreach (var edge in block.NavMeshObj.GlobalEdges)
+            {
+                var worldLine = block.LocalToWorld.MultiplyLine(edge.Line);
+                DrawProjectedNavMeshEdge(
+                    graphics,
+                    context.CenterX,
+                    context.CenterY,
+                    worldLine.Min.X,
+                    worldLine.Min.Z,
+                    worldLine.Max.X,
+                    worldLine.Max.Z,
+                    ResolveEdgePen(edge.IsBlocked, edge.IsRailing, blockedPen, railingPen, openPen),
+                    context,
+                    scaleX,
+                    scaleY);
+            }
+        }
+    }
+
+    private static bool TryProjectPositionToMap(Position position, MapRenderContext context, out float mapX, out float mapY)
+    {
+        var sectorX = position.Region.IsDungeon
+            ? position.GetSectorFromOffset(position.XOffset)
+            : position.Region.X;
+        var sectorY = position.Region.IsDungeon
+            ? position.GetSectorFromOffset(position.YOffset)
+            : position.Region.Y;
+
+        return TryProjectCoordinatesToMap(sectorX, sectorY, position.XSectorOffset, position.YSectorOffset, context, out mapX, out mapY);
+    }
+
+    private static bool TryProjectCoordinatesToMap(
+        byte sectorX,
+        byte sectorY,
+        float localX,
+        float localY,
+        MapRenderContext context,
+        out float mapX,
+        out float mapY)
+    {
+        var startX = context.CenterX - 1;
+        var startY = context.CenterY - 1;
+        var sectorSpan = MapSectorSpan * MapSectorGridSize;
+
+        mapX = (sectorX - startX) * MapSectorSpan + localX;
+        mapY = sectorSpan - ((sectorY - startY) * MapSectorSpan + localY);
+        return true;
+    }
+
+    private static bool TryProjectMapToPosition(
+        float mapX,
+        float mapY,
+        MapRenderContext context,
+        Position playerPosition,
+        out Position destination)
+    {
+        destination = default;
+
+        if (!float.IsFinite(mapX) || !float.IsFinite(mapY))
+            return false;
+
+        var sectorSpan = MapSectorSpan * MapSectorGridSize;
+        var clampedMapX = Math.Clamp(mapX, 0f, sectorSpan);
+        var clampedMapY = Math.Clamp(mapY, 0f, sectorSpan);
+
+        var startX = context.CenterX - 1;
+        var startY = context.CenterY - 1;
+        var projectedY = sectorSpan - clampedMapY;
+
+        var sectorOffsetX = (int)Math.Floor(clampedMapX / MapSectorSpan);
+        var sectorOffsetY = (int)Math.Floor(projectedY / MapSectorSpan);
+        sectorOffsetX = Math.Clamp(sectorOffsetX, 0, MapSectorGridSize - 1);
+        sectorOffsetY = Math.Clamp(sectorOffsetY, 0, MapSectorGridSize - 1);
+
+        var localX = clampedMapX - sectorOffsetX * MapSectorSpan;
+        var localY = projectedY - sectorOffsetY * MapSectorSpan;
+        var targetSectorX = startX + sectorOffsetX;
+        var targetSectorY = startY + sectorOffsetY;
+
+        if (context.IsDungeon)
+        {
+            var dungeonXOffset = (targetSectorX - 128) * MapSectorSpan + localX;
+            var dungeonYOffset = (targetSectorY - 128) * MapSectorSpan + localY;
+            destination = new Position(playerPosition.Region, dungeonXOffset, dungeonYOffset, playerPosition.ZOffset);
+            return true;
+        }
+
+        if (targetSectorX is < byte.MinValue or > byte.MaxValue || targetSectorY is < byte.MinValue or > byte.MaxValue)
+            return false;
+
+        destination = new Position((byte)targetSectorX, (byte)targetSectorY, localX, localY, playerPosition.ZOffset);
+        return true;
+    }
+
+    private static void DrawProjectedNavMeshEdge(
+        Graphics graphics,
+        byte sectorX,
+        byte sectorY,
+        float x1,
+        float y1,
+        float x2,
+        float y2,
+        Pen pen,
+        MapRenderContext context,
+        float scaleX,
+        float scaleY)
+    {
+        if (!TryProjectCoordinatesToMap(sectorX, sectorY, x1, y1, context, out var mapX1, out var mapY1))
+            return;
+        if (!TryProjectCoordinatesToMap(sectorX, sectorY, x2, y2, context, out var mapX2, out var mapY2))
+            return;
+
+        graphics.DrawLine(pen, mapX1 * scaleX, mapY1 * scaleY, mapX2 * scaleX, mapY2 * scaleY);
+    }
+
+    private static Pen ResolveEdgePen(bool isBlocked, bool isRailing, Pen blockedPen, Pen railingPen, Pen openPen)
+    {
+        if (isBlocked)
+            return blockedPen;
+        if (isRailing)
+            return railingPen;
+        return openPen;
+    }
+
+    private static bool TryLoadImage(IFileSystem fileSystem, string path, out Image image)
+    {
+        image = null;
+        if (!fileSystem.TryGetFile(path, out var file) || file == null)
+            return false;
+
+        try
+        {
+            if (path.EndsWith(".ddj", StringComparison.OrdinalIgnoreCase))
+            {
+                image = file.ToImage();
+                return image != null;
+            }
+
+            using var stream = file.OpenRead().GetStream();
+            using var raw = Image.FromStream(stream);
+            image = new Bitmap(raw);
+            return true;
+        }
+        catch
+        {
+            image = null;
+            return false;
+        }
+    }
+
+    private static Color ResolveFallbackMinimapTileColor(short textureId, bool blocked)
+    {
+        var seed = textureId;
+        var red = 28 + Math.Abs((seed * 73) % 96);
+        var green = 42 + Math.Abs((seed * 37) % 120);
+        var blue = 18 + Math.Abs((seed * 29) % 80);
+
+        if (blocked)
+        {
+            red = (int)(red * 0.42f);
+            green = (int)(green * 0.38f);
+            blue = (int)(blue * 0.35f);
+        }
+
+        return Color.FromArgb(255, red, green, blue);
+    }
+
+    private static string ToPngDataUri(Image image)
+    {
+        using var memory = new MemoryStream();
+        image.Save(memory, ImageFormat.Png);
+        return $"data:image/png;base64,{Convert.ToBase64String(memory.ToArray())}";
+    }
 
     private static object BuildInventoryPluginState()
     {
@@ -1362,6 +2334,290 @@ public sealed class UbotCoreService : IUbotCoreService
         if (value.Contains("lure")) return "lure";
         return value.Replace("ubot.", "");
     }
+
+    private static Dictionary<string, object?> BuildPartyPluginState()
+    {
+        var settings = GetPartySettingsSnapshot();
+        var members = new List<Dictionary<string, object?>>();
+        var party = Game.Party;
+
+        if (party?.Members != null)
+        {
+            foreach (var member in party.Members.Where(member => member != null))
+            {
+                var hpPercent = ((member.HealthMana >> 4) & 0x0F) * 10;
+                var mpPercent = (member.HealthMana & 0x0F) * 10;
+
+                hpPercent = Math.Clamp(hpPercent, 0, 100);
+                mpPercent = Math.Clamp(mpPercent, 0, 100);
+
+                var positionText = $"{member.Position.X:0.0}, {member.Position.Y:0.0}";
+
+                members.Add(new Dictionary<string, object?>
+                {
+                    ["memberId"] = member.MemberId,
+                    ["name"] = member.Name ?? string.Empty,
+                    ["level"] = member.Level,
+                    ["guild"] = member.Guild ?? string.Empty,
+                    ["hpPercent"] = hpPercent,
+                    ["mpPercent"] = mpPercent,
+                    ["hpMp"] = $"{hpPercent}/{mpPercent}",
+                    ["position"] = positionText
+                });
+            }
+        }
+
+        var buffCatalog = BuildPartyBuffCatalog(PlayerConfig.Get("UBot.Party.Buff.HideLowLevelSkills", false));
+        var assignments = ParsePartyBuffAssignments(PlayerConfig.GetArray<string>("UBot.Party.Buff.Assignments"));
+        var memberBuffs = assignments
+            .Select(assignment => new Dictionary<string, object?>
+            {
+                ["name"] = assignment.Name,
+                ["group"] = assignment.Group,
+                ["buffs"] = assignment.Buffs.Cast<object?>().ToList()
+            })
+            .Cast<object?>()
+            .ToList();
+
+        var pluginConfig = LoadPluginJsonConfig(PartyPluginName);
+        pluginConfig.TryGetValue("matchingResults", out var matchingResultsRaw);
+        var matchingResults = matchingResultsRaw as IList ?? new List<object?>();
+
+        return new Dictionary<string, object?>
+        {
+            ["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            ["isInParty"] = party?.IsInParty == true,
+            ["isLeader"] = party?.IsLeader == true,
+            ["leaderName"] = party?.Leader?.Name ?? "Not in a party",
+            ["canInvite"] = party?.CanInvite == true,
+            ["expAutoShare"] = settings.ExperienceAutoShare,
+            ["itemAutoShare"] = settings.ItemAutoShare,
+            ["allowInvitations"] = settings.AllowInvitation,
+            ["members"] = members.Cast<object?>().ToList(),
+            ["buffCatalog"] = buffCatalog.Cast<object?>().ToList(),
+            ["memberBuffs"] = memberBuffs,
+            ["matchingResults"] = matchingResults.Cast<object?>().ToList()
+        };
+    }
+
+    private static Dictionary<string, object?> BuildPartyPluginConfig()
+    {
+        var config = LoadPluginJsonConfig(PartyPluginName);
+
+        config["expAutoShare"] = PlayerConfig.Get("UBot.Party.EXPAutoShare", true);
+        config["itemAutoShare"] = PlayerConfig.Get("UBot.Party.ItemAutoShare", true);
+        config["allowInvitations"] = PlayerConfig.Get("UBot.Party.AllowInvitations", true);
+
+        config["acceptAllInvitations"] = PlayerConfig.Get("UBot.Party.AcceptAll", false);
+        config["acceptInvitationsFromList"] = PlayerConfig.Get("UBot.Party.AcceptList", false);
+        config["autoInviteAllPlayers"] = PlayerConfig.Get("UBot.Party.InviteAll", false);
+        config["autoInviteAllPlayersFromList"] = PlayerConfig.Get("UBot.Party.InviteList", false);
+        config["acceptInviteOnlyTrainingPlace"] = PlayerConfig.Get("UBot.Party.AtTrainingPlace", false);
+        config["acceptIfBotStopped"] = PlayerConfig.Get("UBot.Party.AcceptIfBotStopped", false);
+        config["leaveIfMasterNot"] = PlayerConfig.Get("UBot.Party.LeaveIfMasterNot", false);
+        config["leaveIfMasterNotName"] = PlayerConfig.Get("UBot.Party.LeaveIfMasterNotName", string.Empty);
+        config["alwaysFollowPartyMaster"] = PlayerConfig.Get("UBot.Party.AlwaysFollowPartyMaster", false);
+        config["listenPartyMasterCommands"] = PlayerConfig.Get("UBot.Party.Commands.ListenFromMaster", false);
+        config["listenCommandsInList"] = PlayerConfig.Get("UBot.Party.Commands.ListenOnlyList", false);
+
+        config["autoPartyPlayers"] = PlayerConfig.GetArray<string>("UBot.Party.AutoPartyList")
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Cast<object?>()
+            .ToList();
+
+        config["commandPlayers"] = PlayerConfig.GetArray<string>("UBot.Party.Commands.PlayersList")
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Cast<object?>()
+            .ToList();
+
+        config["matchingPurpose"] = (int)PlayerConfig.Get<byte>("UBot.Party.Matching.Purpose", 0);
+        config["matchingTitle"] = PlayerConfig.Get("UBot.Party.Matching.Title", "For opening hunting on the silkroad!");
+        config["matchingAutoReform"] = PlayerConfig.Get("UBot.Party.Matching.AutoReform", false);
+        config["matchingAutoAccept"] = PlayerConfig.Get("UBot.Party.Matching.AutoAccept", true);
+        config["matchingLevelFrom"] = (int)PlayerConfig.Get<byte>("UBot.Party.Matching.LevelFrom", 1);
+        config["matchingLevelTo"] = (int)PlayerConfig.Get<byte>("UBot.Party.Matching.LevelTo", 140);
+        config["autoJoinByName"] = PlayerConfig.Get("UBot.Party.AutoJoin.ByName", false);
+        config["autoJoinByTitle"] = PlayerConfig.Get("UBot.Party.AutoJoin.ByTitle", false);
+        config["autoJoinByNameText"] = PlayerConfig.Get("UBot.Party.AutoJoin.Name", string.Empty);
+        config["autoJoinByTitleText"] = PlayerConfig.Get("UBot.Party.AutoJoin.Title", string.Empty);
+
+        config["buffHideLowLevelSkills"] = PlayerConfig.Get("UBot.Party.Buff.HideLowLevelSkills", false);
+        config["buffGroups"] = PlayerConfig.GetArray<string>("UBot.Party.Buff.Groups")
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Cast<object?>()
+            .ToList();
+        config["buffSkillIds"] = PlayerConfig.GetArray<uint>("UBot.Party.Buff.SkillIds")
+            .Distinct()
+            .Cast<object?>()
+            .ToList();
+        config["buffAssignments"] = PlayerConfig.GetArray<string>("UBot.Party.Buff.Assignments")
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value.Trim())
+            .Cast<object?>()
+            .ToList();
+
+        if (!config.TryGetValue("matchingResults", out var matchingResults) || matchingResults is not IList)
+            config["matchingResults"] = new List<object?>();
+
+        if (!config.TryGetValue("matchingSelectedId", out _))
+            config["matchingSelectedId"] = 0U;
+
+        return config;
+    }
+
+    private static List<Dictionary<string, object?>> BuildPartyBuffCatalog(bool hideLowLevelSkills)
+    {
+        var result = new List<Dictionary<string, object?>>();
+        foreach (var skill in CollectKnownAndAbilitySkills())
+        {
+            var record = skill.Record;
+            if (record == null)
+                continue;
+            if (skill.IsPassive || skill.IsAttack)
+                continue;
+
+            var isLowLevel = false;
+            try
+            {
+                isLowLevel = skill.IsLowLevel();
+            }
+            catch
+            {
+                // ignored
+            }
+
+            if (hideLowLevelSkills && isLowLevel)
+                continue;
+
+            var name = record.GetRealName();
+            if (string.IsNullOrWhiteSpace(name))
+                name = record.Basic_Code;
+            if (string.IsNullOrWhiteSpace(name))
+                name = $"Skill {skill.Id}";
+
+            result.Add(new Dictionary<string, object?>
+            {
+                ["id"] = skill.Id,
+                ["name"] = name,
+                ["icon"] = record.UI_IconFile,
+                ["isLowLevel"] = isLowLevel
+            });
+        }
+
+        return result
+            .OrderBy(item => item.TryGetValue("name", out var value) ? value?.ToString() : string.Empty, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private sealed class PartyBuffAssignment
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Group { get; set; } = string.Empty;
+        public List<uint> Buffs { get; set; } = new();
+    }
+
+    private static List<PartyBuffAssignment> ParsePartyBuffAssignments(IEnumerable<string> serializedAssignments)
+    {
+        var result = new List<PartyBuffAssignment>();
+        foreach (var raw in serializedAssignments ?? Array.Empty<string>())
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+                continue;
+
+            var parts = raw.Split(':');
+            if (parts.Length != 3)
+                continue;
+
+            var name = parts[0].Trim();
+            var group = parts[1].Trim();
+            if (string.IsNullOrWhiteSpace(name))
+                continue;
+
+            var buffs = parts[2]
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Where(token => uint.TryParse(token, out _))
+                .Select(uint.Parse)
+                .Distinct()
+                .ToList();
+
+            result.Add(new PartyBuffAssignment
+            {
+                Name = name,
+                Group = group,
+                Buffs = buffs
+            });
+        }
+
+        return result
+            .GroupBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
+            .Select(group => group.Last())
+            .ToList();
+    }
+
+    private static List<string> SerializePartyBuffAssignments(IEnumerable<PartyBuffAssignment> assignments)
+    {
+        return (assignments ?? Array.Empty<PartyBuffAssignment>())
+            .Where(item => !string.IsNullOrWhiteSpace(item.Name))
+            .Select(item =>
+            {
+                var buffString = string.Join(",", (item.Buffs ?? new List<uint>()).Distinct());
+                return $"{item.Name}:{item.Group}:{buffString}";
+            })
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private static PartySettings GetPartySettingsSnapshot()
+    {
+        if (Game.Party?.Settings != null)
+            return Game.Party.Settings;
+
+        return new PartySettings
+        {
+            ExperienceAutoShare = PlayerConfig.Get("UBot.Party.EXPAutoShare", true),
+            ItemAutoShare = PlayerConfig.Get("UBot.Party.ItemAutoShare", true),
+            AllowInvitation = PlayerConfig.Get("UBot.Party.AllowInvitations", true)
+        };
+    }
+
+    private static void ApplyLivePartySettingsFromConfig()
+    {
+        if (Game.Party == null)
+            return;
+
+        var expAutoShare = PlayerConfig.Get("UBot.Party.EXPAutoShare", true);
+        var itemAutoShare = PlayerConfig.Get("UBot.Party.ItemAutoShare", true);
+        var allowInvitations = PlayerConfig.Get("UBot.Party.AllowInvitations", true);
+
+        if (Game.Party.Settings == null)
+            Game.Party.Settings = new PartySettings(expAutoShare, itemAutoShare, allowInvitations);
+        else
+        {
+            Game.Party.Settings.ExperienceAutoShare = expAutoShare;
+            Game.Party.Settings.ItemAutoShare = itemAutoShare;
+            Game.Party.Settings.AllowInvitation = allowInvitations;
+        }
+    }
+
+    private static void RefreshPartyPluginRuntime()
+    {
+        try
+        {
+            var containerType = Type.GetType("UBot.Party.Bundle.Container, UBot.Party", false);
+            var refreshMethod = containerType?.GetMethod("Refresh", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+            refreshMethod?.Invoke(null, null);
+        }
+        catch
+        {
+            // ignored
+        }
+    }
     private static Dictionary<string, object?> BuildGeneralPluginConfig()
     {
         var config = LoadPluginJsonConfig("UBot.General");
@@ -1455,9 +2711,9 @@ public sealed class UbotCoreService : IUbotCoreService
     private static Dictionary<string, object?> BuildMapPluginConfig()
     {
         var config = LoadPluginJsonConfig(MapPluginName);
-        var showFilter = PlayerConfig.Get("UBot.Desktop.Map.ShowFilter", string.Empty);
-        if (string.IsNullOrWhiteSpace(showFilter))
-            showFilter = PlayerConfig.Get("UBot.Desktop.Map.EntityFilter", "All");
+        var showFilter = NormalizeMapShowFilter(
+            PlayerConfig.Get("UBot.Desktop.Map.ShowFilter",
+                PlayerConfig.Get("UBot.Desktop.Map.EntityFilter", "All")));
 
         var collisionDetection = GlobalConfig.Get("UBot.EnableCollisionDetection",
             PlayerConfig.Get("UBot.Desktop.Map.CollisionDetection", false));
@@ -2140,7 +3396,7 @@ public sealed class UbotCoreService : IUbotCoreService
         var changed = false;
         if (TryGetStringValue(patch, "showFilter", out var showFilter) || TryGetStringValue(patch, "entityFilter", out showFilter))
         {
-            var normalized = string.IsNullOrWhiteSpace(showFilter) ? "All" : showFilter.Trim();
+            var normalized = NormalizeMapShowFilter(showFilter);
             PlayerConfig.Set("UBot.Desktop.Map.ShowFilter", normalized);
             PlayerConfig.Set("UBot.Desktop.Map.EntityFilter", normalized);
             changed = true;
@@ -2392,6 +3648,131 @@ public sealed class UbotCoreService : IUbotCoreService
         return changed;
     }
 
+    private static bool ApplyPartyPluginPatch(Dictionary<string, object?> patch)
+    {
+        var changed = false;
+
+        changed |= SetPlayerBool("UBot.Party.EXPAutoShare", patch, "expAutoShare");
+        changed |= SetPlayerBool("UBot.Party.ItemAutoShare", patch, "itemAutoShare");
+        changed |= SetPlayerBool("UBot.Party.AllowInvitations", patch, "allowInvitations");
+
+        changed |= SetPlayerBool("UBot.Party.AcceptAll", patch, "acceptAllInvitations");
+        changed |= SetPlayerBool("UBot.Party.AcceptList", patch, "acceptInvitationsFromList");
+        changed |= SetPlayerBool("UBot.Party.InviteAll", patch, "autoInviteAllPlayers");
+        changed |= SetPlayerBool("UBot.Party.InviteList", patch, "autoInviteAllPlayersFromList");
+        changed |= SetPlayerBool("UBot.Party.AtTrainingPlace", patch, "acceptInviteOnlyTrainingPlace");
+        changed |= SetPlayerBool("UBot.Party.AcceptIfBotStopped", patch, "acceptIfBotStopped");
+        changed |= SetPlayerBool("UBot.Party.LeaveIfMasterNot", patch, "leaveIfMasterNot");
+        changed |= SetPlayerString("UBot.Party.LeaveIfMasterNotName", patch, "leaveIfMasterNotName");
+        changed |= SetPlayerBool("UBot.Party.AlwaysFollowPartyMaster", patch, "alwaysFollowPartyMaster");
+        changed |= SetPlayerBool("UBot.Party.Commands.ListenFromMaster", patch, "listenPartyMasterCommands");
+        changed |= SetPlayerBool("UBot.Party.Commands.ListenOnlyList", patch, "listenCommandsInList");
+
+        changed |= SetPlayerBool("UBot.Party.Matching.AutoReform", patch, "matchingAutoReform");
+        changed |= SetPlayerBool("UBot.Party.Matching.AutoAccept", patch, "matchingAutoAccept");
+        changed |= SetPlayerString("UBot.Party.Matching.Title", patch, "matchingTitle");
+        changed |= SetPlayerBool("UBot.Party.AutoJoin.ByName", patch, "autoJoinByName");
+        changed |= SetPlayerBool("UBot.Party.AutoJoin.ByTitle", patch, "autoJoinByTitle");
+        changed |= SetPlayerString("UBot.Party.AutoJoin.Name", patch, "autoJoinByNameText");
+        changed |= SetPlayerString("UBot.Party.AutoJoin.Title", patch, "autoJoinByTitleText");
+        changed |= SetPlayerBool("UBot.Party.Buff.HideLowLevelSkills", patch, "buffHideLowLevelSkills");
+
+        if (TryGetIntValue(patch, "matchingPurpose", out var matchingPurpose))
+        {
+            PlayerConfig.Set("UBot.Party.Matching.Purpose", (byte)Math.Clamp(matchingPurpose, 0, 3));
+            changed = true;
+        }
+
+        if (TryGetIntValue(patch, "matchingLevelFrom", out var levelFrom))
+        {
+            PlayerConfig.Set("UBot.Party.Matching.LevelFrom", (byte)Math.Clamp(levelFrom, 1, 140));
+            changed = true;
+        }
+
+        if (TryGetIntValue(patch, "matchingLevelTo", out var levelTo))
+        {
+            PlayerConfig.Set("UBot.Party.Matching.LevelTo", (byte)Math.Clamp(levelTo, 1, 140));
+            changed = true;
+        }
+
+        if (TryGetStringListValue(patch, "autoPartyPlayers", out var autoPartyPlayers))
+        {
+            var normalized = autoPartyPlayers
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Select(value => value.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+            PlayerConfig.SetArray("UBot.Party.AutoPartyList", normalized);
+            changed = true;
+        }
+
+        if (TryGetStringListValue(patch, "commandPlayers", out var commandPlayers))
+        {
+            var normalized = commandPlayers
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Select(value => value.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+            PlayerConfig.SetArray("UBot.Party.Commands.PlayersList", normalized);
+            changed = true;
+        }
+
+        if (TryGetStringListValue(patch, "buffGroups", out var buffGroups))
+        {
+            var normalized = buffGroups
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Select(value => value.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+            PlayerConfig.SetArray("UBot.Party.Buff.Groups", normalized);
+            changed = true;
+        }
+
+        if (TryGetUIntListValue(patch, "buffSkillIds", out var buffSkillIds))
+        {
+            PlayerConfig.SetArray("UBot.Party.Buff.SkillIds", buffSkillIds.Distinct().ToArray());
+            changed = true;
+        }
+
+        if (TryGetStringListValue(patch, "buffAssignments", out var buffAssignments))
+        {
+            var normalizedAssignments = ParsePartyBuffAssignments(buffAssignments);
+            PlayerConfig.SetArray("UBot.Party.Buff.Assignments", SerializePartyBuffAssignments(normalizedAssignments).ToArray());
+            changed = true;
+        }
+
+        var pluginConfig = LoadPluginJsonConfig(PartyPluginName);
+        var pluginConfigChanged = false;
+
+        if (patch.TryGetValue("matchingSelectedId", out var selectedIdRaw) && selectedIdRaw != null)
+        {
+            if (TryConvertInt(selectedIdRaw, out var selectedIdInt) && selectedIdInt >= 0)
+            {
+                pluginConfig["matchingSelectedId"] = (uint)selectedIdInt;
+                pluginConfigChanged = true;
+                changed = true;
+            }
+            else if (selectedIdRaw is uint selectedIdUInt)
+            {
+                pluginConfig["matchingSelectedId"] = selectedIdUInt;
+                pluginConfigChanged = true;
+                changed = true;
+            }
+        }
+
+        if (pluginConfigChanged)
+            SavePluginJsonConfig(PartyPluginName, pluginConfig);
+
+        if (changed)
+        {
+            ApplyLivePartySettingsFromConfig();
+            RefreshPartyPluginRuntime();
+            EventManager.FireEvent("OnSavePlayerConfig");
+        }
+
+        return changed;
+    }
+
     private static void RefreshLiveSkillsFromConfig()
     {
         if (Game.Player?.Skills == null || SkillManager.Skills == null || SkillManager.Buffs == null)
@@ -2453,6 +3834,370 @@ public sealed class UbotCoreService : IUbotCoreService
         return true;
     }
 
+    private static bool HandlePartyAction(string action, Dictionary<string, object?> payload)
+    {
+        switch (action)
+        {
+            case "party.leave":
+            case "party.leave-party":
+                if (Game.Party?.IsInParty == true)
+                {
+                    Game.Party.Leave();
+                    return true;
+                }
+                return false;
+
+            case "party.banish-member":
+                if (!TryGetUIntValue(payload, "memberId", out var memberId))
+                    return false;
+                if (Game.Party?.Members == null)
+                    return false;
+
+                var member = Game.Party.Members.FirstOrDefault(item => item.MemberId == memberId);
+                if (member == null)
+                    return false;
+
+                member.Banish();
+                return true;
+
+            case "party.matching.search":
+            case "party.matching.refresh":
+                return HandlePartyMatchingSearchAction(payload);
+
+            case "party.matching.join":
+            case "party.matching.join-party":
+                return HandlePartyMatchingJoinAction(payload);
+
+            case "party.matching.form":
+            case "party.matching.add":
+            case "party.matching.create":
+                return HandlePartyMatchingCreateOrChangeAction(payload, false);
+
+            case "party.matching.change":
+                return HandlePartyMatchingCreateOrChangeAction(payload, true);
+
+            case "party.matching.delete":
+            case "party.matching.delete-entry":
+                return HandlePartyMatchingDeleteAction(payload);
+
+            default:
+                return false;
+        }
+    }
+
+    private static bool HandlePartyMatchingSearchAction(Dictionary<string, object?> payload)
+    {
+        var queryName = TryGetStringValue(payload, "name", out var nameFilter) ? nameFilter.Trim() : string.Empty;
+        var queryTitle = TryGetStringValue(payload, "title", out var titleFilter) ? titleFilter.Trim() : string.Empty;
+        var requestedPurpose = TryGetIntValue(payload, "purpose", out var purposeFilter)
+            ? Math.Clamp(purposeFilter, -1, 3)
+            : -1;
+
+        var levelFrom = TryGetIntValue(payload, "levelFrom", out var parsedLevelFrom)
+            ? Math.Clamp(parsedLevelFrom, 1, 140)
+            : 1;
+        var levelTo = TryGetIntValue(payload, "levelTo", out var parsedLevelTo)
+            ? Math.Clamp(parsedLevelTo, 1, 140)
+            : 140;
+
+        if (levelFrom > levelTo)
+            (levelFrom, levelTo) = (levelTo, levelFrom);
+
+        var merged = new List<Dictionary<string, object?>>();
+        if (!TryRequestPartyMatchingPage(0, out var pageCount, out var firstPageEntries))
+            return false;
+
+        merged.AddRange(firstPageEntries);
+        for (byte page = 1; page < pageCount; page++)
+        {
+            if (!TryRequestPartyMatchingPage(page, out _, out var pageEntries))
+                continue;
+
+            merged.AddRange(pageEntries);
+        }
+
+        var filtered = merged
+            .Where(entry =>
+            {
+                var leader = entry.TryGetValue("name", out var nameRaw) ? nameRaw?.ToString() ?? string.Empty : string.Empty;
+                var title = entry.TryGetValue("title", out var titleRaw) ? titleRaw?.ToString() ?? string.Empty : string.Empty;
+                var min = entry.TryGetValue("minLevel", out var minRaw) && TryConvertInt(minRaw, out var parsedMin) ? parsedMin : 1;
+                var max = entry.TryGetValue("maxLevel", out var maxRaw) && TryConvertInt(maxRaw, out var parsedMax) ? parsedMax : 140;
+                var purpose = entry.TryGetValue("purposeValue", out var purposeRaw) && TryConvertInt(purposeRaw, out var parsedPurpose) ? parsedPurpose : 0;
+
+                if (!string.IsNullOrWhiteSpace(queryName)
+                    && !leader.Contains(queryName, StringComparison.OrdinalIgnoreCase))
+                    return false;
+
+                if (!string.IsNullOrWhiteSpace(queryTitle)
+                    && !title.Contains(queryTitle, StringComparison.OrdinalIgnoreCase))
+                    return false;
+
+                if (requestedPurpose >= 0 && purpose != requestedPurpose)
+                    return false;
+
+                if (max < levelFrom || min > levelTo)
+                    return false;
+
+                return true;
+            })
+            .ToList();
+
+        for (var i = 0; i < filtered.Count; i++)
+            filtered[i]["no"] = i + 1;
+
+        var pluginConfig = LoadPluginJsonConfig(PartyPluginName);
+        pluginConfig["matchingResults"] = filtered.Cast<object?>().ToList();
+        pluginConfig["matchingSelectedId"] = 0U;
+        pluginConfig["matchingQueryName"] = queryName;
+        pluginConfig["matchingQueryTitle"] = queryTitle;
+        pluginConfig["matchingQueryPurpose"] = requestedPurpose;
+        pluginConfig["matchingQueryLevelFrom"] = levelFrom;
+        pluginConfig["matchingQueryLevelTo"] = levelTo;
+        pluginConfig["matchingLastRefreshAt"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        SavePluginJsonConfig(PartyPluginName, pluginConfig);
+        return true;
+    }
+
+    private static bool TryRequestPartyMatchingPage(byte page, out byte pageCount, out List<Dictionary<string, object?>> entries)
+    {
+        pageCount = 0;
+        entries = new List<Dictionary<string, object?>>();
+        var success = false;
+        byte parsedPageCount = 0;
+        var parsedEntries = new List<Dictionary<string, object?>>();
+
+        var packet = new Packet(0x706C);
+        packet.WriteByte(page);
+
+        var callback = new AwaitCallback(
+            response =>
+            {
+                if (response.ReadByte() != 1)
+                    return AwaitCallbackResult.Fail;
+
+                parsedPageCount = response.ReadByte();
+                _ = response.ReadByte(); // current page
+                var partyCount = response.ReadByte();
+                for (var i = 0; i < partyCount; i++)
+                    parsedEntries.Add(ParsePartyMatchingEntry(response));
+
+                success = true;
+                return AwaitCallbackResult.Success;
+            },
+            0xB06C
+        );
+
+        PacketManager.SendPacket(packet, PacketDestination.Server, callback);
+        callback.AwaitResponse(5000);
+        pageCount = parsedPageCount;
+        entries = parsedEntries;
+        return callback.IsCompleted && success;
+    }
+
+    private static Dictionary<string, object?> ParsePartyMatchingEntry(Packet packet)
+    {
+        var id = packet.ReadUInt();
+        _ = packet.ReadUInt(); // leader unique id
+
+        if (Game.ClientType >= GameClientType.Chinese && Game.ClientType != GameClientType.Rigid)
+            _ = packet.ReadUInt(); // unknown
+
+        var leader = packet.ReadString();
+        var race = (ObjectCountry)packet.ReadByte();
+        var memberCount = packet.ReadByte();
+        var settings = PartySettings.FromType(packet.ReadByte());
+        var purpose = (PartyPurpose)packet.ReadByte();
+        var minLevel = packet.ReadByte();
+        var maxLevel = packet.ReadByte();
+        var title = packet.ReadConditonalString();
+
+        return new Dictionary<string, object?>
+        {
+            ["id"] = id,
+            ["name"] = leader,
+            ["title"] = title,
+            ["race"] = race.ToString(),
+            ["purpose"] = purpose.ToString(),
+            ["purposeValue"] = (int)purpose,
+            ["memberCount"] = memberCount,
+            ["member"] = memberCount,
+            ["minLevel"] = (int)minLevel,
+            ["maxLevel"] = (int)maxLevel,
+            ["range"] = $"{minLevel} ~ {maxLevel}",
+            ["expAutoShare"] = settings.ExperienceAutoShare,
+            ["itemAutoShare"] = settings.ItemAutoShare,
+            ["allowInvitations"] = settings.AllowInvitation
+        };
+    }
+
+    private static bool HandlePartyMatchingJoinAction(Dictionary<string, object?> payload)
+    {
+        if (!TryResolveMatchingId(payload, out var matchingId))
+            return false;
+
+        var accepted = 0;
+        var callback = new AwaitCallback(
+            response =>
+            {
+                var result = response.ReadByte();
+                if (result != 1)
+                    return AwaitCallbackResult.Fail;
+
+                accepted = response.ReadByte();
+                return AwaitCallbackResult.Success;
+            },
+            0xB06D
+        );
+
+        var packet = new Packet(0x706D);
+        packet.WriteUInt(matchingId);
+        PacketManager.SendPacket(packet, PacketDestination.Server, callback);
+        callback.AwaitResponse(10000);
+        return callback.IsCompleted && accepted == 1;
+    }
+
+    private static bool HandlePartyMatchingCreateOrChangeAction(Dictionary<string, object?> payload, bool changeExisting)
+    {
+        var expAutoShare = TryGetBoolValue(payload, "expAutoShare", out var parsedExpAutoShare)
+            ? parsedExpAutoShare
+            : PlayerConfig.Get("UBot.Party.EXPAutoShare", true);
+
+        var itemAutoShare = TryGetBoolValue(payload, "itemAutoShare", out var parsedItemAutoShare)
+            ? parsedItemAutoShare
+            : PlayerConfig.Get("UBot.Party.ItemAutoShare", true);
+
+        var allowInvitations = TryGetBoolValue(payload, "allowInvitations", out var parsedAllowInvitations)
+            ? parsedAllowInvitations
+            : PlayerConfig.Get("UBot.Party.AllowInvitations", true);
+
+        var purposeValue = TryGetIntValue(payload, "purpose", out var parsedPurpose)
+            ? Math.Clamp(parsedPurpose, 0, 3)
+            : (int)PlayerConfig.Get<byte>("UBot.Party.Matching.Purpose", 0);
+
+        var levelFrom = TryGetIntValue(payload, "levelFrom", out var parsedLevelFrom)
+            ? Math.Clamp(parsedLevelFrom, 1, 140)
+            : (int)PlayerConfig.Get<byte>("UBot.Party.Matching.LevelFrom", 1);
+
+        var levelTo = TryGetIntValue(payload, "levelTo", out var parsedLevelTo)
+            ? Math.Clamp(parsedLevelTo, 1, 140)
+            : (int)PlayerConfig.Get<byte>("UBot.Party.Matching.LevelTo", 140);
+
+        if (levelFrom > levelTo)
+            (levelFrom, levelTo) = (levelTo, levelFrom);
+
+        var title = TryGetStringValue(payload, "title", out var parsedTitle)
+            ? parsedTitle.Trim()
+            : PlayerConfig.Get("UBot.Party.Matching.Title", "For opening hunting on the silkroad!");
+
+        if (string.IsNullOrWhiteSpace(title))
+            title = "For opening hunting on the silkroad!";
+
+        var autoReform = TryGetBoolValue(payload, "autoReform", out var parsedAutoReform)
+            ? parsedAutoReform
+            : PlayerConfig.Get("UBot.Party.Matching.AutoReform", false);
+
+        var autoAccept = TryGetBoolValue(payload, "autoAccept", out var parsedAutoAccept)
+            ? parsedAutoAccept
+            : PlayerConfig.Get("UBot.Party.Matching.AutoAccept", true);
+
+        PlayerConfig.Set("UBot.Party.EXPAutoShare", expAutoShare);
+        PlayerConfig.Set("UBot.Party.ItemAutoShare", itemAutoShare);
+        PlayerConfig.Set("UBot.Party.AllowInvitations", allowInvitations);
+        PlayerConfig.Set("UBot.Party.Matching.Purpose", (byte)purposeValue);
+        PlayerConfig.Set("UBot.Party.Matching.LevelFrom", (byte)levelFrom);
+        PlayerConfig.Set("UBot.Party.Matching.LevelTo", (byte)levelTo);
+        PlayerConfig.Set("UBot.Party.Matching.Title", title);
+        PlayerConfig.Set("UBot.Party.Matching.AutoReform", autoReform);
+        PlayerConfig.Set("UBot.Party.Matching.AutoAccept", autoAccept);
+        ApplyLivePartySettingsFromConfig();
+        RefreshPartyPluginRuntime();
+
+        uint matchingId = 0;
+        if (changeExisting && !TryResolveMatchingId(payload, out matchingId))
+            return false;
+
+        var settings = new PartySettings(expAutoShare, itemAutoShare, allowInvitations);
+        var opcode = changeExisting ? (ushort)0x706A : (ushort)0x7069;
+        var callbackOpcode = changeExisting ? (ushort)0xB06A : (ushort)0xB069;
+        var callback = new AwaitCallback(
+            response => response.ReadByte() == 1 ? AwaitCallbackResult.Success : AwaitCallbackResult.Fail,
+            callbackOpcode
+        );
+
+        var packet = new Packet(opcode);
+        packet.WriteUInt(changeExisting ? matchingId : 0U);
+        packet.WriteUInt(0);
+        packet.WriteByte(settings.GetPartyType());
+        packet.WriteByte((byte)purposeValue);
+        packet.WriteByte((byte)levelFrom);
+        packet.WriteByte((byte)levelTo);
+        packet.WriteConditonalString(title);
+        PacketManager.SendPacket(packet, PacketDestination.Server, callback);
+        callback.AwaitResponse(5000);
+        if (!callback.IsCompleted)
+            return false;
+
+        HandlePartyMatchingSearchAction(new Dictionary<string, object?>());
+        return true;
+    }
+
+    private static bool HandlePartyMatchingDeleteAction(Dictionary<string, object?> payload)
+    {
+        if (!TryResolveMatchingId(payload, out var matchingId))
+            return false;
+
+        var packet = new Packet(0x706B);
+        packet.WriteUInt(matchingId);
+        PacketManager.SendPacket(packet, PacketDestination.Server);
+
+        var pluginConfig = LoadPluginJsonConfig(PartyPluginName);
+        if (pluginConfig.TryGetValue("matchingResults", out var rawResults) && rawResults is IList resultList)
+        {
+            var filtered = new List<object?>();
+            foreach (var item in resultList)
+            {
+                if (item is Dictionary<string, object?> dict
+                    && dict.TryGetValue("id", out var idRaw)
+                    && TryConvertUIntLoose(idRaw, out var idValue)
+                    && idValue == matchingId)
+                {
+                    continue;
+                }
+
+                filtered.Add(item);
+            }
+
+            pluginConfig["matchingResults"] = filtered;
+            pluginConfig["matchingSelectedId"] = 0U;
+            SavePluginJsonConfig(PartyPluginName, pluginConfig);
+        }
+
+        return true;
+    }
+
+    private static bool TryResolveMatchingId(IDictionary<string, object?> payload, out uint matchingId)
+    {
+        matchingId = 0;
+        if (TryGetUIntValue(payload, "matchingId", out matchingId))
+            return matchingId > 0;
+        if (TryGetUIntValue(payload, "entryId", out matchingId))
+            return matchingId > 0;
+        if (TryGetUIntValue(payload, "id", out matchingId))
+            return matchingId > 0;
+        if (TryGetUIntValue(payload, "selectedId", out matchingId))
+            return matchingId > 0;
+
+        var pluginConfig = LoadPluginJsonConfig(PartyPluginName);
+        if (pluginConfig.TryGetValue("matchingSelectedId", out var selectedRaw) && TryConvertUIntLoose(selectedRaw, out var selected))
+        {
+            matchingId = selected;
+            return matchingId > 0;
+        }
+
+        return false;
+    }
+
     private static bool HandleSetTrainingAreaToCurrentPosition()
     {
         if (Game.Player == null)
@@ -2479,7 +4224,26 @@ public sealed class UbotCoreService : IUbotCoreService
             return false;
 
         var source = Game.Player.Position;
-        var destination = new Position((float)mapX, (float)mapY, source.Region) { ZOffset = source.ZOffset };
+        Position destination;
+
+        if (TryBuildMapRenderContext(source, out var renderContext)
+            && TryProjectMapToPosition((float)mapX, (float)mapY, renderContext, source, out var projected))
+        {
+            destination = projected;
+        }
+        else if (!source.Region.IsDungeon && mapX >= 0 && mapX <= 1920 && mapY >= 0 && mapY <= 1920)
+        {
+            destination = new Position(
+                source.Region,
+                (float)Math.Clamp(mapX, 0, 1920),
+                (float)Math.Clamp(mapY, 0, 1920),
+                source.ZOffset);
+        }
+        else
+        {
+            destination = new Position((float)mapX, (float)mapY, source.Region) { ZOffset = source.ZOffset };
+        }
+
         var movementTarget = ClampMapWalkStep(source, destination, MapClickMaxStepDistance);
         return TrySendPlayerMovePacket(movementTarget);
     }
@@ -2949,25 +4713,44 @@ public sealed class UbotCoreService : IUbotCoreService
         if (!payload.TryGetValue(key, out var raw) || raw == null)
             return false;
 
-        if (raw is uint direct)
+        return TryConvertUIntLoose(raw, out value);
+    }
+
+    private static bool TryConvertUIntLoose(object? raw, out uint value)
+    {
+        value = 0;
+        if (raw == null)
+            return false;
+
+        switch (raw)
         {
-            value = direct;
-            return true;
+            case uint uintValue:
+                value = uintValue;
+                return true;
+            case int intValue when intValue >= 0:
+                value = (uint)intValue;
+                return true;
+            case long longValue when longValue >= 0 && longValue <= uint.MaxValue:
+                value = (uint)longValue;
+                return true;
+            case short shortValue when shortValue >= 0:
+                value = (uint)shortValue;
+                return true;
+            case ushort ushortValue:
+                value = ushortValue;
+                return true;
+            case byte byteValue:
+                value = byteValue;
+                return true;
+            case double doubleValue when doubleValue >= 0 && doubleValue <= uint.MaxValue:
+                value = (uint)Math.Round(doubleValue);
+                return true;
+            case float floatValue when floatValue >= 0 && floatValue <= uint.MaxValue:
+                value = (uint)Math.Round(floatValue);
+                return true;
         }
 
-        if (raw is int intValue && intValue >= 0)
-        {
-            value = (uint)intValue;
-            return true;
-        }
-
-        if (uint.TryParse(raw.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed))
-        {
-            value = parsed;
-            return true;
-        }
-
-        return false;
+        return uint.TryParse(raw.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
     }
 
     private static bool TryGetUIntListValue(IDictionary<string, object?> payload, string key, out List<uint> values)

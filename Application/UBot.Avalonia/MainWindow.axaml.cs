@@ -69,6 +69,10 @@ public partial class MainWindow : Window
         {
             _state.AddLog($"[{level.ToUpperInvariant()}] {message}");
         };
+        _core.ChatMessageReceived += (channel, sender, message) =>
+        {
+            _state.AddChatMessage(channel, sender, message);
+        };
 
         LoadBanner();
         BuildSidebar();

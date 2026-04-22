@@ -7,6 +7,7 @@ namespace UBot.Avalonia.Services;
 public interface IUbotCoreService
 {
     event Action<string, string>? LogReceived;
+    event Action<string, string, string>? ChatMessageReceived;
 
     Task<RuntimeStatus> GetStatusAsync();
     Task<ConnectionOptions> GetConnectionOptionsAsync();

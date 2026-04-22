@@ -1,0 +1,71 @@
+<Window
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  x:Class="UBot.Avalonia.Features.Party.PartyFormWindow"
+  Title="Form Party"
+  Width="760"
+  Height="620"
+  MinWidth="740"
+  MinHeight="590"
+  CanResize="False"
+  WindowStartupLocation="CenterOwner"
+  Background="{DynamicResource PanelBrush}">
+  <Border Margin="10" BorderBrush="{DynamicResource StrokeSoftBrush}" BorderThickness="1" CornerRadius="12" Padding="10">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+      <TextBlock Grid.Row="0" Text="Party Objective" FontSize="26" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,2,0,8"/>
+
+      <Border Grid.Row="1" Classes="section-card" Padding="10">
+        <StackPanel Orientation="Horizontal" Spacing="18" HorizontalAlignment="Center">
+          <RadioButton x:Name="PurposeHuntingRadio" Content="Hunting" IsChecked="True"/>
+          <RadioButton x:Name="PurposeQuestRadio" Content="Quest" GroupName="partyPurpose"/>
+          <RadioButton x:Name="PurposeTradeRadio" Content="Trade Union" GroupName="partyPurpose"/>
+          <RadioButton x:Name="PurposeThiefRadio" Content="Thief Union" GroupName="partyPurpose"/>
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Row="2" Classes="section-card" Margin="0,10,0,0" Padding="12">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Level Restrict" FontSize="20" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+          <Grid ColumnDefinitions="Auto,120,Auto,120" HorizontalAlignment="Center">
+            <TextBlock Grid.Column="0" Text="Min." VerticalAlignment="Center"/>
+            <TextBox x:Name="LevelFromBox" Grid.Column="1" Classes="field number" Text="1"/>
+            <TextBlock Grid.Column="2" Text="Max." VerticalAlignment="Center" Margin="10,0,0,0"/>
+            <TextBox x:Name="LevelToBox" Grid.Column="3" Classes="field number" Text="140"/>
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Row="3" Classes="section-card" Margin="0,10,0,0" Padding="12">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Party Type" FontSize="20" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+          <StackPanel Orientation="Horizontal" Spacing="18" HorizontalAlignment="Center">
+            <ToggleSwitch x:Name="ExpAutoShareToggle" OnContent="EXP Auto share" OffContent="EXP Auto share"/>
+            <ToggleSwitch x:Name="ItemAutoShareToggle" OnContent="Item auto share" OffContent="Item auto share"/>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Row="4" Classes="section-card" Margin="0,10,0,0" Padding="12">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Title" FontSize="20" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+          <TextBox x:Name="TitleBox" Classes="field" Watermark="Party title"/>
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Row="5" Classes="section-card" Margin="0,10,0,0" Padding="12">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Config" FontSize="20" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+          <StackPanel Orientation="Horizontal" Spacing="18" HorizontalAlignment="Center">
+            <ToggleSwitch x:Name="AutoReformToggle" OnContent="Auto Reform" OffContent="Auto Reform"/>
+            <ToggleSwitch x:Name="AutoAcceptToggle" OnContent="Auto Accept" OffContent="Auto Accept"/>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+      <Grid Grid.Row="6" ColumnDefinitions="Auto,*,Auto" Margin="0,14,0,0">
+        <Button Grid.Column="0" Classes="btn blue" Content="Accept" Width="120" Click="Accept_Click"/>
+        <Button Grid.Column="2" Classes="btn" Content="Cancel" Width="120" Click="Cancel_Click"/>
+      </Grid>
+    </Grid>
+  </Border>
+</Window>

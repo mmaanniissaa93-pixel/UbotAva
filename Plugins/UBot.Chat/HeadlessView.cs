@@ -1,4 +1,5 @@
 ﻿using System.Windows.Forms;
+using UBot.Core.Event;
 using UBot.Core.Objects;
 
 namespace UBot.Chat.Views
@@ -14,6 +15,11 @@ namespace UBot.Chat.Views
 
         public void AppendMessage(string message, string sender, ChatType type)
         {
+            EventManager.FireEvent(
+                "OnChatMessage",
+                sender ?? string.Empty,
+                message ?? string.Empty,
+                type);
         }
     }
 
@@ -21,6 +27,7 @@ namespace UBot.Chat.Views
     {
         public void Write(string message)
         {
+            EventManager.FireEvent("OnUniqueMessage", message ?? string.Empty);
         }
     }
 }

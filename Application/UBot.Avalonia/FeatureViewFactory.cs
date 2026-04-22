@@ -67,6 +67,7 @@ public sealed class FeatureViewFactory
             if (cached.View is SkillsFeatureView skills) skills.UpdateFromState(state);
             if (cached.View is ItemsFeatureView items) items.UpdateFromState(state);
             if (cached.View is InventoryFeatureView inv) inv.UpdateFromState(state);
+            if (cached.View is PartyFeatureView party) party.UpdateFromState(state);
         });
     }
 

@@ -12,7 +12,7 @@ public class Party
     /// <value>
     ///     <c>true</c> Indicating whether other party members can invite; otherwise, <c>false</c>.
     /// </value>
-    public bool CanInvite => Settings.AllowInvitation || IsLeader || !IsInParty;
+    public bool CanInvite => (Settings?.AllowInvitation == true) || IsLeader || !IsInParty;
 
     /// <summary>
     ///     Gets a value indicating whether this instance has pending request.
@@ -38,7 +38,7 @@ public class Party
     /// <value>
     ///     <c>true</c> if this instance is leader; otherwise, <c>false</c>.
     /// </value>
-    public bool IsLeader => Leader?.Name == Game.Player.Name;
+    public bool IsLeader => Leader?.Name != null && Game.Player?.Name != null && Leader.Name == Game.Player.Name;
 
     /// <summary>
     ///     Gets or sets the leader.
