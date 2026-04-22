@@ -471,7 +471,7 @@ public abstract class UbotServiceBase
         return false;
     }
 
-    protected static string NormalizeMapShowFilter(string? value)
+    protected static string NormalizeMapShowFilterValue(string? value)
     {
         var normalized = (value ?? "all").Trim().ToLowerInvariant();
         return normalized switch

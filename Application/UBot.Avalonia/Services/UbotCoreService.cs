@@ -55,13 +55,44 @@ public sealed class UbotCoreService : UbotServiceBase, IUbotCoreService
         _mapService = new UbotMapService();
         _autoLoginService = new UbotAutoLoginService();
         var commandCenterService = new UbotCommandCenterService();
-        var pluginModuleService = new UbotPluginModuleService(
+        var commandCenterPluginService = new UbotCommandCenterPluginService(commandCenterService);
+        var generalPluginService = new UbotGeneralPluginService(_autoLoginService);
+        var protectionPluginService = new UbotProtectionPluginService();
+        var mapPluginService = new UbotMapPluginService();
+        var skillsPluginService = new UbotSkillsPluginService();
+        var itemsPluginService = new UbotItemsPluginService();
+        var partyPluginService = new UbotPartyPluginService();
+        var targetAssistPluginService = new UbotTargetAssistPluginService();
+        var trainingBotbaseService = new UbotTrainingBotbaseService();
+        var lureBotbaseService = new UbotLureBotbaseService();
+        var tradeBotbaseService = new UbotTradeBotbaseService();
+        var alchemyBotbaseService = new UbotAlchemyBotbaseService();
+        var auxPluginStateService = new UbotPluginStateAuxService(_connectionService);
+
+        _pluginConfigService = new UbotPluginConfigService(
+            generalPluginService,
+            protectionPluginService,
+            mapPluginService,
+            skillsPluginService,
+            itemsPluginService,
+            partyPluginService,
+            targetAssistPluginService,
+            trainingBotbaseService,
+            lureBotbaseService,
+            tradeBotbaseService,
+            alchemyBotbaseService,
+            commandCenterPluginService);
+        _pluginStateService = new UbotPluginStateService(
             _connectionService,
             _mapService,
-            commandCenterService,
-            _autoLoginService);
-        _pluginConfigService = new UbotPluginConfigService(pluginModuleService);
-        _pluginStateService = new UbotPluginStateService(pluginModuleService);
+            partyPluginService,
+            skillsPluginService,
+            itemsPluginService,
+            targetAssistPluginService,
+            lureBotbaseService,
+            tradeBotbaseService,
+            alchemyBotbaseService,
+            auxPluginStateService);
         _iconService = new UbotIconService();
         _dialogService = new UbotDialogService();
 
