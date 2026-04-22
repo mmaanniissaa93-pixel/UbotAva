@@ -32,20 +32,20 @@
   </Style>
 
   <Style Selector="Button.sidebar-item.active">
-    <Setter Property="Background" Value="#364A6B9B"/>
+    <Setter Property="Background" Value="#1A2035"/>
     <Setter Property="BorderBrush" Value="Transparent"/>
-    <Setter Property="BorderThickness" Value="3,0,0,0"/>
-    <Setter Property="CornerRadius" Value="2,8,8,2"/>
-    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="8"/>
+    <Setter Property="Foreground" Value="#93C5FD"/>
   </Style>
 
   <Style Selector="Button.sidebar-item.active /template/ ContentPresenter">
-    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+    <Setter Property="Foreground" Value="#93C5FD"/>
   </Style>
 
   <!-- Active nav icon turns accent blue -->
   <Style Selector="Button.sidebar-item.active Path">
-    <Setter Property="Stroke" Value="{DynamicResource AccentBrush}"/>
+    <Setter Property="Stroke" Value="#93C5FD"/>
   </Style>
 
   <Style Selector="TextBlock.sidebar-group">
@@ -54,6 +54,14 @@
     <Setter Property="LetterSpacing" Value="1.6"/>
     <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}"/>
     <Setter Property="Margin" Value="12,12,12,4"/>
+  </Style>
+
+  <Style Selector="TextBlock.sidebar-group-label">
+    <Setter Property="FontSize" Value="10.5"/>
+    <Setter Property="FontWeight" Value="Bold"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}"/>
+    <Setter Property="LetterSpacing" Value="0.1"/>
+    <Setter Property="Opacity" Value="0.8"/>
   </Style>
 
   <Style Selector="Button.tab-btn">
@@ -253,6 +261,27 @@
     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
   </Style>
 
+  <Style Selector="Button.btn.ghost-outline">
+    <Setter Property="Height" Value="28"/>
+    <Setter Property="MinWidth" Value="0"/>
+    <Setter Property="FontSize" Value="11"/>
+    <Setter Property="Padding" Value="10,0"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderBrush" Value="#2F4B63"/>
+    <Setter Property="Foreground" Value="#9FB6D8"/>
+    <Setter Property="CornerRadius" Value="8"/>
+  </Style>
+
+  <Style Selector="Button.btn.ghost-outline:pointerover">
+    <Setter Property="Background" Value="#141D32"/>
+    <Setter Property="BorderBrush" Value="#4E6D96"/>
+    <Setter Property="Foreground" Value="#D6E6FF"/>
+  </Style>
+
+  <Style Selector="Button.btn.ghost-outline Path">
+    <Setter Property="Stroke" Value="#9FB6D8"/>
+  </Style>
+
   <Style Selector="Button.btn.start">
     <Setter Property="Background" Value="{DynamicResource BtnStartBrush}"/>
     <Setter Property="BorderBrush" Value="#5534D399"/>
@@ -324,13 +353,17 @@
     <Setter Property="Foreground" Value="{DynamicResource MetricAmberBrush}"/>
   </Style>
 
+  <Style Selector="TextBlock.metric-value.purple">
+    <Setter Property="Foreground" Value="{DynamicResource MetricPurpleBrush}"/>
+  </Style>
+
   <Style Selector="TextBlock.metric-subtext">
     <Setter Property="FontSize" Value="12"/>
     <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
   </Style>
 
   <Style Selector="TextBox.field">
-    <Setter Property="Background" Value="#DD0A1322"/>
+    <Setter Property="Background" Value="#0A0D13"/>
     <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="9"/>
@@ -396,6 +429,30 @@
     <Setter Property="Foreground" Value="#D8E8FF"/>
   </Style>
 
+  <Style Selector="Border.section-pill">
+    <Setter Property="Background" Value="#131D34"/>
+    <Setter Property="BorderBrush" Value="#2A3650"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="999"/>
+    <Setter Property="Padding" Value="10,2"/>
+    <Setter Property="Height" Value="22"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+  </Style>
+
+  <Style Selector="TextBlock.section-pill-text">
+    <Setter Property="FontSize" Value="10"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="LetterSpacing" Value="0.8"/>
+    <Setter Property="Foreground" Value="#7D90B0"/>
+  </Style>
+
+  <Style Selector="Border.section-separator">
+    <Setter Property="Height" Value="1"/>
+    <Setter Property="Background" Value="#1E2433"/>
+    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+    <Setter Property="Margin" Value="0,8"/>
+  </Style>
+
   <Style Selector="TextBlock.panel-title">
     <Setter Property="FontSize" Value="10"/>
     <Setter Property="FontWeight" Value="Bold"/>
@@ -408,6 +465,12 @@
     <Setter Property="FontSize" Value="12"/>
     <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
     <Setter Property="VerticalAlignment" Value="Center"/>
+  </Style>
+
+  <Style Selector="TextBlock.hint">
+    <Setter Property="FontSize" Value="11"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}"/>
+    <Setter Property="FontStyle" Value="Italic"/>
   </Style>
 
   <Style Selector="TextBlock.sidebar-group">
@@ -438,7 +501,7 @@
   <Style Selector="Border.select-trigger">
     <Setter Property="Height" Value="32"/>
     <Setter Property="MinWidth" Value="110"/>
-    <Setter Property="Background" Value="#DD0A1322"/>
+    <Setter Property="Background" Value="#0A0D13"/>
     <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="9"/>

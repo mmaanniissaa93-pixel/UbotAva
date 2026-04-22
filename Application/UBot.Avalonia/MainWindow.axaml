@@ -115,6 +115,12 @@
 
               <Border x:Name="StatusChipBorder" Classes="status-stopped">
                 <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                  <Ellipse x:Name="StatusPulseDot"
+                           Width="7"
+                           Height="7"
+                           Fill="{DynamicResource AccentBrush}"
+                           IsVisible="False"
+                           Opacity="1"/>
                   <shapes:Path x:Name="StatusIcon" Width="11" Height="11" Stretch="Uniform"
                                StrokeThickness="1.6"
                                Data="M18,6 L6,18 M6,6 L18,18"/>
@@ -230,7 +236,7 @@
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center">
 
-              <Button x:Name="BtnStartClient" Classes="btn secondary" Click="BtnStartClient_Click" Width="105">
+              <Button x:Name="BtnStartClient" Classes="btn ghost-outline" Click="BtnStartClient_Click" Width="105">
                 <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" HorizontalAlignment="Center">
                   <shapes:Path Width="10" Height="10" Stretch="Uniform"
                                Stroke="{DynamicResource TextMutedBrush}" StrokeThickness="1.4"
@@ -239,7 +245,7 @@
                 </StackPanel>
               </Button>
 
-              <Button x:Name="BtnGoClientless" Classes="btn secondary" Click="BtnGoClientless_Click" Width="105">
+              <Button x:Name="BtnGoClientless" Classes="btn ghost-outline" Click="BtnGoClientless_Click" Width="105">
                 <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" HorizontalAlignment="Center">
                   <shapes:Path Width="10" Height="10" Stretch="Uniform"
                                Stroke="{DynamicResource TextMutedBrush}" StrokeThickness="1.4"
@@ -248,7 +254,7 @@
                 </StackPanel>
               </Button>
 
-              <Button x:Name="BtnHideClient" Classes="btn secondary" Click="BtnHideClient_Click" Width="105">
+              <Button x:Name="BtnHideClient" Classes="btn ghost-outline" Click="BtnHideClient_Click" Width="105">
                 <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" HorizontalAlignment="Center">
                   <shapes:Path Width="10" Height="10" Stretch="Uniform"
                                Stroke="{DynamicResource TextMutedBrush}" StrokeThickness="1.4"
@@ -274,52 +280,84 @@
                   Margin="12,12,12,0">
 
               <Border Grid.Column="0" Classes="metric-card empty">
-                <Grid RowDefinitions="Auto,*,Auto">
-                  <TextBlock Grid.Row="0" Text="LEVEL" Classes="metric-label"/>
-                  <TextBlock Grid.Row="1" x:Name="MetricLevel" Classes="metric-value blue" Text="—"
-                             VerticalAlignment="Center" Margin="0,2,0,0"/>
-                  <TextBlock Grid.Row="2" x:Name="MetricLevelHint" Classes="metric-subtext" Text=""/>
+                <Grid>
+                  <Border Width="3"
+                          CornerRadius="2"
+                          Background="{DynamicResource MetricBlueBrush}"
+                          HorizontalAlignment="Left"
+                          VerticalAlignment="Stretch"
+                          Margin="-14,-12,0,-12"/>
+                  <Grid RowDefinitions="Auto,*,Auto" Margin="10,0,0,0">
+                    <TextBlock Grid.Row="0" Text="LEVEL" Classes="metric-label"/>
+                    <TextBlock Grid.Row="1" x:Name="MetricLevel" Classes="metric-value blue" Text="-"
+                               VerticalAlignment="Center" Margin="0,2,0,0"/>
+                    <TextBlock Grid.Row="2" x:Name="MetricLevelHint" Classes="metric-subtext" Text=""/>
+                  </Grid>
                 </Grid>
               </Border>
 
               <Border Grid.Column="1" Classes="metric-card empty" Margin="8,0,0,0">
-                <Grid RowDefinitions="Auto,*,Auto,Auto">
-                  <TextBlock Grid.Row="0" Text="HP" Classes="metric-label"/>
-                  <TextBlock Grid.Row="1" x:Name="MetricHp" Classes="metric-value green" Text="—"
-                             VerticalAlignment="Center" Margin="0,2,0,0"/>
-                  <TextBlock Grid.Row="2" x:Name="MetricHpHint" Classes="metric-subtext" Text=""/>
-                  <Grid Grid.Row="3" Margin="0,4,0,0">
-                    <Border Background="#1634D399" CornerRadius="999" Height="4"/>
-                    <Border x:Name="HpBar" Background="{DynamicResource MetricGreenBrush}"
-                            CornerRadius="999" Height="4" HorizontalAlignment="Left" Width="0"/>
+                <Grid>
+                  <Border Width="3"
+                          CornerRadius="2"
+                          Background="{DynamicResource MetricGreenBrush}"
+                          HorizontalAlignment="Left"
+                          VerticalAlignment="Stretch"
+                          Margin="-14,-12,0,-12"/>
+                  <Grid RowDefinitions="Auto,*,Auto,Auto" Margin="10,0,0,0">
+                    <TextBlock Grid.Row="0" Text="HP" Classes="metric-label"/>
+                    <TextBlock Grid.Row="1" x:Name="MetricHp" Classes="metric-value green" Text="-"
+                               VerticalAlignment="Center" Margin="0,2,0,0"/>
+                    <TextBlock Grid.Row="2" x:Name="MetricHpHint" Classes="metric-subtext" Text=""/>
+                    <Grid Grid.Row="3" Margin="0,4,0,0">
+                      <Border Background="#1634D399" CornerRadius="999" Height="4"/>
+                      <Border x:Name="HpBar" Background="{DynamicResource MetricGreenBrush}"
+                              CornerRadius="999" Height="4" HorizontalAlignment="Left" Width="0"/>
+                    </Grid>
                   </Grid>
                 </Grid>
               </Border>
 
               <Border Grid.Column="2" Classes="metric-card empty" Margin="8,0,0,0">
-                <Grid RowDefinitions="Auto,*,Auto,Auto">
-                  <TextBlock Grid.Row="0" Text="MP" Classes="metric-label"/>
-                  <TextBlock Grid.Row="1" x:Name="MetricMp" Classes="metric-value blue" Text="—"
-                             VerticalAlignment="Center" Margin="0,2,0,0"/>
-                  <TextBlock Grid.Row="2" x:Name="MetricMpHint" Classes="metric-subtext" Text=""/>
-                  <Grid Grid.Row="3" Margin="0,4,0,0">
-                    <Border Background="#165BA3F5" CornerRadius="999" Height="4"/>
-                    <Border x:Name="MpBar" Background="{DynamicResource MetricBlueBrush}"
-                            CornerRadius="999" Height="4" HorizontalAlignment="Left" Width="0"/>
+                <Grid>
+                  <Border Width="3"
+                          CornerRadius="2"
+                          Background="{DynamicResource MetricPurpleBrush}"
+                          HorizontalAlignment="Left"
+                          VerticalAlignment="Stretch"
+                          Margin="-14,-12,0,-12"/>
+                  <Grid RowDefinitions="Auto,*,Auto,Auto" Margin="10,0,0,0">
+                    <TextBlock Grid.Row="0" Text="MP" Classes="metric-label"/>
+                    <TextBlock Grid.Row="1" x:Name="MetricMp" Classes="metric-value purple" Text="-"
+                               VerticalAlignment="Center" Margin="0,2,0,0"/>
+                    <TextBlock Grid.Row="2" x:Name="MetricMpHint" Classes="metric-subtext" Text=""/>
+                    <Grid Grid.Row="3" Margin="0,4,0,0">
+                      <Border Background="#16A78BFA" CornerRadius="999" Height="4"/>
+                      <Border x:Name="MpBar" Background="{DynamicResource MetricPurpleBrush}"
+                              CornerRadius="999" Height="4" HorizontalAlignment="Left" Width="0"/>
+                    </Grid>
                   </Grid>
                 </Grid>
               </Border>
 
               <Border Grid.Column="3" Classes="metric-card empty" Margin="8,0,0,0">
-                <Grid RowDefinitions="Auto,*,Auto,Auto">
-                  <TextBlock Grid.Row="0" Text="EXP" Classes="metric-label"/>
-                  <TextBlock Grid.Row="1" x:Name="MetricExp" Classes="metric-value amber" Text="—"
-                             VerticalAlignment="Center" Margin="0,2,0,0"/>
-                  <TextBlock Grid.Row="2" x:Name="MetricExpHint" Classes="metric-subtext" Text=""/>
-                  <Grid Grid.Row="3" Margin="0,4,0,0">
-                    <Border Background="#18F59E0B" CornerRadius="999" Height="4"/>
-                    <Border x:Name="ExpBar" Background="{DynamicResource MetricAmberBrush}"
-                            CornerRadius="999" Height="4" HorizontalAlignment="Left" Width="0"/>
+                <Grid>
+                  <Border Width="3"
+                          CornerRadius="2"
+                          Background="{DynamicResource MetricAmberBrush}"
+                          HorizontalAlignment="Left"
+                          VerticalAlignment="Stretch"
+                          Margin="-14,-12,0,-12"/>
+                  <Grid RowDefinitions="Auto,*,Auto,Auto" Margin="10,0,0,0">
+                    <TextBlock Grid.Row="0" Text="EXP" Classes="metric-label"/>
+                    <TextBlock Grid.Row="1" x:Name="MetricExp" Classes="metric-value amber" Text="-"
+                               VerticalAlignment="Center" Margin="0,2,0,0"/>
+                    <TextBlock Grid.Row="2" x:Name="MetricExpHint" Classes="metric-subtext" Text=""/>
+                    <Grid Grid.Row="3" Margin="0,4,0,0">
+                      <Border Background="#18F59E0B" CornerRadius="999" Height="4"/>
+                      <Border x:Name="ExpBar" Background="{DynamicResource MetricAmberBrush}"
+                              CornerRadius="999" Height="4" HorizontalAlignment="Left" Width="0"/>
+                    </Grid>
                   </Grid>
                 </Grid>
               </Border>
@@ -332,4 +370,6 @@
     </Grid>
   </Panel>
 </Window>
+
+
 

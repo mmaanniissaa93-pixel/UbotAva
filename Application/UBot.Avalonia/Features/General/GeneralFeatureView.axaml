@@ -68,6 +68,9 @@
               <TextBox Grid.Column="1" x:Name="CaptchaBox" Classes="field" LostFocus="Captcha_LostFocus" Margin="6,0,0,0"/>
             </Grid>
 
+            <Border Classes="section-separator"/>
+
+
             <!-- Checkbox columns — tightened spacing for compact modern look -->
             <Grid ColumnDefinitions="*,*" Margin="0,4,0,0">
               <StackPanel Grid.Column="0" Spacing="2">
@@ -110,6 +113,9 @@
                        TextWrapping="Wrap"
                        Margin="0,2,0,4"/>
 
+            <Border Classes="section-separator"/>
+
+
             <!-- Compact numeric rows logic refined -->
             <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
               <TextBlock Text="Login delay" Classes="label" Width="74"/>
@@ -145,6 +151,7 @@
               <CheckBox x:Name="MoveToTrayCheck" Classes="check"
                         Content="Move bot to system tray when minimized"
                         IsCheckedChanged="Check_Changed" Tag="moveToTrayOnMinimize"/>
+              <Border Classes="section-separator" Margin="0,6,0,4"/>
               <TextBlock Classes="hint"
                          Text="If the client exits due to a crash, the bot will automatically switch."
                          Margin="0,4,0,0"/>
@@ -173,6 +180,9 @@
                          TextChanged="NumBox_Changed" Tag="queuePeopleLeft"/>
                 <TextBlock Text="people left" Classes="unit-label"/>
               </StackPanel>
+
+              <Border Classes="section-separator"/>
+
 
               <Button Classes="btn"
                       Content="Toggle Pending Window"

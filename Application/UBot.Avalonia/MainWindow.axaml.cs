@@ -1,14 +1,18 @@
 using Avalonia;
+using Avalonia.Animation;
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Animation.Easings;
+using Avalonia.Styling;
 using Avalonia.Threading;
 using global::Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using UBot.Avalonia.Controls;
 using UBot.Avalonia.Services;
 using UBot.Avalonia.Dialogs;
@@ -29,6 +33,7 @@ public partial class MainWindow : Window
     private bool _pollInProgress;
     private bool _syncingConnectionSelects;
     private int _connectionPollCounter;
+    private CancellationTokenSource? _statusPulseCts;
 
     private static readonly (string Id, string Label, string Icon)[] DefaultPlugins =
     {
@@ -98,6 +103,7 @@ public partial class MainWindow : Window
     {
         _runtimePollTimer.Stop();
         _runtimePollTimer.Tick -= RuntimePollTimer_Tick;
+        StopStatusPulse();
         base.OnClosed(e);
     }
 
@@ -301,6 +307,9 @@ public partial class MainWindow : Window
 
         if (running)
         {
+            StopStatusPulse();
+            StatusPulseDot.IsVisible = false;
+            StatusIcon.IsVisible = true;
             StatusChipBorder.Classes.Add("status-running");
             StatusText.Text = "Running";
             StatusText.Foreground = new SolidColorBrush(Color.Parse("#34D399"));
@@ -309,6 +318,9 @@ public partial class MainWindow : Window
         }
         else if (connected && waiting)
         {
+            StopStatusPulse();
+            StatusPulseDot.IsVisible = false;
+            StatusIcon.IsVisible = true;
             StatusChipBorder.Classes.Add("status-waiting");
             StatusText.Text = "Waiting for Character";
             StatusText.Foreground = new SolidColorBrush(Color.Parse("#F59E0B"));
@@ -317,14 +329,18 @@ public partial class MainWindow : Window
         }
         else if (connected)
         {
+            StartStatusPulse(Color.Parse("#34D399"));
+            StatusPulseDot.IsVisible = true;
+            StatusIcon.IsVisible = false;
             StatusChipBorder.Classes.Add("status-connected");
             StatusText.Text = "Connected";
-            StatusText.Foreground = new SolidColorBrush(Color.Parse("#5BA3F5"));
-            StatusIcon.Stroke = new SolidColorBrush(Color.Parse("#5BA3F5"));
-            StatusIcon.Data = Geometry.Parse("M12,2 L20,6 L20,12 C20,17 16,21 12,22 C8,21 4,17 4,12 L4,6 Z"); // shield
+            StatusText.Foreground = new SolidColorBrush(Color.Parse("#34D399"));
         }
         else
         {
+            StopStatusPulse();
+            StatusPulseDot.IsVisible = false;
+            StatusIcon.IsVisible = true;
             StatusChipBorder.Classes.Add("status-stopped");
             StatusText.Text = "Off";
             StatusText.Foreground = new SolidColorBrush(Color.Parse("#F26C6C"));
@@ -664,6 +680,51 @@ public partial class MainWindow : Window
             b.Classes.Remove("empty");
             if (empty) b.Classes.Add("empty");
         }
+    }
+
+    private void StartStatusPulse(Color color)
+    {
+        StatusPulseDot.Fill = new SolidColorBrush(color);
+        StopStatusPulse();
+
+        _statusPulseCts = new CancellationTokenSource();
+        var animation = new Animation
+        {
+            Duration = TimeSpan.FromSeconds(1.6),
+            IterationCount = IterationCount.Infinite,
+            Easing = new SineEaseInOut(),
+            Children =
+            {
+                new KeyFrame
+                {
+                    Cue = new Cue(0d),
+                    Setters = { new Setter(Visual.OpacityProperty, 1d) }
+                },
+                new KeyFrame
+                {
+                    Cue = new Cue(0.5d),
+                    Setters = { new Setter(Visual.OpacityProperty, 0.3d) }
+                },
+                new KeyFrame
+                {
+                    Cue = new Cue(1d),
+                    Setters = { new Setter(Visual.OpacityProperty, 1d) }
+                }
+            }
+        };
+
+        _ = animation.RunAsync(StatusPulseDot, _statusPulseCts.Token);
+    }
+
+    private void StopStatusPulse()
+    {
+        if (_statusPulseCts == null)
+            return;
+
+        _statusPulseCts.Cancel();
+        _statusPulseCts.Dispose();
+        _statusPulseCts = null;
+        StatusPulseDot.Opacity = 1;
     }
 }
 
