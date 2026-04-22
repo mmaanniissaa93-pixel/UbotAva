@@ -43,6 +43,18 @@ public sealed class UbotCoreService : IUbotCoreService
     private const string SkillsPluginName = "UBot.Skills";
     private const string ItemsPluginName = "UBot.Items";
     private const string PartyPluginName = "UBot.Party";
+    private const string TargetAssistPluginName = "UBot.TargetAssist";
+    private const string CommandCenterPluginName = "UBot.CommandCenter";
+
+    private const string AlchemyModeKey = "UBot.Desktop.Alchemy.Mode";
+    private const string AlchemyItemCodeKey = "UBot.Desktop.Alchemy.ItemCode";
+    private const string AlchemyMaxEnhancementKey = "UBot.Desktop.Alchemy.MaxEnhancement";
+    private const string AlchemyElixirTypeKey = "UBot.Desktop.Alchemy.ElixirType";
+    private const string AlchemyStopAtNoPowderKey = "UBot.Desktop.Alchemy.StopAtNoPowder";
+    private const string AlchemyUseLuckyStoneKey = "UBot.Desktop.Alchemy.UseLuckyStone";
+    private const string AlchemyUseImmortalStoneKey = "UBot.Desktop.Alchemy.UseImmortalStone";
+    private const string AlchemyUseAstralStoneKey = "UBot.Desktop.Alchemy.UseAstralStone";
+    private const string AlchemyUseSteadyStoneKey = "UBot.Desktop.Alchemy.UseSteadyStone";
     private const double MapClickMaxStepDistance = 145.0;
     private const int MapSectorGridSize = 3;
     private const float MapSectorSpan = 1920f;
@@ -73,6 +85,29 @@ public sealed class UbotCoreService : IUbotCoreService
         ["emoticon.rush"] = "icon\\action\\emot_act_rush.ddj",
         ["emoticon.joy"] = "icon\\action\\emot_act_joy.ddj",
         ["emoticon.no"] = "icon\\action\\emot_act_no.ddj"
+    };
+
+    private static readonly (string Key, string Group, string Label)[] AlchemyBlueOptions =
+    {
+        ("str", RefMagicOpt.MaterialStr, "Str"),
+        ("int", RefMagicOpt.MaterialInt, "Int"),
+        ("immortal", RefMagicOpt.MaterialImmortal, "Immortal"),
+        ("steady", RefMagicOpt.MaterialSteady, "Steady"),
+        ("lucky", RefMagicOpt.MaterialLuck, "Lucky"),
+        ("durability", RefMagicOpt.MaterialDurability, "Durability"),
+        ("attackRate", RefMagicOpt.MaterialAttackRate, "Attack rate"),
+        ("blockRate", RefMagicOpt.MaterialBlockRate, "Blocking rate")
+    };
+
+    private static readonly (string Key, ItemAttributeGroup Group, string Label)[] AlchemyStatOptions =
+    {
+        ("critical", ItemAttributeGroup.Critical, "Critical"),
+        ("magAtk", ItemAttributeGroup.MagicalDamage, "Mag. atk. pwr."),
+        ("phyAtk", ItemAttributeGroup.PhysicalDamage, "Phy. atk. pwr."),
+        ("attackRate", ItemAttributeGroup.HitRatio, "Attack rate"),
+        ("magReinforce", ItemAttributeGroup.MagicalSpecialize, "Mag. reinforce"),
+        ("phyReinforce", ItemAttributeGroup.PhysicalSpecialize, "Phy. reinforce"),
+        ("durability", ItemAttributeGroup.Durability, "Durability")
     };
 
     private static readonly object InitLock = new();
@@ -276,6 +311,21 @@ public sealed class UbotCoreService : IUbotCoreService
         if (TryResolvePlugin(pluginId, out plugin) && IsPartyPlugin(plugin))
             state["party"] = BuildPartyPluginState();
 
+        if (TryResolvePlugin(pluginId, out plugin) && IsQuestPlugin(plugin))
+            state["quests"] = BuildQuestState();
+
+        if (TryResolvePlugin(pluginId, out plugin) && IsTargetAssistPlugin(plugin))
+            state["targetAssist"] = BuildTargetAssistState();
+
+        if (TryResolveBotbase(pluginId, out var botbase) && IsLureBotbase(botbase))
+            state["lure"] = BuildLureState(botbase);
+
+        if (TryResolveBotbase(pluginId, out botbase) && IsTradeBotbase(botbase))
+            state["trade"] = BuildTradeState(botbase);
+
+        if (TryResolveBotbase(pluginId, out botbase) && IsAlchemyBotbase(botbase))
+            state["alchemy"] = BuildAlchemyState(botbase);
+
         var dto = new PluginStateDto
         {
             Id = pluginId ?? string.Empty,
@@ -292,6 +342,12 @@ public sealed class UbotCoreService : IUbotCoreService
         {
             if (IsTrainingBotbase(botbase))
                 return Task.FromResult(BuildTrainingBotbaseConfig());
+            if (IsLureBotbase(botbase))
+                return Task.FromResult(BuildLureBotbaseConfig());
+            if (IsTradeBotbase(botbase))
+                return Task.FromResult(BuildTradeBotbaseConfig());
+            if (IsAlchemyBotbase(botbase))
+                return Task.FromResult(BuildAlchemyBotbaseConfig());
         }
 
         if (TryResolvePlugin(pluginId, out var plugin))
@@ -308,8 +364,10 @@ public sealed class UbotCoreService : IUbotCoreService
                 return Task.FromResult(BuildItemsPluginConfig());
             if (IsPartyPlugin(plugin))
                 return Task.FromResult(BuildPartyPluginConfig());
-            if (plugin.Name == "UBot.CommandCenter")
-                return Task.FromResult(BuildCommandCenterConfig());
+            if (IsTargetAssistPlugin(plugin))
+                return Task.FromResult(BuildTargetAssistPluginConfig());
+            if (IsCommandCenterPlugin(plugin))
+                return Task.FromResult(BuildCommandCenterPluginConfig());
         }
 
         var loaded = LoadPluginJsonConfig(pluginId);
@@ -326,6 +384,12 @@ public sealed class UbotCoreService : IUbotCoreService
         {
             if (IsTrainingBotbase(botbase))
                 changed = ApplyTrainingBotbasePatch(patch);
+            else if (IsLureBotbase(botbase))
+                changed = ApplyLureBotbasePatch(botbase, patch);
+            else if (IsTradeBotbase(botbase))
+                changed = ApplyTradeBotbasePatch(botbase, patch);
+            else if (IsAlchemyBotbase(botbase))
+                changed = ApplyAlchemyBotbasePatch(botbase, patch);
         }
         else if (TryResolvePlugin(pluginId, out var plugin))
         {
@@ -341,8 +405,10 @@ public sealed class UbotCoreService : IUbotCoreService
                 changed = ApplyItemsPluginPatch(patch);
             else if (IsPartyPlugin(plugin))
                 changed = ApplyPartyPluginPatch(patch);
-            else if (plugin.Name == "UBot.CommandCenter")
-                changed = ApplyCommandCenterPatch(patch);
+            else if (IsTargetAssistPlugin(plugin))
+                changed = ApplyTargetAssistPluginPatch(patch);
+            else if (IsCommandCenterPlugin(plugin))
+                changed = ApplyCommandCenterPluginPatch(patch);
             else
                 changed = ApplyGenericPluginPatch(plugin.Name, patch);
         }
@@ -650,18 +716,142 @@ public sealed class UbotCoreService : IUbotCoreService
         }
     }
 
-    private static Dictionary<string, object?> BuildCommandCenterConfig()
+    private static readonly (string Name, string Label, string IconKey, string DefaultCommand)[] CommandCenterEmoteDefinitions =
     {
-        return LoadPluginJsonConfig("UBot.CommandCenter");
+        ("emoticon.no", "No", "no", "stop"),
+        ("emoticon.joy", "Joy", "joy", "none"),
+        ("emoticon.rush", "Rush", "rush", "area"),
+        ("emoticon.yes", "Yes", "yes", "start"),
+        ("emoticon.greeting", "Greeting", "greeting", "area"),
+        ("emoticon.smile", "Smile", "smile", "show"),
+        ("emoticon.hi", "Hi", "hi", "none")
+    };
+
+    private static Dictionary<string, object?> BuildCommandCenterPluginConfig()
+    {
+        var config = LoadPluginJsonConfig(CommandCenterPluginName);
+        var descriptions = CommandManager.GetCommandDescriptions() ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        config["enabled"] = PlayerConfig.Get("UBot.CommandCenter.Enabled", true);
+        config["commandOptions"] = descriptions
+            .Select(entry => new Dictionary<string, object?>
+            {
+                ["value"] = entry.Key,
+                ["label"] = string.IsNullOrWhiteSpace(entry.Value) ? entry.Key : entry.Value
+            })
+            .OrderBy(option => string.Equals(option["value"]?.ToString(), "none", StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+            .ThenBy(option => option["label"]?.ToString() ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+            .Cast<object?>()
+            .ToList();
+
+        config["emotes"] = CommandCenterEmoteDefinitions
+            .Select(definition =>
+            {
+                var mappedCommand = PlayerConfig.Get(
+                    $"UBot.CommandCenter.MappedEmotes.{definition.Name}",
+                    definition.DefaultCommand);
+
+                return new Dictionary<string, object?>
+                {
+                    ["id"] = definition.Name,
+                    ["name"] = definition.Name,
+                    ["label"] = definition.Label,
+                    ["iconKey"] = definition.IconKey,
+                    ["command"] = NormalizeCommandCenterCommand(mappedCommand),
+                    ["defaultCommand"] = definition.DefaultCommand
+                };
+            })
+            .Cast<object?>()
+            .ToList();
+
+        config["chatCommands"] = new[]
+        {
+            BuildCommandCenterChatCommand("area", "Set the training area", descriptions),
+            BuildCommandCenterChatCommand("buff", "Cast all buffs", descriptions),
+            BuildCommandCenterChatCommand("show", "Show the bot window", descriptions),
+            BuildCommandCenterChatCommand("start", "Start the bot", descriptions),
+            BuildCommandCenterChatCommand("here", "Set training area and start bot", descriptions),
+            BuildCommandCenterChatCommand("stop", "Stop the bot", descriptions)
+        }.Cast<object?>().ToList();
+
+        return config;
     }
 
-    private static bool ApplyCommandCenterPatch(Dictionary<string, object?> patch)
+    private static bool ApplyCommandCenterPluginPatch(Dictionary<string, object?> patch)
     {
-        var current = LoadPluginJsonConfig("UBot.CommandCenter");
-        foreach (var kv in patch)
-            current[kv.Key] = kv.Value;
-        SavePluginJsonConfig("UBot.CommandCenter", current);
-        return true;
+        var changed = false;
+        if (TryGetBoolValue(patch, "enabled", out var enabled))
+        {
+            PlayerConfig.Set("UBot.CommandCenter.Enabled", enabled);
+            changed = true;
+        }
+
+        if (patch.TryGetValue("emotes", out var emotesRaw) && emotesRaw != null)
+        {
+            if (TryConvertObjectToDictionary(emotesRaw, out var emoteMap))
+            {
+                foreach (var entry in emoteMap)
+                {
+                    var emoteName = entry.Key?.Trim();
+                    if (string.IsNullOrWhiteSpace(emoteName))
+                        continue;
+
+                    var command = NormalizeCommandCenterCommand(entry.Value?.ToString() ?? string.Empty);
+                    PlayerConfig.Set($"UBot.CommandCenter.MappedEmotes.{emoteName}", command);
+                    changed = true;
+                }
+            }
+            else if (emotesRaw is IEnumerable enumerable)
+            {
+                foreach (var item in enumerable)
+                {
+                    if (!TryConvertObjectToDictionary(item, out var entry))
+                        continue;
+
+                    var emoteName = TryGetStringValue(entry, "id", out var id)
+                        ? id
+                        : TryGetStringValue(entry, "name", out var name)
+                            ? name
+                            : string.Empty;
+                    if (string.IsNullOrWhiteSpace(emoteName))
+                        continue;
+
+                    var command = TryGetStringValue(entry, "command", out var mapped)
+                        ? NormalizeCommandCenterCommand(mapped)
+                        : "none";
+                    PlayerConfig.Set($"UBot.CommandCenter.MappedEmotes.{emoteName.Trim()}", command);
+                    changed = true;
+                }
+            }
+        }
+
+        if (changed)
+            EventManager.FireEvent("OnSavePlayerConfig");
+
+        return changed;
+    }
+
+    private static Dictionary<string, object?> BuildCommandCenterChatCommand(
+        string commandName,
+        string fallbackDescription,
+        IReadOnlyDictionary<string, string> descriptions)
+    {
+        var description = descriptions.TryGetValue(commandName, out var dynamicDescription) && !string.IsNullOrWhiteSpace(dynamicDescription)
+            ? dynamicDescription
+            : fallbackDescription;
+
+        return new Dictionary<string, object?>
+        {
+            ["trigger"] = $"\\{commandName}",
+            ["command"] = commandName,
+            ["description"] = description
+        };
+    }
+
+    private static string NormalizeCommandCenterCommand(string? value)
+    {
+        var normalized = (value ?? string.Empty).Trim();
+        return string.IsNullOrWhiteSpace(normalized) ? "none" : normalized;
     }
 
     public Task<IReadOnlyList<AutoLoginAccountDto>> GetAutoLoginAccountsAsync()
@@ -1128,11 +1318,17 @@ public sealed class UbotCoreService : IUbotCoreService
     }
 
     private static bool IsTrainingBotbase(IBotbase botbase) => ResolveModuleKey(botbase.Name) == "training";
+    private static bool IsAlchemyBotbase(IBotbase botbase) => ResolveModuleKey(botbase.Name) == "alchemy";
+    private static bool IsTradeBotbase(IBotbase botbase) => ResolveModuleKey(botbase.Name) == "trade";
+    private static bool IsLureBotbase(IBotbase botbase) => ResolveModuleKey(botbase.Name) == "lure";
     private static bool IsGeneralPlugin(IPlugin plugin) => ResolveModuleKey(plugin.Name) == "general";
     private static bool IsProtectionPlugin(IPlugin plugin) => ResolveModuleKey(plugin.Name) == "protection";
     private static bool IsMapPlugin(IPlugin plugin) => ResolveModuleKey(plugin.Name) == "map";
     private static bool IsInventoryPlugin(IPlugin plugin) => plugin?.Name == "UBot.Inventory";
     private static bool IsPartyPlugin(IPlugin plugin) => ResolveModuleKey(plugin.Name) == "party";
+    private static bool IsQuestPlugin(IPlugin plugin) => ResolveModuleKey(plugin.Name) == "quest";
+    private static bool IsTargetAssistPlugin(IPlugin plugin) => plugin?.Name == TargetAssistPluginName || ResolveModuleKey(plugin.Name) == "targetassist";
+    private static bool IsCommandCenterPlugin(IPlugin plugin) => plugin?.Name == CommandCenterPluginName || ResolveModuleKey(plugin.Name) == "commandcenter";
 
     private readonly struct MapRenderContext
     {
@@ -2400,6 +2596,691 @@ public sealed class UbotCoreService : IUbotCoreService
         };
     }
 
+    private static object BuildLureState(IBotbase botbase)
+    {
+        var area = botbase?.Area;
+        var areaPosition = area?.Position ?? default;
+        var playerPosition = Game.Player?.Position ?? default;
+
+        return new Dictionary<string, object?>
+        {
+            ["selected"] = Kernel.Bot?.Botbase?.Name == botbase?.Name,
+            ["centerRegion"] = (int)areaPosition.Region.Id,
+            ["centerXSector"] = (int)areaPosition.Region.X,
+            ["centerYSector"] = (int)areaPosition.Region.Y,
+            ["centerX"] = Math.Round(areaPosition.XOffset, 2),
+            ["centerY"] = Math.Round(areaPosition.YOffset, 2),
+            ["centerZ"] = Math.Round(areaPosition.ZOffset, 2),
+            ["radius"] = area?.Radius ?? Math.Clamp(PlayerConfig.Get("UBot.Lure.Area.Radius", 20), 1, 200),
+            ["currentPosition"] = new Dictionary<string, object?>
+            {
+                ["region"] = (int)playerPosition.Region.Id,
+                ["xSector"] = (int)playerPosition.Region.X,
+                ["ySector"] = (int)playerPosition.Region.Y,
+                ["x"] = Math.Round(playerPosition.XOffset, 2),
+                ["y"] = Math.Round(playerPosition.YOffset, 2),
+                ["z"] = Math.Round(playerPosition.ZOffset, 2)
+            },
+            ["hasCenter"] = areaPosition.Region.Id != 0 || areaPosition.XOffset != 0 || areaPosition.YOffset != 0
+        };
+    }
+
+    private static object BuildTradeState(IBotbase botbase)
+    {
+        var player = Game.Player;
+        var routeLists = LoadTradeRouteListsFromPlayerConfig();
+        var selectedRouteListIndex = Math.Clamp(
+            PlayerConfig.Get("UBot.Trade.SelectedRouteListIndex", 0),
+            0,
+            Math.Max(0, routeLists.Count - 1));
+
+        var selectedRouteList = routeLists.Count > 0
+            ? routeLists[selectedRouteListIndex]
+            : new TradeRouteListDefinition { Name = "Default", Scripts = new List<string>() };
+
+        var routeRows = selectedRouteList.Scripts
+            .Select(BuildTradeRouteRow)
+            .Cast<object?>()
+            .ToList();
+
+        var currentRouteFile = ScriptManager.File ?? string.Empty;
+        var jobInfo = player?.JobInformation;
+
+        return new Dictionary<string, object?>
+        {
+            ["selected"] = Kernel.Bot?.Botbase?.Name == botbase?.Name,
+            ["useRouteScripts"] = PlayerConfig.Get("UBot.Trade.UseRouteScripts", true),
+            ["tracePlayer"] = PlayerConfig.Get("UBot.Trade.TracePlayer", false),
+            ["selectedRouteList"] = selectedRouteList.Name,
+            ["selectedRouteListIndex"] = selectedRouteListIndex,
+            ["routeRows"] = routeRows,
+            ["scriptRunning"] = ScriptManager.Running,
+            ["currentRouteFile"] = currentRouteFile,
+            ["currentRouteName"] = string.IsNullOrWhiteSpace(currentRouteFile) ? string.Empty : Path.GetFileNameWithoutExtension(currentRouteFile),
+            ["hasTransport"] = player?.JobTransport != null,
+            ["transportDistance"] = player?.JobTransport != null ? Math.Round(player.JobTransport.Position.DistanceToPlayer(), 1) : -1d,
+            ["jobOverview"] = new Dictionary<string, object?>
+            {
+                ["difficulty"] = player?.TradeInfo?.Scale ?? 0,
+                ["alias"] = jobInfo?.Name ?? string.Empty,
+                ["level"] = (int)(jobInfo?.Level ?? 0),
+                ["experience"] = jobInfo?.Experience ?? 0L,
+                ["type"] = (jobInfo?.Type ?? JobType.None).ToString()
+            }
+        };
+    }
+
+    private static Dictionary<string, object?> BuildTradeRouteRow(string scriptPath)
+    {
+        var normalizedPath = scriptPath?.Trim() ?? string.Empty;
+        var routeName = string.IsNullOrWhiteSpace(normalizedPath)
+            ? "(empty)"
+            : Path.GetFileNameWithoutExtension(normalizedPath);
+        if (string.IsNullOrWhiteSpace(routeName))
+            routeName = Path.GetFileName(normalizedPath);
+
+        var info = ReadTradeRouteScriptInfo(normalizedPath);
+        return new Dictionary<string, object?>
+        {
+            ["path"] = normalizedPath,
+            ["name"] = routeName,
+            ["startRegion"] = info.StartRegion,
+            ["endRegion"] = info.EndRegion,
+            ["numSteps"] = info.StepCount,
+            ["missing"] = info.Missing
+        };
+    }
+
+    private static (string StartRegion, string EndRegion, int StepCount, bool Missing) ReadTradeRouteScriptInfo(string scriptPath)
+    {
+        if (string.IsNullOrWhiteSpace(scriptPath) || !File.Exists(scriptPath))
+            return ("-", "-", 0, true);
+
+        try
+        {
+            Position first = default;
+            Position last = default;
+            var found = false;
+            var steps = 0;
+
+            foreach (var line in File.ReadLines(scriptPath))
+            {
+                if (!TryParseTradeMoveCommand(line, out var point))
+                    continue;
+
+                if (!found)
+                {
+                    first = point;
+                    found = true;
+                }
+
+                last = point;
+                steps++;
+            }
+
+            if (!found)
+                return ("-", "-", 0, false);
+
+            return (
+                first.Region.Id == 0 ? "-" : first.Region.Id.ToString(CultureInfo.InvariantCulture),
+                last.Region.Id == 0 ? "-" : last.Region.Id.ToString(CultureInfo.InvariantCulture),
+                steps,
+                false);
+        }
+        catch
+        {
+            return ("-", "-", 0, true);
+        }
+    }
+
+    private static bool TryParseTradeMoveCommand(string line, out Position point)
+    {
+        point = default;
+        if (string.IsNullOrWhiteSpace(line))
+            return false;
+
+        var trimmed = line.Trim();
+        if (trimmed.StartsWith("#", StringComparison.Ordinal) || trimmed.StartsWith("//", StringComparison.Ordinal))
+            return false;
+
+        var split = trimmed.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        if (split.Length < 6 || !split[0].Equals("move", StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        if (!float.TryParse(split[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var xOffset)
+            || !float.TryParse(split[2], NumberStyles.Float, CultureInfo.InvariantCulture, out var yOffset)
+            || !float.TryParse(split[3], NumberStyles.Float, CultureInfo.InvariantCulture, out var zOffset)
+            || !byte.TryParse(split[4], NumberStyles.Integer, CultureInfo.InvariantCulture, out var xSector)
+            || !byte.TryParse(split[5], NumberStyles.Integer, CultureInfo.InvariantCulture, out var ySector))
+        {
+            return false;
+        }
+
+        point = new Position(xSector, ySector, xOffset, yOffset, zOffset);
+        return true;
+    }
+
+    private static object BuildAlchemyState(IBotbase botbase)
+    {
+        var selectableItems = GetAlchemySelectableItems();
+        var selectedItem = ResolveAlchemySelectedItem(selectableItems);
+        var blues = BuildAlchemyBlueRows(selectedItem);
+        var stats = BuildAlchemyStatRows(selectedItem);
+
+        return new Dictionary<string, object?>
+        {
+            ["selected"] = Kernel.Bot?.Botbase?.Name == botbase?.Name,
+            ["mode"] = NormalizeAlchemyMode(PlayerConfig.Get(AlchemyModeKey, "enhance")),
+            ["hasItem"] = selectedItem != null,
+            ["selectedItem"] = selectedItem == null
+                ? null
+                : new Dictionary<string, object?>
+                {
+                    ["codeName"] = selectedItem.Record?.CodeName ?? string.Empty,
+                    ["name"] = selectedItem.Record?.GetRealName(true) ?? selectedItem.ItemId.ToString(CultureInfo.InvariantCulture),
+                    ["degree"] = selectedItem.Record?.Degree ?? 0,
+                    ["optLevel"] = selectedItem.OptLevel,
+                    ["slot"] = selectedItem.Slot
+                },
+            ["luckyPowderCount"] = selectedItem != null ? GetAlchemyLuckyPowderCount(selectedItem) : 0,
+            ["luckyStoneCount"] = selectedItem != null ? GetAlchemyStonesByGroup(selectedItem, RefMagicOpt.MaterialLuck).Sum(item => item.Amount) : 0,
+            ["immortalStoneCount"] = selectedItem != null ? GetAlchemyStonesByGroup(selectedItem, RefMagicOpt.MaterialImmortal).Sum(item => item.Amount) : 0,
+            ["astralStoneCount"] = selectedItem != null ? GetAlchemyStonesByGroup(selectedItem, RefMagicOpt.MaterialAstral).Sum(item => item.Amount) : 0,
+            ["steadyStoneCount"] = selectedItem != null ? GetAlchemyStonesByGroup(selectedItem, RefMagicOpt.MaterialSteady).Sum(item => item.Amount) : 0,
+            ["itemsCatalog"] = selectableItems
+                .GroupBy(item => item.Record?.CodeName ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+                .Select(group => group.OrderByDescending(item => item.OptLevel).ThenBy(item => item.Slot).First())
+                .OrderBy(item => item.Record?.GetRealName() ?? string.Empty)
+                .Select(item => new Dictionary<string, object?>
+                {
+                    ["codeName"] = item.Record?.CodeName ?? string.Empty,
+                    ["name"] = $"{item.Record?.GetRealName(true) ?? item.ItemId.ToString(CultureInfo.InvariantCulture)} (+{item.OptLevel})",
+                    ["degree"] = item.Record?.Degree ?? 0,
+                    ["optLevel"] = item.OptLevel,
+                    ["slot"] = item.Slot
+                })
+                .Cast<object?>()
+                .ToList(),
+            ["alchemyBlues"] = blues.Cast<object?>().ToList(),
+            ["alchemyStats"] = stats.Cast<object?>().ToList()
+        };
+    }
+
+    private static object[] BuildAlchemyBlueRows(InventoryItem selectedItem)
+    {
+        if (selectedItem?.Record == null)
+            return Array.Empty<object>();
+
+        var degree = selectedItem.Record.Degree;
+        var rows = AlchemyBlueOptions.Select(option =>
+        {
+            var currentValue = GetAlchemyMagicOptionValue(selectedItem, option.Group);
+            var maxValue = GetAlchemyMagicOptionMaxValue(selectedItem, option.Group);
+            var stones = GetAlchemyStonesByGroup(selectedItem, option.Group).Sum(item => item.Amount);
+
+            return new Dictionary<string, object?>
+            {
+                ["key"] = option.Key,
+                ["name"] = option.Label,
+                ["value"] = currentValue.ToString(CultureInfo.InvariantCulture),
+                ["current"] = (int)currentValue,
+                ["max"] = (int)maxValue,
+                ["stoneCount"] = stones,
+                ["group"] = option.Group,
+                ["degree"] = degree
+            };
+        }).Cast<object>().ToList();
+
+        rows.Add(new Dictionary<string, object?>
+        {
+            ["key"] = "availableSlots",
+            ["name"] = "Available slots",
+            ["value"] = selectedItem.MagicOptions?.Count.ToString(CultureInfo.InvariantCulture) ?? "0",
+            ["current"] = selectedItem.MagicOptions?.Count ?? 0,
+            ["max"] = selectedItem.MagicOptions?.Count ?? 0,
+            ["stoneCount"] = 0,
+            ["group"] = string.Empty,
+            ["degree"] = degree
+        });
+
+        return rows.ToArray();
+    }
+
+    private static object[] BuildAlchemyStatRows(InventoryItem selectedItem)
+    {
+        if (selectedItem?.Record == null)
+            return Array.Empty<object>();
+
+        var availableGroups = ItemAttributesInfo.GetAvailableAttributeGroupsForItem(selectedItem.Record)?.ToHashSet()
+            ?? new HashSet<ItemAttributeGroup>();
+
+        return AlchemyStatOptions
+            .Select(option =>
+            {
+                var currentPercent = availableGroups.Contains(option.Group)
+                    ? GetAlchemyAttributePercentage(selectedItem, option.Group)
+                    : 0;
+
+                return new Dictionary<string, object?>
+                {
+                    ["key"] = option.Key,
+                    ["name"] = option.Label,
+                    ["value"] = currentPercent > 0 ? $"+{currentPercent}%" : "0",
+                    ["current"] = currentPercent
+                };
+            })
+            .Cast<object>()
+            .ToArray();
+    }
+
+    private static IReadOnlyList<InventoryItem> GetAlchemySelectableItems()
+    {
+        var inventory = Game.Player?.Inventory;
+        if (inventory == null)
+            return Array.Empty<InventoryItem>();
+
+        return inventory
+            .GetNormalPartItems(item =>
+                item?.Record != null
+                && item.Record.IsEquip
+                && !item.Record.IsAvatar
+                && (item.Record.IsWeapon || item.Record.IsShield || item.Record.IsArmor || item.Record.IsAccessory))
+            .OrderBy(item => item.Slot)
+            .ToArray();
+    }
+
+    private static InventoryItem ResolveAlchemySelectedItem(IEnumerable<InventoryItem>? candidates = null)
+    {
+        var source = candidates?.ToList() ?? GetAlchemySelectableItems().ToList();
+        if (source.Count == 0)
+            return null;
+
+        var codeName = (PlayerConfig.Get(AlchemyItemCodeKey, string.Empty) ?? string.Empty).Trim();
+        if (!string.IsNullOrWhiteSpace(codeName))
+        {
+            var matched = source.FirstOrDefault(item =>
+                item.Record?.CodeName != null
+                && item.Record.CodeName.Equals(codeName, StringComparison.OrdinalIgnoreCase));
+            if (matched != null)
+                return matched;
+        }
+
+        return source.FirstOrDefault();
+    }
+
+    private static IReadOnlyList<InventoryItem> GetAlchemyStonesByGroup(InventoryItem targetItem, string group)
+    {
+        if (targetItem?.Record == null || string.IsNullOrWhiteSpace(group))
+            return Array.Empty<InventoryItem>();
+
+        var inventory = Game.Player?.Inventory;
+        if (inventory == null)
+            return Array.Empty<InventoryItem>();
+
+        return inventory
+            .GetNormalPartItems(item =>
+                item?.Record != null
+                && item.Record.Desc1 == group
+                && item.Record.ItemClass == targetItem.Record.Degree)
+            .ToArray();
+    }
+
+    private static IReadOnlyList<InventoryItem> ResolveAlchemyElixirs(InventoryItem targetItem, string elixirType)
+    {
+        var inventory = Game.Player?.Inventory;
+        if (inventory == null || targetItem?.Record == null)
+            return Array.Empty<InventoryItem>();
+
+        const int protectorParam = 16909056;
+        const int weaponParam = 100663296;
+        const int accessoryParam = 83886080;
+        const int shieldParam = 67108864;
+
+        var normalizedType = NormalizeAlchemyElixirType(elixirType);
+        var paramValue = normalizedType switch
+        {
+            "shield" => shieldParam,
+            "protector" => protectorParam,
+            "accessory" => accessoryParam,
+            _ => weaponParam
+        };
+
+        var degree = targetItem.Record.Degree;
+        Func<InventoryItem, bool> predicate;
+        if (Game.ClientType >= GameClientType.Chinese && degree >= 12)
+            predicate = item => item.Record.Param1 == degree && item.Record.Param3 == paramValue;
+        else
+            predicate = item => item.Record.Param1 == paramValue;
+
+        return inventory.GetNormalPartItems(item => item?.Record != null && predicate(item)).ToArray();
+    }
+
+    private static int GetAlchemyLuckyPowderCount(InventoryItem targetItem)
+    {
+        if (targetItem?.Record == null)
+            return 0;
+
+        var inventory = Game.Player?.Inventory;
+        if (inventory == null)
+            return 0;
+
+        var powders = inventory
+            .GetNormalPartItems(item =>
+                item?.Record != null
+                && item.Record.TypeID2 == 3
+                && item.Record.TypeID3 == 10
+                && item.Record.TypeID4 == 2
+                && item.Record.ItemClass == targetItem.Record.Degree)
+            .Sum(item => item.Amount);
+
+        if (Game.ClientType >= GameClientType.Chinese && targetItem.Record.Degree >= 12)
+        {
+            powders += inventory
+                .GetNormalPartItems(item =>
+                    item?.Record != null
+                    && item.Record.TypeID2 == 3
+                    && item.Record.TypeID3 == 10
+                    && item.Record.TypeID4 == 8
+                    && item.Record.Param1 == targetItem.Record.ItemClass)
+                .Sum(item => item.Amount);
+        }
+
+        return powders;
+    }
+
+    private static uint GetAlchemyMagicOptionValue(InventoryItem targetItem, string group)
+    {
+        if (targetItem?.Record == null || string.IsNullOrWhiteSpace(group))
+            return 0;
+
+        var option = targetItem.MagicOptions?.FirstOrDefault(m =>
+        {
+            var record = m?.Record ?? Game.ReferenceManager.GetMagicOption(m?.Id ?? 0);
+            return record?.Group == group;
+        });
+
+        return option?.Value ?? 0;
+    }
+
+    private static ushort GetAlchemyMagicOptionMaxValue(InventoryItem targetItem, string group)
+    {
+        if (targetItem?.Record == null || string.IsNullOrWhiteSpace(group))
+            return 0;
+
+        var current = targetItem.MagicOptions?.FirstOrDefault(m =>
+        {
+            var record = m?.Record ?? Game.ReferenceManager.GetMagicOption(m?.Id ?? 0);
+            return record?.Group == group;
+        });
+
+        if (current?.Record != null)
+            return current.Record.GetMaxValue();
+
+        var byDegree = Game.ReferenceManager.GetMagicOption(group, (byte)targetItem.Record.Degree);
+        return byDegree?.GetMaxValue() ?? 0;
+    }
+
+    private static int GetAlchemyAttributePercentage(InventoryItem targetItem, ItemAttributeGroup group)
+    {
+        if (targetItem?.Record == null)
+            return 0;
+
+        var available = ItemAttributesInfo.GetAvailableAttributeGroupsForItem(targetItem.Record);
+        if (available == null || !available.Contains(group))
+            return 0;
+
+        var slot = ItemAttributesInfo.GetAttributeSlotForItem(group, targetItem.Record);
+        return targetItem.Attributes.GetPercentage(slot);
+    }
+
+    private static string NormalizeAlchemyMode(string mode)
+    {
+        var normalized = (mode ?? string.Empty).Trim().ToLowerInvariant();
+        return normalized switch
+        {
+            "blues" => "blues",
+            "stats" => "stats",
+            _ => "enhance"
+        };
+    }
+
+    private static string NormalizeAlchemyElixirType(string type)
+    {
+        var normalized = (type ?? string.Empty).Trim().ToLowerInvariant();
+        return normalized switch
+        {
+            "shield" => "shield",
+            "protector" => "protector",
+            "accessory" => "accessory",
+            _ => "weapon"
+        };
+    }
+
+    private static string NormalizeAlchemyStatTarget(string target)
+    {
+        var normalized = (target ?? string.Empty).Trim().ToLowerInvariant();
+        return normalized switch
+        {
+            "low" => "low",
+            "medium" => "medium",
+            "high" => "high",
+            "max" => "max",
+            _ => "off"
+        };
+    }
+
+    private static int MapAlchemyStatTargetToPercent(string target)
+    {
+        return NormalizeAlchemyStatTarget(target) switch
+        {
+            "low" => 25,
+            "medium" => 50,
+            "high" => 75,
+            "max" => 100,
+            _ => 0
+        };
+    }
+
+    private static string GetAlchemyBlueEnabledConfigKey(string key) => $"UBot.Desktop.Alchemy.Blue.{key}.Enabled";
+    private static string GetAlchemyBlueMaxConfigKey(string key) => $"UBot.Desktop.Alchemy.Blue.{key}.Max";
+    private static string GetAlchemyStatEnabledConfigKey(string key) => $"UBot.Desktop.Alchemy.Stat.{key}.Enabled";
+    private static string GetAlchemyStatTargetConfigKey(string key) => $"UBot.Desktop.Alchemy.Stat.{key}.Target";
+
+    private static string InferAlchemyElixirType(InventoryItem selectedItem)
+    {
+        var record = selectedItem?.Record;
+        if (record == null)
+            return "weapon";
+
+        if (record.IsShield)
+            return "shield";
+        if (record.IsAccessory)
+            return "accessory";
+        if (record.IsArmor)
+            return "protector";
+        return "weapon";
+    }
+
+    private static object BuildQuestState()
+    {
+        var quests = Game.Player?.QuestLog?.ActiveQuests?.Values;
+        var completed = Game.Player?.QuestLog?.CompletedQuests?.Length ?? 0;
+        var activeRows = new List<Dictionary<string, object?>>();
+        if (quests != null)
+        {
+            foreach (var quest in quests)
+            {
+                activeRows.Add(new Dictionary<string, object?>
+                {
+                    ["id"] = quest.Id,
+                    ["name"] = quest.Quest?.GetTranslatedName() ?? quest.Quest?.CodeName ?? quest.Id.ToString(CultureInfo.InvariantCulture),
+                    ["status"] = quest.Status.ToString(),
+                    ["objectiveCount"] = quest.Objectives?.Length ?? 0,
+                    ["remainingTime"] = quest.RemainingTime
+                });
+            }
+        }
+
+        return new Dictionary<string, object?>
+        {
+            ["activeCount"] = activeRows.Count,
+            ["completedCount"] = completed,
+            ["active"] = activeRows
+                .OrderBy(quest => quest["name"]?.ToString() ?? string.Empty)
+                .Take(200)
+                .Cast<object?>()
+                .ToList()
+        };
+    }
+
+    private static object BuildTargetAssistState()
+    {
+        const int effectTransferParam = 1701213281;
+        var bloodyStormCodeTokens = new[] { "FANSTORM", "FAN_STORM" };
+
+        var enabled = PlayerConfig.Get("UBot.TargetAssist.Enabled", false);
+        var maxRange = Math.Clamp(PlayerConfig.Get("UBot.TargetAssist.MaxRange", 40f), 5f, 400f);
+        var includeDeadTargets = PlayerConfig.Get("UBot.TargetAssist.IncludeDeadTargets", false);
+        var ignoreSnowShieldTargets = PlayerConfig.Get("UBot.TargetAssist.IgnoreSnowShieldTargets", true);
+        var ignoreBloodyStormTargets = PlayerConfig.Get("UBot.TargetAssist.IgnoreBloodyStormTargets", false);
+        var onlyCustomPlayers = PlayerConfig.Get("UBot.TargetAssist.OnlyCustomPlayers", false);
+
+        var roleModeRaw = PlayerConfig.Get("UBot.TargetAssist.RoleMode", "Civil");
+        var roleMode = roleModeRaw.Equals("Thief", StringComparison.OrdinalIgnoreCase)
+            ? "thief"
+            : roleModeRaw.Equals("HunterTrader", StringComparison.OrdinalIgnoreCase)
+                ? "hunterTrader"
+                : "civil";
+
+        var ignoredGuilds = PlayerConfig.GetArray<string>("UBot.TargetAssist.IgnoredGuilds", '|')
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var ignoredGuildSet = new HashSet<string>(ignoredGuilds, StringComparer.OrdinalIgnoreCase);
+
+        var customPlayers = PlayerConfig.GetArray<string>("UBot.TargetAssist.CustomPlayers", '|')
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var customPlayerSet = new HashSet<string>(customPlayers, StringComparer.OrdinalIgnoreCase);
+
+        var candidateCount = 0;
+        var nearestTargetName = string.Empty;
+        var nearestTargetDistance = -1d;
+
+        if (enabled
+            && Game.Ready
+            && Game.Player != null
+            && Game.Player.State.LifeState == LifeState.Alive
+            && SpawnManager.TryGetEntities<SpawnedPlayer>(out var players))
+        {
+            var candidates = players
+                .Where(player => player != null && player.UniqueId != Game.Player.UniqueId)
+                .Where(player => !string.IsNullOrWhiteSpace(player.Name))
+                .Where(player => includeDeadTargets || player.State.LifeState == LifeState.Alive)
+                .Where(player => player.DistanceToPlayer <= maxRange)
+                .Where(player => !ignoreSnowShieldTargets || !HasSnowShieldBuff(player, effectTransferParam))
+                .Where(player => !ignoreBloodyStormTargets || !HasAnyBuffCodeToken(player, bloodyStormCodeTokens))
+                .Where(player => !IsIgnoredGuildName(player, ignoredGuildSet))
+                .Where(player => !onlyCustomPlayers || customPlayerSet.Contains(player.Name.Trim()))
+                .Where(player => MatchesTargetAssistRoleMode(player, roleMode))
+                .OrderBy(player => player.DistanceToPlayer)
+                .ToList();
+
+            candidateCount = candidates.Count;
+            if (candidateCount > 0)
+            {
+                nearestTargetName = candidates[0].Name;
+                nearestTargetDistance = Math.Round(candidates[0].DistanceToPlayer, 1);
+            }
+        }
+
+        return new Dictionary<string, object?>
+        {
+            ["enabled"] = enabled,
+            ["maxRange"] = maxRange,
+            ["includeDeadTargets"] = includeDeadTargets,
+            ["ignoreSnowShieldTargets"] = ignoreSnowShieldTargets,
+            ["ignoreBloodyStormTargets"] = ignoreBloodyStormTargets,
+            ["onlyCustomPlayers"] = onlyCustomPlayers,
+            ["roleMode"] = roleMode,
+            ["targetCycleKey"] = PlayerConfig.Get("UBot.TargetAssist.TargetCycleKey", "Oem3"),
+            ["ignoredGuilds"] = ignoredGuilds.Cast<object?>().ToList(),
+            ["customPlayers"] = customPlayers.Cast<object?>().ToList(),
+            ["candidateCount"] = candidateCount,
+            ["nearestTargetName"] = nearestTargetName,
+            ["nearestTargetDistance"] = nearestTargetDistance
+        };
+    }
+
+    private static bool HasSnowShieldBuff(SpawnedPlayer player, int effectTransferParam)
+    {
+        if (player?.State?.ActiveBuffs == null)
+            return false;
+
+        foreach (var buff in player.State.ActiveBuffs)
+        {
+            var record = buff?.Record;
+            if (record == null)
+                continue;
+
+            var code = record.Basic_Code;
+            if (!string.IsNullOrWhiteSpace(code) && code.IndexOf("COLD_SHIELD", StringComparison.OrdinalIgnoreCase) >= 0)
+                return true;
+
+            if (record.Params.Contains(effectTransferParam))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static bool HasAnyBuffCodeToken(SpawnedPlayer player, IEnumerable<string> tokens)
+    {
+        if (player?.State?.ActiveBuffs == null || tokens == null)
+            return false;
+
+        foreach (var buff in player.State.ActiveBuffs)
+        {
+            var code = buff?.Record?.Basic_Code;
+            if (string.IsNullOrWhiteSpace(code))
+                continue;
+
+            foreach (var token in tokens)
+            {
+                if (string.IsNullOrWhiteSpace(token))
+                    continue;
+
+                if (code.IndexOf(token, StringComparison.OrdinalIgnoreCase) >= 0)
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsIgnoredGuildName(SpawnedPlayer player, HashSet<string> ignoredGuildSet)
+    {
+        var guildName = player.Guild?.Name;
+        if (string.IsNullOrWhiteSpace(guildName))
+            return false;
+
+        return ignoredGuildSet.Contains(guildName.Trim());
+    }
+
+    private static bool MatchesTargetAssistRoleMode(SpawnedPlayer player, string roleMode)
+    {
+        if (roleMode.Equals("thief", StringComparison.OrdinalIgnoreCase))
+            return player.WearsJobSuite && (player.Job == JobType.Hunter || player.Job == JobType.Trade);
+
+        if (roleMode.Equals("hunterTrader", StringComparison.OrdinalIgnoreCase))
+            return player.WearsJobSuite && player.Job == JobType.Thief;
+
+        return true;
+    }
+
     private static Dictionary<string, object?> BuildPartyPluginConfig()
     {
         var config = LoadPluginJsonConfig(PartyPluginName);
@@ -2705,6 +3586,807 @@ public sealed class UbotCoreService : IUbotCoreService
             ["avoidanceList"] = PlayerConfig.GetArray<string>("UBot.Avoidance.Avoid").ToList(),
             ["preferList"] = PlayerConfig.GetArray<string>("UBot.Avoidance.Prefer").ToList(),
             ["berserkList"] = PlayerConfig.GetArray<string>("UBot.Avoidance.Berserk").ToList()
+        };
+    }
+
+    private static Dictionary<string, object?> BuildLureBotbaseConfig()
+    {
+        var region = PlayerConfig.Get<ushort>("UBot.Lure.Area.Region");
+        var x = PlayerConfig.Get("UBot.Lure.Area.X", 0f);
+        var y = PlayerConfig.Get("UBot.Lure.Area.Y", 0f);
+        var z = PlayerConfig.Get("UBot.Lure.Area.Z", 0f);
+        var selectedMonsterType = PlayerConfig.GetEnum("UBot.Lure.SelectedMonsterType", MonsterRarity.General);
+        var useScript = PlayerConfig.Get("UBot.Lure.UseScript", false);
+        var stayAtCenter = PlayerConfig.Get("UBot.Lure.StayAtCenter", false);
+
+        var lureMode = useScript
+            ? "useScript"
+            : stayAtCenter
+                ? "stayAtCenter"
+                : "walkRandomly";
+
+        return new Dictionary<string, object?>
+        {
+            ["lureLocationScript"] = PlayerConfig.Get("UBot.Lure.Walkback.File", string.Empty),
+            ["lureCenterRegion"] = (int)region,
+            ["lureCenterXSector"] = (int)((CoreRegion)region).X,
+            ["lureCenterYSector"] = (int)((CoreRegion)region).Y,
+            ["lureCenterX"] = Math.Round(x, 2),
+            ["lureCenterY"] = Math.Round(y, 2),
+            ["lureCenterZ"] = Math.Round(z, 2),
+            ["lureRadius"] = Math.Clamp(PlayerConfig.Get("UBot.Lure.Area.Radius", 20), 1, 200),
+            ["lureMode"] = lureMode,
+            ["lureScriptPath"] = PlayerConfig.Get("UBot.Lure.SelectedScriptPath", string.Empty),
+            ["lureStayAtCenterForEnabled"] = PlayerConfig.Get("UBot.Lure.StayAtCenterFor", false),
+            ["lureStayAtCenterSeconds"] = Math.Clamp(PlayerConfig.Get("UBot.Lure.StayAtCenterForSeconds", 10), 0, 3600),
+            ["lureCastHowlingShout"] = PlayerConfig.Get("UBot.Lure.UseHowlingShout", false),
+            ["lureDontCastNearCenter"] = PlayerConfig.Get("UBot.Lure.NoHowlingAtCenter", true),
+            ["lureUseNormalAttackSwitch"] = PlayerConfig.Get("UBot.Lure.UseNormalAttack", false),
+            ["lureUseAttackSkillSwitch"] = PlayerConfig.Get("UBot.Lure.UseAttackingSkills", false),
+            ["lureStopOnDeadPartyMembersEnabled"] = PlayerConfig.Get("UBot.Lure.StopIfNumPartyMemberDead", false),
+            ["lureStopDeadPartyMembers"] = Math.Clamp(PlayerConfig.Get("UBot.Lure.NumPartyMemberDead", 0), 0, 8),
+            ["lureStopOnPartyMembersEnabled"] = PlayerConfig.Get("UBot.Lure.StopIfNumPartyMember", false),
+            ["lureStopPartyMembersLe"] = Math.Clamp(PlayerConfig.Get("UBot.Lure.NumPartyMember", 0), 0, 8),
+            ["lureStopOnPartyMembersOnSpotEnabled"] = PlayerConfig.Get("UBot.Lure.StopIfNumPartyMembersOnSpot", false),
+            ["lureStopPartyMembersOnSpotLe"] = Math.Clamp(PlayerConfig.Get("UBot.Lure.NumPartyMembersOnSpot", 0), 0, 8),
+            ["lureStopOnMonsterTypeEnabled"] = PlayerConfig.Get("UBot.Lure.StopIfNumMonsterType", false),
+            ["lureMonsterType"] = FormatMonsterTypeToken(selectedMonsterType),
+            ["lureStopMonsterCount"] = Math.Clamp(PlayerConfig.Get("UBot.Lure.NumMonsterType", 1), 0, 50)
+        };
+    }
+
+    private static bool ApplyLureBotbasePatch(IBotbase botbase, Dictionary<string, object?> patch)
+    {
+        var changed = false;
+        changed |= SetPlayerString("UBot.Lure.Walkback.File", patch, "lureLocationScript");
+        changed |= SetPlayerInt("UBot.Lure.Area.Region", patch, "lureCenterRegion", 0, ushort.MaxValue);
+        changed |= SetPlayerFloat("UBot.Lure.Area.X", patch, "lureCenterX");
+        changed |= SetPlayerFloat("UBot.Lure.Area.Y", patch, "lureCenterY");
+        changed |= SetPlayerFloat("UBot.Lure.Area.Z", patch, "lureCenterZ");
+        changed |= SetPlayerInt("UBot.Lure.Area.Radius", patch, "lureRadius", 1, 200);
+        changed |= SetPlayerString("UBot.Lure.SelectedScriptPath", patch, "lureScriptPath");
+        changed |= SetPlayerBool("UBot.Lure.StayAtCenterFor", patch, "lureStayAtCenterForEnabled");
+        changed |= SetPlayerInt("UBot.Lure.StayAtCenterForSeconds", patch, "lureStayAtCenterSeconds", 0, 3600);
+        changed |= SetPlayerBool("UBot.Lure.UseHowlingShout", patch, "lureCastHowlingShout");
+        changed |= SetPlayerBool("UBot.Lure.NoHowlingAtCenter", patch, "lureDontCastNearCenter");
+        changed |= SetPlayerBool("UBot.Lure.UseNormalAttack", patch, "lureUseNormalAttackSwitch");
+        changed |= SetPlayerBool("UBot.Lure.UseAttackingSkills", patch, "lureUseAttackSkillSwitch");
+        changed |= SetPlayerBool("UBot.Lure.StopIfNumPartyMemberDead", patch, "lureStopOnDeadPartyMembersEnabled");
+        changed |= SetPlayerInt("UBot.Lure.NumPartyMemberDead", patch, "lureStopDeadPartyMembers", 0, 8);
+        changed |= SetPlayerBool("UBot.Lure.StopIfNumPartyMember", patch, "lureStopOnPartyMembersEnabled");
+        changed |= SetPlayerInt("UBot.Lure.NumPartyMember", patch, "lureStopPartyMembersLe", 0, 8);
+        changed |= SetPlayerBool("UBot.Lure.StopIfNumPartyMembersOnSpot", patch, "lureStopOnPartyMembersOnSpotEnabled");
+        changed |= SetPlayerInt("UBot.Lure.NumPartyMembersOnSpot", patch, "lureStopPartyMembersOnSpotLe", 0, 8);
+        changed |= SetPlayerBool("UBot.Lure.StopIfNumMonsterType", patch, "lureStopOnMonsterTypeEnabled");
+        changed |= SetPlayerInt("UBot.Lure.NumMonsterType", patch, "lureStopMonsterCount", 0, 50);
+
+        if (TryGetStringValue(patch, "lureMode", out var lureMode))
+        {
+            var mode = lureMode.Trim().ToLowerInvariant();
+            var walkRandomly = mode != "stayatcenter" && mode != "usescript";
+            var stayAtCenter = mode == "stayatcenter";
+            var useScript = mode == "usescript";
+
+            PlayerConfig.Set("UBot.Lure.WalkRandomly", walkRandomly);
+            PlayerConfig.Set("UBot.Lure.StayAtCenter", stayAtCenter);
+            PlayerConfig.Set("UBot.Lure.UseScript", useScript);
+            changed = true;
+        }
+
+        if (patch.TryGetValue("lureMonsterType", out var lureMonsterTypeRaw) && lureMonsterTypeRaw != null)
+        {
+            var current = PlayerConfig.GetEnum("UBot.Lure.SelectedMonsterType", MonsterRarity.General);
+            var next = current;
+
+            if (lureMonsterTypeRaw is string token)
+                next = ParseMonsterTypeToken(token, current);
+            else if (TryConvertInt(lureMonsterTypeRaw, out var numericMonsterType))
+                next = (MonsterRarity)Math.Clamp(numericMonsterType, byte.MinValue, byte.MaxValue);
+
+            PlayerConfig.Set("UBot.Lure.SelectedMonsterType", (byte)next);
+            changed = true;
+        }
+
+        if (changed)
+            EventManager.FireEvent("OnSavePlayerConfig");
+
+        return changed;
+    }
+
+    private sealed class TradeRouteListDefinition
+    {
+        public string Name { get; set; } = string.Empty;
+        public List<string> Scripts { get; set; } = new();
+    }
+
+    private static Dictionary<string, object?> BuildTradeBotbaseConfig()
+    {
+        var routeLists = LoadTradeRouteListsFromPlayerConfig();
+        var selectedRouteListIndex = Math.Clamp(
+            PlayerConfig.Get("UBot.Trade.SelectedRouteListIndex", 0),
+            0,
+            Math.Max(0, routeLists.Count - 1));
+
+        return new Dictionary<string, object?>
+        {
+            ["tradeTracePlayerName"] = PlayerConfig.Get("UBot.Trade.TracePlayerName", string.Empty),
+            ["tradeTracePlayer"] = PlayerConfig.Get("UBot.Trade.TracePlayer", false),
+            ["tradeUseRouteScripts"] = PlayerConfig.Get("UBot.Trade.UseRouteScripts", true),
+            ["tradeSelectedRouteListIndex"] = selectedRouteListIndex,
+            ["tradeRouteLists"] = routeLists.Select(routeList => new Dictionary<string, object?>
+            {
+                ["name"] = routeList.Name,
+                ["scripts"] = routeList.Scripts.Cast<object?>().ToList()
+            }).Cast<object?>().ToList(),
+            ["tradeRunTownScript"] = PlayerConfig.Get("UBot.Trade.RunTownScript", false),
+            ["tradeWaitForHunter"] = PlayerConfig.Get("UBot.Trade.WaitForHunter", false),
+            ["tradeAttackThiefPlayers"] = PlayerConfig.Get("UBot.Trade.AttackThiefPlayers", false),
+            ["tradeAttackThiefNpcs"] = PlayerConfig.Get("UBot.Trade.AttackThiefNpcs", false),
+            ["tradeCounterAttack"] = PlayerConfig.Get("UBot.Trade.CounterAttack", false),
+            ["tradeProtectTransport"] = PlayerConfig.Get("UBot.Trade.ProtectTransport", false),
+            ["tradeCastBuffs"] = PlayerConfig.Get("UBot.Trade.CastBuffs", false),
+            ["tradeMountTransport"] = PlayerConfig.Get("UBot.Trade.MountTransport", false),
+            ["tradeMaxTransportDistance"] = Math.Clamp(PlayerConfig.Get("UBot.Trade.MaxTransportDistance", 15), 1, 300),
+            ["tradeSellGoods"] = PlayerConfig.Get("UBot.Trade.SellGoods", true),
+            ["tradeBuyGoods"] = PlayerConfig.Get("UBot.Trade.BuyGoods", true),
+            ["tradeBuyGoodsQuantity"] = Math.Max(0, PlayerConfig.Get("UBot.Trade.BuyGoodsQuantity", 0)),
+            ["tradeRecorderScriptPath"] = PlayerConfig.Get("UBot.Desktop.Trade.RecorderScriptPath", string.Empty)
+        };
+    }
+
+    private static bool ApplyTradeBotbasePatch(IBotbase botbase, Dictionary<string, object?> patch)
+    {
+        var changed = false;
+        var selectedRouteListIndex = PlayerConfig.Get("UBot.Trade.SelectedRouteListIndex", 0);
+        var routeLists = LoadTradeRouteListsFromPlayerConfig();
+        var routeListsChanged = false;
+
+        bool? tracePlayerToggle = null;
+        bool? useRouteScriptsToggle = null;
+
+        changed |= SetPlayerString("UBot.Trade.TracePlayerName", patch, "tradeTracePlayerName");
+        changed |= SetPlayerBool("UBot.Trade.RunTownScript", patch, "tradeRunTownScript");
+        changed |= SetPlayerBool("UBot.Trade.WaitForHunter", patch, "tradeWaitForHunter");
+        changed |= SetPlayerBool("UBot.Trade.AttackThiefPlayers", patch, "tradeAttackThiefPlayers");
+        changed |= SetPlayerBool("UBot.Trade.AttackThiefNpcs", patch, "tradeAttackThiefNpcs");
+        changed |= SetPlayerBool("UBot.Trade.CounterAttack", patch, "tradeCounterAttack");
+        changed |= SetPlayerBool("UBot.Trade.ProtectTransport", patch, "tradeProtectTransport");
+        changed |= SetPlayerBool("UBot.Trade.CastBuffs", patch, "tradeCastBuffs");
+        changed |= SetPlayerBool("UBot.Trade.MountTransport", patch, "tradeMountTransport");
+        changed |= SetPlayerInt("UBot.Trade.MaxTransportDistance", patch, "tradeMaxTransportDistance", 1, 300);
+        changed |= SetPlayerBool("UBot.Trade.SellGoods", patch, "tradeSellGoods");
+        changed |= SetPlayerBool("UBot.Trade.BuyGoods", patch, "tradeBuyGoods");
+        changed |= SetPlayerInt("UBot.Trade.BuyGoodsQuantity", patch, "tradeBuyGoodsQuantity", 0, int.MaxValue);
+        changed |= SetPlayerString("UBot.Desktop.Trade.RecorderScriptPath", patch, "tradeRecorderScriptPath");
+
+        if (TryGetBoolValue(patch, "tradeTracePlayer", out var tracePlayer))
+            tracePlayerToggle = tracePlayer;
+
+        if (TryGetBoolValue(patch, "tradeUseRouteScripts", out var useRouteScripts))
+            useRouteScriptsToggle = useRouteScripts;
+
+        if (TryGetIntValue(patch, "tradeSelectedRouteListIndex", out var parsedRouteListIndex))
+        {
+            selectedRouteListIndex = parsedRouteListIndex;
+            changed = true;
+        }
+
+        if (patch.TryGetValue("tradeRouteLists", out var tradeRouteListsRaw) && tradeRouteListsRaw != null)
+        {
+            routeLists = ParseTradeRouteListsPatch(tradeRouteListsRaw);
+            routeListsChanged = true;
+            changed = true;
+        }
+
+        if (tracePlayerToggle.HasValue || useRouteScriptsToggle.HasValue)
+        {
+            var finalUseRouteScripts = PlayerConfig.Get("UBot.Trade.UseRouteScripts", true);
+            var finalTracePlayer = PlayerConfig.Get("UBot.Trade.TracePlayer", false);
+
+            if (useRouteScriptsToggle.HasValue)
+                finalUseRouteScripts = useRouteScriptsToggle.Value;
+            if (tracePlayerToggle.HasValue)
+                finalTracePlayer = tracePlayerToggle.Value;
+
+            if (useRouteScriptsToggle.HasValue && !tracePlayerToggle.HasValue)
+                finalTracePlayer = !finalUseRouteScripts;
+            else if (!useRouteScriptsToggle.HasValue && tracePlayerToggle.HasValue)
+                finalUseRouteScripts = !finalTracePlayer;
+            else if (useRouteScriptsToggle.HasValue && tracePlayerToggle.HasValue && finalUseRouteScripts == finalTracePlayer)
+                finalTracePlayer = !finalUseRouteScripts;
+
+            PlayerConfig.Set("UBot.Trade.UseRouteScripts", finalUseRouteScripts);
+            PlayerConfig.Set("UBot.Trade.TracePlayer", finalTracePlayer);
+            changed = true;
+        }
+
+        routeLists = NormalizeTradeRouteLists(routeLists);
+        if (routeListsChanged)
+            SaveTradeRouteListsToPlayerConfig(routeLists);
+
+        selectedRouteListIndex = Math.Clamp(selectedRouteListIndex, 0, Math.Max(0, routeLists.Count - 1));
+        PlayerConfig.Set("UBot.Trade.SelectedRouteListIndex", selectedRouteListIndex);
+
+        if (changed)
+            EventManager.FireEvent("OnSavePlayerConfig");
+
+        return changed;
+    }
+
+    private static List<TradeRouteListDefinition> ParseTradeRouteListsPatch(object raw)
+    {
+        if (raw is not IEnumerable enumerable || raw is string)
+            return LoadTradeRouteListsFromPlayerConfig();
+
+        var routeLists = new List<TradeRouteListDefinition>();
+        foreach (var item in enumerable)
+        {
+            if (!TryConvertObjectToDictionary(item, out var row))
+                continue;
+
+            var listName = TryGetStringValue(row, "name", out var parsedName) ? parsedName : string.Empty;
+            var scripts = new List<string>();
+            if (row.TryGetValue("scripts", out var scriptsRaw) && scriptsRaw is IEnumerable scriptsEnum && scriptsRaw is not string)
+            {
+                foreach (var script in scriptsEnum)
+                {
+                    var value = script?.ToString()?.Trim();
+                    if (!string.IsNullOrWhiteSpace(value))
+                        scripts.Add(value);
+                }
+            }
+
+            routeLists.Add(new TradeRouteListDefinition
+            {
+                Name = listName,
+                Scripts = scripts
+            });
+        }
+
+        return NormalizeTradeRouteLists(routeLists);
+    }
+
+    private static List<TradeRouteListDefinition> LoadTradeRouteListsFromPlayerConfig()
+    {
+        var names = PlayerConfig.GetArray<string>("UBot.Trade.RouteScriptList", ';')
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Select(name => name.Trim())
+            .ToList();
+
+        if (names.Count == 0)
+            names.Add("Default");
+
+        var routeLists = new List<TradeRouteListDefinition>(names.Count);
+        foreach (var name in names)
+        {
+            var scripts = PlayerConfig
+                .GetArray<string>($"UBot.Trade.RouteScriptList.{name}")
+                .Where(path => !string.IsNullOrWhiteSpace(path))
+                .Select(path => path.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            routeLists.Add(new TradeRouteListDefinition
+            {
+                Name = name,
+                Scripts = scripts
+            });
+        }
+
+        return NormalizeTradeRouteLists(routeLists);
+    }
+
+    private static void SaveTradeRouteListsToPlayerConfig(IReadOnlyList<TradeRouteListDefinition> routeLists)
+    {
+        var normalizedLists = NormalizeTradeRouteLists(routeLists);
+        var previousNames = PlayerConfig.GetArray<string>("UBot.Trade.RouteScriptList", ';')
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Select(name => name.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var currentNames = normalizedLists
+            .Select(routeList => routeList.Name)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        foreach (var oldName in previousNames.Where(name => !currentNames.Contains(name, StringComparer.OrdinalIgnoreCase)))
+            PlayerConfig.SetArray($"UBot.Trade.RouteScriptList.{oldName}", Array.Empty<string>());
+
+        PlayerConfig.SetArray("UBot.Trade.RouteScriptList", currentNames, ";");
+        foreach (var routeList in normalizedLists)
+            PlayerConfig.SetArray($"UBot.Trade.RouteScriptList.{routeList.Name}", routeList.Scripts.Distinct(StringComparer.OrdinalIgnoreCase).ToArray());
+    }
+
+    private static List<TradeRouteListDefinition> NormalizeTradeRouteLists(IEnumerable<TradeRouteListDefinition> routeLists)
+    {
+        var normalized = new List<TradeRouteListDefinition>();
+        var takenNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var routeList in routeLists ?? Array.Empty<TradeRouteListDefinition>())
+        {
+            var baseName = NormalizeTradeRouteListName(routeList?.Name, "Route List");
+            var finalName = baseName;
+            var suffix = 2;
+            while (!takenNames.Add(finalName))
+                finalName = $"{baseName} {suffix++}";
+
+            var scripts = (routeList?.Scripts ?? new List<string>())
+                .Where(path => !string.IsNullOrWhiteSpace(path))
+                .Select(path => path.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            normalized.Add(new TradeRouteListDefinition
+            {
+                Name = finalName,
+                Scripts = scripts
+            });
+        }
+
+        if (normalized.Count == 0)
+        {
+            normalized.Add(new TradeRouteListDefinition
+            {
+                Name = "Default",
+                Scripts = new List<string>()
+            });
+            return normalized;
+        }
+
+        if (!normalized.Any(routeList => routeList.Name.Equals("Default", StringComparison.OrdinalIgnoreCase)))
+        {
+            normalized.Insert(0, new TradeRouteListDefinition
+            {
+                Name = "Default",
+                Scripts = new List<string>()
+            });
+        }
+
+        return normalized;
+    }
+
+    private static string NormalizeTradeRouteListName(string value, string fallback)
+    {
+        var raw = (value ?? string.Empty).Trim();
+        if (raw.Length == 0)
+            raw = fallback;
+
+        var cleaned = new string(raw.Where(ch => char.IsLetterOrDigit(ch) || ch == ' ' || ch == '-' || ch == '_').ToArray()).Trim();
+        if (cleaned.Length == 0)
+            cleaned = fallback;
+        if (cleaned.Length > 48)
+            cleaned = cleaned.Substring(0, 48).Trim();
+        return cleaned;
+    }
+
+    private static Dictionary<string, object?> BuildAlchemyBotbaseConfig()
+    {
+        var selectedItem = ResolveAlchemySelectedItem();
+        var mode = NormalizeAlchemyMode(PlayerConfig.Get(AlchemyModeKey, "enhance"));
+        var elixirType = NormalizeAlchemyElixirType(PlayerConfig.Get(AlchemyElixirTypeKey, InferAlchemyElixirType(selectedItem)));
+
+        var config = new Dictionary<string, object?>(StringComparer.Ordinal)
+        {
+            ["alchemyMode"] = mode,
+            ["alchemyItemCode"] = PlayerConfig.Get(AlchemyItemCodeKey, selectedItem?.Record?.CodeName ?? string.Empty),
+            ["alchemyItemDegree"] = selectedItem?.Record?.Degree ?? 0,
+            ["alchemyCurrentEnhancement"] = selectedItem?.OptLevel ?? 0,
+            ["alchemyMaxEnhancement"] = Math.Clamp(PlayerConfig.Get(AlchemyMaxEnhancementKey, 0), 0, 15),
+            ["alchemyElixirType"] = elixirType,
+            ["stopAtNoPowder"] = PlayerConfig.Get(AlchemyStopAtNoPowderKey, true),
+            ["useLuckyStone"] = PlayerConfig.Get(AlchemyUseLuckyStoneKey, false),
+            ["useImmortalStone"] = PlayerConfig.Get(AlchemyUseImmortalStoneKey, false),
+            ["useAstralStone"] = PlayerConfig.Get(AlchemyUseAstralStoneKey, false),
+            ["useSteadyStone"] = PlayerConfig.Get(AlchemyUseSteadyStoneKey, false),
+            ["luckyPowderCount"] = selectedItem != null ? GetAlchemyLuckyPowderCount(selectedItem) : 0,
+            ["luckyStoneCount"] = selectedItem != null ? GetAlchemyStonesByGroup(selectedItem, RefMagicOpt.MaterialLuck).Sum(item => item.Amount) : 0,
+            ["immortalStoneCount"] = selectedItem != null ? GetAlchemyStonesByGroup(selectedItem, RefMagicOpt.MaterialImmortal).Sum(item => item.Amount) : 0,
+            ["astralStoneCount"] = selectedItem != null ? GetAlchemyStonesByGroup(selectedItem, RefMagicOpt.MaterialAstral).Sum(item => item.Amount) : 0,
+            ["steadyStoneCount"] = selectedItem != null ? GetAlchemyStonesByGroup(selectedItem, RefMagicOpt.MaterialSteady).Sum(item => item.Amount) : 0
+        };
+
+        foreach (var option in AlchemyBlueOptions)
+        {
+            var enabledKey = GetAlchemyBlueEnabledConfigKey(option.Key);
+            var maxKey = GetAlchemyBlueMaxConfigKey(option.Key);
+            var currentValue = selectedItem != null ? (int)GetAlchemyMagicOptionValue(selectedItem, option.Group) : 0;
+            var maxValue = selectedItem != null ? (int)GetAlchemyMagicOptionMaxValue(selectedItem, option.Group) : 0;
+            var persistedMax = Math.Max(0, PlayerConfig.Get(maxKey, maxValue));
+            var stoneCount = selectedItem != null ? GetAlchemyStonesByGroup(selectedItem, option.Group).Sum(item => item.Amount) : 0;
+
+            config[$"alchemyBlueEnabled_{option.Key}"] = PlayerConfig.Get(enabledKey, false);
+            config[$"alchemyBlueCurrent_{option.Key}"] = currentValue;
+            config[$"alchemyBlueMax_{option.Key}"] = persistedMax;
+            config[$"alchemyBlueStoneCount_{option.Key}"] = stoneCount;
+        }
+
+        var availableSlotsMax = Math.Max(0, PlayerConfig.Get(GetAlchemyBlueMaxConfigKey("availableSlots"), selectedItem?.MagicOptions?.Count ?? 0));
+        config["alchemyBlueEnabled_availableSlots"] = PlayerConfig.Get(GetAlchemyBlueEnabledConfigKey("availableSlots"), false);
+        config["alchemyBlueCurrent_availableSlots"] = selectedItem?.MagicOptions?.Count ?? 0;
+        config["alchemyBlueMax_availableSlots"] = availableSlotsMax;
+        config["alchemyBlueStoneCount_availableSlots"] = 0;
+
+        foreach (var stat in AlchemyStatOptions)
+        {
+            var enabledKey = GetAlchemyStatEnabledConfigKey(stat.Key);
+            var targetKey = GetAlchemyStatTargetConfigKey(stat.Key);
+            var currentValue = selectedItem != null ? GetAlchemyAttributePercentage(selectedItem, stat.Group) : 0;
+            var target = NormalizeAlchemyStatTarget(PlayerConfig.Get(targetKey, "off"));
+
+            config[$"alchemyStatEnabled_{stat.Key}"] = PlayerConfig.Get(enabledKey, false);
+            config[$"alchemyStatTarget_{stat.Key}"] = target;
+            config[$"alchemyStatCurrent_{stat.Key}"] = currentValue;
+        }
+
+        return config;
+    }
+
+    private static bool ApplyAlchemyBotbasePatch(IBotbase botbase, Dictionary<string, object?> patch)
+    {
+        var changed = false;
+
+        if (TryGetStringValue(patch, "alchemyMode", out var mode))
+        {
+            PlayerConfig.Set(AlchemyModeKey, NormalizeAlchemyMode(mode));
+            changed = true;
+        }
+
+        if (TryGetStringValue(patch, "alchemyItemCode", out var itemCode))
+        {
+            PlayerConfig.Set(AlchemyItemCodeKey, itemCode.Trim());
+            changed = true;
+        }
+
+        if (TryGetIntValue(patch, "alchemyMaxEnhancement", out var maxEnhancement))
+        {
+            PlayerConfig.Set(AlchemyMaxEnhancementKey, Math.Clamp(maxEnhancement, 0, 15));
+            changed = true;
+        }
+
+        if (TryGetStringValue(patch, "alchemyElixirType", out var elixirType))
+        {
+            PlayerConfig.Set(AlchemyElixirTypeKey, NormalizeAlchemyElixirType(elixirType));
+            changed = true;
+        }
+
+        changed |= SetPlayerBool(AlchemyStopAtNoPowderKey, patch, "stopAtNoPowder");
+        changed |= SetPlayerBool(AlchemyUseLuckyStoneKey, patch, "useLuckyStone");
+        changed |= SetPlayerBool(AlchemyUseImmortalStoneKey, patch, "useImmortalStone");
+        changed |= SetPlayerBool(AlchemyUseAstralStoneKey, patch, "useAstralStone");
+        changed |= SetPlayerBool(AlchemyUseSteadyStoneKey, patch, "useSteadyStone");
+
+        foreach (var entry in patch)
+        {
+            const string blueEnabledPrefix = "alchemyBlueEnabled_";
+            const string blueMaxPrefix = "alchemyBlueMax_";
+            const string statEnabledPrefix = "alchemyStatEnabled_";
+            const string statTargetPrefix = "alchemyStatTarget_";
+
+            if (entry.Key.StartsWith(blueEnabledPrefix, StringComparison.Ordinal))
+            {
+                if (TryConvertBool(entry.Value, out var enabled))
+                {
+                    var key = entry.Key.Substring(blueEnabledPrefix.Length);
+                    PlayerConfig.Set(GetAlchemyBlueEnabledConfigKey(key), enabled);
+                    changed = true;
+                }
+                continue;
+            }
+
+            if (entry.Key.StartsWith(blueMaxPrefix, StringComparison.Ordinal))
+            {
+                if (TryConvertInt(entry.Value, out var maxValue))
+                {
+                    var key = entry.Key.Substring(blueMaxPrefix.Length);
+                    PlayerConfig.Set(GetAlchemyBlueMaxConfigKey(key), Math.Max(0, maxValue));
+                    changed = true;
+                }
+                continue;
+            }
+
+            if (entry.Key.StartsWith(statEnabledPrefix, StringComparison.Ordinal))
+            {
+                if (TryConvertBool(entry.Value, out var enabled))
+                {
+                    var key = entry.Key.Substring(statEnabledPrefix.Length);
+                    PlayerConfig.Set(GetAlchemyStatEnabledConfigKey(key), enabled);
+                    changed = true;
+                }
+                continue;
+            }
+
+            if (entry.Key.StartsWith(statTargetPrefix, StringComparison.Ordinal))
+            {
+                var key = entry.Key.Substring(statTargetPrefix.Length);
+                PlayerConfig.Set(GetAlchemyStatTargetConfigKey(key), NormalizeAlchemyStatTarget(entry.Value?.ToString() ?? string.Empty));
+                changed = true;
+            }
+        }
+
+        if (changed)
+            EventManager.FireEvent("OnSavePlayerConfig");
+
+        ApplyAlchemyRuntimeConfig(botbase);
+        return changed;
+    }
+
+    private static bool ApplyAlchemyRuntimeConfig(IBotbase botbase = null)
+    {
+        var activeBotbase = botbase ?? Kernel.Bot?.Botbase;
+        if (!IsAlchemyBotbase(activeBotbase))
+            return false;
+
+        var globalsType = Type.GetType("UBot.Alchemy.Globals, UBot.Alchemy", false);
+        var globalsBotbaseProperty = globalsType?.GetProperty("Botbase", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
+        var runtimeBotbase = globalsBotbaseProperty?.GetValue(null);
+        if (runtimeBotbase == null)
+            return false;
+
+        var selectedItem = ResolveAlchemySelectedItem();
+        var mode = NormalizeAlchemyMode(PlayerConfig.Get(AlchemyModeKey, "enhance"));
+
+        var magicTargets = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
+        var magicStones = new Dictionary<InventoryItem, RefMagicOpt>();
+        if (selectedItem?.Record != null)
+        {
+            foreach (var option in AlchemyBlueOptions)
+            {
+                if (!PlayerConfig.Get(GetAlchemyBlueEnabledConfigKey(option.Key), false))
+                    continue;
+
+                var referenceOption = Game.ReferenceManager.GetMagicOption(option.Group, (byte)selectedItem.Record.Degree);
+                if (referenceOption == null)
+                    continue;
+
+                var targetValue = PlayerConfig.Get(GetAlchemyBlueMaxConfigKey(option.Key), 0);
+                if (targetValue <= 0)
+                    targetValue = referenceOption.GetMaxValue();
+
+                targetValue = Math.Min(targetValue, referenceOption.GetMaxValue());
+                if (targetValue <= 0)
+                    continue;
+
+                var stone = GetAlchemyStonesByGroup(selectedItem, option.Group).FirstOrDefault(item => item.Amount > 0);
+                if (stone == null)
+                    continue;
+
+                magicStones[stone] = referenceOption;
+                magicTargets[option.Group] = (uint)targetValue;
+            }
+        }
+
+        var attributePlans = new List<(ItemAttributeGroup Group, InventoryItem Stone, int MaxValue)>();
+        if (selectedItem?.Record != null)
+        {
+            var available = ItemAttributesInfo.GetAvailableAttributeGroupsForItem(selectedItem.Record)?.ToHashSet()
+                ?? new HashSet<ItemAttributeGroup>();
+
+            foreach (var option in AlchemyStatOptions)
+            {
+                if (!PlayerConfig.Get(GetAlchemyStatEnabledConfigKey(option.Key), false))
+                    continue;
+
+                var targetScale = NormalizeAlchemyStatTarget(PlayerConfig.Get(GetAlchemyStatTargetConfigKey(option.Key), "off"));
+                var targetValue = MapAlchemyStatTargetToPercent(targetScale);
+                if (targetValue <= 0 || !available.Contains(option.Group))
+                    continue;
+
+                var groupName = ItemAttributesInfo.GetActualAttributeGroupNameForItem(selectedItem.Record, option.Group);
+                if (string.IsNullOrWhiteSpace(groupName))
+                    continue;
+
+                var stone = Game.Player?.Inventory?
+                    .GetNormalPartItems(item =>
+                        item?.Record != null
+                        && item.Record.TypeID2 == 3
+                        && item.Record.TypeID3 == 11
+                        && item.Record.TypeID4 == 2
+                        && item.Record.Desc1 == groupName)
+                    .FirstOrDefault(item => item.Amount > 0);
+
+                if (stone == null)
+                    continue;
+
+                attributePlans.Add((option.Group, stone, targetValue));
+            }
+        }
+
+        var engineName = mode switch
+        {
+            "stats" => "Attribute",
+            "blues" => "Magic",
+            _ => "Enhance"
+        };
+
+        var runtimeType = runtimeBotbase.GetType();
+        var engineProperty = runtimeType.GetProperty("AlchemyEngine", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+        if (engineProperty?.PropertyType?.IsEnum == true)
+        {
+            var enumValue = Enum.Parse(engineProperty.PropertyType, engineName, ignoreCase: true);
+            engineProperty.SetValue(runtimeBotbase, enumValue);
+        }
+
+        var enhanceConfigType = Type.GetType("UBot.Alchemy.Bundle.Enhance.EnhanceBundleConfig, UBot.Alchemy", false);
+        var magicConfigType = Type.GetType("UBot.Alchemy.Bundle.Magic.MagicBundleConfig, UBot.Alchemy", false);
+        var attributeConfigType = Type.GetType("UBot.Alchemy.Bundle.Attribute.AttributeBundleConfig, UBot.Alchemy", false);
+        var attributeItemType = Type.GetType("UBot.Alchemy.Bundle.Attribute.AttributeBundleConfig+AttributeBundleConfigItem, UBot.Alchemy", false);
+
+        object enhanceConfig = null;
+        object magicConfig = null;
+        object attributeConfig = null;
+
+        if (engineName == "Enhance" && enhanceConfigType != null)
+        {
+            var config = Activator.CreateInstance(enhanceConfigType);
+            var maxOpt = Math.Clamp(PlayerConfig.Get(AlchemyMaxEnhancementKey, 0), 0, 15);
+            var elixirType = NormalizeAlchemyElixirType(PlayerConfig.Get(AlchemyElixirTypeKey, InferAlchemyElixirType(selectedItem)));
+            var elixirs = selectedItem != null ? ResolveAlchemyElixirs(selectedItem, elixirType).ToArray() : Array.Empty<InventoryItem>();
+
+            enhanceConfigType.GetProperty("MaxOptLevel")?.SetValue(config, (byte)maxOpt);
+            enhanceConfigType.GetProperty("Item")?.SetValue(config, selectedItem);
+            enhanceConfigType.GetProperty("StopIfLuckyPowderEmpty")?.SetValue(config, PlayerConfig.Get(AlchemyStopAtNoPowderKey, true));
+            enhanceConfigType.GetProperty("UseImmortalStones")?.SetValue(config, PlayerConfig.Get(AlchemyUseImmortalStoneKey, false));
+            enhanceConfigType.GetProperty("UseAstralStones")?.SetValue(config, PlayerConfig.Get(AlchemyUseAstralStoneKey, false));
+            enhanceConfigType.GetProperty("UseSteadyStones")?.SetValue(config, PlayerConfig.Get(AlchemyUseSteadyStoneKey, false));
+            enhanceConfigType.GetProperty("UseLuckyStones")?.SetValue(config, PlayerConfig.Get(AlchemyUseLuckyStoneKey, false));
+            enhanceConfigType.GetProperty("Elixirs")?.SetValue(config, elixirs);
+
+            enhanceConfig = config;
+        }
+
+        if (engineName == "Magic" && magicConfigType != null)
+        {
+            var config = Activator.CreateInstance(magicConfigType);
+            magicConfigType.GetProperty("Item")?.SetValue(config, selectedItem);
+            magicConfigType.GetProperty("MagicStones")?.SetValue(config, magicStones);
+            magicConfigType.GetProperty("TargetValues")?.SetValue(config, magicTargets);
+            magicConfig = config;
+        }
+
+        if (engineName == "Attribute" && attributeConfigType != null && attributeItemType != null)
+        {
+            var config = Activator.CreateInstance(attributeConfigType);
+            var attributeListType = typeof(List<>).MakeGenericType(attributeItemType);
+            var attributeList = (IList)Activator.CreateInstance(attributeListType);
+
+            foreach (var plan in attributePlans)
+            {
+                var item = Activator.CreateInstance(attributeItemType);
+                attributeItemType.GetProperty("MaxValue")?.SetValue(item, plan.MaxValue);
+                attributeItemType.GetProperty("Stone")?.SetValue(item, plan.Stone);
+                attributeItemType.GetProperty("Group")?.SetValue(item, plan.Group);
+                attributeList.Add(item);
+            }
+
+            attributeConfigType.GetProperty("Item")?.SetValue(config, selectedItem);
+            attributeConfigType.GetProperty("Attributes")?.SetValue(config, attributeList);
+            attributeConfig = config;
+        }
+
+        runtimeType.GetProperty("EnhanceBundleConfig", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)?.SetValue(runtimeBotbase, enhanceConfig);
+        runtimeType.GetProperty("MagicBundleConfig", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)?.SetValue(runtimeBotbase, magicConfig);
+        runtimeType.GetProperty("AttributeBundleConfig", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)?.SetValue(runtimeBotbase, attributeConfig);
+        return true;
+    }
+
+    private static Dictionary<string, object?> BuildTargetAssistPluginConfig()
+    {
+        var roleModeRaw = PlayerConfig.Get("UBot.TargetAssist.RoleMode", "Civil");
+        var roleMode = roleModeRaw.Equals("Thief", StringComparison.OrdinalIgnoreCase)
+            ? "thief"
+            : roleModeRaw.Equals("HunterTrader", StringComparison.OrdinalIgnoreCase)
+                ? "hunterTrader"
+                : "civil";
+
+        return new Dictionary<string, object?>
+        {
+            ["enabled"] = PlayerConfig.Get("UBot.TargetAssist.Enabled", false),
+            ["maxRange"] = Math.Clamp(PlayerConfig.Get("UBot.TargetAssist.MaxRange", 40f), 5f, 400f),
+            ["includeDeadTargets"] = PlayerConfig.Get("UBot.TargetAssist.IncludeDeadTargets", false),
+            ["ignoreSnowShieldTargets"] = PlayerConfig.Get("UBot.TargetAssist.IgnoreSnowShieldTargets", true),
+            ["ignoreBloodyStormTargets"] = PlayerConfig.Get("UBot.TargetAssist.IgnoreBloodyStormTargets", false),
+            ["ignoredGuilds"] = PlayerConfig.GetArray<string>("UBot.TargetAssist.IgnoredGuilds", '|').Cast<object?>().ToList(),
+            ["customPlayers"] = PlayerConfig.GetArray<string>("UBot.TargetAssist.CustomPlayers", '|').Cast<object?>().ToList(),
+            ["onlyCustomPlayers"] = PlayerConfig.Get("UBot.TargetAssist.OnlyCustomPlayers", false),
+            ["roleMode"] = roleMode,
+            ["targetCycleKey"] = PlayerConfig.Get("UBot.TargetAssist.TargetCycleKey", "Oem3")
+        };
+    }
+
+    private static bool ApplyTargetAssistPluginPatch(Dictionary<string, object?> patch)
+    {
+        var changed = false;
+        changed |= SetPlayerBool("UBot.TargetAssist.Enabled", patch, "enabled");
+        changed |= SetPlayerBool("UBot.TargetAssist.IncludeDeadTargets", patch, "includeDeadTargets");
+        changed |= SetPlayerBool("UBot.TargetAssist.IgnoreSnowShieldTargets", patch, "ignoreSnowShieldTargets");
+        changed |= SetPlayerBool("UBot.TargetAssist.IgnoreBloodyStormTargets", patch, "ignoreBloodyStormTargets");
+        changed |= SetPlayerBool("UBot.TargetAssist.OnlyCustomPlayers", patch, "onlyCustomPlayers");
+        changed |= SetPlayerString("UBot.TargetAssist.TargetCycleKey", patch, "targetCycleKey");
+
+        if (TryGetDoubleValue(patch, "maxRange", out var maxRange))
+        {
+            PlayerConfig.Set("UBot.TargetAssist.MaxRange", (float)Math.Clamp(maxRange, 5d, 400d));
+            changed = true;
+        }
+
+        if (TryGetStringListValue(patch, "ignoredGuilds", out var ignoredGuilds))
+        {
+            PlayerConfig.SetArray(
+                "UBot.TargetAssist.IgnoredGuilds",
+                ignoredGuilds.Select(value => value.Trim())
+                    .Where(value => !string.IsNullOrWhiteSpace(value))
+                    .Distinct(StringComparer.OrdinalIgnoreCase),
+                "|");
+            changed = true;
+        }
+
+        if (TryGetStringListValue(patch, "customPlayers", out var customPlayers))
+        {
+            PlayerConfig.SetArray(
+                "UBot.TargetAssist.CustomPlayers",
+                customPlayers.Select(value => value.Trim())
+                    .Where(value => !string.IsNullOrWhiteSpace(value))
+                    .Distinct(StringComparer.OrdinalIgnoreCase),
+                "|");
+            changed = true;
+        }
+
+        if (TryGetStringValue(patch, "roleMode", out var roleModeRaw))
+        {
+            var roleMode = roleModeRaw.Trim().ToLowerInvariant() switch
+            {
+                "thief" => "Thief",
+                "huntertrader" => "HunterTrader",
+                "hunter_trader" => "HunterTrader",
+                "hunter-trader" => "HunterTrader",
+                _ => "Civil"
+            };
+            PlayerConfig.Set("UBot.TargetAssist.RoleMode", roleMode);
+            changed = true;
+        }
+
+        if (changed)
+            EventManager.FireEvent("OnSavePlayerConfig");
+
+        return changed;
+    }
+
+    private static MonsterRarity ParseMonsterTypeToken(string value, MonsterRarity fallback = MonsterRarity.General)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return fallback;
+
+        var normalized = value.Trim().ToLowerInvariant();
+        return normalized switch
+        {
+            "general" => MonsterRarity.General,
+            "champion" => MonsterRarity.Champion,
+            "giant" => MonsterRarity.Giant,
+            "generalparty" or "partygeneral" => MonsterRarity.GeneralParty,
+            "championparty" or "partychampion" => MonsterRarity.ChampionParty,
+            "giantparty" or "partygiant" => MonsterRarity.GiantParty,
+            "elite" => MonsterRarity.Elite,
+            "strong" or "elitestrong" => MonsterRarity.EliteStrong,
+            "unique" => MonsterRarity.Unique,
+            "event" => MonsterRarity.Event,
+            _ => fallback
+        };
+    }
+
+    private static string FormatMonsterTypeToken(MonsterRarity value)
+    {
+        return value switch
+        {
+            MonsterRarity.Champion => "Champion",
+            MonsterRarity.Giant => "Giant",
+            MonsterRarity.GeneralParty => "GeneralParty",
+            MonsterRarity.ChampionParty => "ChampionParty",
+            MonsterRarity.GiantParty => "GiantParty",
+            MonsterRarity.Elite => "Elite",
+            MonsterRarity.EliteStrong => "Strong",
+            MonsterRarity.Unique => "Unique",
+            MonsterRarity.Event => "Event",
+            _ => "General"
         };
     }
 

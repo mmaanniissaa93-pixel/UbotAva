@@ -5,6 +5,7 @@ using UBot.Avalonia.Features;
 using UBot.Avalonia.Features.Alchemy;
 using UBot.Avalonia.Features.AutoDungeon;
 using UBot.Avalonia.Features.Chat;
+using UBot.Avalonia.Features.CommandCenter;
 using UBot.Avalonia.Features.General;
 using UBot.Avalonia.Features.Inventory;
 using UBot.Avalonia.Features.Items;
@@ -68,6 +69,12 @@ public sealed class FeatureViewFactory
             if (cached.View is ItemsFeatureView items) items.UpdateFromState(state);
             if (cached.View is InventoryFeatureView inv) inv.UpdateFromState(state);
             if (cached.View is PartyFeatureView party) party.UpdateFromState(state);
+            if (cached.View is QuestFeatureView quest) quest.UpdateFromState(state);
+            if (cached.View is TargetAssistFeatureView targetAssist) targetAssist.UpdateFromState(state);
+            if (cached.View is TradeFeatureView trade) trade.UpdateFromState(state);
+            if (cached.View is LureFeatureView lure) lure.UpdateFromState(state);
+            if (cached.View is AlchemyFeatureView alchemy) alchemy.UpdateFromState(state);
+            if (cached.View is CommandCenterFeatureView commandCenter) commandCenter.UpdateFromState(state);
         });
     }
 
@@ -196,6 +203,13 @@ public sealed class FeatureViewFactory
                 v.Initialize(vm, _state);
                 return (v, vm);
             }
+            case "commandcenter":
+            {
+                var vm = new SimpleVm(_core, _state);
+                var v  = new CommandCenterFeatureView();
+                v.Initialize(vm, _state);
+                return (v, vm);
+            }
             case "server":
             {
                 var vm = new SimpleVm(_core, _state);
@@ -230,6 +244,7 @@ public sealed class FeatureViewFactory
         if (s.Contains("log"))            return "log";
         if (s.Contains("serverinfo"))     return "server";
         if (s.Contains("autodungeon"))    return "autodungeon";
+        if (s.Contains("commandcenter"))  return "commandcenter";
         if (s.Contains("targetassist"))   return "targetassist";
         if (s.Contains("alchemy"))        return "alchemy";
         if (s.Contains("trade"))          return "trade";
