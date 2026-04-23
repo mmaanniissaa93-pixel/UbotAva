@@ -1,17 +1,25 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using global::Avalonia.Layout;
+using Avalonia.Layout;
+using Avalonia.Media;
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Text.Json;
+using UBot.Avalonia.Controls;
 using UBot.Avalonia.Services;
 using UBot.Avalonia.ViewModels;
 
 namespace UBot.Avalonia.Features.Alchemy;
+
+public sealed class AlchemyLogRow
+{
+    public string Item { get; set; } = string.Empty;
+    public string Message { get; set; } = string.Empty;
+}
 
 public partial class AlchemyFeatureView : UserControl
 {
@@ -19,106 +27,320 @@ public partial class AlchemyFeatureView : UserControl
     {
         public string Code { get; set; } = string.Empty;
         public string Label { get; set; } = string.Empty;
-        public override string ToString() => Label;
+        public int Degree { get; set; }
+        public int OptLevel { get; set; }
+        public int Slot { get; set; }
     }
 
-    private static readonly string[] BlueKeys =
+    private sealed class AlchemyRow
     {
-        "str", "int", "immortal", "steady", "lucky", "durability", "attackRate", "blockRate", "availableSlots"
+        public string Key { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Value { get; set; } = "0";
+        public int Current { get; set; }
+        public int Max { get; set; }
+        public int StoneCount { get; set; }
+    }
+
+    private static readonly (string Key, string Label)[] BlueMeta =
+    {
+        ("str", "Str"),
+        ("int", "Int"),
+        ("immortal", "Immortal"),
+        ("steady", "Steady"),
+        ("lucky", "Lucky"),
+        ("durability", "Durability"),
+        ("attackRate", "Attack rate"),
+        ("blockRate", "Blocking rate"),
+        ("availableSlots", "Available numb...")
     };
 
-    private static readonly string[] StatKeys =
+    private static readonly (string Key, string Label)[] StatMeta =
     {
-        "critical", "magAtk", "phyAtk", "attackRate", "magReinforce", "phyReinforce", "durability"
+        ("critical", "Critical"),
+        ("magAtk", "Mag. atk. pwr."),
+        ("phyAtk", "Phy. atk. pwr."),
+        ("attackRate", "Attack rate"),
+        ("magReinforce", "Mag. reinforce"),
+        ("phyReinforce", "Phy. reinforce"),
+        ("durability", "Durability")
+    };
+
+    private static readonly (string Value, string Label)[] ElixirOptions =
+    {
+        ("weapon", "Weapon Elixir"),
+        ("shield", "Shield Elixir"),
+        ("protector", "Protector Elixir"),
+        ("accessory", "Accessory Elixir")
+    };
+
+    private static readonly (string Value, string Label)[] StatTargetOptions =
+    {
+        ("off", "Disabled"),
+        ("low", "Low"),
+        ("medium", "Medium"),
+        ("high", "High"),
+        ("max", "Max")
     };
 
     private PluginViewModelBase? _vm;
     private AppState? _state;
-    private bool _built;
     private bool _syncing;
+    private bool _botRunning;
+    private bool _alchemySelected;
 
-    private ComboBox? _modeCombo;
-    private ComboBox? _itemCombo;
-    private TextBox? _maxEnhancementBox;
-    private ComboBox? _elixirTypeCombo;
-    private CheckBox? _stopNoPowderCheck;
-    private CheckBox? _luckyStoneCheck;
-    private CheckBox? _immortalStoneCheck;
-    private CheckBox? _astralStoneCheck;
-    private CheckBox? _steadyStoneCheck;
-    private TextBlock? _runtimeLabel;
-    private ListBox? _bluesList;
-    private ListBox? _statsList;
-
-    private readonly Dictionary<string, CheckBox> _blueEnabledChecks = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, TextBox> _blueMaxBoxes = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, CheckBox> _statEnabledChecks = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, ComboBox> _statTargetCombos = new(StringComparer.OrdinalIgnoreCase);
+    private string _currentMode = "enhance";
+    private string _leftSummaryMode = "blues";
+    private string _selectedItemCode = string.Empty;
 
     private readonly List<AlchemyItemOption> _itemOptions = new();
+    private readonly Dictionary<string, AlchemyRow> _blueRows = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, AlchemyRow> _statRows = new(StringComparer.OrdinalIgnoreCase);
+
+    private readonly Dictionary<string, CheckBox> _blueToggles = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, TextBox> _blueMaxBoxes = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, TextBlock> _blueCurrentTexts = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, TextBlock> _blueStoneTexts = new(StringComparer.OrdinalIgnoreCase);
+
+    private readonly Dictionary<string, CheckBox> _statToggles = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, CustomSelect> _statTargets = new(StringComparer.OrdinalIgnoreCase);
+
+    private readonly ObservableCollection<AlchemyLogRow> _logRows = new();
 
     public AlchemyFeatureView()
     {
         InitializeComponent();
+        BuildStaticUi();
+        WireStaticEvents();
     }
 
     public void Initialize(PluginViewModelBase vm, AppState state)
     {
         _vm = vm;
         _state = state;
-        Build();
         _ = LoadFromConfigAsync();
     }
 
     public void UpdateFromState(JsonElement moduleState)
     {
-        Build();
         var root = moduleState;
         if (moduleState.ValueKind == JsonValueKind.Object && moduleState.TryGetProperty("alchemy", out var alchemyNode))
             root = alchemyNode;
         if (root.ValueKind != JsonValueKind.Object)
             return;
 
-        if (_runtimeLabel != null)
+        _botRunning = moduleState.TryGetProperty("botRunning", out var botRunningNode) && botRunningNode.ValueKind == JsonValueKind.True;
+        _alchemySelected = root.TryGetProperty("selected", out var selectedNode) && selectedNode.ValueKind == JsonValueKind.True;
+        UpdateStartButtonVisual();
+
+        UpdateItemCatalog(root);
+        UpdateSelectedItemDetails(root);
+        UpdateResourceCounts(root);
+
+        _blueRows.Clear();
+        foreach (var row in ParseRows(root, "alchemyBlues"))
+            _blueRows[row.Key] = row;
+
+        _statRows.Clear();
+        foreach (var row in ParseRows(root, "alchemyStats"))
+            _statRows[row.Key] = row;
+
+        RenderLeftSummary();
+        RenderBluesRightValues();
+        UpdateLogs();
+    }
+
+    private void BuildStaticUi()
+    {
+        ItemSelect.Options = new List<SelectOption>();
+        ElixirSelect.Options = ElixirOptions.Select(option => new SelectOption(option.Value, option.Label)).ToList();
+
+        BuildBlueRowsUi();
+        BuildStatRowsUi();
+
+        LogList.ItemsSource = _logRows;
+        ApplyModeVisuals();
+        ApplyLeftSummaryVisuals();
+        UpdateStartButtonVisual();
+    }
+
+    private void WireStaticEvents()
+    {
+        ItemSelect.SelectionChanged += ItemSelect_Changed;
+        ElixirSelect.SelectionChanged += ElixirSelect_Changed;
+
+        ModeEnhanceBtn.Click += (_, _) => SetMode("enhance", patch: true);
+        ModeBluesBtn.Click += (_, _) => SetMode("blues", patch: true);
+        ModeStatsBtn.Click += (_, _) => SetMode("stats", patch: true);
+
+        LeftBluesBtn.Click += (_, _) => SetLeftSummaryMode("blues");
+        LeftStatsBtn.Click += (_, _) => SetLeftSummaryMode("stats");
+
+        MaxMinusBtn.Click += MaxMinusBtn_Click;
+        MaxPlusBtn.Click += MaxPlusBtn_Click;
+        MaxEnhancementBox.LostFocus += MaxEnhancementBox_LostFocus;
+
+        StopPowderToggle.IsCheckedChanged += (_, _) => _ = PatchBoolAsync("stopAtNoPowder", StopPowderToggle.IsChecked == true);
+        LuckyStoneToggle.IsCheckedChanged += (_, _) => _ = PatchBoolAsync("useLuckyStone", LuckyStoneToggle.IsChecked == true);
+        ImmortalStoneToggle.IsCheckedChanged += (_, _) => _ = PatchBoolAsync("useImmortalStone", ImmortalStoneToggle.IsChecked == true);
+        AstralStoneToggle.IsCheckedChanged += (_, _) => _ = PatchBoolAsync("useAstralStone", AstralStoneToggle.IsChecked == true);
+        SteadyStoneToggle.IsCheckedChanged += (_, _) => _ = PatchBoolAsync("useSteadyStone", SteadyStoneToggle.IsChecked == true);
+        AlchemyStartBtn.Click += AlchemyStartBtn_Click;
+    }
+
+    private void BuildBlueRowsUi()
+    {
+        BluesRowsHost.Children.Clear();
+        _blueToggles.Clear();
+        _blueMaxBoxes.Clear();
+        _blueCurrentTexts.Clear();
+        _blueStoneTexts.Clear();
+
+        foreach (var (key, label) in BlueMeta)
         {
-            var powder = ReadInt(root, "luckyPowderCount");
-            var luckyStone = ReadInt(root, "luckyStoneCount");
-            var immortal = ReadInt(root, "immortalStoneCount");
-            var astral = ReadInt(root, "astralStoneCount");
-            var steady = ReadInt(root, "steadyStoneCount");
-            _runtimeLabel.Text = $"Powder:{powder}  Lucky:{luckyStone}  Immortal:{immortal}  Astral:{astral}  Steady:{steady}";
-        }
+            var rowBorder = new Border
+            {
+                BorderBrush = new SolidColorBrush(Color.Parse("#214B6E95")),
+                BorderThickness = new Thickness(0, 0, 0, 1),
+                Padding = new Thickness(6, 6, 0, 6)
+            };
 
-        if (root.TryGetProperty("itemsCatalog", out var itemsCatalog) && itemsCatalog.ValueKind == JsonValueKind.Array)
+            var rowGrid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,120,120,120") };
+
+            var optionHost = new Grid { ColumnDefinitions = new ColumnDefinitions("24,*") };
+            var toggle = new CheckBox
+            {
+                Content = string.Empty,
+                Classes = { "alchemy-check" },
+                VerticalAlignment = VerticalAlignment.Center,
+                Tag = key
+            };
+            toggle.IsCheckedChanged += BlueToggle_IsCheckedChanged;
+
+            var nameText = new TextBlock
+            {
+                Text = label,
+                Classes = { "label" },
+                Margin = new Thickness(10, 0, 0, 0),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            Grid.SetColumn(toggle, 0);
+            Grid.SetColumn(nameText, 1);
+            optionHost.Children.Add(toggle);
+            optionHost.Children.Add(nameText);
+
+            var currentText = new TextBlock
+            {
+                Text = "0",
+                Classes = { "label" },
+                FontWeight = FontWeight.SemiBold,
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+
+            var maxBox = new TextBox
+            {
+                Text = "0",
+                Classes = { "alchemy-num" },
+                Tag = key,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            maxBox.LostFocus += BlueMaxBox_LostFocus;
+
+            var stonesText = new TextBlock
+            {
+                Text = "0",
+                Classes = { "label" },
+                FontWeight = FontWeight.SemiBold,
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+
+            Grid.SetColumn(optionHost, 0);
+            Grid.SetColumn(currentText, 1);
+            Grid.SetColumn(maxBox, 2);
+            Grid.SetColumn(stonesText, 3);
+
+            rowGrid.Children.Add(optionHost);
+            rowGrid.Children.Add(currentText);
+            rowGrid.Children.Add(maxBox);
+            rowGrid.Children.Add(stonesText);
+
+            rowBorder.Child = rowGrid;
+            BluesRowsHost.Children.Add(rowBorder);
+
+            _blueToggles[key] = toggle;
+            _blueMaxBoxes[key] = maxBox;
+            _blueCurrentTexts[key] = currentText;
+            _blueStoneTexts[key] = stonesText;
+        }
+    }
+
+    private void BuildStatRowsUi()
+    {
+        StatsRowsHost.Children.Clear();
+        _statToggles.Clear();
+        _statTargets.Clear();
+
+        foreach (var (key, label) in StatMeta)
         {
-            var selectedCode = (_itemCombo?.SelectedItem as AlchemyItemOption)?.Code
-                ?? _vm?.TextCfg("alchemyItemCode", string.Empty)
-                ?? string.Empty;
-            _itemOptions.Clear();
-            foreach (var entry in itemsCatalog.EnumerateArray())
+            var rowBorder = new Border
             {
-                if (entry.ValueKind != JsonValueKind.Object)
-                    continue;
-                var code = entry.TryGetProperty("codeName", out var codeNode) ? codeNode.GetString() ?? string.Empty : string.Empty;
-                var name = entry.TryGetProperty("name", out var nameNode) ? nameNode.GetString() ?? code : code;
-                if (string.IsNullOrWhiteSpace(code))
-                    continue;
-                _itemOptions.Add(new AlchemyItemOption { Code = code, Label = name });
-            }
+                BorderBrush = new SolidColorBrush(Color.Parse("#214B6E95")),
+                BorderThickness = new Thickness(0, 0, 0, 1),
+                Padding = new Thickness(6, 6, 0, 6)
+            };
 
-            if (_itemCombo != null)
+            var rowGrid = new Grid { ColumnDefinitions = new ColumnDefinitions("250,*") };
+
+            var optionHost = new Grid { ColumnDefinitions = new ColumnDefinitions("24,*") };
+            var toggle = new CheckBox
             {
-                _itemCombo.ItemsSource = null;
-                _itemCombo.ItemsSource = _itemOptions;
-                _itemCombo.SelectedItem = _itemOptions.FirstOrDefault(x => x.Code.Equals(selectedCode, StringComparison.OrdinalIgnoreCase))
-                    ?? _itemOptions.FirstOrDefault();
-            }
+                Content = string.Empty,
+                Classes = { "alchemy-check" },
+                VerticalAlignment = VerticalAlignment.Center,
+                Tag = key
+            };
+            toggle.IsCheckedChanged += StatToggle_IsCheckedChanged;
+
+            var nameText = new TextBlock
+            {
+                Text = label,
+                Classes = { "label" },
+                Margin = new Thickness(10, 0, 0, 0),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            Grid.SetColumn(toggle, 0);
+            Grid.SetColumn(nameText, 1);
+            optionHost.Children.Add(toggle);
+            optionHost.Children.Add(nameText);
+
+            var targetSelect = new CustomSelect
+            {
+                Height = 32,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Width = 160,
+                Tag = key,
+                Options = StatTargetOptions.Select(option => new SelectOption(option.Value, option.Label)).ToList(),
+                SelectedValue = "off"
+            };
+            var statKey = key;
+            targetSelect.SelectionChanged += value => StatTarget_SelectionChanged(statKey, value);
+
+            Grid.SetColumn(optionHost, 0);
+            Grid.SetColumn(targetSelect, 1);
+
+            rowGrid.Children.Add(optionHost);
+            rowGrid.Children.Add(targetSelect);
+            rowBorder.Child = rowGrid;
+            StatsRowsHost.Children.Add(rowBorder);
+
+            _statToggles[key] = toggle;
+            _statTargets[key] = targetSelect;
         }
-
-        if (_bluesList != null)
-            _bluesList.ItemsSource = ParseRows(root, "alchemyBlues");
-        if (_statsList != null)
-            _statsList.ItemsSource = ParseRows(root, "alchemyStats");
     }
 
     private async System.Threading.Tasks.Task LoadFromConfigAsync()
@@ -127,33 +349,95 @@ public partial class AlchemyFeatureView : UserControl
             return;
 
         await _vm.LoadConfigAsync();
+
         _syncing = true;
         try
         {
-            _modeCombo!.SelectedItem = _vm.TextCfg("alchemyMode", "enhance");
-            _maxEnhancementBox!.Text = ((int)Math.Round(_vm.NumCfg("alchemyMaxEnhancement", 0))).ToString(CultureInfo.InvariantCulture);
-            _elixirTypeCombo!.SelectedItem = _vm.TextCfg("alchemyElixirType", "weapon");
-            _stopNoPowderCheck!.IsChecked = _vm.BoolCfg("stopAtNoPowder", true);
-            _luckyStoneCheck!.IsChecked = _vm.BoolCfg("useLuckyStone", false);
-            _immortalStoneCheck!.IsChecked = _vm.BoolCfg("useImmortalStone", false);
-            _astralStoneCheck!.IsChecked = _vm.BoolCfg("useAstralStone", false);
-            _steadyStoneCheck!.IsChecked = _vm.BoolCfg("useSteadyStone", false);
+            SetMode(_vm.TextCfg("alchemyMode", "enhance"), patch: false);
+            _selectedItemCode = _vm.TextCfg("alchemyItemCode", string.Empty);
 
-            foreach (var key in BlueKeys)
+            MaxEnhancementBox.Text = ClampInt(_vm.NumCfg("alchemyMaxEnhancement", 0), 0, 15).ToString(CultureInfo.InvariantCulture);
+            ElixirSelect.SelectedValue = NormalizeElixir(_vm.TextCfg("alchemyElixirType", "weapon"));
+
+            StopPowderToggle.IsChecked = _vm.BoolCfg("stopAtNoPowder", true);
+            LuckyStoneToggle.IsChecked = _vm.BoolCfg("useLuckyStone", false);
+            ImmortalStoneToggle.IsChecked = _vm.BoolCfg("useImmortalStone", false);
+            AstralStoneToggle.IsChecked = _vm.BoolCfg("useAstralStone", false);
+            SteadyStoneToggle.IsChecked = _vm.BoolCfg("useSteadyStone", false);
+
+            foreach (var (key, _) in BlueMeta)
             {
-                if (_blueEnabledChecks.TryGetValue(key, out var enabledCheck))
-                    enabledCheck.IsChecked = _vm.BoolCfg($"alchemyBlueEnabled_{key}", false);
+                if (_blueToggles.TryGetValue(key, out var toggle))
+                    toggle.IsChecked = _vm.BoolCfg($"alchemyBlueEnabled_{key}", false);
+
                 if (_blueMaxBoxes.TryGetValue(key, out var maxBox))
-                    maxBox.Text = ((int)Math.Round(_vm.NumCfg($"alchemyBlueMax_{key}", 0))).ToString(CultureInfo.InvariantCulture);
+                    maxBox.Text = Math.Max(0, (int)Math.Round(_vm.NumCfg($"alchemyBlueMax_{key}", 0))).ToString(CultureInfo.InvariantCulture);
             }
 
-            foreach (var key in StatKeys)
+            foreach (var (key, _) in StatMeta)
             {
-                if (_statEnabledChecks.TryGetValue(key, out var enabledCheck))
-                    enabledCheck.IsChecked = _vm.BoolCfg($"alchemyStatEnabled_{key}", false);
-                if (_statTargetCombos.TryGetValue(key, out var targetCombo))
-                    targetCombo.SelectedItem = _vm.TextCfg($"alchemyStatTarget_{key}", "off");
+                if (_statToggles.TryGetValue(key, out var toggle))
+                    toggle.IsChecked = _vm.BoolCfg($"alchemyStatEnabled_{key}", false);
+
+                if (_statTargets.TryGetValue(key, out var targetSelect))
+                    targetSelect.SelectedValue = NormalizeStatTarget(_vm.TextCfg($"alchemyStatTarget_{key}", "off"));
             }
+        }
+        finally
+        {
+            _syncing = false;
+        }
+
+        RenderBluesRightValues();
+        RenderLeftSummary();
+    }
+
+    private void UpdateItemCatalog(JsonElement root)
+    {
+        if (!root.TryGetProperty("itemsCatalog", out var itemsCatalog) || itemsCatalog.ValueKind != JsonValueKind.Array)
+            return;
+
+        _itemOptions.Clear();
+        foreach (var entry in itemsCatalog.EnumerateArray())
+        {
+            if (entry.ValueKind != JsonValueKind.Object)
+                continue;
+
+            var code = entry.TryGetProperty("codeName", out var codeNode) ? codeNode.GetString() ?? string.Empty : string.Empty;
+            var name = entry.TryGetProperty("name", out var nameNode) ? nameNode.GetString() ?? code : code;
+            if (string.IsNullOrWhiteSpace(code))
+                continue;
+
+            _itemOptions.Add(new AlchemyItemOption
+            {
+                Code = code,
+                Label = name,
+                Degree = ReadInt(entry, "degree"),
+                OptLevel = ReadInt(entry, "optLevel"),
+                Slot = ReadInt(entry, "slot")
+            });
+        }
+
+        var options = _itemOptions
+            .Select(item => new SelectOption(item.Code, item.Label))
+            .Cast<SelectOption>()
+            .ToList();
+
+        _syncing = true;
+        try
+        {
+            ItemSelect.Options = options;
+
+            var stateCode = root.TryGetProperty("selectedItem", out var selectedNode) && selectedNode.ValueKind == JsonValueKind.Object
+                ? (selectedNode.TryGetProperty("codeName", out var stateCodeNode) ? stateCodeNode.GetString() ?? string.Empty : string.Empty)
+                : string.Empty;
+
+            var selectedCode = !string.IsNullOrWhiteSpace(_selectedItemCode) ? _selectedItemCode : stateCode;
+            if (string.IsNullOrWhiteSpace(selectedCode) && _itemOptions.Count > 0)
+                selectedCode = _itemOptions[0].Code;
+
+            _selectedItemCode = selectedCode;
+            ItemSelect.SelectedValue = selectedCode;
         }
         finally
         {
@@ -161,130 +445,298 @@ public partial class AlchemyFeatureView : UserControl
         }
     }
 
-    private void Build()
+    private void UpdateSelectedItemDetails(JsonElement root)
     {
-        if (_built)
-            return;
-        _built = true;
+        var degree = 0;
+        var enhancement = 0;
 
-        TabStripCtrl.SetTabs(new[] { ("alchemy", "Alchemy") });
-        TabStripCtrl.ActiveTabId = "alchemy";
-        ContentHost.Children.Clear();
-
-        var layout = new StackPanel { Spacing = 10 };
-
-        _runtimeLabel = new TextBlock
+        if (root.TryGetProperty("selectedItem", out var selectedNode) && selectedNode.ValueKind == JsonValueKind.Object)
         {
-            Text = "Powder:0  Lucky:0  Immortal:0  Astral:0  Steady:0",
-            Classes = { "form-label" }
-        };
-        layout.Children.Add(_runtimeLabel);
-
-        _modeCombo = new ComboBox { ItemsSource = new[] { "enhance", "blues", "stats" }, SelectedItem = "enhance", Width = 220 };
-        _itemCombo = new ComboBox { Width = 520 };
-        _maxEnhancementBox = CreateTextBox("0", 120);
-        _elixirTypeCombo = new ComboBox { ItemsSource = new[] { "weapon", "shield", "protector", "accessory" }, SelectedItem = "weapon", Width = 220 };
-        _stopNoPowderCheck = CreateCheck("Stop at no powder");
-        _luckyStoneCheck = CreateCheck("Use lucky stone");
-        _immortalStoneCheck = CreateCheck("Use immortal stone");
-        _astralStoneCheck = CreateCheck("Use astral stone");
-        _steadyStoneCheck = CreateCheck("Use steady stone");
-
-        layout.Children.Add(CreateRow("Mode", _modeCombo));
-        layout.Children.Add(CreateRow("Item", _itemCombo));
-        layout.Children.Add(CreateRow("Max enhancement", _maxEnhancementBox));
-        layout.Children.Add(CreateRow("Elixir type", _elixirTypeCombo));
-        layout.Children.Add(_stopNoPowderCheck);
-        layout.Children.Add(_luckyStoneCheck);
-        layout.Children.Add(_immortalStoneCheck);
-        layout.Children.Add(_astralStoneCheck);
-        layout.Children.Add(_steadyStoneCheck);
-
-        var bluesPanel = new StackPanel { Spacing = 6 };
-        bluesPanel.Children.Add(new TextBlock { Text = "Blue targets", Classes = { "form-label" } });
-        foreach (var key in BlueKeys)
-        {
-            var enabled = CreateCheck(key);
-            var maxBox = CreateTextBox("0", 90);
-            _blueEnabledChecks[key] = enabled;
-            _blueMaxBoxes[key] = maxBox;
-            bluesPanel.Children.Add(CreateRowControl(enabled, maxBox));
+            degree = ReadInt(selectedNode, "degree");
+            enhancement = ReadInt(selectedNode, "optLevel");
         }
-        layout.Children.Add(bluesPanel);
 
-        var statsPanel = new StackPanel { Spacing = 6 };
-        statsPanel.Children.Add(new TextBlock { Text = "Stat targets", Classes = { "form-label" } });
-        foreach (var key in StatKeys)
-        {
-            var enabled = CreateCheck(key);
-            var target = new ComboBox { ItemsSource = new[] { "off", "low", "medium", "high", "max" }, SelectedItem = "off", Width = 120 };
-            _statEnabledChecks[key] = enabled;
-            _statTargetCombos[key] = target;
-            statsPanel.Children.Add(CreateRowControl(enabled, target));
-        }
-        layout.Children.Add(statsPanel);
-
-        _bluesList = new ListBox { Height = 120 };
-        _statsList = new ListBox { Height = 120 };
-        layout.Children.Add(CreateRow("Blue status", _bluesList));
-        layout.Children.Add(CreateRow("Stat status", _statsList));
-
-        var saveBtn = new Button { Content = "Save", Classes = { "primary" }, Width = 140 };
-        saveBtn.Click += SaveBtn_Click;
-        layout.Children.Add(saveBtn);
-
-        ContentHost.Children.Add(layout);
+        DegreeValueText.Text = degree.ToString(CultureInfo.InvariantCulture);
+        EnhancementValueText.Text = $"+{enhancement}";
     }
 
-    private async void SaveBtn_Click(object? sender, RoutedEventArgs e)
+    private void UpdateResourceCounts(JsonElement root)
+    {
+        LuckyPowderCountText.Text = $"x{ReadInt(root, "luckyPowderCount")}";
+        LuckyStoneCountText.Text = $"x{ReadInt(root, "luckyStoneCount")}";
+        ImmortalStoneCountText.Text = $"x{ReadInt(root, "immortalStoneCount")}";
+        AstralStoneCountText.Text = $"x{ReadInt(root, "astralStoneCount")}";
+        SteadyStoneCountText.Text = $"x{ReadInt(root, "steadyStoneCount")}";
+    }
+
+    private void RenderLeftSummary()
+    {
+        LeftRowsHost.Children.Clear();
+
+        var useStats = string.Equals(_leftSummaryMode, "stats", StringComparison.OrdinalIgnoreCase);
+        LeftTableNameHeader.Text = useStats ? "STAT" : "BLUE";
+        LeftTableValueHeader.Text = "VALUE";
+
+        var rows = useStats
+            ? StatMeta.Select(meta => _statRows.TryGetValue(meta.Key, out var row) ? row : new AlchemyRow { Name = meta.Label, Value = "0" })
+            : BlueMeta.Select(meta => _blueRows.TryGetValue(meta.Key, out var row) ? row : new AlchemyRow { Name = meta.Label, Value = "0" });
+
+        foreach (var row in rows)
+        {
+            var border = new Border
+            {
+                BorderBrush = new SolidColorBrush(Color.Parse("#214B6E95")),
+                BorderThickness = new Thickness(0, 0, 0, 1),
+                Padding = new Thickness(0, 5)
+            };
+
+            var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,90") };
+            var name = new TextBlock
+            {
+                Text = row.Name,
+                Classes = { "label" },
+                TextTrimming = TextTrimming.CharacterEllipsis
+            };
+            var value = new TextBlock
+            {
+                Text = string.IsNullOrWhiteSpace(row.Value) ? "0" : row.Value,
+                Classes = { "label" },
+                FontWeight = FontWeight.SemiBold
+            };
+
+            Grid.SetColumn(name, 0);
+            Grid.SetColumn(value, 1);
+            grid.Children.Add(name);
+            grid.Children.Add(value);
+            border.Child = grid;
+            LeftRowsHost.Children.Add(border);
+        }
+    }
+
+    private void RenderBluesRightValues()
+    {
+        foreach (var (key, _) in BlueMeta)
+        {
+            if (_blueCurrentTexts.TryGetValue(key, out var currentText))
+            {
+                currentText.Text = _blueRows.TryGetValue(key, out var row)
+                    ? row.Current.ToString(CultureInfo.InvariantCulture)
+                    : "0";
+            }
+
+            if (_blueStoneTexts.TryGetValue(key, out var stonesText))
+            {
+                stonesText.Text = _blueRows.TryGetValue(key, out var row)
+                    ? row.StoneCount.ToString(CultureInfo.InvariantCulture)
+                    : "0";
+            }
+        }
+    }
+
+    private void SetMode(string mode, bool patch)
+    {
+        _currentMode = NormalizeMode(mode);
+        ApplyModeVisuals();
+
+        if (patch)
+            _ = PatchAsync("alchemyMode", _currentMode);
+    }
+
+    private void ApplyModeVisuals()
+    {
+        SetTabActive(ModeEnhanceBtn, _currentMode == "enhance");
+        SetTabActive(ModeBluesBtn, _currentMode == "blues");
+        SetTabActive(ModeStatsBtn, _currentMode == "stats");
+
+        EnhancePanel.IsVisible = _currentMode == "enhance";
+        BluesPanel.IsVisible = _currentMode == "blues";
+        StatsPanel.IsVisible = _currentMode == "stats";
+    }
+
+    private void SetLeftSummaryMode(string mode)
+    {
+        _leftSummaryMode = string.Equals(mode, "stats", StringComparison.OrdinalIgnoreCase) ? "stats" : "blues";
+        ApplyLeftSummaryVisuals();
+        RenderLeftSummary();
+    }
+
+    private void ApplyLeftSummaryVisuals()
+    {
+        SetTabActive(LeftBluesBtn, _leftSummaryMode == "blues");
+        SetTabActive(LeftStatsBtn, _leftSummaryMode == "stats");
+    }
+
+    private static void SetTabActive(Button button, bool active)
+    {
+        button.Classes.Remove("active");
+        if (active)
+            button.Classes.Add("active");
+    }
+
+    private void UpdateLogs()
+    {
+        if (_state == null)
+            return;
+
+        var filtered = _state.LogLines
+            .Where(line => line.Contains("[Alchemy]", StringComparison.OrdinalIgnoreCase))
+            .Take(120)
+            .Select(line => new AlchemyLogRow
+            {
+                Item = string.Empty,
+                Message = line
+            })
+            .ToList();
+
+        _logRows.Clear();
+        foreach (var row in filtered)
+            _logRows.Add(row);
+    }
+
+    private async void ItemSelect_Changed(object value)
+    {
+        var code = value?.ToString() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(code))
+            return;
+
+        _selectedItemCode = code;
+        await PatchAsync("alchemyItemCode", code);
+    }
+
+    private async void ElixirSelect_Changed(object value)
+    {
+        var normalized = NormalizeElixir(value?.ToString() ?? "weapon");
+        await PatchAsync("alchemyElixirType", normalized);
+    }
+
+    private void MaxMinusBtn_Click(object? sender, RoutedEventArgs e)
+    {
+        var current = ParseInt(MaxEnhancementBox.Text, 0);
+        current = Math.Clamp(current - 1, 0, 15);
+        MaxEnhancementBox.Text = current.ToString(CultureInfo.InvariantCulture);
+        _ = PatchAsync("alchemyMaxEnhancement", current);
+    }
+
+    private void MaxPlusBtn_Click(object? sender, RoutedEventArgs e)
+    {
+        var current = ParseInt(MaxEnhancementBox.Text, 0);
+        current = Math.Clamp(current + 1, 0, 15);
+        MaxEnhancementBox.Text = current.ToString(CultureInfo.InvariantCulture);
+        _ = PatchAsync("alchemyMaxEnhancement", current);
+    }
+
+    private void MaxEnhancementBox_LostFocus(object? sender, RoutedEventArgs e)
+    {
+        var value = Math.Clamp(ParseInt(MaxEnhancementBox.Text, 0), 0, 15);
+        MaxEnhancementBox.Text = value.ToString(CultureInfo.InvariantCulture);
+        _ = PatchAsync("alchemyMaxEnhancement", value);
+    }
+
+    private void BlueToggle_IsCheckedChanged(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not CheckBox toggle || toggle.Tag is not string key)
+            return;
+
+        _ = PatchBoolAsync($"alchemyBlueEnabled_{key}", toggle.IsChecked == true);
+    }
+
+    private void BlueMaxBox_LostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not TextBox box || box.Tag is not string key)
+            return;
+
+        var value = Math.Max(0, ParseInt(box.Text, 0));
+        box.Text = value.ToString(CultureInfo.InvariantCulture);
+        _ = PatchAsync($"alchemyBlueMax_{key}", value);
+    }
+
+    private void StatToggle_IsCheckedChanged(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not CheckBox toggle || toggle.Tag is not string key)
+            return;
+
+        _ = PatchBoolAsync($"alchemyStatEnabled_{key}", toggle.IsChecked == true);
+    }
+
+    private async void StatTarget_SelectionChanged(string key, object value)
+    {
+        if (value is not string target)
+            return;
+
+        await PatchAsync($"alchemyStatTarget_{key}", NormalizeStatTarget(target));
+    }
+
+    private async System.Threading.Tasks.Task PatchBoolAsync(string key, bool value)
+    {
+        await PatchAsync(key, value);
+    }
+
+    private async System.Threading.Tasks.Task PatchAsync(string key, object? value)
     {
         if (_vm == null || _syncing)
             return;
 
-        var patch = new Dictionary<string, object?>
+        await _vm.PatchConfigAsync(new Dictionary<string, object?>
         {
-            ["alchemyMode"] = _modeCombo?.SelectedItem?.ToString() ?? "enhance",
-            ["alchemyItemCode"] = (_itemCombo?.SelectedItem as AlchemyItemOption)?.Code ?? string.Empty,
-            ["alchemyMaxEnhancement"] = ParseInt(_maxEnhancementBox?.Text, 0),
-            ["alchemyElixirType"] = _elixirTypeCombo?.SelectedItem?.ToString() ?? "weapon",
-            ["stopAtNoPowder"] = _stopNoPowderCheck?.IsChecked == true,
-            ["useLuckyStone"] = _luckyStoneCheck?.IsChecked == true,
-            ["useImmortalStone"] = _immortalStoneCheck?.IsChecked == true,
-            ["useAstralStone"] = _astralStoneCheck?.IsChecked == true,
-            ["useSteadyStone"] = _steadyStoneCheck?.IsChecked == true
-        };
-
-        foreach (var key in BlueKeys)
-        {
-            patch[$"alchemyBlueEnabled_{key}"] = _blueEnabledChecks.TryGetValue(key, out var enabledCheck) && enabledCheck.IsChecked == true;
-            patch[$"alchemyBlueMax_{key}"] = _blueMaxBoxes.TryGetValue(key, out var maxBox) ? ParseInt(maxBox.Text, 0) : 0;
-        }
-
-        foreach (var key in StatKeys)
-        {
-            patch[$"alchemyStatEnabled_{key}"] = _statEnabledChecks.TryGetValue(key, out var enabledCheck) && enabledCheck.IsChecked == true;
-            patch[$"alchemyStatTarget_{key}"] = _statTargetCombos.TryGetValue(key, out var targetCombo)
-                ? targetCombo.SelectedItem?.ToString() ?? "off"
-                : "off";
-        }
-
-        await _vm.PatchConfigAsync(patch);
+            [key] = value
+        });
     }
 
-    private static List<string> ParseRows(JsonElement root, string key)
+    private async void AlchemyStartBtn_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_vm == null || _state == null)
+            return;
+
+        RuntimeStatus status;
+        if (_botRunning && _alchemySelected)
+            status = await _vm.Core.StopBotAsync();
+        else
+            status = await _vm.Core.StartBotAsync();
+
+        _state.ApplyStatus(status);
+        _botRunning = status.BotRunning;
+        _alchemySelected = !string.IsNullOrWhiteSpace(status.SelectedBotbase)
+            && status.SelectedBotbase.Contains("alchemy", StringComparison.OrdinalIgnoreCase);
+        UpdateStartButtonVisual();
+    }
+
+    private void UpdateStartButtonVisual()
+    {
+        var shouldShowStop = _botRunning && _alchemySelected;
+        AlchemyStartBtn.Content = shouldShowStop ? "Alchemy Stop" : "Alchemy Start";
+
+        AlchemyStartBtn.Classes.Remove("go");
+        AlchemyStartBtn.Classes.Remove("halt");
+        AlchemyStartBtn.Classes.Add(shouldShowStop ? "halt" : "go");
+    }
+
+    private static List<AlchemyRow> ParseRows(JsonElement root, string key)
     {
         if (!root.TryGetProperty(key, out var rowsNode) || rowsNode.ValueKind != JsonValueKind.Array)
-            return new List<string>();
+            return new List<AlchemyRow>();
 
-        var result = new List<string>();
+        var result = new List<AlchemyRow>();
         foreach (var row in rowsNode.EnumerateArray())
         {
             if (row.ValueKind != JsonValueKind.Object)
                 continue;
-            var name = row.TryGetProperty("name", out var nameNode) ? nameNode.GetString() ?? string.Empty : string.Empty;
-            var value = row.TryGetProperty("value", out var valueNode) ? valueNode.GetString() ?? string.Empty : string.Empty;
-            var stones = row.TryGetProperty("stoneCount", out var stonesNode) && stonesNode.TryGetInt32(out var stonesValue) ? stonesValue : 0;
-            result.Add($"{name} => {value} (stones: {stones})");
+
+            var keyValue = row.TryGetProperty("key", out var keyNode) ? keyNode.GetString() ?? string.Empty : string.Empty;
+            if (string.IsNullOrWhiteSpace(keyValue))
+                continue;
+
+            var name = row.TryGetProperty("name", out var nameNode) ? nameNode.GetString() ?? keyValue : keyValue;
+            var value = row.TryGetProperty("value", out var valueNode) ? valueNode.GetString() ?? "0" : "0";
+
+            result.Add(new AlchemyRow
+            {
+                Key = keyValue,
+                Name = name,
+                Value = value,
+                Current = ReadInt(row, "current"),
+                Max = ReadInt(row, "max"),
+                StoneCount = ReadInt(row, "stoneCount")
+            });
         }
 
         return result;
@@ -302,37 +754,45 @@ public partial class AlchemyFeatureView : UserControl
             : fallback;
     }
 
-    private static StackPanel CreateRow(string label, Control control)
+    private static string NormalizeMode(string mode)
     {
-        var panel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
-        panel.Children.Add(new TextBlock { Text = label, Width = 220, VerticalAlignment = VerticalAlignment.Center });
-        panel.Children.Add(control);
-        return panel;
-    }
-
-    private static StackPanel CreateRowControl(Control left, Control right)
-    {
-        var panel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
-        panel.Children.Add(left);
-        panel.Children.Add(right);
-        return panel;
-    }
-
-    private static CheckBox CreateCheck(string text)
-    {
-        return new CheckBox
+        var normalized = (mode ?? string.Empty).Trim().ToLowerInvariant();
+        return normalized switch
         {
-            Content = text,
-            Classes = { "check" }
+            "blues" => "blues",
+            "stats" => "stats",
+            _ => "enhance"
         };
     }
 
-    private static TextBox CreateTextBox(string value, double width = 220)
+    private static string NormalizeElixir(string mode)
     {
-        return new TextBox
+        var normalized = (mode ?? string.Empty).Trim().ToLowerInvariant();
+        return normalized switch
         {
-            Text = value,
-            Width = width
+            "shield" => "shield",
+            "protector" => "protector",
+            "accessory" => "accessory",
+            _ => "weapon"
         };
+    }
+
+    private static string NormalizeStatTarget(string target)
+    {
+        var normalized = (target ?? string.Empty).Trim().ToLowerInvariant();
+        return normalized switch
+        {
+            "low" => "low",
+            "medium" => "medium",
+            "high" => "high",
+            "max" => "max",
+            _ => "off"
+        };
+    }
+
+    private static int ClampInt(double value, int min, int max)
+    {
+        var rounded = (int)Math.Round(value);
+        return Math.Clamp(rounded, min, max);
     }
 }

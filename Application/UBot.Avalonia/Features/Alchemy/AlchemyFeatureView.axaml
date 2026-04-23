@@ -3,10 +3,263 @@
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:controls="clr-namespace:UBot.Avalonia.Controls"
   x:Class="UBot.Avalonia.Features.Alchemy.AlchemyFeatureView">
-  <ScrollViewer VerticalScrollBarVisibility="Auto">
-    <StackPanel Spacing="10" Margin="0,0,0,12">
-      <controls:TabStrip x:Name="TabStripCtrl" />
-      <StackPanel x:Name="ContentHost" Spacing="10" />
-    </StackPanel>
-  </ScrollViewer>
+
+  <UserControl.Styles>
+    <Style Selector="Button.alchemy-tab">
+      <Setter Property="Height" Value="34" />
+      <Setter Property="MinWidth" Value="116" />
+      <Setter Property="Padding" Value="16,0" />
+      <Setter Property="Background" Value="{DynamicResource TabBtnBgBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource TabBtnBorderBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="17" />
+      <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="Button.alchemy-tab /template/ ContentPresenter">
+      <Setter Property="HorizontalAlignment" Value="Center" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="Button.alchemy-tab.active">
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+      <Setter Property="Background" Value="{DynamicResource TabBtnActiveBgBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.alchemy-metric-label">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.alchemy-metric-value">
+      <Setter Property="FontSize" Value="20" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+      <Setter Property="HorizontalAlignment" Value="Right" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="MinWidth" Value="64" />
+    </Style>
+
+    <Style Selector="TextBlock.alchemy-table-head">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="Foreground" Value="{DynamicResource SectionHeaderTextBrush}" />
+      <Setter Property="LetterSpacing" Value="0.2" />
+    </Style>
+
+    <Style Selector="TextBox.alchemy-num">
+      <Setter Property="Background" Value="{DynamicResource FieldBgBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Height" Value="28" />
+      <Setter Property="Width" Value="84" />
+      <Setter Property="TextAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Padding" Value="4,0" />
+    </Style>
+
+    <Style Selector="Button.alchemy-step">
+      <Setter Property="MinWidth" Value="30" />
+      <Setter Property="Width" Value="30" />
+      <Setter Property="Height" Value="30" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Background" Value="{DynamicResource FieldBgBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="FontSize" Value="16" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+
+    <Style Selector="Button.alchemy-step /template/ ContentPresenter">
+      <Setter Property="HorizontalAlignment" Value="Center" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="Button.alchemy-step:pointerover">
+      <Setter Property="BorderBrush" Value="{DynamicResource StrokeStrongBrush}" />
+    </Style>
+
+    <Style Selector="CheckBox.alchemy-check">
+      <Setter Property="MinWidth" Value="20" />
+      <Setter Property="MinHeight" Value="20" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="HorizontalAlignment" Value="Left" />
+      <Setter Property="Margin" Value="2,0,0,0" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,10,*">
+    <Grid Grid.Row="0" ColumnDefinitions="320,10,*">
+      <Border Grid.Column="0" Classes="section-card" MinHeight="360">
+        <Grid RowDefinitions="Auto,*">
+          <Border Classes="section-header">
+            <TextBlock Text="Item" Classes="section-header-text" />
+          </Border>
+
+          <StackPanel Grid.Row="1" Margin="10" Spacing="10">
+            <TextBlock Text="Item:" Classes="label" />
+
+            <Grid ColumnDefinitions="*,8,34">
+              <controls:CustomSelect Grid.Column="0" x:Name="ItemSelect" Height="34" Placeholder="Select item..." />
+              <Button Grid.Column="2" x:Name="ItemSlotButton" Classes="btn secondary" Content="[]" IsEnabled="False" Width="34" Height="34" Padding="0" />
+            </Grid>
+
+            <Grid ColumnDefinitions="Auto,72" RowDefinitions="Auto,Auto" Margin="0,2,0,0">
+              <TextBlock Grid.Row="0" Grid.Column="0" Text="Degree:" Classes="alchemy-metric-label" />
+              <TextBlock Grid.Row="0" Grid.Column="1" x:Name="DegreeValueText" Classes="alchemy-metric-value" Text="-" />
+              <TextBlock Grid.Row="1" Grid.Column="0" Text="Enhancement:" Classes="alchemy-metric-label" />
+              <TextBlock Grid.Row="1" Grid.Column="1" x:Name="EnhancementValueText" Classes="alchemy-metric-value" Text="+0" />
+            </Grid>
+
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Button x:Name="LeftBluesBtn" Classes="alchemy-tab" Content="Blues" MinWidth="0" Width="62" Height="30" Padding="0" />
+              <Button x:Name="LeftStatsBtn" Classes="alchemy-tab" Content="Stats" MinWidth="0" Width="62" Height="30" Padding="0" />
+            </StackPanel>
+
+            <Border Classes="log-board" Padding="10" MinHeight="186">
+              <Grid RowDefinitions="Auto,*">
+                <Grid ColumnDefinitions="*,90" Margin="0,0,0,6">
+                  <TextBlock x:Name="LeftTableNameHeader" Grid.Column="0" Classes="alchemy-table-head" Text="BLUE" />
+                  <TextBlock x:Name="LeftTableValueHeader" Grid.Column="1" Classes="alchemy-table-head" Text="VALUE" HorizontalAlignment="Left" />
+                </Grid>
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                  <StackPanel x:Name="LeftRowsHost" Spacing="0" />
+                </ScrollViewer>
+              </Grid>
+            </Border>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <Border Grid.Column="2" Classes="section-card" MinHeight="360">
+        <Grid RowDefinitions="Auto,*">
+          <Border Classes="section-header">
+            <TextBlock Text="Alchemy" Classes="section-header-text" />
+          </Border>
+
+          <StackPanel Grid.Row="1" Margin="10" Spacing="10">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <Button x:Name="ModeEnhanceBtn" Classes="alchemy-tab" Content="Enhance (+)" />
+              <Button x:Name="ModeBluesBtn" Classes="alchemy-tab" Content="Blues" />
+              <Button x:Name="ModeStatsBtn" Classes="alchemy-tab" Content="Stats" />
+            </StackPanel>
+
+            <StackPanel x:Name="EnhancePanel" Spacing="10">
+              <Grid ColumnDefinitions="150,30,8,84,8,30,*" VerticalAlignment="Center">
+                <TextBlock Grid.Column="0" Text="Max enhancement:" Classes="label" VerticalAlignment="Center" />
+                <Button Grid.Column="1" x:Name="MaxMinusBtn" Classes="alchemy-step" Content="-" />
+                <TextBox Grid.Column="3" x:Name="MaxEnhancementBox" Classes="alchemy-num" />
+                <Button Grid.Column="5" x:Name="MaxPlusBtn" Classes="alchemy-step" Content="+" />
+              </Grid>
+
+              <Grid ColumnDefinitions="150,*">
+                <TextBlock Grid.Column="0" Text="Elixir:" Classes="label" VerticalAlignment="Center" />
+                <controls:CustomSelect Grid.Column="1" x:Name="ElixirSelect" Height="34" />
+              </Grid>
+
+              <StackPanel Spacing="6" Margin="0,2,0,0">
+                <Grid ColumnDefinitions="32,*,44" VerticalAlignment="Center">
+                  <CheckBox Grid.Column="0" x:Name="StopPowderToggle" Classes="alchemy-check" Content="" />
+                  <TextBlock Grid.Column="1" Text="Stop if 0 lucky powder" Classes="label" Margin="8,0,0,0" VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="2" x:Name="LuckyPowderCountText" Text="x0" Classes="group-caption" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+
+                <Grid ColumnDefinitions="32,*,44" VerticalAlignment="Center">
+                  <CheckBox Grid.Column="0" x:Name="LuckyStoneToggle" Classes="alchemy-check" Content="" />
+                  <TextBlock Grid.Column="1" Text="Use lucky stones" Classes="label" Margin="8,0,0,0" VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="2" x:Name="LuckyStoneCountText" Text="x0" Classes="group-caption" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+
+                <Grid ColumnDefinitions="32,*,44" VerticalAlignment="Center">
+                  <CheckBox Grid.Column="0" x:Name="ImmortalStoneToggle" Classes="alchemy-check" Content="" />
+                  <TextBlock Grid.Column="1" Text="Use immortal stones" Classes="label" Margin="8,0,0,0" VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="2" x:Name="ImmortalStoneCountText" Text="x0" Classes="group-caption" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+
+                <Grid ColumnDefinitions="32,*,44" VerticalAlignment="Center">
+                  <CheckBox Grid.Column="0" x:Name="AstralStoneToggle" Classes="alchemy-check" Content="" />
+                  <TextBlock Grid.Column="1" Text="Use astral stones" Classes="label" Margin="8,0,0,0" VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="2" x:Name="AstralStoneCountText" Text="x0" Classes="group-caption" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+
+                <Grid ColumnDefinitions="32,*,44" VerticalAlignment="Center">
+                  <CheckBox Grid.Column="0" x:Name="SteadyStoneToggle" Classes="alchemy-check" Content="" />
+                  <TextBlock Grid.Column="1" Text="Use steady stones" Classes="label" Margin="8,0,0,0" VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="2" x:Name="SteadyStoneCountText" Text="x0" Classes="group-caption" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+              </StackPanel>
+            </StackPanel>
+
+            <Border x:Name="BluesPanel" Classes="log-board" Padding="10" IsVisible="False">
+              <Grid RowDefinitions="Auto,*">
+                <Grid ColumnDefinitions="*,120,120,120" Margin="0,0,0,6">
+                  <TextBlock Grid.Column="0" Text="OPTION" Classes="alchemy-table-head" />
+                  <TextBlock Grid.Column="1" Text="CURRENT" Classes="alchemy-table-head" HorizontalAlignment="Center" />
+                  <TextBlock Grid.Column="2" Text="MAX" Classes="alchemy-table-head" HorizontalAlignment="Center" />
+                  <TextBlock Grid.Column="3" Text="NUM. STONES" Classes="alchemy-table-head" HorizontalAlignment="Center" />
+                </Grid>
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Height="300">
+                  <StackPanel x:Name="BluesRowsHost" Spacing="0" />
+                </ScrollViewer>
+              </Grid>
+            </Border>
+
+            <StackPanel x:Name="StatsPanel" IsVisible="False" Spacing="6">
+              <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Height="300">
+                <StackPanel x:Name="StatsRowsHost" Spacing="0" />
+              </ScrollViewer>
+            </StackPanel>
+
+            <Button
+              x:Name="AlchemyStartBtn"
+              Classes="btn primary go"
+              Content="Alchemy Start"
+              Width="188"
+              HorizontalAlignment="Left"
+              Margin="0,8,0,0" />
+          </StackPanel>
+        </Grid>
+      </Border>
+    </Grid>
+
+    <Border Grid.Row="2" Classes="section-card">
+      <Grid RowDefinitions="Auto,*">
+        <Border Classes="section-header">
+          <TextBlock Text="Alchemy Log" Classes="section-header-text" />
+        </Border>
+
+        <Border Grid.Row="1" Classes="log-board" Margin="10" Padding="10">
+          <Grid RowDefinitions="Auto,*">
+            <Grid ColumnDefinitions="180,*" Margin="0,0,0,6">
+              <TextBlock Text="ITEM" Classes="alchemy-table-head" />
+              <TextBlock Grid.Column="1" Text="MESSAGE" Classes="alchemy-table-head" />
+            </Grid>
+            <ListBox Grid.Row="1" x:Name="LogList" Background="Transparent" BorderThickness="0" Height="120">
+              <ListBox.ItemTemplate>
+                <DataTemplate>
+                  <Grid ColumnDefinitions="180,*" Margin="0,0,0,2">
+                    <TextBlock Grid.Column="0" Text="{Binding Item}" Classes="label" />
+                    <TextBlock Grid.Column="1" Text="{Binding Message}" Classes="label" TextTrimming="CharacterEllipsis" />
+                  </Grid>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </Grid>
+        </Border>
+      </Grid>
+    </Border>
+  </Grid>
 </UserControl>
