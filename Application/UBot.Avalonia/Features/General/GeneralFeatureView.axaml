@@ -141,12 +141,12 @@
             <Grid ColumnDefinitions="84,64,Auto,14,84,64,Auto" VerticalAlignment="Center">
               <TextBlock Grid.Column="0" Text="Login delay" Classes="label compact-label" VerticalAlignment="Center"/>
               <TextBox Grid.Column="1" x:Name="LoginDelayBox" Classes="compact-num"
-                       TextChanged="NumBox_Changed" Tag="loginDelay"/>
+                       TextChanged="NumBox_Changed" LostFocus="NumBox_LostFocus" Tag="loginDelay"/>
               <TextBlock Grid.Column="2" Text="sec" Classes="compact-unit"/>
 
               <TextBlock Grid.Column="4" Text="Wait after DC" Classes="label compact-label" VerticalAlignment="Center"/>
               <TextBox Grid.Column="5" x:Name="WaitAfterDcBox" Classes="compact-num"
-                       TextChanged="NumBox_Changed" Tag="waitAfterDc"/>
+                       TextChanged="NumBox_Changed" LostFocus="NumBox_LostFocus" Tag="waitAfterDc"/>
               <TextBlock Grid.Column="6" Text="min" Classes="compact-unit"/>
             </Grid>
           </StackPanel>
@@ -193,7 +193,7 @@
                           Content="Notify on"
                           IsCheckedChanged="Check_Changed" Tag="enableQueueNotification"/>
                 <TextBox x:Name="PeopleLeftBox" Classes="compact-num"
-                         TextChanged="NumBox_Changed" Tag="queuePeopleLeft"/>
+                         TextChanged="NumBox_Changed" LostFocus="NumBox_LostFocus" Tag="queuePeopleLeft"/>
                 <TextBlock Text="people left" Classes="compact-unit"/>
               </StackPanel>
 

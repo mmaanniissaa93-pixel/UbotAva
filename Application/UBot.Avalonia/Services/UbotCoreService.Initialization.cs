@@ -85,8 +85,15 @@ internal sealed class UbotCoreLifecycleService : UbotServiceBase
             EnsureProfileLoaded();
             GlobalConfig.Load();
 
-            if (!string.IsNullOrWhiteSpace(ProfileManager.SelectedCharacter))
-                PlayerConfig.Load(ProfileManager.SelectedCharacter);
+            var selectedCharacter = ProfileManager.SelectedCharacter?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(selectedCharacter))
+                selectedCharacter = GlobalConfig.Get("UBot.General.AutoLoginCharacter", string.Empty)?.Trim() ?? string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(selectedCharacter))
+            {
+                ProfileManager.SelectedCharacter = selectedCharacter;
+                PlayerConfig.Load(selectedCharacter);
+            }
 
             Kernel.Language = GlobalConfig.Get("UBot.Language", "en_US");
             Kernel.Initialize();

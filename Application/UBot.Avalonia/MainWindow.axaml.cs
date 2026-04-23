@@ -16,11 +16,15 @@ using System.Threading;
 using UBot.Avalonia.Controls;
 using UBot.Avalonia.Services;
 using UBot.Avalonia.Dialogs;
+using UBot.Core;
 
 namespace UBot.Avalonia;
 
 public partial class MainWindow : Window
 {
+    private const string DesktopThemeConfigKey = "UBot.Desktop.Theme";
+    private const string DesktopLanguageConfigKey = "UBot.Desktop.Language";
+
     public static IUbotCoreService? CoreService { get; set; }
     public static AppState?         State       { get; set; }
 
@@ -70,6 +74,7 @@ public partial class MainWindow : Window
         _core    = CoreService ?? new UbotCoreService();
         _state   = State       ?? new AppState();
         _factory = new FeatureViewFactory(_core, _state);
+        LoadDesktopPreferences();
         _core.LogReceived += (level, message) =>
         {
             _state.AddLog($"[{level.ToUpperInvariant()}] {message}");
@@ -103,6 +108,15 @@ public partial class MainWindow : Window
         _runtimePollTimer.Stop();
         _runtimePollTimer.Tick -= RuntimePollTimer_Tick;
         StopStatusPulse();
+        PersistDesktopPreferences();
+        try
+        {
+            _core?.SaveConfigAsync().GetAwaiter().GetResult();
+        }
+        catch
+        {
+            // ignore save failures during shutdown
+        }
         base.OnClosed(e);
     }
 
@@ -279,17 +293,29 @@ public partial class MainWindow : Window
 
     private void InitTopbar()
     {
-        _isDark = ActualThemeVariant == ThemeVariant.Dark;
         LblToggle.Text     = "START";
         LblDisconnect.Text = "Disconnect";
         LblStartClient.Text = "Start Client";
         LblGoClientless.Text = "Go Clientless";
         LblHideClient.Text = "Hide Client";
-        BtnEn.Classes.Add("active");
+
+        if (_lang == "Turkish")
+        {
+            BtnTr.Classes.Add("active");
+            BtnEn.Classes.Remove("active");
+        }
+        else
+        {
+            _lang = "English";
+            BtnEn.Classes.Add("active");
+            BtnTr.Classes.Remove("active");
+        }
+
         DivisionSelect.SelectionChanged += DivisionSelect_SelectionChanged;
         GatewaySelect.SelectionChanged += GatewaySelect_SelectionChanged;
         UpdateThemeIcon();
         LoadBanner();
+        ApplyTranslations();
         SyncTopbar();
     }
 
@@ -624,11 +650,13 @@ public partial class MainWindow : Window
     private void BtnEn_Click(object? s, RoutedEventArgs e)
     {
         _lang = "English"; BtnEn.Classes.Add("active"); BtnTr.Classes.Remove("active");
+        PersistDesktopPreferences();
         ApplyTranslations();
     }
     private void BtnTr_Click(object? s, RoutedEventArgs e)
     {
         _lang = "Turkish"; BtnTr.Classes.Add("active"); BtnEn.Classes.Remove("active");
+        PersistDesktopPreferences();
         ApplyTranslations();
     }
     private void BtnTheme_Click(object? s, RoutedEventArgs e)
@@ -638,8 +666,31 @@ public partial class MainWindow : Window
         RequestedThemeVariant = target;
         if (Application.Current is { } app)
             app.RequestedThemeVariant = target;
+        PersistDesktopPreferences();
         UpdateThemeIcon();
         LoadBanner();
+    }
+
+    private void LoadDesktopPreferences()
+    {
+        var savedTheme = GlobalConfig.Get(DesktopThemeConfigKey, "dark");
+        _isDark = !string.Equals(savedTheme, "light", StringComparison.OrdinalIgnoreCase);
+
+        var target = _isDark ? ThemeVariant.Dark : ThemeVariant.Light;
+        RequestedThemeVariant = target;
+        if (Application.Current is { } app)
+            app.RequestedThemeVariant = target;
+
+        var savedLanguage = GlobalConfig.Get(DesktopLanguageConfigKey, "English");
+        _lang = string.Equals(savedLanguage, "Turkish", StringComparison.OrdinalIgnoreCase)
+            ? "Turkish"
+            : "English";
+    }
+
+    private void PersistDesktopPreferences()
+    {
+        GlobalConfig.Set(DesktopThemeConfigKey, _isDark ? "dark" : "light");
+        GlobalConfig.Set(DesktopLanguageConfigKey, _lang);
     }
 
     private void UpdateThemeIcon()

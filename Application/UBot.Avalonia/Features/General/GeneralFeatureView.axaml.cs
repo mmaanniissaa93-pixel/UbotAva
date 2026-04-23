@@ -1,10 +1,13 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using UBot.Avalonia.Controls;
 using UBot.Avalonia.Services;
 using UBot.Avalonia.ViewModels;
+using UBot.Core;
 
 namespace UBot.Avalonia.Features.General;
 
@@ -24,8 +27,6 @@ public partial class GeneralFeatureView : UserControl
         AccountSelect.SelectionChanged += AccountSelect_SelectionChanged;
         CharacterSelect.SelectionChanged += CharacterSelect_SelectionChanged;
         ClientTypeSelect.SelectionChanged += ClientTypeSelect_SelectionChanged;
-
-        Refresh();
     }
 
     public void Refresh()
@@ -78,7 +79,9 @@ public partial class GeneralFeatureView : UserControl
         ClientTypeSelect.Options       = ctOpts;
         ClientTypeSelect.SelectedValue = _vm.ConnectionOptions.ClientType ?? "Vietnam";
 
-        _syncing = false;
+        // Keep sync guard until the current UI cycle ends so programmatic Text updates
+        // never trigger persistence handlers with fallback/default values.
+        Dispatcher.UIThread.Post(() => _syncing = false);
     }
 
     private void SroBox_Changed(object? s, TextChangedEventArgs e)
@@ -116,6 +119,7 @@ public partial class GeneralFeatureView : UserControl
     private void Check_Changed(object? s, RoutedEventArgs e)
     {
         if (_syncing || _vm is null || s is not CheckBox cb || cb.Tag is not string key) return;
+        PersistCriticalGeneralBool(key, cb.IsChecked == true);
         _ = _vm.PatchConfigAsync(new Dictionary<string, object?> { [key] = cb.IsChecked == true });
     }
 
@@ -123,7 +127,26 @@ public partial class GeneralFeatureView : UserControl
     {
         if (_syncing || _vm is null || s is not TextBox tb || tb.Tag is not string key) return;
         if (double.TryParse(tb.Text, out var v))
+        {
+            if (key is "loginDelay" or "waitAfterDc")
+                PersistCriticalGeneralInt(key, Math.Max(0, (int)Math.Round(v)));
             _ = _vm.PatchConfigAsync(new Dictionary<string, object?> { [key] = v });
+        }
+    }
+
+    private async void NumBox_LostFocus(object? s, RoutedEventArgs e)
+    {
+        if (_syncing || _vm is null || s is not TextBox tb || tb.Tag is not string key)
+            return;
+
+        if (!TryParseNumeric(tb.Text, out var parsed))
+            return;
+
+        // Persist a normalized integer on focus loss so close/reopen keeps the last value.
+        var normalized = Math.Max(0, (int)Math.Round(parsed));
+        tb.Text = normalized.ToString(CultureInfo.InvariantCulture);
+        PersistCriticalGeneralInt(key, normalized);
+        await _vm.PatchConfigAsync(new Dictionary<string, object?> { [key] = normalized });
     }
 
     private void RadioFirstFound_Checked(object? s, RoutedEventArgs e)
@@ -158,6 +181,50 @@ public partial class GeneralFeatureView : UserControl
     private void OnVmUiStateChanged()
     {
         Dispatcher.UIThread.Post(Refresh);
+    }
+
+    private static bool TryParseNumeric(string? raw, out double value)
+    {
+        value = 0;
+
+        if (string.IsNullOrWhiteSpace(raw))
+            return false;
+
+        var text = raw.Trim();
+        return double.TryParse(text, NumberStyles.Float, CultureInfo.CurrentCulture, out value)
+               || double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out value);
+    }
+
+    private static void PersistCriticalGeneralBool(string key, bool value)
+    {
+        string? configKey = key switch
+        {
+            "enableLoginDelay" => "UBot.General.EnableLoginDelay",
+            "enableWaitAfterDc" => "UBot.General.EnableWaitAfterDC",
+            _ => null
+        };
+
+        if (configKey == null)
+            return;
+
+        GlobalConfig.Set(configKey, value);
+        GlobalConfig.Save();
+    }
+
+    private static void PersistCriticalGeneralInt(string key, int value)
+    {
+        string? configKey = key switch
+        {
+            "loginDelay" => "UBot.General.LoginDelay",
+            "waitAfterDc" => "UBot.General.WaitAfterDC",
+            _ => null
+        };
+
+        if (configKey == null)
+            return;
+
+        GlobalConfig.Set(configKey, Math.Clamp(value, 0, 3600));
+        GlobalConfig.Save();
     }
 
     private async System.Threading.Tasks.Task OpenAccountSetupDialogAsync()
