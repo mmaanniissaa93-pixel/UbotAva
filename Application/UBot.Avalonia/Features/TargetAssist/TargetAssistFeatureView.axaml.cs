@@ -88,8 +88,12 @@ public partial class TargetAssistFeatureView : UserControl
         if (_runtimeLabel != null)
         {
             _runtimeLabel.Text = candidates <= 0
-                ? "No target candidates in range."
-                : $"Candidates: {candidates}  |  Nearest: {nearest} {(distance >= 0 ? $"({distance:0.0}m)" : string.Empty)}";
+                ? DesktopLanguageService.Translate("No target candidates in range.")
+                : string.Format(
+                    DesktopLanguageService.Translate("Candidates: {0}  |  Nearest: {1} {2}"),
+                    candidates,
+                    nearest,
+                    distance >= 0 ? $"({distance:0.0}m)" : string.Empty);
         }
     }
 
@@ -150,7 +154,7 @@ public partial class TargetAssistFeatureView : UserControl
 
         _runtimeLabel = new TextBlock
         {
-            Text = "No target candidates in range.",
+            Text = DesktopLanguageService.Translate("No target candidates in range."),
             Classes = { "ta-helper" }
         };
 
@@ -483,24 +487,26 @@ public partial class TargetAssistFeatureView : UserControl
     {
         if (_cycleKeyDisplayBox != null)
             _cycleKeyDisplayBox.Text = _capturingCycleKey
-                ? "Press a key... (Esc to cancel)"
+                ? DesktopLanguageService.Translate("Press a key... (Esc to cancel)")
                 : (string.IsNullOrWhiteSpace(_capturedCycleKey) ? "Oem3" : _capturedCycleKey);
 
         if (_captureCycleKeyBtn != null)
-            _captureCycleKeyBtn.Content = _capturingCycleKey ? "[] Stop" : "[] Capture";
+            _captureCycleKeyBtn.Content = _capturingCycleKey
+                ? DesktopLanguageService.Translate("[] Stop")
+                : DesktopLanguageService.Translate("[] Capture");
     }
 
     private void UpdateListMetaLabels()
     {
         if (_ignoredGuildsMetaLabel != null)
             _ignoredGuildsMetaLabel.Text = _ignoredGuilds.Count == 0
-                ? "No guild entry yet. Add a guild to exclude from targeting."
-                : $"{_ignoredGuilds.Count} guild entr{(_ignoredGuilds.Count == 1 ? "y" : "ies")} configured.";
+                ? DesktopLanguageService.Translate("No guild entry yet. Add a guild to exclude from targeting.")
+                : string.Format(DesktopLanguageService.Translate("{0} guild entries configured."), _ignoredGuilds.Count);
 
         if (_customPlayersMetaLabel != null)
             _customPlayersMetaLabel.Text = _customPlayers.Count == 0
-                ? "No custom player entry yet. Add names for explicit targeting."
-                : $"{_customPlayers.Count} custom player{(_customPlayers.Count == 1 ? string.Empty : "s")} configured.";
+                ? DesktopLanguageService.Translate("No custom player entry yet. Add names for explicit targeting.")
+                : string.Format(DesktopLanguageService.Translate("{0} custom players configured."), _customPlayers.Count);
     }
 
     private void UpdateListHeights()

@@ -172,7 +172,10 @@ public partial class MainWindow : Window
         {
             var pluginState = await _core.GetPluginStateAsync(_activeId);
             if (pluginState.State is { } moduleState)
+            {
                 _factory.UpdateState(_activeId, moduleState);
+                ApplyLanguageToActiveViewDeferred();
+            }
         }
     }
 
@@ -213,9 +216,9 @@ public partial class MainWindow : Window
             else if (dataIds.Contains(k)) dataItems.Add((id, label, k));
         }
 
-        AddGroup("CORE", coreItems, isFirst: true);
+        AddGroup(DesktopLanguageService.Translate("CORE"), coreItems, isFirst: true);
         // Removed from sidebar: AddGroup("AUTOMATION", autoItems);
-        AddGroup("DATA & TOOLS", dataItems);
+        AddGroup(DesktopLanguageService.Translate("DATA & TOOLS"), dataItems);
     }
 
     private void BuildMenu()
@@ -224,22 +227,21 @@ public partial class MainWindow : Window
 
         PluginsMenu.Items.Clear();
         AutomationMenu.Items.Clear();
-
         // Plugins Menu: Quests, Command center, Target Assist
-        var questsMi = new MenuItem { Header = "Quests" };
+        var questsMi = new MenuItem { Header = DesktopLanguageService.Translate("Quests") };
         questsMi.Click += (_, _) => Navigate("UBot.Quest");
         PluginsMenu.Items.Add(questsMi);
 
-        var commandMi = new MenuItem { Header = "Command center" };
+        var commandMi = new MenuItem { Header = DesktopLanguageService.Translate("Command center") };
         commandMi.Click += (_, _) => Navigate("UBot.CommandCenter");
         PluginsMenu.Items.Add(commandMi);
 
-        var assistMi = new MenuItem { Header = "Target Assist" };
+        var assistMi = new MenuItem { Header = DesktopLanguageService.Translate("Target Assist") };
         assistMi.Click += (_, _) => Navigate("UBot.TargetAssist");
         PluginsMenu.Items.Add(assistMi);
 
         // Automation Menu: Alchemy, Lure, Trade
-        var alchemyMi = new MenuItem { Header = "Alchemy" };
+        var alchemyMi = new MenuItem { Header = DesktopLanguageService.Translate("Alchemy") };
         alchemyMi.Click += (_, _) => Navigate("UBot.Alchemy");
         AutomationMenu.Items.Add(alchemyMi);
 
@@ -247,7 +249,7 @@ public partial class MainWindow : Window
         lureMi.Click += (_, _) => Navigate("UBot.Lure");
         AutomationMenu.Items.Add(lureMi);
 
-        var tradeMi = new MenuItem { Header = "Trade" };
+        var tradeMi = new MenuItem { Header = DesktopLanguageService.Translate("Trade") };
         tradeMi.Click += (_, _) => Navigate("UBot.Trade");
         AutomationMenu.Items.Add(tradeMi);
     }
@@ -280,7 +282,11 @@ public partial class MainWindow : Window
             });
         }
 
-        stack.Children.Add(new TextBlock { Text = label, VerticalAlignment = global::Avalonia.Layout.VerticalAlignment.Center });
+        stack.Children.Add(new TextBlock
+        {
+            Text = DesktopLanguageService.Translate(label),
+            VerticalAlignment = global::Avalonia.Layout.VerticalAlignment.Center
+        });
 
         var btn = new Button { Content = stack, Tag = id };
         btn.Classes.Add("sidebar-item");
@@ -302,20 +308,43 @@ public partial class MainWindow : Window
 
         var view = _factory.GetView(id);
         ContentHost.Content = view;
+        ApplyLanguageToActiveViewDeferred();
 
         if (view is CommandCenterFeatureView commandCenterView)
             commandCenterView.OpenPopup(this);
+    }
+
+    private void ApplyLanguageToActiveViewDeferred()
+    {
+        if (ContentHost.Content is not Control control)
+            return;
+
+        // Immediate pass for already built controls.
+        DesktopLanguageService.ApplyToControl(control, _lang);
+
+        // Deferred passes for sections that populate asynchronously after navigation.
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (ContentHost.Content is Control current)
+                DesktopLanguageService.ApplyToControl(current, _lang);
+        }, DispatcherPriority.Background);
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (ContentHost.Content is Control current)
+                DesktopLanguageService.ApplyToControl(current, _lang);
+        }, DispatcherPriority.Loaded);
     }
 
     // ────────────────────────────────────────────────────────────────────────────
 
     private void InitTopbar()
     {
-        LblToggle.Text     = "START";
-        LblDisconnect.Text = "Disconnect";
-        LblStartClient.Text = "Start Client";
-        LblGoClientless.Text = "Go Clientless";
-        LblHideClient.Text = "Hide Client";
+        LblToggle.Text      = DesktopLanguageService.Translate("START");
+        LblDisconnect.Text  = DesktopLanguageService.Translate("Disconnect");
+        LblStartClient.Text = DesktopLanguageService.Translate("Start Client");
+        LblGoClientless.Text = DesktopLanguageService.Translate("Go Clientless");
+        LblHideClient.Text  = DesktopLanguageService.Translate("Hide Client");
 
         if (_lang == "Turkish")
         {
@@ -358,7 +387,7 @@ public partial class MainWindow : Window
             StatusPulseDot.IsVisible = false;
             StatusIcon.IsVisible = true;
             StatusChipBorder.Classes.Add("status-running");
-            StatusText.Text = "Running";
+            StatusText.Text = DesktopLanguageService.Translate("Running");
             StatusText.Foreground = new SolidColorBrush(Color.Parse("#34D399"));
             StatusIcon.Stroke = new SolidColorBrush(Color.Parse("#34D399"));
             StatusIcon.Data = Geometry.Parse("M5,12 L10,17 L19,8"); // checkmark
@@ -369,7 +398,7 @@ public partial class MainWindow : Window
             StatusPulseDot.IsVisible = false;
             StatusIcon.IsVisible = true;
             StatusChipBorder.Classes.Add("status-waiting");
-            StatusText.Text = "Waiting for Character";
+            StatusText.Text = DesktopLanguageService.Translate("Waiting for Character");
             var waitingColor = _isDark ? Color.Parse("#F59E0B") : Color.Parse("#A66A00");
             StatusText.Foreground = new SolidColorBrush(waitingColor);
             StatusIcon.Stroke = new SolidColorBrush(waitingColor);
@@ -381,7 +410,7 @@ public partial class MainWindow : Window
             StatusPulseDot.IsVisible = true;
             StatusIcon.IsVisible = false;
             StatusChipBorder.Classes.Add("status-connected");
-            StatusText.Text = "Connected";
+            StatusText.Text = DesktopLanguageService.Translate("Connected");
             StatusText.Foreground = new SolidColorBrush(_isDark ? Color.Parse("#34D399") : Color.Parse("#0A6A4A"));
         }
         else
@@ -390,7 +419,7 @@ public partial class MainWindow : Window
             StatusPulseDot.IsVisible = false;
             StatusIcon.IsVisible = true;
             StatusChipBorder.Classes.Add("status-stopped");
-            StatusText.Text = "Off";
+            StatusText.Text = DesktopLanguageService.Translate("Off");
             var stopColor = _isDark ? Color.Parse("#F26C6C") : Color.Parse("#B7485A");
             StatusText.Foreground = new SolidColorBrush(stopColor);
             StatusIcon.Stroke = new SolidColorBrush(stopColor);
@@ -398,12 +427,11 @@ public partial class MainWindow : Window
         }
 
         // ── Primary toggle button ──
-        bool tr = _lang == "Turkish";
         if (running)
         {
             BtnToggle.Classes.Remove("go");
             BtnToggle.Classes.Add("halt");
-            LblToggle.Text = tr ? "DURDUR" : "STOP";
+            LblToggle.Text = DesktopLanguageService.Translate("STOP");
             ToggleIcon.Fill = new SolidColorBrush(Color.Parse("#FFE4E4"));
             ToggleIcon.Stroke = null;
             ToggleIcon.Data = Geometry.Parse("M6,6 L18,6 L18,18 L6,18 Z"); // stop square
@@ -412,7 +440,7 @@ public partial class MainWindow : Window
         {
             BtnToggle.Classes.Remove("halt");
             BtnToggle.Classes.Add("go");
-            LblToggle.Text = tr ? "BASLAT" : "START";
+            LblToggle.Text = DesktopLanguageService.Translate("START");
             ToggleIcon.Fill = new SolidColorBrush(Color.Parse("#F0FFFFFF"));
             ToggleIcon.Stroke = null;
             ToggleIcon.Data = Geometry.Parse("M5,3 L19,12 L5,21 Z"); // play triangle
@@ -421,7 +449,7 @@ public partial class MainWindow : Window
         ProfileLabel.Text = _state.Profile;
 
         // ── Character pill ──
-        CharLabel.Text = waiting ? "Waiting for Character..." : ch;
+        CharLabel.Text = waiting ? DesktopLanguageService.Translate("Waiting for Character...") : ch;
         if (waiting)
         {
             CharPill.Classes.Add("waiting");
@@ -447,10 +475,11 @@ public partial class MainWindow : Window
             MetricHp.Text    = $"{_state.PlayerHealth:N0} / {_state.PlayerMaxHealth:N0}";
             MetricMp.Text    = $"{_state.PlayerMana:N0} / {_state.PlayerMaxMana:N0}";
             MetricExp.Text   = $"{_state.PlayerExpPercent:F2}%";
-            MetricLevelHint.Text = "Live";
-            MetricHpHint.Text = "Live";
-            MetricMpHint.Text = "Live";
-            MetricExpHint.Text = "Live";
+            var live = DesktopLanguageService.Translate("Live");
+            MetricLevelHint.Text = live;
+            MetricHpHint.Text = live;
+            MetricMpHint.Text = live;
+            MetricExpHint.Text = live;
             UpdateBar(HpBar,  _state.PlayerHealthPercent);
             UpdateBar(MpBar,  _state.PlayerManaPercent);
             UpdateBar(ExpBar, _state.PlayerExpPercent);
@@ -758,11 +787,21 @@ public partial class MainWindow : Window
     private void ApplyTranslations()
     {
         bool tr = _lang == "Turkish";
-        LblToggle.Text       = _state!.BotRunning ? (tr ? "DURDUR" : "STOP") : (tr ? "BASLAT" : "START");
-        LblDisconnect.Text   = tr ? "Baglantiyi Kes" : "Disconnect";
-        LblStartClient.Text  = tr ? "Client Baslat" : "Start Client";
-        LblGoClientless.Text = tr ? "Clientless" : "Go Clientless";
-        LblHideClient.Text   = tr ? "Client Gizle" : "Hide Client";
+        DesktopLanguageService.SetLanguage(_lang);
+        GlobalConfig.Set("UBot.Language", tr ? "tr_TR" : "en_US");
+        Kernel.Language = tr ? "tr_TR" : "en_US";
+        LblToggle.Text       = _state!.BotRunning
+            ? DesktopLanguageService.Translate("STOP")
+            : DesktopLanguageService.Translate("START");
+        LblDisconnect.Text   = DesktopLanguageService.Translate("Disconnect");
+        LblStartClient.Text  = DesktopLanguageService.Translate("Start Client");
+        LblGoClientless.Text = DesktopLanguageService.Translate("Go Clientless");
+        LblHideClient.Text   = DesktopLanguageService.Translate("Hide Client");
+        BuildSidebar();
+        BuildMenu();
+        if (!string.IsNullOrWhiteSpace(_activeId))
+            Navigate(_activeId);
+        DesktopLanguageService.ApplyToControl(this, _lang);
         SyncTopbar();
     }
 
