@@ -1,19 +1,21 @@
 <UserControl
   xmlns="https://github.com/avaloniaui"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-  x:Class="UBot.Avalonia.Controls.CustomSelect">
+  x:Class="UBot.Avalonia.Controls.CustomSelect"
+  MinHeight="32">
 
   <!--
     Mirrors CustomSelect.tsx — a styled combobox trigger + flyout menu.
     Popup is handled via Avalonia Popup for proper viewport overflow handling.
   -->
 
-  <Panel x:Name="RootPanel" MinWidth="110">
+  <Panel x:Name="RootPanel" MinWidth="110" MinHeight="32">
 
     <!-- Trigger button -->
     <Border
       x:Name="Trigger"
       Classes="select-trigger"
+      VerticalAlignment="Stretch"
       PointerPressed="Trigger_PointerPressed">
 
       <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">

@@ -432,8 +432,8 @@
   </Style>
 
   <Style Selector="Border.section-pill">
-    <Setter Property="Background" Value="#131D34"/>
-    <Setter Property="BorderBrush" Value="#2A3650"/>
+    <Setter Property="Background" Value="{DynamicResource TopbarPillBgBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="999"/>
     <Setter Property="Padding" Value="10,2"/>
@@ -445,7 +445,7 @@
     <Setter Property="FontSize" Value="10"/>
     <Setter Property="FontWeight" Value="SemiBold"/>
     <Setter Property="LetterSpacing" Value="0.8"/>
-    <Setter Property="Foreground" Value="#7D90B0"/>
+    <Setter Property="Foreground" Value="{DynamicResource GroupCaptionBrush}"/>
   </Style>
 
   <Style Selector="Border.section-separator">
@@ -512,7 +512,7 @@
   </Style>
 
   <Style Selector="Border.select-trigger">
-    <Setter Property="Height" Value="32"/>
+    <Setter Property="MinHeight" Value="32"/>
     <Setter Property="MinWidth" Value="110"/>
     <Setter Property="Background" Value="{DynamicResource FieldBgBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}"/>
@@ -549,12 +549,12 @@
   </Style>
 
   <Style Selector="Border.select-item:pointerover">
-    <Setter Property="Background" Value="#2A4A6C9E"/>
+    <Setter Property="Background" Value="{DynamicResource SelectItemHoverBgBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}"/>
   </Style>
 
   <Style Selector="Border.select-item.selected">
-    <Setter Property="Background" Value="#235B8DD0"/>
+    <Setter Property="Background" Value="{DynamicResource SelectItemSelectedBgBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}"/>
   </Style>
 
@@ -566,20 +566,30 @@
   </Style>
 
   <Style Selector="Button.window-btn">
-    <Setter Property="Width" Value="46"/>
-    <Setter Property="Height" Value="36"/>
+    <Setter Property="Width" Value="30"/>
+    <Setter Property="Height" Value="24"/>
     <Setter Property="Background" Value="Transparent"/>
-    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="7"/>
     <Setter Property="Padding" Value="0"/>
     <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
   </Style>
 
   <Style Selector="Button.window-btn:pointerover">
     <Setter Property="Background" Value="{DynamicResource WindowButtonHoverBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource StrokeStrongBrush}"/>
   </Style>
 
   <Style Selector="Button.window-btn.close:pointerover">
     <Setter Property="Background" Value="{DynamicResource WindowButtonCloseHoverBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource WindowButtonCloseHoverBrush}"/>
+  </Style>
+
+  <Style Selector="Button.window-btn.close:pointerover Path">
+    <Setter Property="Stroke" Value="White"/>
   </Style>
 
 </Styles>

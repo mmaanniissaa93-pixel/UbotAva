@@ -24,7 +24,8 @@
           <Border Padding="12">
             <Panel>
               <Border x:Name="PlayerSkillsPanel">
-                <ListBox x:Name="PlayerSkillsList" Background="Transparent" BorderThickness="0" Padding="0">
+                <Grid RowDefinitions="*">
+                  <ListBox x:Name="PlayerSkillsList" Background="Transparent" BorderThickness="0" Padding="0">
                   <ListBox.Styles>
                     <Style Selector="ListBoxItem">
                       <Setter Property="Padding" Value="0" />
@@ -54,13 +55,30 @@
                       </Border>
                     </DataTemplate>
                   </ListBox.ItemTemplate>
-                </ListBox>
+                  </ListBox>
+                  <TextBlock x:Name="PlayerSkillsEmptyHint"
+                             Text="No skills found for current filters."
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center"
+                             Classes="hint"
+                             IsHitTestVisible="False"
+                             IsVisible="False" />
+                </Grid>
               </Border>
 
               <Border x:Name="ActiveBuffsPanel" IsVisible="False">
-                <ListBox x:Name="ActiveBuffsList" Background="Transparent" BorderThickness="0" Padding="0">
-                  <!-- Similar template for Buffs -->
-                </ListBox>
+                <Grid RowDefinitions="*">
+                  <ListBox x:Name="ActiveBuffsList" Background="Transparent" BorderThickness="0" Padding="0">
+                    <!-- Similar template for Buffs -->
+                  </ListBox>
+                  <TextBlock x:Name="ActiveBuffsEmptyHint"
+                             Text="No active buffs."
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center"
+                             Classes="hint"
+                             IsHitTestVisible="False"
+                             IsVisible="False" />
+                </Grid>
               </Border>
             </Panel>
           </Border>
@@ -114,11 +132,34 @@
                     </StackPanel>
                   </Grid>
 
-                  <Grid ColumnDefinitions="Auto,180,12,*,8,*">
-                    <TextBlock Grid.Column="0" Text="Type" Classes="label" VerticalAlignment="Center" Margin="0,0,8,0" FontSize="11" />
-                    <controls:CustomSelect Grid.Column="1" x:Name="AttackTypeSelect" Height="28" />
-                    <CheckBox Grid.Column="3" x:Name="UseInOrderCheck" Content="In order" Classes="legacy-check" IsCheckedChanged="SimpleCheck_Changed" Tag="useSkillsInOrder" FontSize="11" />
-                    <CheckBox Grid.Column="5" x:Name="NoAttackCheck" Content="No attack" Classes="legacy-check" IsCheckedChanged="SimpleCheck_Changed" Tag="noAttack" FontSize="11" />
+                  <Grid ColumnDefinitions="Auto,180,14,Auto,14,Auto,*" VerticalAlignment="Center" MinHeight="32">
+                    <TextBlock Grid.Column="0"
+                               Text="Type"
+                               Classes="label"
+                               VerticalAlignment="Center"
+                               Margin="0,0,8,0"
+                               FontSize="12" />
+                    <controls:CustomSelect Grid.Column="1" x:Name="AttackTypeSelect" Height="32" VerticalAlignment="Center" />
+                    <CheckBox Grid.Column="3"
+                              x:Name="UseInOrderCheck"
+                              Content="In order"
+                              Classes="legacy-check"
+                              IsCheckedChanged="SimpleCheck_Changed"
+                              Tag="useSkillsInOrder"
+                              FontSize="12"
+                              VerticalAlignment="Center"
+                              Margin="0"
+                              MinHeight="0" />
+                    <CheckBox Grid.Column="5"
+                              x:Name="NoAttackCheck"
+                              Content="No attack"
+                              Classes="legacy-check"
+                              IsCheckedChanged="SimpleCheck_Changed"
+                              Tag="noAttack"
+                              FontSize="12"
+                              VerticalAlignment="Center"
+                              Margin="0"
+                              MinHeight="0" />
                   </Grid>
                 </StackPanel>
               </Grid>
@@ -154,7 +195,7 @@
 
                   <Grid ColumnDefinitions="Auto,180">
                     <TextBlock Grid.Column="0" Text="Imbue" Classes="label" VerticalAlignment="Center" Margin="0,0,8,0" FontSize="11" />
-                    <controls:CustomSelect Grid.Column="1" x:Name="ImbueSkillSelect" Height="28" />
+                    <controls:CustomSelect Grid.Column="1" x:Name="ImbueSkillSelect" Height="32" VerticalAlignment="Center" />
                   </Grid>
                 </StackPanel>
               </Grid>

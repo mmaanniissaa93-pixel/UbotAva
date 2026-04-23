@@ -44,7 +44,7 @@ public partial class TrainingFeatureView : UserControl
         BerserkTitle.Text   = "Berserk";
         AdvancedTitle.Text  = "Advanced";
         AvoidTitle.Text     = "Avoidance";
-        SetCurrentBtn.Content = "Set Current";
+        SetCurrentBtn.Content = "Set Current Position";
         MonstersLabel.Text  = "monsters";
         // Build rarity rows
         _rarityRows.Clear();

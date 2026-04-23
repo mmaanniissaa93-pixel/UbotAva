@@ -255,6 +255,7 @@ public partial class SkillsFeatureView : UserControl
         ActiveBuffsPanel.IsVisible = _leftTab == "activeBuffs";
         GeneralSetupPanel.IsVisible = _mainTab == "generalSetup";
         AdvancedSetupPanel.IsVisible = _mainTab == "advancedSetup";
+        UpdateEmptyHints();
     }
 
     private void RefreshAvailableRows()
@@ -270,7 +271,10 @@ public partial class SkillsFeatureView : UserControl
             .ToList();
 
         if (IsCollectionIdentical(_availableRows, filtered))
+        {
+            UpdateEmptyHints();
             return;
+        }
 
         _availableRows.Clear();
         SkillListRow? nextSelection = null;
@@ -284,6 +288,8 @@ public partial class SkillsFeatureView : UserControl
 
         if (nextSelection != null)
             PlayerSkillsList.SelectedItem = nextSelection;
+
+        UpdateEmptyHints();
     }
 
     private void RefreshAttackRows()
@@ -360,6 +366,17 @@ public partial class SkillsFeatureView : UserControl
                 Display = $"{buff.Name}{percentText}"
             });
         }
+
+        UpdateEmptyHints();
+    }
+
+    private void UpdateEmptyHints()
+    {
+        if (PlayerSkillsEmptyHint != null)
+            PlayerSkillsEmptyHint.IsVisible = _availableRows.Count == 0 && _leftTab == "playerSkills";
+
+        if (ActiveBuffsEmptyHint != null)
+            ActiveBuffsEmptyHint.IsVisible = _activeBuffRows.Count == 0 && _leftTab == "activeBuffs";
     }
 
     private List<uint> GetCurrentAttackSkills()

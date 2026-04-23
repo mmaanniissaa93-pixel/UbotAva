@@ -4,18 +4,18 @@
   x:Class="UBot.Avalonia.Features.Training.TrainingFeatureView">
 
   <ScrollViewer VerticalScrollBarVisibility="Auto">
-    <Grid ColumnDefinitions="*,5,*" RowDefinitions="Auto,5,Auto,5,Auto" Margin="0,0,0,8">
+    <Grid ColumnDefinitions="2.1*,6,*" RowDefinitions="Auto,6,Auto,6,Auto" Margin="0,0,0,6">
       
 <!-- ═══ Area (compact) ═══ -->
-      <Border Grid.Row="0" Grid.Column="0" Classes="section-card">
+      <Border Grid.Row="0" Grid.Column="0" Classes="section-card" MinHeight="152">
         <Grid RowDefinitions="Auto,Auto,*">
           <Border Grid.Row="0" Classes="section-header">
             <TextBlock x:Name="AreaTitle" Classes="section-header-text" />
           </Border>
           <TextBox x:Name="RegionBox" Grid.Row="1" IsVisible="False" Tag="areaRegion" />
-          <StackPanel x:Name="AreaPanel" Grid.Row="2" Margin="4" Spacing="4">
+          <StackPanel x:Name="AreaPanel" Grid.Row="2" Margin="7,5,7,6" Spacing="4">
             <StackPanel x:Name="AreaContent" Spacing="4">
-              <Grid ColumnDefinitions="*,12,*">
+              <Grid ColumnDefinitions="*,8,*,8,*">
                 <StackPanel Grid.Column="0" Spacing="4">
                   <TextBlock Text="X" Classes="label" FontSize="9" Opacity="0.6" />
                   <TextBox x:Name="GlobalXBox" Classes="field" TextAlignment="Center" TextChanged="GlobalNumBox_Changed" Watermark="X" />
@@ -24,16 +24,20 @@
                   <TextBlock Text="Y" Classes="label" FontSize="9" Opacity="0.6" />
                   <TextBox x:Name="GlobalYBox" Classes="field" TextAlignment="Center" TextChanged="GlobalNumBox_Changed" Watermark="Y" />
                 </StackPanel>
-              </Grid>
-              <Grid ColumnDefinitions="*,12,Auto">
-                <StackPanel Grid.Column="0" Spacing="4">
-                  <TextBlock Text="R" Classes="label" FontSize="9" Opacity="0.6" />
+                <StackPanel Grid.Column="4" Spacing="4">
+                  <TextBlock Text="R (m)" Classes="label" FontSize="9" Opacity="0.6" />
                   <TextBox x:Name="RadiusBox" Classes="field" TextAlignment="Center" Tag="areaRadius" TextChanged="NumBox_Changed" Watermark="Radius" />
                 </StackPanel>
-                <Button Grid.Column="2" Classes="btn blue" x:Name="SetCurrentBtn" Click="SetCurrent_Click" VerticalAlignment="Bottom" Height="28" Padding="12,0" />
               </Grid>
-              <Border Background="{DynamicResource TopbarPillBgBrush}" CornerRadius="4" Padding="10,6">
-                <TextBlock x:Name="CurrentPositionLabel" FontSize="10" FontFamily="Consolas,Monospace" Foreground="{DynamicResource TextDimBrush}" HorizontalAlignment="Center" />
+              <Button Classes="btn secondary"
+                      x:Name="SetCurrentBtn"
+                      Click="SetCurrent_Click"
+                      HorizontalAlignment="Stretch"
+                      Height="28"
+                      Padding="12,0"
+                      ToolTip.Tip="Use your current in-game position for X/Y" />
+              <Border Background="{DynamicResource TopbarPillBgBrush}" CornerRadius="4" Padding="8,3">
+                <TextBlock x:Name="CurrentPositionLabel" FontSize="9" FontFamily="Consolas,Monospace" Foreground="{DynamicResource TextDimBrush}" HorizontalAlignment="Center" />
               </Border>
             </StackPanel>
           </StackPanel>
@@ -132,13 +136,15 @@
           <Border Grid.Row="0" Classes="section-header">
             <TextBlock x:Name="AvoidTitle" Classes="section-header-text" />
           </Border>
-          <StackPanel Grid.Row="1" Margin="8,8,8,8">
+          <StackPanel Grid.Row="1" Margin="6,6,6,6">
             <DataGrid x:Name="AvoidanceGrid"
                       AutoGenerateColumns="False"
                       CanUserSortColumns="False"
                       IsReadOnly="False"
                       CanUserResizeColumns="True"
-                      MinHeight="200" MaxHeight="220"
+                      MinHeight="150" MaxHeight="168"
+                      RowHeight="30"
+                      ColumnHeaderHeight="30"
                       GridLinesVisibility="Horizontal"
                       RowBackground="Transparent">
               <DataGrid.Columns>

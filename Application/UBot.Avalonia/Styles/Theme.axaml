@@ -101,6 +101,8 @@
       <SolidColorBrush x:Key="TopbarPillBgBrush" Color="#10314B6D"/>
       <SolidColorBrush x:Key="SecondaryBtnBgBrush" Color="#18FFFFFF"/>
       <SolidColorBrush x:Key="SecondaryBtnHoverBgBrush" Color="#28FFFFFF"/>
+      <SolidColorBrush x:Key="SelectItemHoverBgBrush" Color="#2A4A6C9E"/>
+      <SolidColorBrush x:Key="SelectItemSelectedBgBrush" Color="#235B8DD0"/>
       <SolidColorBrush x:Key="GhostBtnBorderBrush" Color="#2F4B63"/>
       <SolidColorBrush x:Key="GhostBtnFgBrush" Color="#9FB6D8"/>
       <SolidColorBrush x:Key="GhostBtnHoverBgBrush" Color="#141D32"/>
@@ -166,19 +168,19 @@
       </LinearGradientBrush>
 
       <LinearGradientBrush x:Key="PanelBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Offset="0" Color="#FFF8FBFF"/>
-        <GradientStop Offset="1" Color="#FFF1F6FF"/>
+        <GradientStop Offset="0" Color="#FFFFFFFF"/>
+        <GradientStop Offset="1" Color="#FFF2F7FF"/>
       </LinearGradientBrush>
 
       <LinearGradientBrush x:Key="TopbarBrush" StartPoint="0,0" EndPoint="1,0">
-        <GradientStop Offset="0" Color="#E5EEF9"/>
-        <GradientStop Offset="1" Color="#DDE8F6"/>
+        <GradientStop Offset="0" Color="#DCE8F7"/>
+        <GradientStop Offset="1" Color="#CFDEF2"/>
       </LinearGradientBrush>
 
       <LinearGradientBrush x:Key="AppBg" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Offset="0" Color="#F8FBFF"/>
-        <GradientStop Offset="0.55" Color="#F2F7FF"/>
-        <GradientStop Offset="1" Color="#EAF1FC"/>
+        <GradientStop Offset="0" Color="#F4F8FE"/>
+        <GradientStop Offset="0.55" Color="#EAF1FB"/>
+        <GradientStop Offset="1" Color="#E1EAF7"/>
       </LinearGradientBrush>
 
       <LinearGradientBrush x:Key="BtnStartBrush" StartPoint="0,0" EndPoint="1,1">
@@ -221,21 +223,23 @@
       <SolidColorBrush x:Key="DangerBrush" Color="#D95766"/>
       <SolidColorBrush x:Key="GoodBrush" Color="#209A78"/>
       <SolidColorBrush x:Key="SignalBrush" Color="#D18A1A"/>
-      <SolidColorBrush x:Key="StrokeSoftBrush" Color="#8AA5C4"/>
-      <SolidColorBrush x:Key="StrokeStrongBrush" Color="#6788AD"/>
+      <SolidColorBrush x:Key="StrokeSoftBrush" Color="#7D9BBC"/>
+      <SolidColorBrush x:Key="StrokeStrongBrush" Color="#5C84AE"/>
       <SolidColorBrush x:Key="SidebarItemHoverBgBrush" Color="#E5EEF9"/>
       <SolidColorBrush x:Key="SidebarItemActiveBgBrush" Color="#D6E4F7"/>
       <SolidColorBrush x:Key="SidebarItemActiveFgBrush" Color="#1B4E87"/>
-      <SolidColorBrush x:Key="TabBtnBgBrush" Color="#EAF1FA"/>
-      <SolidColorBrush x:Key="TabBtnBorderBrush" Color="#A7BED8"/>
-      <SolidColorBrush x:Key="TabBtnHoverBgBrush" Color="#DFEAF8"/>
-      <SolidColorBrush x:Key="TabBtnHoverBorderBrush" Color="#8FAFD1"/>
-      <SolidColorBrush x:Key="TabBtnActiveBgBrush" Color="#D5E4F8"/>
+      <SolidColorBrush x:Key="TabBtnBgBrush" Color="#E4EDF9"/>
+      <SolidColorBrush x:Key="TabBtnBorderBrush" Color="#98B3D1"/>
+      <SolidColorBrush x:Key="TabBtnHoverBgBrush" Color="#D8E5F7"/>
+      <SolidColorBrush x:Key="TabBtnHoverBorderBrush" Color="#7FA2C8"/>
+      <SolidColorBrush x:Key="TabBtnActiveBgBrush" Color="#C9DCF4"/>
       <SolidColorBrush x:Key="LangBtnHoverBgBrush" Color="#DCE8F7"/>
       <SolidColorBrush x:Key="LangBtnActiveBgBrush" Color="#2F7FE6"/>
-      <SolidColorBrush x:Key="TopbarPillBgBrush" Color="#DFEAF8"/>
-      <SolidColorBrush x:Key="SecondaryBtnBgBrush" Color="#EEF3FA"/>
-      <SolidColorBrush x:Key="SecondaryBtnHoverBgBrush" Color="#E2EBF7"/>
+      <SolidColorBrush x:Key="TopbarPillBgBrush" Color="#D6E5F7"/>
+      <SolidColorBrush x:Key="SecondaryBtnBgBrush" Color="#E5EDF8"/>
+      <SolidColorBrush x:Key="SecondaryBtnHoverBgBrush" Color="#D9E4F4"/>
+      <SolidColorBrush x:Key="SelectItemHoverBgBrush" Color="#D7E6F8"/>
+      <SolidColorBrush x:Key="SelectItemSelectedBgBrush" Color="#C5DBF5"/>
       <SolidColorBrush x:Key="GhostBtnBorderBrush" Color="#8EA8C6"/>
       <SolidColorBrush x:Key="GhostBtnFgBrush" Color="#3C628D"/>
       <SolidColorBrush x:Key="GhostBtnHoverBgBrush" Color="#E2EBF7"/>
@@ -253,23 +257,23 @@
       <SolidColorBrush x:Key="StatusWaitingBorderBrush" Color="#CEA156"/>
       <SolidColorBrush x:Key="StatusConnectedBgBrush" Color="#CFE2F8"/>
       <SolidColorBrush x:Key="StatusConnectedBorderBrush" Color="#6F93C1"/>
-      <SolidColorBrush x:Key="CardSurfaceBrush" Color="#F4F8FE"/>
+      <SolidColorBrush x:Key="CardSurfaceBrush" Color="#FFFFFFFF"/>
       <LinearGradientBrush x:Key="MetricCardBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Offset="0" Color="#EEF4FD"/>
-        <GradientStop Offset="1" Color="#E2ECF9"/>
+        <GradientStop Offset="0" Color="#EAF1FB"/>
+        <GradientStop Offset="1" Color="#DDE8F7"/>
       </LinearGradientBrush>
       <LinearGradientBrush x:Key="SectionHeaderBrush" StartPoint="0,0" EndPoint="1,0">
-        <GradientStop Offset="0" Color="#D7E5F7"/>
-        <GradientStop Offset="1" Color="#CADCF3"/>
+        <GradientStop Offset="0" Color="#D2E1F3"/>
+        <GradientStop Offset="1" Color="#C1D4EC"/>
       </LinearGradientBrush>
-      <SolidColorBrush x:Key="SectionHeaderBorderBrush" Color="#91ACCB"/>
+      <SolidColorBrush x:Key="SectionHeaderBorderBrush" Color="#7F9FC4"/>
       <SolidColorBrush x:Key="SectionHeaderTextBrush" Color="#17385E"/>
-      <SolidColorBrush x:Key="FieldBgBrush" Color="#F8FBFF"/>
+      <SolidColorBrush x:Key="FieldBgBrush" Color="#FFFFFFFF"/>
       <SolidColorBrush x:Key="FieldBgFocusBrush" Color="#FFFFFF"/>
       <SolidColorBrush x:Key="SelectMenuBrush" Color="#FFFFFFFF"/>
-      <SolidColorBrush x:Key="SectionSeparatorBrush" Color="#C0D1E6"/>
+      <SolidColorBrush x:Key="SectionSeparatorBrush" Color="#B5CAE2"/>
       <SolidColorBrush x:Key="GroupCaptionBrush" Color="#496F99"/>
-      <SolidColorBrush x:Key="LogBoardBrush" Color="#EEF4FC"/>
+      <SolidColorBrush x:Key="LogBoardBrush" Color="#E8F0FA"/>
       <SolidColorBrush x:Key="TransparentBrush" Color="Transparent"/>
     </ResourceDictionary>
   </ResourceDictionary.ThemeDictionaries>
