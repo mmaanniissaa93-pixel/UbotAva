@@ -1,8 +1,0 @@
-DisplayName="Map"
-UBot.Map.Main.label3="لا تعمل هذه الوظيفة أثناء نشاط البوت.
- إذا كنت تريد أن يهاجم الروبوت تلقائيا أثناء النشاط ،
- تعيين التجنب."
-UBot.Map.Main.checkBoxAutoSelectUniques="تلقائيا اختيار اليونيك"
-UBot.Map.Main.label4="إظهار"
-UBot.Map.Main.lblRegion="ليس في اللعبة"
-NoName="<No name>"

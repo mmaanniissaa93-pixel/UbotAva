@@ -1,8 +1,0 @@
-DisplayName="Map"
-UBot.Map.Main.label3="This function does not work while the bot is active.
- If you want the bot to auto attack while active,
- set Avoidance."
-UBot.Map.Main.checkBoxAutoSelectUniques="Automatically select uniques"
-UBot.Map.Main.label4="Show:"
-UBot.Map.Main.lblRegion="Not in game"
-NoName="<No name>"

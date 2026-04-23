@@ -1,7 +1,0 @@
-DisplayName="Log"
-UBot.Log.Main.Panel.checkNormal="Normal"
-UBot.Log.Main.Panel.checkError="Error"
-UBot.Log.Main.Panel.checkWarning="Warning"
-UBot.Log.Main.Panel.checkDebug="Debug"
-UBot.Log.Main.Panel.btnReset="Clear"
-UBot.Log.Main.Panel.checkEnabled="Enabled"
