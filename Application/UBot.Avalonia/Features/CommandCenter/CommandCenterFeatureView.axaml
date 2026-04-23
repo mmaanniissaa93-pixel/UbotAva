@@ -1,12 +1,11 @@
 <UserControl
   xmlns="https://github.com/avaloniaui"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-  xmlns:controls="clr-namespace:UBot.Avalonia.Controls"
   x:Class="UBot.Avalonia.Features.CommandCenter.CommandCenterFeatureView">
-  <ScrollViewer VerticalScrollBarVisibility="Auto">
-    <StackPanel Spacing="10" Margin="0,0,0,12">
-      <controls:TabStrip x:Name="TabStripCtrl" />
-      <StackPanel x:Name="ContentHost" Spacing="10" />
+  <Border Classes="section-card" Padding="16">
+    <StackPanel Spacing="10">
+      <TextBlock Text="Command Center opens in a popup window." Classes="label" />
+      <Button x:Name="OpenPopupBtn" Classes="btn blue" Content="Open Command Center" Width="220" />
     </StackPanel>
-  </ScrollViewer>
+  </Border>
 </UserControl>

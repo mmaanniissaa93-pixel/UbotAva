@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using UBot.Avalonia.Controls;
+using UBot.Avalonia.Features.CommandCenter;
 using UBot.Avalonia.Services;
 using UBot.Avalonia.Dialogs;
 using UBot.Core;
@@ -286,7 +287,14 @@ public partial class MainWindow : Window
             b.Classes.Remove("active");
             if (k == id) b.Classes.Add("active");
         }
-        if (_factory != null) ContentHost.Content = _factory.GetView(id);
+        if (_factory == null)
+            return;
+
+        var view = _factory.GetView(id);
+        ContentHost.Content = view;
+
+        if (view is CommandCenterFeatureView commandCenterView)
+            commandCenterView.OpenPopup(this);
     }
 
     // ────────────────────────────────────────────────────────────────────────────

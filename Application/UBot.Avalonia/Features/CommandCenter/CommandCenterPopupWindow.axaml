@@ -1,0 +1,52 @@
+<Window
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:controls="clr-namespace:UBot.Avalonia.Controls"
+  x:Class="UBot.Avalonia.Features.CommandCenter.CommandCenterPopupWindow"
+  Title="Command Center"
+  Width="760"
+  Height="660"
+  MinWidth="680"
+  MinHeight="560"
+  CanResize="True"
+  Background="{DynamicResource PanelBrush}">
+
+  <Border BorderBrush="{DynamicResource StrokeSoftBrush}" BorderThickness="1" CornerRadius="12" Padding="14" ClipToBounds="True">
+    <Grid RowDefinitions="Auto,*,Auto">
+      <controls:TabStrip x:Name="Tabs" Grid.Row="0" />
+
+      <Border Grid.Row="1" Classes="section-card" Margin="0,10,0,10">
+        <Grid RowDefinitions="Auto,*">
+          <Border Classes="section-header">
+            <TextBlock x:Name="HeaderText" Classes="section-header-text" Text="Emote Commands" />
+          </Border>
+
+          <Grid Grid.Row="1" Margin="10" RowDefinitions="*">
+            <ScrollViewer x:Name="EmoteScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+              <StackPanel x:Name="EmoteRowsHost" Spacing="6" />
+            </ScrollViewer>
+
+            <Border x:Name="ChatPanel" IsVisible="False" Background="{DynamicResource FieldBgBrush}" BorderBrush="{DynamicResource StrokeSoftBrush}" BorderThickness="1" CornerRadius="10" Padding="0">
+              <Grid RowDefinitions="Auto,*">
+                <Border Background="{DynamicResource SectionHeaderBrush}" BorderBrush="{DynamicResource SectionSeparatorBrush}" BorderThickness="0,0,0,1" Padding="10,8">
+                  <TextBlock Text="Type the following commands into the game chat" Classes="label" />
+                </Border>
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                  <StackPanel x:Name="ChatRowsHost" Spacing="0" Margin="0,4,0,4" />
+                </ScrollViewer>
+              </Grid>
+            </Border>
+          </Grid>
+        </Grid>
+      </Border>
+
+      <Border Grid.Row="2" Background="{DynamicResource SectionHeaderBrush}" BorderBrush="{DynamicResource StrokeSoftBrush}" BorderThickness="1" CornerRadius="10" Padding="10,8">
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto" VerticalAlignment="Center">
+          <Button x:Name="ResetBtn" Grid.Column="0" Classes="btn secondary" Content="Reset to defaults" MinWidth="150" Margin="0,0,10,0" />
+          <CheckBox x:Name="EnabledCheck" Grid.Column="2" Classes="check" Content="Enable command center" VerticalAlignment="Center" Margin="0,0,10,0" />
+          <Button x:Name="SaveBtn" Grid.Column="3" Classes="btn blue" Content="Save" MinWidth="96" />
+        </Grid>
+      </Border>
+    </Grid>
+  </Border>
+</Window>
