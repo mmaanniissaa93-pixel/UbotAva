@@ -11,11 +11,20 @@
 
     <Border BorderBrush="{DynamicResource StrokeSoftBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
         <StackPanel Spacing="12">
-            <TextBlock Text="PROXY CONFIG" 
-                       FontSize="18" 
-                       FontWeight="Bold" 
-                       Foreground="{DynamicResource AccentBrush}"
-                       Margin="0,0,0,5"/>
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0"
+                           Text="PROXY CONFIG" 
+                           FontSize="18" 
+                           FontWeight="Bold" 
+                           Foreground="{DynamicResource AccentBrush}"/>
+                <Button Grid.Column="1"
+                        Width="32"
+                        Height="32"
+                        Classes="btn secondary"
+                        Content="x"
+                        Click="Close_Click"/>
+            </Grid>
+            <Separator Margin="0,-2,0,2"/>
 
             <StackPanel Orientation="Horizontal" Spacing="10">
                 <ToggleSwitch x:Name="ProxyActiveToggle" OnContent="Activate" OffContent="Activate" Classes="switch"/>
@@ -42,9 +51,7 @@
 
                 <StackPanel Grid.Row="2" Grid.Column="0" Spacing="5" Margin="0,0,10,10">
                     <TextBlock Text="Proxy Type" Classes="label"/>
-                    <ComboBox x:Name="ProxyTypeSelect" Classes="field" HorizontalAlignment="Stretch">
-                        <ComboBoxItem Content="SOCKS5" IsSelected="True"/>
-                    </ComboBox>
+                    <ComboBox x:Name="ProxyTypeSelect" Classes="field" HorizontalAlignment="Stretch"/>
                 </StackPanel>
                 <StackPanel Grid.Row="2" Grid.Column="1" Spacing="5" Margin="0,0,0,10">
                     <TextBlock Text="IP Bind" Classes="label"/>
@@ -52,9 +59,10 @@
                 </StackPanel>
             </Grid>
 
-            <StackPanel Orientation="Horizontal" Margin="0,15,0,0" Spacing="10">
-                <Button Classes="btn secondary" Content="Cancel" Width="215" Click="Cancel_Click"/>
+            <Separator Margin="0,6,0,0"/>
+            <StackPanel Orientation="Horizontal" Margin="0,10,0,0" Spacing="10">
                 <Button Classes="btn primary" Content="Confirm" Width="215" Click="Confirm_Click"/>
+                <Button Classes="btn secondary" Content="Cancel" Width="215" Click="Cancel_Click"/>
             </StackPanel>
         </StackPanel>
     </Border>

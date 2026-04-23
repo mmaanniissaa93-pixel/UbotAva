@@ -88,6 +88,16 @@ public partial class MainWindow : Window
         BuildSidebar();
         InitTopbar();
         BindStateEvents();
+        if (MenuSelectProfile != null)
+        {
+            MenuSelectProfile.Click -= OnSelectProfileClick;
+            MenuSelectProfile.Click += OnSelectProfileClick;
+        }
+        if (MenuProxyConfig != null)
+        {
+            MenuProxyConfig.Click -= OnProxyConfigClick;
+            MenuProxyConfig.Click += OnProxyConfigClick;
+        }
 
         await RefreshRuntimeStatusAsync(forceConnectionRefresh: true);
 
@@ -645,14 +655,40 @@ public partial class MainWindow : Window
 
     private async void OnSelectProfileClick(object? s, RoutedEventArgs e)
     {
-        var dlg = new ProfileSelectionWindow();
-        await dlg.ShowDialog(this);
+        try
+        {
+            var dlg = new ProfileSelectionWindow();
+            dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            dlg.Closed += async (_, _) =>
+            {
+                if (dlg.Applied)
+                    await RefreshRuntimeStatusAsync(forceConnectionRefresh: true);
+            };
+            dlg.Show(this);
+        }
+        catch (Exception ex)
+        {
+            _state?.AddLog($"[ERROR] Profile dialog failed: {ex.Message}");
+        }
     }
 
     private async void OnProxyConfigClick(object? s, RoutedEventArgs e)
     {
-        var dlg = new ProxyConfigWindow();
-        await dlg.ShowDialog(this);
+        try
+        {
+            var dlg = new ProxyConfigWindow();
+            dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            dlg.Closed += async (_, _) =>
+            {
+                if (dlg.Applied)
+                    await RefreshRuntimeStatusAsync(forceConnectionRefresh: true);
+            };
+            dlg.Show(this);
+        }
+        catch (Exception ex)
+        {
+            _state?.AddLog($"[ERROR] Proxy dialog failed: {ex.Message}");
+        }
     }
 
     private void BtnEn_Click(object? s, RoutedEventArgs e)

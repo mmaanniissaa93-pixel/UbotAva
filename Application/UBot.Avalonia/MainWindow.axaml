@@ -43,8 +43,8 @@
         <Button.Flyout>
           <MenuFlyout Placement="BottomEdgeAlignedRight">
             <MenuItem Header="File">
-              <MenuItem Header="Select Profile..." Click="OnSelectProfileClick" />
-              <MenuItem Header="Proxy Config" Click="OnProxyConfigClick" />
+              <MenuItem x:Name="MenuSelectProfile" Header="Select Profile..." Click="OnSelectProfileClick" />
+              <MenuItem x:Name="MenuProxyConfig" Header="Proxy Config" Click="OnProxyConfigClick" />
             </MenuItem>
             <MenuItem Header="Plugins" x:Name="PluginsMenu" />
             <MenuItem Header="Automation" x:Name="AutomationMenu" />

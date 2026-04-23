@@ -701,6 +701,111 @@ public partial class ItemsFeatureView : UserControl
         RefreshShoppingSections();
     }
 
+    private async void OnQuickAddShoppingFromSource_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem { DataContext: ItemsSimpleRow row })
+            return;
+
+        await QuickAddShoppingAsync(row.CodeName);
+    }
+
+    private async void OnQuickAddShoppingFromFilter_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem { DataContext: ItemsFilterRow row })
+            return;
+
+        await QuickAddShoppingAsync(row.CodeName);
+    }
+
+    private async void OnQuickRemoveShoppingFromTarget_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem { DataContext: ItemsShoppingTargetRow row })
+            return;
+
+        _selectedTargetItemCodeName = row.ItemCodeName;
+        TargetItemSelect.SelectedValue = row.ItemCodeName;
+
+        if (string.IsNullOrWhiteSpace(_selectedShopCodeName))
+            return;
+
+        _shoppingTargets.RemoveAll(target =>
+            string.Equals(target.ShopCodeName, _selectedShopCodeName, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(target.ItemCodeName, row.ItemCodeName, StringComparison.OrdinalIgnoreCase));
+
+        await SaveShoppingTargetsAsync();
+        RefreshShoppingSections();
+    }
+
+    private async void OnQuickSellFromFilter_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem { DataContext: ItemsFilterRow row })
+            return;
+
+        _selectedFilterItemCodeName = row.CodeName;
+        FilterItemSelect.SelectedValue = row.CodeName;
+        _sellFilter.Add(row.CodeName);
+        await SaveFiltersAsync();
+        RefreshSellStoreRows();
+        RefreshItemFilterRows();
+    }
+
+    private async void OnQuickStoreFromFilter_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem { DataContext: ItemsFilterRow row })
+            return;
+
+        _selectedFilterItemCodeName = row.CodeName;
+        FilterItemSelect.SelectedValue = row.CodeName;
+        _storeFilter.Add(row.CodeName);
+        await SaveFiltersAsync();
+        RefreshSellStoreRows();
+        RefreshItemFilterRows();
+    }
+
+    private async void OnQuickPickupFromFilter_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem { DataContext: ItemsFilterRow row })
+            return;
+
+        _selectedFilterItemCodeName = row.CodeName;
+        FilterItemSelect.SelectedValue = row.CodeName;
+        _pickupFilter[row.CodeName] = _pickupFilter.TryGetValue(row.CodeName, out var pickOnlyChar) && pickOnlyChar;
+        await SaveFiltersAsync();
+        RefreshPickupRows();
+        RefreshItemFilterRows();
+    }
+
+    private async void OnPickupOnlyCharacterFromFilter_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem { DataContext: ItemsFilterRow row })
+            return;
+
+        _selectedFilterItemCodeName = row.CodeName;
+        FilterItemSelect.SelectedValue = row.CodeName;
+        _pickupFilter[row.CodeName] = true;
+        await SaveFiltersAsync();
+        RefreshPickupRows();
+        RefreshItemFilterRows();
+    }
+
+    private async void OnRemoveAllFromFilterContext_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem { DataContext: ItemsFilterRow row })
+            return;
+
+        _selectedFilterItemCodeName = row.CodeName;
+        FilterItemSelect.SelectedValue = row.CodeName;
+
+        _pickupFilter.Remove(row.CodeName);
+        _sellFilter.Remove(row.CodeName);
+        _storeFilter.Remove(row.CodeName);
+
+        await SaveFiltersAsync();
+        RefreshPickupRows();
+        RefreshSellStoreRows();
+        RefreshItemFilterRows();
+    }
+
     private void SourceItemsList_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         if (SourceItemsList.SelectedItem is not ItemsSimpleRow row)
@@ -1064,5 +1169,40 @@ public partial class ItemsFeatureView : UserControl
         if (bool.TryParse(raw.ToString(), out var parsed))
             return parsed;
         return fallback;
+    }
+
+    private async System.Threading.Tasks.Task QuickAddShoppingAsync(string itemCodeName)
+    {
+        if (string.IsNullOrWhiteSpace(itemCodeName))
+            return;
+
+        EnsureSelectedShop();
+        if (string.IsNullOrWhiteSpace(_selectedShopCodeName))
+            return;
+
+        _selectedSourceItemCodeName = itemCodeName;
+        ShoppingItemSelect.SelectedValue = itemCodeName;
+
+        var amount = Math.Clamp(ParseInt(ShoppingAmountBox.Text, 1), 1, 50000);
+        var existing = _shoppingTargets.FirstOrDefault(target =>
+            string.Equals(target.ShopCodeName, _selectedShopCodeName, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(target.ItemCodeName, itemCodeName, StringComparison.OrdinalIgnoreCase));
+
+        if (existing == null)
+        {
+            _shoppingTargets.Add(new ShoppingTargetEntry
+            {
+                ShopCodeName = _selectedShopCodeName,
+                ItemCodeName = itemCodeName,
+                Amount = amount
+            });
+        }
+        else
+        {
+            existing.Amount = amount;
+        }
+
+        await SaveShoppingTargetsAsync();
+        RefreshShoppingSections();
     }
 }

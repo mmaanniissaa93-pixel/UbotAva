@@ -26,6 +26,7 @@ public partial class TradeFeatureView : UserControl
     private AppState? _state;
     private bool _built;
     private bool _syncing;
+    private string _activeTab = "route";
 
     private CheckBox? _useRouteScriptsCheck;
     private CheckBox? _tracePlayerCheck;
@@ -34,6 +35,7 @@ public partial class TradeFeatureView : UserControl
     private ListBox? _scriptsList;
     private TextBox? _scriptInputBox;
     private TextBlock? _runtimeLabel;
+    private StackPanel? _routePanel;
 
     private CheckBox? _runTownScriptCheck;
     private CheckBox? _waitHunterCheck;
@@ -48,6 +50,18 @@ public partial class TradeFeatureView : UserControl
     private CheckBox? _buyGoodsCheck;
     private TextBox? _buyGoodsQuantityBox;
     private TextBox? _recorderPathBox;
+    private StackPanel? _settingsPanel;
+
+    private StackPanel? _jobOverviewPanel;
+    private TextBlock? _jobAliasValue;
+    private TextBlock? _jobTypeValue;
+    private TextBlock? _jobLevelValue;
+    private TextBlock? _jobExperienceValue;
+    private TextBlock? _jobDifficultyValue;
+    private TextBlock? _jobRouteValue;
+    private TextBlock? _jobTransportValue;
+    private readonly ObservableCollection<string> _routeOverviewRows = new();
+    private ListBox? _routeOverviewList;
 
     private readonly ObservableCollection<string> _scripts = new();
     private readonly List<RouteListModel> _routeLists = new();
@@ -71,7 +85,7 @@ public partial class TradeFeatureView : UserControl
         var root = moduleState;
         if (moduleState.ValueKind == JsonValueKind.Object && moduleState.TryGetProperty("trade", out var tradeNode))
             root = tradeNode;
-        if (root.ValueKind != JsonValueKind.Object || _runtimeLabel == null)
+        if (root.ValueKind != JsonValueKind.Object)
             return;
 
         var scriptRunning = root.TryGetProperty("scriptRunning", out var runningNode) && runningNode.ValueKind == JsonValueKind.True;
@@ -80,8 +94,62 @@ public partial class TradeFeatureView : UserControl
         var distance = root.TryGetProperty("transportDistance", out var distanceNode) && distanceNode.TryGetDouble(out var distanceValue)
             ? distanceValue
             : -1;
+        var difficulty = 0;
+        var alias = string.Empty;
+        var jobType = string.Empty;
+        var level = 0;
+        var experience = 0L;
 
-        _runtimeLabel.Text = $"Script running: {(scriptRunning ? "Yes" : "No")}  |  Route: {route}  |  Transport: {(hasTransport ? $"Yes ({distance:0.0}m)" : "No")}";
+        if (root.TryGetProperty("jobOverview", out var jobOverview) && jobOverview.ValueKind == JsonValueKind.Object)
+        {
+            if (jobOverview.TryGetProperty("difficulty", out var difficultyNode) && difficultyNode.TryGetInt32(out var parsedDifficulty))
+                difficulty = parsedDifficulty;
+            alias = jobOverview.TryGetProperty("alias", out var aliasNode) ? aliasNode.GetString() ?? string.Empty : string.Empty;
+            jobType = jobOverview.TryGetProperty("type", out var typeNode) ? typeNode.GetString() ?? string.Empty : string.Empty;
+            if (jobOverview.TryGetProperty("level", out var levelNode) && levelNode.TryGetInt32(out var parsedLevel))
+                level = parsedLevel;
+            if (jobOverview.TryGetProperty("experience", out var expNode) && expNode.TryGetInt64(out var parsedExp))
+                experience = parsedExp;
+        }
+
+        if (_runtimeLabel != null)
+            _runtimeLabel.Text = $"Script running: {(scriptRunning ? "Yes" : "No")}  |  Route: {route}  |  Transport: {(hasTransport ? $"Yes ({distance:0.0}m)" : "No")}";
+
+        if (_jobAliasValue != null)
+            _jobAliasValue.Text = string.IsNullOrWhiteSpace(alias) ? "-" : alias;
+        if (_jobTypeValue != null)
+            _jobTypeValue.Text = string.IsNullOrWhiteSpace(jobType) ? "None" : jobType;
+        if (_jobLevelValue != null)
+            _jobLevelValue.Text = level.ToString(CultureInfo.InvariantCulture);
+        if (_jobExperienceValue != null)
+            _jobExperienceValue.Text = experience.ToString(CultureInfo.InvariantCulture);
+        if (_jobDifficultyValue != null)
+            _jobDifficultyValue.Text = difficulty.ToString(CultureInfo.InvariantCulture);
+        if (_jobRouteValue != null)
+            _jobRouteValue.Text = string.IsNullOrWhiteSpace(route) ? "-" : route;
+        if (_jobTransportValue != null)
+            _jobTransportValue.Text = hasTransport ? $"Yes ({distance:0.0}m)" : "No";
+
+        _routeOverviewRows.Clear();
+        if (root.TryGetProperty("routeRows", out var routeRowsNode) && routeRowsNode.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var row in routeRowsNode.EnumerateArray())
+            {
+                if (row.ValueKind != JsonValueKind.Object)
+                    continue;
+
+                var name = row.TryGetProperty("name", out var nameNode) ? nameNode.GetString() ?? "(unknown)" : "(unknown)";
+                var startRegion = row.TryGetProperty("startRegion", out var startNode) ? startNode.ToString() ?? "-" : "-";
+                var endRegion = row.TryGetProperty("endRegion", out var endNode) ? endNode.ToString() ?? "-" : "-";
+                var steps = row.TryGetProperty("numSteps", out var stepNode) && stepNode.TryGetInt32(out var parsedSteps) ? parsedSteps : 0;
+                var missing = row.TryGetProperty("missing", out var missingNode) && missingNode.ValueKind == JsonValueKind.True;
+
+                _routeOverviewRows.Add($"{name}  |  {startRegion} -> {endRegion}  |  Steps: {steps}  |  {(missing ? "Missing" : "OK")}");
+            }
+        }
+
+        if (_routeOverviewRows.Count == 0)
+            _routeOverviewRows.Add("No route script details available.");
     }
 
     private async System.Threading.Tasks.Task LoadFromConfigAsync()
@@ -134,13 +202,18 @@ public partial class TradeFeatureView : UserControl
             return;
         _built = true;
 
-        TabStripCtrl.SetTabs(new[] { ("trade", "Trade") });
-        TabStripCtrl.ActiveTabId = "trade";
+        TabStripCtrl.SetTabs(new[] { ("route", "Route"), ("settings", "Settings"), ("joboverview", "Job Overview") });
+        TabStripCtrl.ActiveTabId = _activeTab;
+        TabStripCtrl.TabChanged += tab =>
+        {
+            _activeTab = tab;
+            SyncTabVisibility();
+        };
         ContentHost.Children.Clear();
 
-        var layout = new StackPanel { Spacing = 10 };
+        _routePanel = new StackPanel { Spacing = 10 };
         _runtimeLabel = new TextBlock { Text = "Script running: No", Classes = { "form-label" } };
-        layout.Children.Add(_runtimeLabel);
+        _routePanel.Children.Add(_runtimeLabel);
 
         _useRouteScriptsCheck = CreateCheck("Use route scripts");
         _tracePlayerCheck = CreateCheck("Trace player");
@@ -173,32 +246,76 @@ public partial class TradeFeatureView : UserControl
         _buyGoodsQuantityBox = CreateTextBox("0", 120);
         _recorderPathBox = CreateTextBox(string.Empty, 420);
 
-        layout.Children.Add(CreateRowControl(_useRouteScriptsCheck, _tracePlayerCheck));
-        layout.Children.Add(CreateRow("Trace player name", _tracePlayerNameBox));
-        layout.Children.Add(CreateRow("Route list", _routeListCombo));
-        layout.Children.Add(CreateRow("Scripts", _scriptsList));
-        layout.Children.Add(CreateRow("Script path", _scriptInputBox));
-        layout.Children.Add(CreateRowControl(addScriptBtn, removeScriptBtn));
-        layout.Children.Add(CreateRowControl(addListBtn, removeListBtn));
-        layout.Children.Add(_runTownScriptCheck);
-        layout.Children.Add(_waitHunterCheck);
-        layout.Children.Add(_attackThiefPlayersCheck);
-        layout.Children.Add(_attackThiefNpcsCheck);
-        layout.Children.Add(_counterAttackCheck);
-        layout.Children.Add(_protectTransportCheck);
-        layout.Children.Add(_castBuffsCheck);
-        layout.Children.Add(_mountTransportCheck);
-        layout.Children.Add(CreateRow("Max transport distance", _maxTransportDistanceBox));
-        layout.Children.Add(_sellGoodsCheck);
-        layout.Children.Add(_buyGoodsCheck);
-        layout.Children.Add(CreateRow("Buy goods quantity", _buyGoodsQuantityBox));
-        layout.Children.Add(CreateRow("Recorder script path", _recorderPathBox));
+        _routePanel.Children.Add(CreateRowControl(_useRouteScriptsCheck, _tracePlayerCheck));
+        _routePanel.Children.Add(CreateRow("Trace player name", _tracePlayerNameBox));
+        _routePanel.Children.Add(CreateRow("Route list", _routeListCombo));
+        _routePanel.Children.Add(CreateRow("Scripts", _scriptsList));
+        _routePanel.Children.Add(CreateRow("Script path", _scriptInputBox));
+        _routePanel.Children.Add(CreateRowControl(addScriptBtn, removeScriptBtn));
+        _routePanel.Children.Add(CreateRowControl(addListBtn, removeListBtn));
 
-        var saveBtn = new Button { Content = "Save", Classes = { "primary" }, Width = 140 };
-        saveBtn.Click += SaveBtn_Click;
-        layout.Children.Add(saveBtn);
+        var routeSaveBtn = new Button { Content = "Save Route", Classes = { "primary" }, Width = 140 };
+        routeSaveBtn.Click += SaveBtn_Click;
+        _routePanel.Children.Add(routeSaveBtn);
 
-        ContentHost.Children.Add(layout);
+        _settingsPanel = new StackPanel { Spacing = 10 };
+        _settingsPanel.Children.Add(_runTownScriptCheck);
+        _settingsPanel.Children.Add(_waitHunterCheck);
+        _settingsPanel.Children.Add(_attackThiefPlayersCheck);
+        _settingsPanel.Children.Add(_attackThiefNpcsCheck);
+        _settingsPanel.Children.Add(_counterAttackCheck);
+        _settingsPanel.Children.Add(_protectTransportCheck);
+        _settingsPanel.Children.Add(_castBuffsCheck);
+        _settingsPanel.Children.Add(_mountTransportCheck);
+        _settingsPanel.Children.Add(CreateRow("Max transport distance", _maxTransportDistanceBox));
+        _settingsPanel.Children.Add(_sellGoodsCheck);
+        _settingsPanel.Children.Add(_buyGoodsCheck);
+        _settingsPanel.Children.Add(CreateRow("Buy goods quantity", _buyGoodsQuantityBox));
+        _settingsPanel.Children.Add(CreateRow("Recorder script path", _recorderPathBox));
+
+        var settingsSaveBtn = new Button { Content = "Save Settings", Classes = { "primary" }, Width = 140 };
+        settingsSaveBtn.Click += SaveBtn_Click;
+        _settingsPanel.Children.Add(settingsSaveBtn);
+
+        _jobOverviewPanel = new StackPanel { Spacing = 8 };
+        _jobAliasValue = new TextBlock { Text = "-", Classes = { "form-label" } };
+        _jobTypeValue = new TextBlock { Text = "None", Classes = { "form-label" } };
+        _jobLevelValue = new TextBlock { Text = "0", Classes = { "form-label" } };
+        _jobExperienceValue = new TextBlock { Text = "0", Classes = { "form-label" } };
+        _jobDifficultyValue = new TextBlock { Text = "0", Classes = { "form-label" } };
+        _jobRouteValue = new TextBlock { Text = "-", Classes = { "form-label" } };
+        _jobTransportValue = new TextBlock { Text = "No", Classes = { "form-label" } };
+        _routeOverviewList = new ListBox { Height = 220, ItemsSource = _routeOverviewRows };
+
+        _jobOverviewPanel.Children.Add(CreateRow("Alias", _jobAliasValue));
+        _jobOverviewPanel.Children.Add(CreateRow("Type", _jobTypeValue));
+        _jobOverviewPanel.Children.Add(CreateRow("Level", _jobLevelValue));
+        _jobOverviewPanel.Children.Add(CreateRow("Experience", _jobExperienceValue));
+        _jobOverviewPanel.Children.Add(CreateRow("Difficulty", _jobDifficultyValue));
+        _jobOverviewPanel.Children.Add(CreateRow("Current route", _jobRouteValue));
+        _jobOverviewPanel.Children.Add(CreateRow("Transport", _jobTransportValue));
+        _jobOverviewPanel.Children.Add(new TextBlock
+        {
+            Text = "Route Details",
+            Classes = { "form-label" },
+            Margin = new Thickness(0, 4, 0, 0)
+        });
+        _jobOverviewPanel.Children.Add(_routeOverviewList);
+
+        ContentHost.Children.Add(_routePanel);
+        ContentHost.Children.Add(_settingsPanel);
+        ContentHost.Children.Add(_jobOverviewPanel);
+        SyncTabVisibility();
+    }
+
+    private void SyncTabVisibility()
+    {
+        if (_routePanel != null)
+            _routePanel.IsVisible = _activeTab == "route";
+        if (_settingsPanel != null)
+            _settingsPanel.IsVisible = _activeTab == "settings";
+        if (_jobOverviewPanel != null)
+            _jobOverviewPanel.IsVisible = _activeTab == "joboverview";
     }
 
     private void RouteListCombo_SelectionChanged(object? sender, SelectionChangedEventArgs e)

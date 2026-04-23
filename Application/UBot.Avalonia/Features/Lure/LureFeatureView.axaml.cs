@@ -24,6 +24,7 @@ public partial class LureFeatureView : UserControl
     private TextBox? _walkbackScriptBox;
     private ComboBox? _modeCombo;
     private TextBox? _selectedScriptBox;
+    private Button? _openRecorderBtn;
     private CheckBox? _stayForCheck;
     private TextBox? _stayForSecondsBox;
     private CheckBox? _howlingCheck;
@@ -147,6 +148,8 @@ public partial class LureFeatureView : UserControl
         _radiusBox = CreateTextBox("20");
         _walkbackScriptBox = CreateTextBox(string.Empty, 480);
         _selectedScriptBox = CreateTextBox(string.Empty, 480);
+        _openRecorderBtn = new Button { Content = "Open Script Recorder", Width = 180 };
+        _openRecorderBtn.Click += OpenRecorderBtn_Click;
         _modeCombo = new ComboBox { ItemsSource = new[] { "walkRandomly", "stayAtCenter", "useScript" }, SelectedItem = "walkRandomly", Width = 220 };
         _stayForCheck = CreateCheck("Stay at center for");
         _stayForSecondsBox = CreateTextBox("10", 120);
@@ -183,6 +186,7 @@ public partial class LureFeatureView : UserControl
         layout.Children.Add(CreateRow("Walkback script", _walkbackScriptBox));
         layout.Children.Add(CreateRow("Lure mode", _modeCombo));
         layout.Children.Add(CreateRow("Selected script", _selectedScriptBox));
+        layout.Children.Add(_openRecorderBtn);
         layout.Children.Add(useCurrentBtn);
         layout.Children.Add(CreateRowControl(_stayForCheck, _stayForSecondsBox));
         layout.Children.Add(_howlingCheck);
@@ -244,6 +248,42 @@ public partial class LureFeatureView : UserControl
         };
 
         await _vm.PatchConfigAsync(patch);
+    }
+
+    private void OpenRecorderBtn_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_vm == null)
+            return;
+
+        var currentPath = (_selectedScriptBox?.Text ?? string.Empty).Trim();
+        var owner = TopLevel.GetTopLevel(this) as Window;
+        var recorder = new LureRecorderWindow(
+            currentPath,
+            async savedPath =>
+            {
+                if (string.IsNullOrWhiteSpace(savedPath))
+                    return;
+
+                if (_selectedScriptBox != null)
+                    _selectedScriptBox.Text = savedPath;
+
+                await _vm.PatchConfigAsync(new Dictionary<string, object?>
+                {
+                    ["lureScriptPath"] = savedPath
+                });
+            }
+        );
+
+        if (owner != null)
+        {
+            recorder.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            recorder.Show(owner);
+        }
+        else
+        {
+            recorder.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            recorder.Show();
+        }
     }
 
     private static StackPanel CreateRow(string label, Control control)

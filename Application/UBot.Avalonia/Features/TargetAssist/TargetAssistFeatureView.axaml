@@ -3,10 +3,186 @@
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:controls="clr-namespace:UBot.Avalonia.Controls"
   x:Class="UBot.Avalonia.Features.TargetAssist.TargetAssistFeatureView">
+  <UserControl.Styles>
+    <Style Selector="Border.ta-card">
+      <Setter Property="Background" Value="{DynamicResource CardSurfaceBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="11" />
+      <Setter Property="Padding" Value="10" />
+    </Style>
+    <Style Selector="Border.ta-card-primary">
+      <Setter Property="Background" Value="{DynamicResource PanelBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource StrokeStrongBrush}" />
+    </Style>
+    <Style Selector="Border.ta-card-secondary">
+      <Setter Property="Background" Value="{DynamicResource CardSurfaceBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}" />
+    </Style>
+    <Style Selector="Border.ta-subcard">
+      <Setter Property="Background" Value="{DynamicResource FieldBgBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="9" />
+      <Setter Property="Padding" Value="9" />
+    </Style>
+    <Style Selector="Border.ta-icon-badge">
+      <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="7" />
+      <Setter Property="Padding" Value="5" />
+    </Style>
+    <Style Selector="TextBlock.ta-title">
+      <Setter Property="FontSize" Value="15" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+    </Style>
+    <Style Selector="Border.ta-section-divider">
+      <Setter Property="Height" Value="1" />
+      <Setter Property="Background" Value="{DynamicResource SectionSeparatorBrush}" />
+      <Setter Property="Margin" Value="0,2,0,2" />
+    </Style>
+    <Style Selector="TextBlock.ta-subtitle">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+    </Style>
+    <Style Selector="TextBlock.ta-label">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Margin" Value="0,0,10,0" />
+    </Style>
+    <Style Selector="TextBlock.ta-helper">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}" />
+    </Style>
+    <Style Selector="Path.ta-icon-path">
+      <Setter Property="Fill" Value="{DynamicResource AccentBrush}" />
+      <Setter Property="Width" Value="12" />
+      <Setter Property="Height" Value="12" />
+      <Setter Property="Stretch" Value="Uniform" />
+    </Style>
+    <Style Selector="TextBox.ta-input">
+      <Setter Property="Background" Value="{DynamicResource FieldBgBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+      <Setter Property="Padding" Value="8,4" />
+      <Setter Property="MinHeight" Value="32" />
+    </Style>
+    <Style Selector="TextBox.ta-input:pointerover">
+      <Setter Property="BorderBrush" Value="{DynamicResource StrokeStrongBrush}" />
+    </Style>
+    <Style Selector="TextBox.ta-input:focus">
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+    </Style>
+    <Style Selector="ComboBox.ta-input">
+      <Setter Property="Background" Value="{DynamicResource FieldBgBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+      <Setter Property="Padding" Value="8,4" />
+      <Setter Property="MinHeight" Value="32" />
+    </Style>
+    <Style Selector="ComboBox.ta-input:pointerover">
+      <Setter Property="BorderBrush" Value="{DynamicResource StrokeStrongBrush}" />
+    </Style>
+    <Style Selector="ComboBox.ta-input:focus">
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+    </Style>
+    <Style Selector="Button.ta-btn">
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="10,5" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Background" Value="{DynamicResource BtnDefaultBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="MinHeight" Value="32" />
+    </Style>
+    <Style Selector="Button.ta-btn:pointerover">
+      <Setter Property="Background" Value="{DynamicResource SecondaryBtnHoverBgBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource StrokeStrongBrush}" />
+    </Style>
+    <Style Selector="Button.ta-btn:pressed">
+      <Setter Property="Background" Value="{DynamicResource SecondaryBtnBgBrush}" />
+    </Style>
+    <Style Selector="Button.ta-btn:disabled">
+      <Setter Property="Opacity" Value="0.55" />
+    </Style>
+    <Style Selector="Button.ta-btn-accent">
+      <Setter Property="Background" Value="{DynamicResource BtnBlueBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+    </Style>
+    <Style Selector="Button.ta-btn-accent:pointerover">
+      <Setter Property="BorderBrush" Value="{DynamicResource StrokeStrongBrush}" />
+    </Style>
+    <Style Selector="Button.ta-btn-primary">
+      <Setter Property="Background" Value="{DynamicResource BtnPrimaryBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource GoodBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+    </Style>
+    <Style Selector="Button.ta-btn-primary:pointerover">
+      <Setter Property="BorderBrush" Value="{DynamicResource StrokeStrongBrush}" />
+    </Style>
+    <Style Selector="Button.ta-btn-danger">
+      <Setter Property="Background" Value="{DynamicResource BtnDangerBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+    </Style>
+    <Style Selector="Button.ta-btn-danger:pointerover">
+      <Setter Property="BorderBrush" Value="{DynamicResource StrokeStrongBrush}" />
+    </Style>
+    <Style Selector="ListBox.ta-list">
+      <Setter Property="Background" Value="{DynamicResource FieldBgBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource StrokeSoftBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="5" />
+      <Setter Property="MinHeight" Value="96" />
+    </Style>
+    <Style Selector="ListBox.ta-list:pointerover">
+      <Setter Property="BorderBrush" Value="{DynamicResource StrokeStrongBrush}" />
+    </Style>
+    <Style Selector="ListBox.ta-list:focus">
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+    </Style>
+    <Style Selector="ListBox.ta-list ListBoxItem">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+      <Setter Property="Margin" Value="0,0,0,4" />
+      <Setter Property="Padding" Value="8,6" />
+      <Setter Property="CornerRadius" Value="6" />
+    </Style>
+    <Style Selector="ListBox.ta-list ListBoxItem:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource SelectItemHoverBgBrush}" />
+    </Style>
+    <Style Selector="ListBox.ta-list ListBoxItem:selected /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource SelectItemSelectedBgBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="ToggleSwitch.ta-toggle">
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+      <Setter Property="Margin" Value="0,3,0,3" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="ToggleSwitch.ta-toggle:pointerover">
+      <Setter Property="Opacity" Value="0.96" />
+    </Style>
+    <Style Selector="ToggleSwitch.ta-toggle:checked">
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+    </Style>
+  </UserControl.Styles>
   <ScrollViewer VerticalScrollBarVisibility="Auto">
-    <StackPanel Spacing="10" Margin="0,0,0,12">
+    <StackPanel Spacing="8" Margin="0,0,0,10">
       <controls:TabStrip x:Name="TabStripCtrl" />
-      <StackPanel x:Name="ContentHost" Spacing="10" />
+      <StackPanel x:Name="ContentHost" Spacing="8" />
     </StackPanel>
   </ScrollViewer>
 </UserControl>

@@ -39,7 +39,14 @@
                   <ListBox x:Name="SourceItemsList" Height="150" SelectionChanged="SourceItemsList_SelectionChanged">
                     <ListBox.ItemTemplate>
                       <DataTemplate>
-                        <TextBlock Text="{Binding Display}" Classes="form-label" />
+                        <Grid>
+                          <Grid.ContextMenu>
+                            <ContextMenu>
+                              <MenuItem Header="Add to shopping list" Click="OnQuickAddShoppingFromSource_Click" />
+                            </ContextMenu>
+                          </Grid.ContextMenu>
+                          <TextBlock Text="{Binding Display}" Classes="form-label" />
+                        </Grid>
                       </DataTemplate>
                     </ListBox.ItemTemplate>
                   </ListBox>
@@ -56,6 +63,11 @@
                     <ListBox.ItemTemplate>
                       <DataTemplate>
                         <Grid ColumnDefinitions="*,70">
+                          <Grid.ContextMenu>
+                            <ContextMenu>
+                              <MenuItem Header="Remove from shopping list" Click="OnQuickRemoveShoppingFromTarget_Click" />
+                            </ContextMenu>
+                          </Grid.ContextMenu>
                           <TextBlock Grid.Column="0" Text="{Binding Name}" Classes="form-label" TextTrimming="CharacterEllipsis" />
                           <TextBlock Grid.Column="1" Text="{Binding Amount}" Classes="form-label" HorizontalAlignment="Right" />
                         </Grid>
@@ -241,6 +253,18 @@
                 <ListBox.ItemTemplate>
                   <DataTemplate>
                     <Grid ColumnDefinitions="*,70,70,70,70,70">
+                      <Grid.ContextMenu>
+                        <ContextMenu>
+                          <MenuItem Header="Quick Sell" Click="OnQuickSellFromFilter_Click" />
+                          <MenuItem Header="Quick Store" Click="OnQuickStoreFromFilter_Click" />
+                          <MenuItem Header="Quick Pickup" Click="OnQuickPickupFromFilter_Click" />
+                          <MenuItem Header="Pickup only character" Click="OnPickupOnlyCharacterFromFilter_Click" />
+                          <Separator />
+                          <MenuItem Header="Don't sell/store/pickup" Click="OnRemoveAllFromFilterContext_Click" />
+                          <Separator />
+                          <MenuItem Header="Add to shopping list" Click="OnQuickAddShoppingFromFilter_Click" />
+                        </ContextMenu>
+                      </Grid.ContextMenu>
                       <TextBlock Grid.Column="0" Text="{Binding Name}" Classes="form-label" TextTrimming="CharacterEllipsis" />
                       <TextBlock Grid.Column="1" Text="{Binding Level}" Classes="form-label" HorizontalAlignment="Center" />
                       <TextBlock Grid.Column="2" Text="{Binding Gender}" Classes="form-label" HorizontalAlignment="Center" />

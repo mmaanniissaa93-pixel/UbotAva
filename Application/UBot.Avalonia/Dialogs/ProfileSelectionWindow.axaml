@@ -11,21 +11,33 @@
 
     <Border BorderBrush="{DynamicResource StrokeSoftBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
         <StackPanel Spacing="15">
-            <TextBlock Text="SELECT PROFILE..." 
-                       FontSize="18" 
-                       FontWeight="Bold" 
-                       Foreground="{DynamicResource AccentBrush}"
-                       Margin="0,0,0,10"/>
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0"
+                           Text="SELECT PROFILE..." 
+                           FontSize="18" 
+                           FontWeight="Bold" 
+                           Foreground="{DynamicResource AccentBrush}"/>
+                <Button Grid.Column="1"
+                        Width="32"
+                        Height="32"
+                        Classes="btn secondary"
+                        Content="x"
+                        Click="Close_Click"/>
+            </Grid>
+            <Separator Margin="0,-4,0,2"/>
 
             <StackPanel Spacing="5">
                 <TextBlock Text="Select a profile" Classes="label"/>
                 <Grid ColumnDefinitions="*,Auto,Auto">
-                    <ComboBox x:Name="ProfileList" Grid.Column="0" HorizontalAlignment="Stretch" Classes="field">
-                        <ComboBoxItem Content="Default"/>
-                    </ComboBox>
+                    <ComboBox x:Name="ProfileList" Grid.Column="0" HorizontalAlignment="Stretch" Classes="field"/>
                     <Button Grid.Column="1" Classes="btn secondary" Content="+" Width="32" Margin="5,0,0,0" Click="AddProfile_Click"/>
                     <Button Grid.Column="2" Classes="btn secondary danger" Content="x" Width="32" Margin="5,0,0,0" Click="DeleteProfile_Click"/>
                 </Grid>
+            </StackPanel>
+
+            <StackPanel Spacing="5">
+                <TextBlock Text="New profile name" Classes="label"/>
+                <TextBox x:Name="NewProfileBox" Classes="field"/>
             </StackPanel>
 
             <CheckBox x:Name="SaveSelectionCheck" Content="Save selection" IsChecked="True" Classes="check"/>
