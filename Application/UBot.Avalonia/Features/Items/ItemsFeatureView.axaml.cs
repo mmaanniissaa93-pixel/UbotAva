@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
@@ -89,6 +90,7 @@ public partial class ItemsFeatureView : UserControl
     }
 
     private PluginViewModelBase? _vm;
+    private AppState? _state;
     private bool _syncing;
     private string _activeTab = "shopping";
 
@@ -132,6 +134,7 @@ public partial class ItemsFeatureView : UserControl
     public void Initialize(PluginViewModelBase vm, AppState state)
     {
         _vm = vm;
+        _state = state;
 
         MainTabs.ActiveTabId = _activeTab;
         MainTabs.SetTabs(new[]
@@ -148,6 +151,20 @@ public partial class ItemsFeatureView : UserControl
 
         SyncTabVisibility();
         _ = LoadFromConfigAsync();
+    }
+
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+
+        if (_vm != null && _itemCatalog.Count == 0)
+            _ = LoadFromConfigAsync();
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        ReleaseHeavyCatalogData();
+        base.OnDetachedFromVisualTree(e);
     }
 
     public void UpdateFromState(JsonElement moduleState)
@@ -171,6 +188,7 @@ public partial class ItemsFeatureView : UserControl
             ReadCatalogFromConfig();
             ReadFiltersFromConfig();
             ReadShoppingTargetsFromConfig();
+            _state?.RemoveConfigKeys(_vm.CurrentPluginId, "itemCatalog", "shopCatalog");
 
             RunWhenInTownCheck.IsChecked = _vm.BoolCfg("shoppingEnabled", true);
             RepairAllGearCheck.IsChecked = _vm.BoolCfg("repairGear", true);
@@ -197,6 +215,26 @@ public partial class ItemsFeatureView : UserControl
         {
             _syncing = false;
         }
+    }
+
+    private void ReleaseHeavyCatalogData()
+    {
+        _itemCatalog.Clear();
+        _shopCatalog.Clear();
+        _sourceRows.Clear();
+        _itemRows.Clear();
+        _selectedCategories.Clear();
+        _selectedSourceItemCodeName = string.Empty;
+        _selectedTargetItemCodeName = string.Empty;
+        _selectedFilterItemCodeName = string.Empty;
+
+        ShopSelect.Options = new List<SelectOption>();
+        ShoppingItemSelect.Options = new List<SelectOption>();
+        TargetItemSelect.Options = new List<SelectOption>();
+        FilterItemSelect.Options = new List<SelectOption>();
+
+        if (_vm != null)
+            _state?.RemoveConfigKeys(_vm.CurrentPluginId, "itemCatalog", "shopCatalog");
     }
 
     private void ReadCatalogFromConfig()

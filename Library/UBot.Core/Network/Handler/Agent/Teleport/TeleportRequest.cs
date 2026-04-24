@@ -43,6 +43,7 @@ internal class TeleportRequest : IPacketHandler
         if (!SpawnManager.TryGetEntity<SpawnedBionic>(teleporterUniqueId, out var portal))
             return;
 
+        Game.ReferenceManager.EnsureTeleportDataLoaded();
         Game.Player.Teleportation = new Teleportation
         {
             Destination = Game.ReferenceManager.TeleportData.FirstOrDefault(t => t.ID == destination),

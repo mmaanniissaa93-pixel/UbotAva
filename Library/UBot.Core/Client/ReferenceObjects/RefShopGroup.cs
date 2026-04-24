@@ -67,6 +67,7 @@ public class RefShopGroup : IReference<string>
     /// <returns></returns>
     public List<RefShop> GetShops()
     {
+        Game.ReferenceManager.EnsureShopDataLoaded();
         var mappedShops = Game.ReferenceManager.ShopGroupMapping.Where(m => m.Group == CodeName);
 
         return mappedShops

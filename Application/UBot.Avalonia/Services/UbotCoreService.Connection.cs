@@ -56,6 +56,8 @@ internal sealed class UbotConnectionService : UbotServiceBase
 
     public Task<ConnectionOptions> GetConnectionOptionsAsync()
     {
+        _lifecycle.EnsureClientInfoLoaded();
+
         var options = ResolveConnectionOptions();
         var normalized = NormalizeConnectionIndices(options.mode, options.divisionIndex, options.gatewayIndex);
 
@@ -76,7 +78,6 @@ internal sealed class UbotConnectionService : UbotServiceBase
     {
         var options = ResolveConnectionOptions();
         var changed = false;
-        var reloadReferenceData = false;
 
         if (!string.IsNullOrWhiteSpace(mode))
         {
@@ -116,7 +117,6 @@ internal sealed class UbotConnectionService : UbotServiceBase
                 GlobalConfig.Set("UBot.Game.ClientType", requestedClientType);
                 Game.ClientType = requestedClientType;
                 _lifecycle.MarkReferenceDataDirty();
-                reloadReferenceData = true;
                 changed = true;
             }
         }
@@ -127,9 +127,6 @@ internal sealed class UbotConnectionService : UbotServiceBase
         GlobalConfig.Set("UBot.GatewayIndex", normalized.gatewayIndex);
         if (changed)
             GlobalConfig.Save();
-
-        if (reloadReferenceData && !_lifecycle.ReferenceLoading)
-            _lifecycle.BeginReferenceDataLoad();
 
         return await GetConnectionOptionsAsync();
     }
@@ -253,8 +250,7 @@ internal sealed class UbotConnectionService : UbotServiceBase
         GlobalConfig.Save();
 
         _lifecycle.MarkReferenceDataDirty();
-        if (!_lifecycle.ReferenceLoading)
-            _lifecycle.BeginReferenceDataLoad();
+        _lifecycle.EnsureClientInfoLoaded();
 
         return Task.FromResult(true);
     }
@@ -289,12 +285,8 @@ internal sealed class UbotConnectionService : UbotServiceBase
         Kernel.Proxy?.Shutdown();
         Game.Clientless = requestedMode == "clientless";
 
-        if (!_lifecycle.ReferenceLoaded)
-        {
-            if (!_lifecycle.ReferenceLoading)
-                _lifecycle.BeginReferenceDataLoad();
+        if (!await EnsureReferenceDataReadyAsync().ConfigureAwait(false))
             return false;
-        }
 
         if (Game.ReferenceManager?.DivisionInfo?.Divisions == null
             || Game.ReferenceManager.DivisionInfo.Divisions.Count == 0
@@ -323,6 +315,36 @@ internal sealed class UbotConnectionService : UbotServiceBase
             return false;
         }
     }
+
+    private async Task<bool> EnsureReferenceDataReadyAsync(int timeoutMs = 45_000)
+    {
+        if (_lifecycle.ReferenceLoaded)
+            return true;
+
+        if (!_lifecycle.EnsureClientInfoLoaded())
+            return false;
+
+        if (!_lifecycle.ReferenceLoading)
+            _lifecycle.BeginReferenceDataLoad();
+
+        if (_lifecycle.ReferenceLoaded)
+            return true;
+
+        var deadline = Environment.TickCount64 + timeoutMs;
+        while (Environment.TickCount64 < deadline)
+        {
+            if (_lifecycle.ReferenceLoaded)
+                return true;
+
+            if (!_lifecycle.ReferenceLoading)
+                return false;
+
+            await Task.Delay(200).ConfigureAwait(false);
+        }
+
+        return _lifecycle.ReferenceLoaded;
+    }
+
     private RuntimeStatus BuildStatusSnapshot()
     {
         var normalized = NormalizeConnectionIndices(

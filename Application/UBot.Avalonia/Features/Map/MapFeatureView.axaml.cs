@@ -36,6 +36,7 @@ public partial class MapFeatureView : UserControl
 
     private PluginViewModelBase? _vm;
     private string _activeTab = "minimap";
+    private string _loadedMapImageVersion = string.Empty;
 
     private Bitmap? _minimapBmp;
     private Bitmap? _navmeshBmp;
@@ -86,8 +87,35 @@ public partial class MapFeatureView : UserControl
 
         var map = moduleState.TryGetProperty("map", out var m) ? m : moduleState;
 
-        if (map.TryGetProperty("minimapImage", out var mi)) TryLoadBmp(mi.GetString(), ref _minimapBmp);
-        if (map.TryGetProperty("navmeshImage",  out var ni)) TryLoadBmp(ni.GetString(), ref _navmeshBmp);
+        var incomingMapImageVersion = map.TryGetProperty("mapImageVersion", out var mv)
+            ? S(mv, string.Empty)
+            : string.Empty;
+        var shouldReloadImages = false;
+        if (!string.IsNullOrWhiteSpace(incomingMapImageVersion))
+        {
+            if (!string.Equals(_loadedMapImageVersion, incomingMapImageVersion, StringComparison.Ordinal))
+            {
+                _loadedMapImageVersion = incomingMapImageVersion;
+                shouldReloadImages = true;
+            }
+        }
+        else if (_minimapBmp == null || _navmeshBmp == null)
+        {
+            shouldReloadImages = true;
+        }
+
+        if ((_minimapBmp == null || _navmeshBmp == null) && (map.TryGetProperty("minimapImage", out _) || map.TryGetProperty("navmeshImage", out _)))
+            shouldReloadImages = true;
+
+        if (shouldReloadImages)
+        {
+            if (map.TryGetProperty("minimapImage", out var mi))
+                TryLoadBmp(mi.GetString(), ref _minimapBmp);
+
+            if (map.TryGetProperty("navmeshImage", out var ni))
+                TryLoadBmp(ni.GetString(), ref _navmeshBmp);
+        }
+
         if (map.TryGetProperty("mapWidth",  out var mw)) _mapW = N(mw, 1920);
         if (map.TryGetProperty("mapHeight", out var mh)) _mapH = N(mh, 1920);
         if (map.TryGetProperty("playerXOffset", out var px)) _playerX = N(px, 0);
@@ -133,6 +161,12 @@ public partial class MapFeatureView : UserControl
             }
 
         ApplyMapPresentation();
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        DisposeMapBitmaps();
+        base.OnDetachedFromVisualTree(e);
     }
 
     private void MapCanvas_PointerPressed(object? s, PointerPressedEventArgs e)
@@ -244,9 +278,22 @@ public partial class MapFeatureView : UserControl
         {
             var data = b64.Contains(',') ? b64[(b64.IndexOf(',') + 1)..] : b64;
             using var ms = new MemoryStream(Convert.FromBase64String(data));
-            bmp = new Bitmap(ms);
+            var nextBitmap = new Bitmap(ms);
+            bmp?.Dispose();
+            bmp = nextBitmap;
         }
         catch { }
+    }
+
+    private void DisposeMapBitmaps()
+    {
+        _minimapBmp?.Dispose();
+        _minimapBmp = null;
+
+        _navmeshBmp?.Dispose();
+        _navmeshBmp = null;
+
+        _loadedMapImageVersion = string.Empty;
     }
 }
 

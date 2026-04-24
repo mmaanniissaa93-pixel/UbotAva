@@ -2,8 +2,23 @@
 
 public class RefTeleportLink : IReference
 {
-    public RefTeleport Owner => Game.ReferenceManager.TeleportData.Find(t => t.ID == OwnerTeleport);
-    public RefTeleport Target => Game.ReferenceManager.TeleportData.Find(t => t.ID == TargetTeleport);
+    public RefTeleport Owner
+    {
+        get
+        {
+            Game.ReferenceManager.EnsureTeleportDataLoaded();
+            return Game.ReferenceManager.TeleportData.Find(t => t.ID == OwnerTeleport);
+        }
+    }
+
+    public RefTeleport Target
+    {
+        get
+        {
+            Game.ReferenceManager.EnsureTeleportDataLoaded();
+            return Game.ReferenceManager.TeleportData.Find(t => t.ID == TargetTeleport);
+        }
+    }
 
     #region IReference
 

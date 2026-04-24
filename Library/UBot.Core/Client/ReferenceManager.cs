@@ -18,8 +18,23 @@ namespace UBot.Core.Client;
 public class ReferenceManager
 {
     private const string ServerDep = "server_dep\\silkroad\\textdata";
+    private const string LowMemoryModeConfigKey = "UBot.Desktop.LowMemoryMode";
+    private readonly object _deferredLoadSync = new();
+    private bool _isShopDataLoaded;
+    private bool _isAlchemyDataLoaded;
+    private bool _isOptLevelDataLoaded;
+    private bool _isQuestDataLoaded;
+    private bool _isEventRewardDataLoaded;
+    private bool _isTextDataLoaded;
+    private bool _isCharacterDataLoaded;
+    private bool _isItemDataLoaded;
+    private bool _isSkillDataLoaded;
+    private bool _isLevelDataLoaded;
+    private bool _isTeleportDataLoaded;
+    private bool _isMapInfoLoaded;
 
     public int LanguageTab { get; set; }
+    public bool IsLowMemoryModeEnabled { get; private set; } = true;
 
     public Dictionary<string, RefText> TextData { get; } = new(70000);
     public Dictionary<uint, RefObjChar> CharacterData { get; } = new(20000);
@@ -53,43 +68,56 @@ public class ReferenceManager
     public void Load(int languageTab, BackgroundWorker worker)
     {
         LanguageTab = languageTab; //until language wizard is reworked?
+        IsLowMemoryModeEnabled = GlobalConfig.Get(LowMemoryModeConfigKey, true);
 
         var sw = Stopwatch.StartNew();
 
         worker.ReportProgress(0, "Client info");
         LoadClientInfo();
 
-        worker.ReportProgress(5, "Map info");
-        LoadMapInfo();
+        worker.ReportProgress(5, IsLowMemoryModeEnabled ? "Map info (deferred)" : "Map info");
+        if (!IsLowMemoryModeEnabled)
+            LoadMapInfo();
 
-        worker.ReportProgress(10, "Texts");
-        LoadTextData();
+        worker.ReportProgress(10, IsLowMemoryModeEnabled ? "Texts (deferred)" : "Texts");
+        if (!IsLowMemoryModeEnabled)
+            LoadTextData();
 
-        worker.ReportProgress(20, "Characters");
-        LoadCharacterData();
+        worker.ReportProgress(20, IsLowMemoryModeEnabled ? "Characters (deferred)" : "Characters");
+        if (!IsLowMemoryModeEnabled)
+            LoadCharacterData();
 
-        worker.ReportProgress(30, "Items");
-        LoadItemData();
+        worker.ReportProgress(30, IsLowMemoryModeEnabled ? "Items (deferred)" : "Items");
+        if (!IsLowMemoryModeEnabled)
+            LoadItemData();
 
-        worker.ReportProgress(40, "Skills");
-        LoadSkillData();
+        worker.ReportProgress(40, IsLowMemoryModeEnabled ? "Skills (deferred)" : "Skills");
+        if (!IsLowMemoryModeEnabled)
+            LoadSkillData();
 
-        worker.ReportProgress(50, "Quests");
-        LoadQuestData();
+        worker.ReportProgress(50, IsLowMemoryModeEnabled ? "Quests (deferred)" : "Quests");
+        if (!IsLowMemoryModeEnabled)
+            LoadQuestData();
 
-        worker.ReportProgress(60, "Shops");
-        LoadShopData();
+        worker.ReportProgress(60, IsLowMemoryModeEnabled ? "Shops (deferred)" : "Shops");
+        if (!IsLowMemoryModeEnabled)
+            LoadShopData();
 
-        worker.ReportProgress(70, "Teleporters");
-        LoadTeleportData();
+        worker.ReportProgress(70, IsLowMemoryModeEnabled ? "Teleporters (deferred)" : "Teleporters");
+        if (!IsLowMemoryModeEnabled)
+            LoadTeleportData();
 
-        worker.ReportProgress(80, "Alchemy");
-        LoadAlchemyData();
+        worker.ReportProgress(80, IsLowMemoryModeEnabled ? "Alchemy (deferred)" : "Alchemy");
+        if (!IsLowMemoryModeEnabled)
+            LoadAlchemyData();
 
-        worker.ReportProgress(90, "Misc");
-        LoadOptLevelData();
-        LoadLevelData();
-        LoadEventRewardData();
+        worker.ReportProgress(90, IsLowMemoryModeEnabled ? "Misc (deferred)" : "Misc");
+        if (!IsLowMemoryModeEnabled)
+            LoadOptLevelData();
+        if (!IsLowMemoryModeEnabled)
+            LoadLevelData();
+        if (!IsLowMemoryModeEnabled)
+            LoadEventRewardData();
 
         sw.Stop();
 
@@ -100,7 +128,96 @@ public class ReferenceManager
         EventManager.FireEvent("OnLoadGameData");
     }
 
-    private void LoadClientInfo()
+    public void EnsureShopDataLoaded()
+    {
+        if (_isShopDataLoaded || Game.MediaPk2 == null)
+            return;
+
+        LoadShopData();
+    }
+
+    public void EnsureQuestDataLoaded()
+    {
+        if ((_isQuestDataLoaded && _isEventRewardDataLoaded) || Game.MediaPk2 == null)
+            return;
+
+        LoadQuestData();
+        LoadEventRewardData();
+    }
+
+    public void EnsureAlchemyDataLoaded()
+    {
+        if (_isAlchemyDataLoaded || Game.MediaPk2 == null)
+            return;
+
+        LoadAlchemyData();
+    }
+
+    public void EnsureOptLevelDataLoaded()
+    {
+        if (_isOptLevelDataLoaded || Game.MediaPk2 == null)
+            return;
+
+        LoadOptLevelData();
+    }
+
+    public void EnsureTextDataLoaded()
+    {
+        if (_isTextDataLoaded || Game.MediaPk2 == null)
+            return;
+
+        LoadTextData();
+    }
+
+    public void EnsureCharacterDataLoaded()
+    {
+        if (_isCharacterDataLoaded || Game.MediaPk2 == null)
+            return;
+
+        LoadCharacterData();
+    }
+
+    public void EnsureItemDataLoaded()
+    {
+        if (_isItemDataLoaded || Game.MediaPk2 == null)
+            return;
+
+        LoadItemData();
+    }
+
+    public void EnsureSkillDataLoaded()
+    {
+        if (_isSkillDataLoaded || Game.MediaPk2 == null)
+            return;
+
+        LoadSkillData();
+    }
+
+    public void EnsureLevelDataLoaded()
+    {
+        if (_isLevelDataLoaded || Game.MediaPk2 == null)
+            return;
+
+        LoadLevelData();
+    }
+
+    public void EnsureTeleportDataLoaded()
+    {
+        if (_isTeleportDataLoaded || Game.MediaPk2 == null)
+            return;
+
+        LoadTeleportData();
+    }
+
+    public void EnsureMapInfoLoaded()
+    {
+        if (_isMapInfoLoaded || Game.DataPk2 == null)
+            return;
+
+        LoadMapInfo();
+    }
+
+    public void LoadClientInfo()
     {
         DivisionInfo = DivisionInfo.Load();
         GatewayInfo = GatewayInfo.Load();
@@ -109,132 +226,217 @@ public class ReferenceManager
 
     private void LoadMapInfo()
     {
-        RegionInfoManager.Load();
-        NavMeshManager.Initialize(Game.DataPk2);
+        lock (_deferredLoadSync)
+        {
+            if (_isMapInfoLoaded)
+                return;
+
+            RegionInfoManager.Load();
+            NavMeshManager.Configure(Game.DataPk2);
+            _isMapInfoLoaded = true;
+        }
     }
 
     private void LoadLevelData()
     {
-        LoadReferenceFile($"{ServerDep}\\LevelData.txt", LevelData);
+        lock (_deferredLoadSync)
+        {
+            if (_isLevelDataLoaded)
+                return;
+
+            LoadReferenceFile($"{ServerDep}\\LevelData.txt", LevelData);
+            _isLevelDataLoaded = true;
+        }
     }
 
     private void LoadShopData()
     {
-        LoadReferenceFile($"{ServerDep}\\RefShop.txt", Shops);
-        LoadReferenceFile($"{ServerDep}\\RefShopTab.txt", ShopTabs);
-        LoadReferenceFile($"{ServerDep}\\RefShopGroup.txt", ShopGroups);
-        LoadReferenceFile($"{ServerDep}\\RefMappingShopGroup.txt", ShopGroupMapping);
-        LoadReferenceFile($"{ServerDep}\\RefMappingShopWithTab.txt", ShopTabMapping);
+        lock (_deferredLoadSync)
+        {
+            if (_isShopDataLoaded)
+                return;
 
-        if (Game.ClientType >= GameClientType.Chinese)
-            LoadReferenceListFile($"{ServerDep}\\RefScrapOfPackageItem.txt", PackageItemScrap);
-        else
-            LoadReferenceFile($"{ServerDep}\\RefScrapOfPackageItem.txt", PackageItemScrap);
+            LoadReferenceFile($"{ServerDep}\\RefShop.txt", Shops);
+            LoadReferenceFile($"{ServerDep}\\RefShopTab.txt", ShopTabs);
+            LoadReferenceFile($"{ServerDep}\\RefShopGroup.txt", ShopGroups);
+            LoadReferenceFile($"{ServerDep}\\RefMappingShopGroup.txt", ShopGroupMapping);
+            LoadReferenceFile($"{ServerDep}\\RefMappingShopWithTab.txt", ShopTabMapping);
 
-        if (Game.ClientType >= GameClientType.Chinese)
-            LoadReferenceListFile($"{ServerDep}\\RefShopGoods.txt", ShopGoods);
-        else
-            LoadReferenceFile($"{ServerDep}\\RefShopGoods.txt", ShopGoods);
+            if (Game.ClientType >= GameClientType.Chinese)
+                LoadReferenceListFile($"{ServerDep}\\RefScrapOfPackageItem.txt", PackageItemScrap);
+            else
+                LoadReferenceFile($"{ServerDep}\\RefScrapOfPackageItem.txt", PackageItemScrap);
+
+            if (Game.ClientType >= GameClientType.Chinese)
+                LoadReferenceListFile($"{ServerDep}\\RefShopGoods.txt", ShopGoods);
+            else
+                LoadReferenceFile($"{ServerDep}\\RefShopGoods.txt", ShopGoods);
+
+            _isShopDataLoaded = true;
+        }
     }
 
     private void LoadAlchemyData()
     {
-        if (Game.ClientType >= GameClientType.Chinese)
-            LoadReferenceListFile($"{ServerDep}\\magicoption.txt", MagicOptions);
-        else
+        lock (_deferredLoadSync)
         {
-            LoadReferenceFile($"{ServerDep}\\magicoption.txt", MagicOptions);
-            if (MagicOptions.Count <= 1)
+            if (_isAlchemyDataLoaded)
+                return;
+
+            if (Game.ClientType >= GameClientType.Chinese)
+                LoadReferenceListFile($"{ServerDep}\\magicoption.txt", MagicOptions);
+            else
             {
-                LoadReferenceFile($"{ServerDep}\\magicoption_all.txt", MagicOptions);
+                LoadReferenceFile($"{ServerDep}\\magicoption.txt", MagicOptions);
+                if (MagicOptions.Count <= 1)
+                {
+                    LoadReferenceFile($"{ServerDep}\\magicoption_all.txt", MagicOptions);
+                }
             }
+
+            LoadReferenceFile($"{ServerDep}\\magicoptionassign.txt", MagicOptionAssignments);
+            _isAlchemyDataLoaded = true;
         }
-        LoadReferenceFile($"{ServerDep}\\magicoptionassign.txt", MagicOptionAssignments);
     }
 
     private void LoadTeleportData()
     {
-        LoadReferenceFile($"{ServerDep}\\TeleportBuilding.txt", CharacterData);
-        LoadReferenceFile($"{ServerDep}\\TeleportData.txt", TeleportData);
-        LoadReferenceFile($"{ServerDep}\\TeleportLink.txt", TeleportLinks);
-        LoadReferenceFile($"{ServerDep}\\refoptionalteleport.txt", OptionalTeleports);
+        lock (_deferredLoadSync)
+        {
+            if (_isTeleportDataLoaded)
+                return;
+
+            LoadReferenceFile($"{ServerDep}\\TeleportBuilding.txt", CharacterData);
+            LoadReferenceFile($"{ServerDep}\\TeleportData.txt", TeleportData);
+            LoadReferenceFile($"{ServerDep}\\TeleportLink.txt", TeleportLinks);
+            LoadReferenceFile($"{ServerDep}\\refoptionalteleport.txt", OptionalTeleports);
+            _isTeleportDataLoaded = true;
+        }
     }
 
     private void LoadItemData()
     {
-        if (Game.ClientType < GameClientType.Thailand)
-            LoadReferenceFile($"{ServerDep}\\ItemData.txt", ItemData);
-        else
-            LoadReferenceListFile($"{ServerDep}\\ItemData.txt", ItemData);
+        lock (_deferredLoadSync)
+        {
+            if (_isItemDataLoaded)
+                return;
+
+            if (Game.ClientType < GameClientType.Thailand)
+                LoadReferenceFile($"{ServerDep}\\ItemData.txt", ItemData);
+            else
+                LoadReferenceListFile($"{ServerDep}\\ItemData.txt", ItemData);
+
+            _isItemDataLoaded = true;
+        }
     }
 
     private void LoadOptLevelData()
     {
-        if (Game.ClientType > GameClientType.Japanese_Old)
+        lock (_deferredLoadSync)
         {
-            LoadReferenceFile($"{ServerDep}\\refabilitybyitemoptleveldata.txt", AbilityItemByOptLevel);
-            LoadReferenceFile($"{ServerDep}\\refskillbyitemoptleveldata.txt", SkillByItemOptLevels);
-        }
+            if (_isOptLevelDataLoaded)
+                return;
 
-        if (Game.ClientType >= GameClientType.Chinese_Old)
-            LoadReferenceFile($"{ServerDep}\\refextraabilitybyequipitemoptlevel.txt", ExtraAbilityByEquipItemOptLevel);
+            if (Game.ClientType > GameClientType.Japanese_Old)
+            {
+                LoadReferenceFile($"{ServerDep}\\refabilitybyitemoptleveldata.txt", AbilityItemByOptLevel);
+                LoadReferenceFile($"{ServerDep}\\refskillbyitemoptleveldata.txt", SkillByItemOptLevels);
+            }
+
+            if (Game.ClientType >= GameClientType.Chinese_Old)
+                LoadReferenceFile($"{ServerDep}\\refextraabilitybyequipitemoptlevel.txt", ExtraAbilityByEquipItemOptLevel);
+
+            _isOptLevelDataLoaded = true;
+        }
     }
 
     private void LoadQuestData()
     {
-        LoadReferenceFile($"{ServerDep}\\refquestrewarditems.txt", QuestRewardItems);
-        LoadReferenceFile($"{ServerDep}\\refqusetreward.txt", QuestRewards);
+        lock (_deferredLoadSync)
+        {
+            if (_isQuestDataLoaded)
+                return;
 
-        if (Game.ClientType >= GameClientType.Chinese)
-            LoadConditionalData($"{ServerDep}\\QuestData.txt", QuestData);
-        else
-            LoadReferenceFile($"{ServerDep}\\questdata.txt", QuestData);
+            LoadReferenceFile($"{ServerDep}\\refquestrewarditems.txt", QuestRewardItems);
+            LoadReferenceFile($"{ServerDep}\\refqusetreward.txt", QuestRewards);
+
+            if (Game.ClientType >= GameClientType.Chinese)
+                LoadConditionalData($"{ServerDep}\\QuestData.txt", QuestData);
+            else
+                LoadReferenceFile($"{ServerDep}\\questdata.txt", QuestData);
+
+            _isQuestDataLoaded = true;
+        }
     }
 
     private void LoadEventRewardData()
     {
-        LoadReferenceFile($"{ServerDep}\\refeventrewarditems.txt", EventRewardItems);
+        lock (_deferredLoadSync)
+        {
+            if (_isEventRewardDataLoaded)
+                return;
+
+            LoadReferenceFile($"{ServerDep}\\refeventrewarditems.txt", EventRewardItems);
+            _isEventRewardDataLoaded = true;
+        }
     }
 
     private void LoadTextData()
     {
-        if (Game.ClientType >= GameClientType.Chinese)
-            LoadReferenceListFile($"{ServerDep}\\TextUISystem.txt", TextData);
-        else
-            LoadReferenceFile($"{ServerDep}\\TextUISystem.txt", TextData);
-
-        if (Game.ClientType >= GameClientType.Chinese)
-            LoadReferenceListFile($"{ServerDep}\\TextZoneName.txt", TextData);
-        else
-            LoadReferenceFile($"{ServerDep}\\TextZoneName.txt", TextData);
-        if (Game.ClientType >= GameClientType.Chinese)
+        lock (_deferredLoadSync)
         {
-            LoadReferenceListFile($"{ServerDep}\\TextQuest_OtherString.txt", TextData);
-            LoadReferenceListFile($"{ServerDep}\\TextData_Object.txt", TextData);
-            LoadReferenceListFile($"{ServerDep}\\TextData_Equip&Skill.txt", TextData);
-            LoadReferenceListFile($"{ServerDep}\\TextQuest_Speech&Name.txt", TextData);
-            LoadReferenceListFile($"{ServerDep}\\TextQuest_QuestString.txt", TextData);
-        }
-        else
-        {
-            if (Game.ClientType >= GameClientType.Thailand)
-            {
-                LoadReferenceListFile($"{ServerDep}\\TextDataName.txt", TextData);
-                LoadReferenceListFile($"{ServerDep}\\TextQuest.txt", TextData);
+            if (_isTextDataLoaded)
                 return;
+
+            if (Game.ClientType >= GameClientType.Chinese)
+                LoadReferenceListFile($"{ServerDep}\\TextUISystem.txt", TextData);
+            else
+                LoadReferenceFile($"{ServerDep}\\TextUISystem.txt", TextData);
+
+            if (Game.ClientType >= GameClientType.Chinese)
+                LoadReferenceListFile($"{ServerDep}\\TextZoneName.txt", TextData);
+            else
+                LoadReferenceFile($"{ServerDep}\\TextZoneName.txt", TextData);
+            if (Game.ClientType >= GameClientType.Chinese)
+            {
+                LoadReferenceListFile($"{ServerDep}\\TextQuest_OtherString.txt", TextData);
+                LoadReferenceListFile($"{ServerDep}\\TextData_Object.txt", TextData);
+                LoadReferenceListFile($"{ServerDep}\\TextData_Equip&Skill.txt", TextData);
+                LoadReferenceListFile($"{ServerDep}\\TextQuest_Speech&Name.txt", TextData);
+                LoadReferenceListFile($"{ServerDep}\\TextQuest_QuestString.txt", TextData);
+            }
+            else
+            {
+                if (Game.ClientType >= GameClientType.Thailand)
+                {
+                    LoadReferenceListFile($"{ServerDep}\\TextDataName.txt", TextData);
+                    LoadReferenceListFile($"{ServerDep}\\TextQuest.txt", TextData);
+                    _isTextDataLoaded = true;
+                    return;
+                }
+
+                LoadReferenceFile($"{ServerDep}\\TextDataName.txt", TextData);
+                LoadReferenceFile($"{ServerDep}\\TextQuest.txt", TextData);
             }
 
-            LoadReferenceFile($"{ServerDep}\\TextDataName.txt", TextData);
-            LoadReferenceFile($"{ServerDep}\\TextQuest.txt", TextData);
+            _isTextDataLoaded = true;
         }
     }
 
     private void LoadCharacterData()
     {
-        if (Game.ClientType < GameClientType.Thailand)
-            LoadReferenceFile($"{ServerDep}\\CharacterData.txt", CharacterData);
-        else
-            LoadReferenceListFile($"{ServerDep}\\CharacterData.txt", CharacterData);
+        lock (_deferredLoadSync)
+        {
+            if (_isCharacterDataLoaded)
+                return;
+
+            if (Game.ClientType < GameClientType.Thailand)
+                LoadReferenceFile($"{ServerDep}\\CharacterData.txt", CharacterData);
+            else
+                LoadReferenceListFile($"{ServerDep}\\CharacterData.txt", CharacterData);
+
+            _isCharacterDataLoaded = true;
+        }
     }
 
     private void LoadConditionalData<TKey, TReference>(string file, IDictionary<TKey, TReference> collection)
@@ -248,14 +450,21 @@ public class ReferenceManager
 
     private void LoadSkillData()
     {
-        if (Game.ClientType == GameClientType.Vietnam || Game.ClientType == GameClientType.Vietnam274)
-            LoadReferenceListFileEnc($"{ServerDep}\\SkillDataEnc.txt", SkillData);
-        else if (Game.ClientType < GameClientType.Thailand)
-            LoadReferenceFile($"{ServerDep}\\SkillData.txt", SkillData);
-        else
-            LoadReferenceListFile($"{ServerDep}\\SkillData.txt", SkillData);
+        lock (_deferredLoadSync)
+        {
+            if (_isSkillDataLoaded)
+                return;
 
-        LoadReferenceFile($"{ServerDep}\\SkillMasteryData.txt", SkillMasteryData);
+            if (Game.ClientType == GameClientType.Vietnam || Game.ClientType == GameClientType.Vietnam274)
+                LoadReferenceListFileEnc($"{ServerDep}\\SkillDataEnc.txt", SkillData);
+            else if (Game.ClientType < GameClientType.Thailand)
+                LoadReferenceFile($"{ServerDep}\\SkillData.txt", SkillData);
+            else
+                LoadReferenceListFile($"{ServerDep}\\SkillData.txt", SkillData);
+
+            LoadReferenceFile($"{ServerDep}\\SkillMasteryData.txt", SkillMasteryData);
+            _isSkillDataLoaded = true;
+        }
     }
 
     private void LoadReferenceListFileEnc<TKey, TReference>(string fileName, IDictionary<TKey, TReference> destination)
@@ -431,6 +640,7 @@ public class ReferenceManager
 
     public IEnumerable<uint> GetBaseSkills()
     {
+        EnsureSkillDataLoaded();
         return SkillData
             .Where(p => p.Value.Basic_Code.EndsWith("_BASE_01") && p.Value.Basic_Group != "xxx")
             .Select(p => p.Key);
@@ -438,11 +648,13 @@ public class ReferenceManager
 
     public RefShopTab GetTab(string codeName)
     {
+        EnsureShopDataLoaded();
         return ShopTabs[codeName];
     }
 
     public string GetTranslation(string name)
     {
+        EnsureTextDataLoaded();
         if (TextData.TryGetValue(name, out var refText))
             return refText.Data;
 
@@ -451,6 +663,8 @@ public class ReferenceManager
 
     public RefObjCommon GetRefObjCommon(uint refObjID)
     {
+        EnsureCharacterDataLoaded();
+        EnsureItemDataLoaded();
         if (CharacterData.TryGetValue(refObjID, out var refChar))
             return refChar;
 
@@ -462,6 +676,7 @@ public class ReferenceManager
 
     public RefObjChar GetRefObjChar(uint id)
     {
+        EnsureCharacterDataLoaded();
         if (CharacterData.TryGetValue(id, out var data))
             return data;
 
@@ -470,11 +685,13 @@ public class ReferenceManager
 
     public RefObjChar GetRefObjChar(string codeName)
     {
+        EnsureCharacterDataLoaded();
         return CharacterData.FirstOrDefault(obj => obj.Value.CodeName == codeName).Value;
     }
 
     public RefObjItem GetRefItem(uint id)
     {
+        EnsureItemDataLoaded();
         if (ItemData.TryGetValue(id, out var data))
             return data;
 
@@ -483,16 +700,19 @@ public class ReferenceManager
 
     public RefObjItem GetRefItem(string codeName)
     {
+        EnsureItemDataLoaded();
         return ItemData.FirstOrDefault(obj => obj.Value.CodeName == codeName).Value;
     }
 
     public RefObjItem GetRefItem(TypeIdFilter filter)
     {
+        EnsureItemDataLoaded();
         return ItemData.FirstOrDefault(obj => filter.EqualsRefItem(obj.Value)).Value;
     }
 
     public RefSkill GetRefSkill(uint id)
     {
+        EnsureSkillDataLoaded();
         if (SkillData.TryGetValue(id, out var data))
             return data;
 
@@ -501,6 +721,7 @@ public class ReferenceManager
 
     public RefSkill GetRefSkill(string codeName)
     {
+        EnsureSkillDataLoaded();
         var skill = SkillData.FirstOrDefault(s => s.Value.Basic_Code == codeName);
 
         return skill.Value;
@@ -508,6 +729,7 @@ public class ReferenceManager
 
     public RefSkillMastery GetRefSkillMastery(uint id)
     {
+        EnsureSkillDataLoaded();
         if (
             (Game.ClientType == GameClientType.Chinese_Old || Game.ClientType == GameClientType.Chinese)
             && id >= 273
@@ -523,6 +745,7 @@ public class ReferenceManager
 
     public RefQuest GetRefQuest(uint id)
     {
+        EnsureQuestDataLoaded();
         if (QuestData.TryGetValue(id, out var data))
             return data;
 
@@ -531,6 +754,7 @@ public class ReferenceManager
 
     public RefLevel GetRefLevel(byte level)
     {
+        EnsureLevelDataLoaded();
         if (LevelData.TryGetValue(level, out var data))
             return data;
 
@@ -539,11 +763,13 @@ public class ReferenceManager
 
     public RefShopGroup GetRefShopGroup(string npcCodeName)
     {
+        EnsureShopDataLoaded();
         return ShopGroups.FirstOrDefault(sg => sg.Value.RefNpcCodeName == npcCodeName).Value;
     }
 
     public RefShopGroup GetRefShopGroupById(ushort id)
     {
+        EnsureShopDataLoaded();
         return ShopGroups.FirstOrDefault(sg => sg.Value.Id == id).Value;
     }
 
@@ -569,6 +795,7 @@ public class ReferenceManager
 
     public RefPackageItemScrap GetRefPackageItem(string codeName)
     {
+        EnsureShopDataLoaded();
         if (PackageItemScrap.TryGetValue(codeName, out var data))
             return data;
 
@@ -577,6 +804,7 @@ public class ReferenceManager
 
     public List<RefPackageItemScrap> GetRefPackageItems(RefShopGroup group)
     {
+        EnsureShopDataLoaded();
         var result = new List<RefPackageItemScrap>();
         foreach (var shop in group.GetShops())
         {
@@ -605,11 +833,13 @@ public class ReferenceManager
 
     public RefShopGood GetRefShopGood(string refPackageItemCodeName)
     {
+        EnsureShopDataLoaded();
         return ShopGoods.FirstOrDefault(sg => sg.RefPackageItemCodeName == refPackageItemCodeName);
     }
 
     public List<RefShopGood> GetRefShopGoods(RefShopGroup group)
     {
+        EnsureShopDataLoaded();
         return (
             from shop in @group.GetShops()
             where shop != null
@@ -623,6 +853,7 @@ public class ReferenceManager
 
     public byte GetRefShopGoodTabIndex(string npcCodeName, RefShopGood good)
     {
+        EnsureShopDataLoaded();
         var shopGroup = GetRefShopGroup(npcCodeName);
         if (shopGroup == null)
             return 0xFF;
@@ -664,6 +895,7 @@ public class ReferenceManager
         string searchPattern = null
     )
     {
+        EnsureItemDataLoaded();
         var result = new List<RefObjItem>(10000);
         foreach (var refItem in ItemData.Values)
         {
@@ -732,6 +964,7 @@ public class ReferenceManager
     /// <returns></returns>
     public RefTeleport[] GetTeleporters(Region region)
     {
+        EnsureTeleportDataLoaded();
         return TeleportData.Where(t => t.GenRegionID == region).ToArray();
     }
 
@@ -742,6 +975,7 @@ public class ReferenceManager
     /// <returns></returns>
     public RefTeleport[] GetGroundTeleporters(Region region)
     {
+        EnsureTeleportDataLoaded();
         return TeleportData.Where(t => t.GenRegionID == region && t.AssocRefObjId == 0).ToArray();
     }
 
@@ -752,6 +986,7 @@ public class ReferenceManager
     /// <returns></returns>
     public RefMagicOpt GetMagicOption(uint id)
     {
+        EnsureAlchemyDataLoaded();
         return MagicOptions?.FirstOrDefault(m => m.Id == id);
     }
 
@@ -762,6 +997,7 @@ public class ReferenceManager
     /// <returns></returns>
     public RefMagicOpt GetMagicOption(string group)
     {
+        EnsureAlchemyDataLoaded();
         return MagicOptions?.FirstOrDefault(m => m.Group == group);
     }
 
@@ -773,6 +1009,7 @@ public class ReferenceManager
     /// <returns></returns>
     public RefMagicOpt GetMagicOption(string group, byte degree)
     {
+        EnsureAlchemyDataLoaded();
         return MagicOptions?.FirstOrDefault(m => m.Group == group && m.Level == degree);
     }
 
@@ -784,6 +1021,7 @@ public class ReferenceManager
     /// <returns></returns>
     public List<RefMagicOpt> GetAssignments(byte typeId3, byte typeId4)
     {
+        EnsureAlchemyDataLoaded();
         return MagicOptionAssignments
             .FirstOrDefault(a => a.TypeId3 == typeId3 && a.TypeId4 == typeId4)
             ?.AvailableMagicOptions.Select(GetMagicOption)
@@ -798,6 +1036,7 @@ public class ReferenceManager
     /// <returns></returns>
     public RefAbilityByItemOptLevel GetAbilityItem(uint itemId, byte optLevel)
     {
+        EnsureOptLevelDataLoaded();
         return AbilityItemByOptLevel.Values.FirstOrDefault(p => p.ItemId == itemId && p.OptLevel == optLevel);
     }
 
@@ -809,6 +1048,7 @@ public class ReferenceManager
     /// <returns></returns>
     public IEnumerable<RefExtraAbilityByEquipItemOptLevel> GetExtraAbilityItems(uint itemId, byte optLevel)
     {
+        EnsureOptLevelDataLoaded();
         return ExtraAbilityByEquipItemOptLevel.Where(p => p.ItemId == itemId && p.OptLevel == optLevel);
     }
 
@@ -819,6 +1059,7 @@ public class ReferenceManager
     /// <returns></returns>
     public IEnumerable<RefQuestRewardItem> GetQuestRewardItems(uint questId)
     {
+        EnsureQuestDataLoaded();
         return QuestRewardItems.Where(r => r.QuestId == questId);
     }
 
@@ -829,6 +1070,7 @@ public class ReferenceManager
     /// <returns></returns>
     public RefQuestReward GetQuestReward(uint questId)
     {
+        EnsureQuestDataLoaded();
         QuestRewards.TryGetValue(questId, out var result);
 
         return result;
@@ -836,6 +1078,7 @@ public class ReferenceManager
 
     public List<RefEventRewardItems> GetEventRewardItems(uint eventId)
     {
+        EnsureQuestDataLoaded();
         return EventRewardItems.Where(r => r.EventId == eventId).ToList();
     }
 

@@ -31,6 +31,7 @@ public class RefAbilityByItemOptLevel : IReference<int>
     /// <returns></returns>
     public IEnumerable<uint> GetLinks()
     {
+        Game.ReferenceManager.EnsureOptLevelDataLoaded();
         return Game.ReferenceManager.SkillByItemOptLevels.Where(tl => tl.Link == Id).Select(p => p.SkillId);
     }
 }

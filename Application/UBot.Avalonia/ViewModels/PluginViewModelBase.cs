@@ -10,6 +10,7 @@ public abstract partial class PluginViewModelBase : ObservableObject
     public readonly IUbotCoreService Core;
     protected readonly AppState State;
     protected string PluginId { get; private set; } = "";
+    public string CurrentPluginId => PluginId;
 
     protected PluginViewModelBase(IUbotCoreService core, AppState state)
     {

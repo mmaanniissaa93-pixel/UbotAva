@@ -121,6 +121,20 @@ public partial class AlchemyFeatureView : UserControl
         _ = LoadFromConfigAsync();
     }
 
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+
+        if (_vm != null && _itemOptions.Count == 0)
+            _ = LoadFromConfigAsync();
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        ReleaseFeatureCache();
+        base.OnDetachedFromVisualTree(e);
+    }
+
     public void UpdateFromState(JsonElement moduleState)
     {
         var root = moduleState;
@@ -708,6 +722,15 @@ public partial class AlchemyFeatureView : UserControl
         AlchemyStartBtn.Classes.Remove("go");
         AlchemyStartBtn.Classes.Remove("halt");
         AlchemyStartBtn.Classes.Add(shouldShowStop ? "halt" : "go");
+    }
+
+    private void ReleaseFeatureCache()
+    {
+        _itemOptions.Clear();
+        _blueRows.Clear();
+        _statRows.Clear();
+        _logRows.Clear();
+        ItemSelect.Options = new List<SelectOption>();
     }
 
     private static List<AlchemyRow> ParseRows(JsonElement root, string key)

@@ -38,6 +38,7 @@ internal sealed class UbotCoreLifecycleService : UbotServiceBase
 {
     private static readonly object InitLock = new();
     private static bool _initialized;
+    private static bool _clientInfoLoaded;
     private static bool _referenceLoading;
     private static bool _referenceLoaded;
     private static string _statusText = "Ready";
@@ -48,10 +49,12 @@ internal sealed class UbotCoreLifecycleService : UbotServiceBase
 
     internal bool ReferenceLoading => _referenceLoading;
     internal bool ReferenceLoaded => _referenceLoaded;
+    internal bool ClientInfoLoaded => _clientInfoLoaded;
     internal string StatusText => _statusText;
 
     internal void MarkReferenceDataDirty()
     {
+        _clientInfoLoaded = false;
         _referenceLoaded = false;
     }
 
@@ -115,7 +118,8 @@ internal sealed class UbotCoreLifecycleService : UbotServiceBase
                 EventManager.SubscribeEvent("OnUniqueMessage", new Action<string>(OnUniqueMessage));
             }
 
-            BeginReferenceDataLoad();
+            // Keep idle footprint low: load lightweight connection metadata only.
+            EnsureClientInfoLoaded();
             _initialized = true;
         }
     }
@@ -166,15 +170,48 @@ internal sealed class UbotCoreLifecycleService : UbotServiceBase
         return true;
     }
 
+    internal bool EnsureClientInfoLoaded()
+    {
+        lock (InitLock)
+        {
+            if (_clientInfoLoaded
+                && Game.ReferenceManager?.DivisionInfo != null
+                && Game.ReferenceManager.GatewayInfo != null
+                && Game.ReferenceManager.VersionInfo != null)
+            {
+                return true;
+            }
+
+            var sroDir = GlobalConfig.Get("UBot.SilkroadDirectory", string.Empty);
+            if (string.IsNullOrWhiteSpace(sroDir) || !File.Exists(Path.Combine(sroDir, "media.pk2")))
+                return false;
+
+            if (!Game.InitializeArchiveFiles())
+                return false;
+
+            try
+            {
+                Game.ReferenceManager.LoadClientInfo();
+                _clientInfoLoaded = Game.ReferenceManager?.DivisionInfo != null
+                                    && Game.ReferenceManager.GatewayInfo != null
+                                    && Game.ReferenceManager.VersionInfo != null;
+                return _clientInfoLoaded;
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Client info load failed: {ex.Message}");
+                _clientInfoLoaded = false;
+                return false;
+            }
+        }
+    }
+
     internal void BeginReferenceDataLoad()
     {
         if (_referenceLoading || _referenceLoaded)
             return;
 
-        var sroDir = GlobalConfig.Get("UBot.SilkroadDirectory", string.Empty);
-        if (string.IsNullOrWhiteSpace(sroDir) || !File.Exists(Path.Combine(sroDir, "media.pk2")))
-            return;
-        if (!Game.InitializeArchiveFiles())
+        if (!EnsureClientInfoLoaded())
             return;
 
         _referenceLoading = true;

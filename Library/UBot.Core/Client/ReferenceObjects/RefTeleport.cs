@@ -39,6 +39,7 @@ public class RefTeleport : IReference<uint>
     /// <returns></returns>
     public List<RefTeleportLink> GetLinks()
     {
+        Game.ReferenceManager.EnsureTeleportDataLoaded();
         return Game.ReferenceManager.TeleportLinks.Where(tl => tl.OwnerTeleport == ID).ToList();
     }
 

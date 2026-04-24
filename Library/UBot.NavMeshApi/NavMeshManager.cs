@@ -12,6 +12,9 @@ namespace UBot.NavMeshApi;
 public static class NavMeshManager
 {
     private const int NORMAL_CACHE_SIZE = 256;
+    private static readonly object _initLock = new();
+    private static bool _initialized;
+    private static bool _normalCacheInitialized;
 
     private static IFileSystem _dataFileSystem;
 
@@ -28,28 +31,22 @@ public static class NavMeshManager
     private static readonly Dictionary<int, NavMeshObj> _objectCache = new Dictionary<int, NavMeshObj>();
     private static readonly Dictionary<RID, NavMeshDungeon> _dungeonCache = new Dictionary<RID, NavMeshDungeon>();
 
+    public static bool IsInitialized => _initialized;
+
+    public static void Configure(IFileSystem dataFileSystem)
+    {
+        lock (_initLock)
+        {
+            _dataFileSystem = dataFileSystem;
+            _initialized = false;
+            InvalidateCaches();
+        }
+    }
+
     public static void Initialize(IFileSystem dataFileSystem)
     {
-        _dataFileSystem = dataFileSystem;
-
-        LoadMapInfo("NavMesh\\MapInfo.mfo");
-        LoadObjectIndex("NavMesh\\Object.ifo");
-        LoadDungeonInfo("Dungeon\\DungeonInfo.txt");
-        //LoadObjectString("NavMesh/ObjectString.ifo"); // EventZone data
-
-        //_terrainCache.EnsureCapacity(RegionManager.ActiveRegions);
-        //_objectCache.EnsureCapacity(ObjectIndex.)
-
-        for (int i = 0; i < NORMAL_CACHE_SIZE; i++)
-        {
-            const float TwoPiOverANGLE_CACHE_SIZE = 2 * MathF.PI / NORMAL_CACHE_SIZE;
-            NormalCache[i].Y = -MathF.Sin(i * TwoPiOverANGLE_CACHE_SIZE);
-            NormalCache[i].X = MathF.Cos(i * TwoPiOverANGLE_CACHE_SIZE);
-        }
-
-        Debug.WriteLine("Initialized NavMeshManager!");
-        Debug.WriteLine($"Mapinfo.mfo: {RegionManager.ActiveRegions} active regions");
-        Debug.WriteLine($"Object.ifo: {ObjectIndex.Count()} objects");
+        Configure(dataFileSystem);
+        EnsureInitialized();
     }
 
     public static bool Raycast(
@@ -59,6 +56,12 @@ public static class NavMeshManager
         [NotNullWhen(true)] out NavMeshRaycastHit? hit
     )
     {
+        if (!EnsureInitialized())
+        {
+            hit = null;
+            return false;
+        }
+
         if (src.Region == dst.Region && src.Offset == dst.Offset)
         {
             hit = null;
@@ -101,6 +104,9 @@ public static class NavMeshManager
 
     public static bool ResolveCellAndHeight(NavMeshTransform transform)
     {
+        if (!EnsureInitialized())
+            return false;
+
         transform.Normalize();
         if (!TryGetNavMesh(transform.Region, out NavMesh mesh))
             return false;
@@ -323,6 +329,12 @@ public static class NavMeshManager
 
     public static bool TryGetNavMesh(RID region, out NavMesh mesh)
     {
+        if (!EnsureInitialized())
+        {
+            mesh = null;
+            return false;
+        }
+
         if (_regionCache.TryGetValue(region, out mesh))
             return true;
 
@@ -352,6 +364,12 @@ public static class NavMeshManager
 
     public static bool TryGetNavMeshTerrain(RID region, out NavMeshTerrain terrain)
     {
+        if (!EnsureInitialized())
+        {
+            terrain = null;
+            return false;
+        }
+
         if (!RegionManager.IsEnabled(region))
         {
             terrain = null;
@@ -369,6 +387,12 @@ public static class NavMeshManager
 
     public static bool TryGetNavMeshObj(int index, out NavMeshObj obj)
     {
+        if (!EnsureInitialized())
+        {
+            obj = null;
+            return false;
+        }
+
         if (!_objectCache.TryGetValue(index, out obj))
         {
             var objectIndex = ObjectIndex[index];
@@ -384,6 +408,12 @@ public static class NavMeshManager
 
     public static bool TryGetNavMeshDungeon(RID region, out NavMeshDungeon dungeon)
     {
+        if (!EnsureInitialized())
+        {
+            dungeon = null;
+            return false;
+        }
+
         if (!region.IsDungeon)
         {
             dungeon = null;
@@ -402,5 +432,44 @@ public static class NavMeshManager
         }
 
         return dungeon != null;
+    }
+
+    private static bool EnsureInitialized()
+    {
+        if (_initialized)
+            return true;
+
+        lock (_initLock)
+        {
+            if (_initialized)
+                return true;
+
+            if (_dataFileSystem == null)
+                return false;
+
+            if (!_normalCacheInitialized)
+            {
+                for (int i = 0; i < NORMAL_CACHE_SIZE; i++)
+                {
+                    const float TwoPiOverANGLE_CACHE_SIZE = 2 * MathF.PI / NORMAL_CACHE_SIZE;
+                    NormalCache[i].Y = -MathF.Sin(i * TwoPiOverANGLE_CACHE_SIZE);
+                    NormalCache[i].X = MathF.Cos(i * TwoPiOverANGLE_CACHE_SIZE);
+                }
+
+                _normalCacheInitialized = true;
+            }
+
+            LoadMapInfo("NavMesh\\MapInfo.mfo");
+            LoadObjectIndex("NavMesh\\Object.ifo");
+            LoadDungeonInfo("Dungeon\\DungeonInfo.txt");
+            //LoadObjectString("NavMesh/ObjectString.ifo"); // EventZone data
+
+            _initialized = true;
+
+            Debug.WriteLine("Initialized NavMeshManager!");
+            Debug.WriteLine($"Mapinfo.mfo: {RegionManager.ActiveRegions} active regions");
+            Debug.WriteLine($"Object.ifo: {ObjectIndex.Count()} objects");
+            return true;
+        }
     }
 }

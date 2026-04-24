@@ -26,6 +26,7 @@ public class RefShop : IReference<string>
     /// <returns></returns>
     public List<RefShopTab> GetTabs()
     {
+        Game.ReferenceManager.EnsureShopDataLoaded();
         var mapping = Game.ReferenceManager.ShopTabMapping.Where(m => m.Shop == CodeName);
 
         return (

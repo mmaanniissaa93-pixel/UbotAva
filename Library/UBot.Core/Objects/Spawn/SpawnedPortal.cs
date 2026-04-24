@@ -49,9 +49,12 @@ public sealed class SpawnedPortal : SpawnedBionic
 
         var teleportObj = Game.ReferenceManager.GetRefObjChar(result.Id);
         if (teleportObj != null)
+        {
+            Game.ReferenceManager.EnsureTeleportDataLoaded();
             result.Links = Game
                 .ReferenceManager.TeleportData.FirstOrDefault(t => t.AssocRefObjId == teleportObj.ID)
                 ?.GetLinks();
+        }
 
         if (Game.ClientType < GameClientType.Vietnam)
             return result;

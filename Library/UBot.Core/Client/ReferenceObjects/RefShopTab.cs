@@ -28,6 +28,7 @@ public class RefShopTab : IReference<string>
     /// <returns></returns>
     public List<RefShopGood> GetGoods()
     {
+        Game.ReferenceManager.EnsureShopDataLoaded();
         return Game.ReferenceManager.ShopGoods.Where(g => g.RefTabCodeName == CodeName).ToList();
     }
 

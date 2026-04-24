@@ -44,11 +44,13 @@ internal sealed class UbotMapService : UbotServiceBase
 
     internal Dictionary<string, object?> BuildMapPluginStateSnapshot()
     {
+        Game.ReferenceManager?.EnsureMapInfoLoaded();
         return BuildMapPluginState();
     }
 
     internal bool TryResolveWalkDestination(Position source, double mapX, double mapY, out Position destination)
     {
+        Game.ReferenceManager?.EnsureMapInfoLoaded();
         if (TryBuildMapRenderContext(source, out var renderContext)
             && TryProjectMapToPosition((float)mapX, (float)mapY, renderContext, source, out var projected))
         {
@@ -979,6 +981,7 @@ internal sealed class UbotMapService : UbotServiceBase
 
     public Task<IReadOnlyList<MapLocationDto>> GetMapLocationsAsync()
     {
+        Game.ReferenceManager?.EnsureMapInfoLoaded();
         var list = new List<MapLocationDto>();
         var teleports = Game.ReferenceManager?.OptionalTeleports;
         if (teleports != null)

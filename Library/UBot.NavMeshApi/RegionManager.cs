@@ -21,6 +21,8 @@ public class RegionManager
 
     public void Load(Stream stream)
     {
+        ActiveRegions = 0;
+
         using (var reader = new NavMeshReader(stream))
         {
             var signature = reader.ReadString(12);

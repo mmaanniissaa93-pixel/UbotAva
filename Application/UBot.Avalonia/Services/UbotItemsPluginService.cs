@@ -128,6 +128,8 @@ internal sealed class UbotItemsPluginService : UbotServiceBase
         if (Game.ReferenceManager?.ShopGroups == null)
             return result;
 
+        Game.ReferenceManager.EnsureShopDataLoaded();
+
         foreach (var shopGroup in Game.ReferenceManager.ShopGroups.Values)
         {
             if (shopGroup == null || string.IsNullOrWhiteSpace(shopGroup.RefNpcCodeName))
@@ -180,6 +182,8 @@ internal sealed class UbotItemsPluginService : UbotServiceBase
         var result = new List<Dictionary<string, object?>>();
         if (Game.ReferenceManager?.ItemData == null)
             return result;
+
+        Game.ReferenceManager.EnsureItemDataLoaded();
 
         foreach (var refItem in Game.ReferenceManager.ItemData.Values)
         {

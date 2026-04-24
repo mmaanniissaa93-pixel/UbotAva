@@ -55,6 +55,27 @@ public partial class AppState : ObservableObject
         OnPropertyChanged(nameof(Plugins));
     }
 
+    public void RemoveConfigKeys(string pluginId, params string[] keys)
+    {
+        if (string.IsNullOrWhiteSpace(pluginId) || keys == null || keys.Length == 0)
+            return;
+
+        if (!_configs.TryGetValue(pluginId, out var existing))
+            return;
+
+        var changed = false;
+        foreach (var key in keys)
+        {
+            if (string.IsNullOrWhiteSpace(key))
+                continue;
+
+            changed |= existing.Remove(key);
+        }
+
+        if (changed)
+            OnPropertyChanged(nameof(Plugins));
+    }
+
     public ObservableCollection<string> LogLines { get; } = new();
     public ObservableCollection<ChatMessageEntry> ChatMessages { get; } = new();
 

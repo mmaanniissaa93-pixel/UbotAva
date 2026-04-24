@@ -13,6 +13,8 @@ namespace UBot.Core.Components;
 
 public static class SkillManager
 {
+    private static readonly uint[] EmptySkills = Array.Empty<uint>();
+
     /// <summary>
     ///     Get the skill using index
     /// </summary>
@@ -26,7 +28,7 @@ public static class SkillManager
     /// <summary>
     ///     Basic skills
     /// </summary>
-    private static IEnumerable<uint> _baseSkills;
+    private static IEnumerable<uint> _baseSkills = EmptySkills;
 
     /// <summary>
     ///     Gets or sets the skills organized by their mob priority.
@@ -73,7 +75,14 @@ public static class SkillManager
     /// <summary>
     ///     Is the last action basic skill (Auto attack) <c>true</c>; otherwise <c>false</c>
     /// </summary>
-    public static bool IsLastCastedBasic => _baseSkills.Contains(LastCastedSkillId);
+    public static bool IsLastCastedBasic
+    {
+        get
+        {
+            EnsureBaseSkillsLoaded();
+            return _baseSkills.Contains(LastCastedSkillId);
+        }
+    }
 
     /// <summary>
     ///     Initializes this instance.
@@ -93,7 +102,15 @@ public static class SkillManager
 
     private static void OnLoadGamedData()
     {
-        _baseSkills = Game.ReferenceManager.GetBaseSkills();
+        _baseSkills = EmptySkills;
+    }
+
+    private static void EnsureBaseSkillsLoaded()
+    {
+        if (_baseSkills != null && !ReferenceEquals(_baseSkills, EmptySkills))
+            return;
+
+        _baseSkills = Game.ReferenceManager?.GetBaseSkills()?.ToArray() ?? EmptySkills;
     }
 
     /// <summary>
