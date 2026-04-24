@@ -33,7 +33,10 @@ public interface IUbotCoreService
     Task<string> GetSroExecutablePathAsync();
     Task<IReadOnlyList<AutoLoginAccountDto>> GetAutoLoginAccountsAsync();
     Task<bool> SaveAutoLoginAccountsAsync(IReadOnlyList<AutoLoginAccountDto> accounts);
+    Task<SoundNotificationSettingsDto> GetSoundNotificationSettingsAsync();
+    Task<bool> SaveSoundNotificationSettingsAsync(SoundNotificationSettingsDto settings);
     Task<string> PickExecutableAsync();
+    Task<string> PickSoundFileAsync();
     Task<string> PickScriptFileAsync();
     Task<byte[]?> GetSkillIconAsync(string iconFile);
     Task<byte[]?> GetEmoteIconAsync(string emoteName);

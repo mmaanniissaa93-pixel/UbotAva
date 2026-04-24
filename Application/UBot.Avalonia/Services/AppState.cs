@@ -67,6 +67,11 @@ public partial class AppState : ObservableObject
         });
     }
 
+    public void ClearLogs()
+    {
+        global::Avalonia.Threading.Dispatcher.UIThread.Post(() => LogLines.Clear());
+    }
+
     public void AddChatMessage(string channel, string sender, string message)
     {
         var normalizedChannel = string.IsNullOrWhiteSpace(channel) ? "all" : channel.Trim().ToLowerInvariant();

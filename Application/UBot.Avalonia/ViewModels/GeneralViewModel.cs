@@ -107,6 +107,18 @@ public partial class GeneralViewModel : PluginViewModelBase
         return true;
     }
 
+    public async Task<SoundNotificationSettingsDto> LoadSoundNotificationSettingsAsync()
+        => await Core.GetSoundNotificationSettingsAsync();
+
+    public async Task<bool> SaveSoundNotificationSettingsAsync(SoundNotificationSettingsDto settings)
+        => await Core.SaveSoundNotificationSettingsAsync(settings);
+
+    public async Task<string?> PickSoundFileAsync()
+    {
+        var path = await Core.PickSoundFileAsync();
+        return string.IsNullOrWhiteSpace(path) ? null : path;
+    }
+
     public async Task SelectAutoLoginAccountAsync(string? account)
     {
         var normalized = account?.Trim() ?? string.Empty;

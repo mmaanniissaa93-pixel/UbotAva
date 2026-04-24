@@ -89,10 +89,16 @@ if ((-not (Test-Path $targetAssistAssemblyPath)) -and (Test-Path $targetAssistPr
 Write-Output "NOTE: This is a truncated view of the build logs. For the full log, refer to .\build.log"
 Get-Content -Path "build.log" -Tail 100
 
-# Copy runtime data from Dependencies into Build\Data.
+# Copy runtime data from Dependencies into Build\Data (except legacy Languages assets).
 if (Test-Path ".\Dependencies") {
     New-Item -ItemType Directory -Path ".\Build\Data" -Force > $null
-    Copy-Item -Path ".\Dependencies\*" -Destination ".\Build\Data\" -Recurse -Force
+
+    $dependencyItems = Get-ChildItem -Path ".\Dependencies" -Force |
+        Where-Object { $_.Name -ne "Languages" }
+
+    foreach ($item in $dependencyItems) {
+        Copy-Item -Path $item.FullName -Destination ".\Build\Data\" -Recurse -Force
+    }
 }
 
 # Copy plugin manifests beside plugin assemblies as <AssemblyName>.manifest.json
@@ -107,9 +113,8 @@ if ($pluginManifestFiles -and $pluginManifestFiles.Count -gt 0) {
     }
 }
 
-# Ensure required runtime data exists after build (languages and town scripts).
+# Ensure required runtime data exists after build (town scripts).
 $requiredRuntimeFiles = @(
-    ".\Build\Data\Languages\langs.rsl",
     ".\Build\Data\Scripts\Towns\22106.rbs"
 )
 
@@ -122,7 +127,7 @@ if ($missingRuntimeFiles.Count -gt 0) {
         exit 1
     }
 
-    git restore Build/Data/Languages Build/Data/Scripts/Towns
+    git restore Build/Data/Scripts/Towns
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Failed to restore runtime data files. Please check your git working tree state."
         exit 1

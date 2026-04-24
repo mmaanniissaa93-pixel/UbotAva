@@ -18,6 +18,7 @@ public sealed class UbotCoreService : UbotServiceBase, IUbotCoreService
     private readonly UbotActionRouter _actionRouter;
     private readonly UbotIconService _iconService;
     private readonly UbotAutoLoginService _autoLoginService;
+    private readonly UbotSoundNotificationService _soundNotificationService;
     private readonly UbotDialogService _dialogService;
 
     public event Action<string, string>? LogReceived
@@ -54,6 +55,7 @@ public sealed class UbotCoreService : UbotServiceBase, IUbotCoreService
         _connectionService = new UbotConnectionService(_lifecycleService);
         _mapService = new UbotMapService();
         _autoLoginService = new UbotAutoLoginService();
+        _soundNotificationService = new UbotSoundNotificationService();
         var commandCenterService = new UbotCommandCenterService();
         var commandCenterPluginService = new UbotCommandCenterPluginService(commandCenterService);
         var generalPluginService = new UbotGeneralPluginService(_autoLoginService);
@@ -199,7 +201,13 @@ public sealed class UbotCoreService : UbotServiceBase, IUbotCoreService
 
     public Task<bool> SaveAutoLoginAccountsAsync(IReadOnlyList<AutoLoginAccountDto> accounts) => _autoLoginService.SaveAutoLoginAccountsAsync(accounts);
 
+    public Task<SoundNotificationSettingsDto> GetSoundNotificationSettingsAsync() => _soundNotificationService.GetSoundNotificationSettingsAsync();
+
+    public Task<bool> SaveSoundNotificationSettingsAsync(SoundNotificationSettingsDto settings) => _soundNotificationService.SaveSoundNotificationSettingsAsync(settings);
+
     public Task<string> PickExecutableAsync() => _dialogService.PickExecutableAsync();
+
+    public Task<string> PickSoundFileAsync() => _dialogService.PickSoundFileAsync();
 
     public Task<string> PickScriptFileAsync() => _dialogService.PickScriptFileAsync();
 

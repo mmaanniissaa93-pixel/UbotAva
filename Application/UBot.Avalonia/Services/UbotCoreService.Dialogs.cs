@@ -50,6 +50,20 @@ internal sealed class UbotDialogService : UbotServiceBase
         return Task.FromResult(result == Forms.DialogResult.OK ? dialog.FileName : string.Empty);
     }
 
+    public Task<string> PickSoundFileAsync()
+    {
+        using var dialog = new Forms.OpenFileDialog
+        {
+            Filter = "WAV files (*.wav)|*.wav|All files (*.*)|*.*",
+            CheckFileExists = true,
+            Multiselect = false,
+            Title = "Select sound file"
+        };
+
+        var result = dialog.ShowDialog();
+        return Task.FromResult(result == Forms.DialogResult.OK ? dialog.FileName : string.Empty);
+    }
+
     public Task<string> PickScriptFileAsync()
     {
         using var dialog = new Forms.OpenFileDialog

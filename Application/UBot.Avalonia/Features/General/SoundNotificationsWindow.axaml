@@ -1,0 +1,201 @@
+<Window
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  x:Class="UBot.Avalonia.Features.General.SoundNotificationsWindow"
+  Title="Sound Notifications"
+  Width="760"
+  Height="560"
+  MinWidth="740"
+  MinHeight="520"
+  CanResize="False"
+  WindowStartupLocation="CenterOwner"
+  Background="{DynamicResource SoundNotifWindowBgBrush}"
+  ExtendClientAreaToDecorationsHint="True"
+  ExtendClientAreaChromeHints="NoChrome">
+
+  <Window.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="SoundNotifWindowBgBrush" Color="#030912"/>
+          <SolidColorBrush x:Key="SoundNotifShellBrush" Color="#050E1B"/>
+          <SolidColorBrush x:Key="SoundNotifShellBorderBrush" Color="#274465"/>
+          <SolidColorBrush x:Key="SoundNotifGroupBrush" Color="#061325"/>
+          <SolidColorBrush x:Key="SoundNotifGroupBorderBrush" Color="#223C5B"/>
+          <SolidColorBrush x:Key="SoundNotifHeaderTextBrush" Color="#79E2CE"/>
+          <SolidColorBrush x:Key="SoundNotifLabelBrush" Color="#8FA8CC"/>
+          <SolidColorBrush x:Key="SoundNotifHintBrush" Color="#7A8FAE"/>
+          <SolidColorBrush x:Key="SoundNotifFieldBrush" Color="#030912"/>
+          <SolidColorBrush x:Key="SoundNotifFieldBorderBrush" Color="#294A6D"/>
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="SoundNotifWindowBgBrush" Color="#EAF2FD"/>
+          <SolidColorBrush x:Key="SoundNotifShellBrush" Color="#F8FBFF"/>
+          <SolidColorBrush x:Key="SoundNotifShellBorderBrush" Color="#8BA8C8"/>
+          <SolidColorBrush x:Key="SoundNotifGroupBrush" Color="#F2F8FF"/>
+          <SolidColorBrush x:Key="SoundNotifGroupBorderBrush" Color="#9AB5D2"/>
+          <SolidColorBrush x:Key="SoundNotifHeaderTextBrush" Color="#1A6F78"/>
+          <SolidColorBrush x:Key="SoundNotifLabelBrush" Color="#2D537D"/>
+          <SolidColorBrush x:Key="SoundNotifHintBrush" Color="#4B6E95"/>
+          <SolidColorBrush x:Key="SoundNotifFieldBrush" Color="#FFFFFF"/>
+          <SolidColorBrush x:Key="SoundNotifFieldBorderBrush" Color="#8EA9C7"/>
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </Window.Resources>
+
+  <Window.Styles>
+    <Style Selector="Border.sound-shell">
+      <Setter Property="Background" Value="{DynamicResource SoundNotifShellBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SoundNotifShellBorderBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="14" />
+    </Style>
+
+    <Style Selector="Border.sound-group">
+      <Setter Property="Background" Value="{DynamicResource SoundNotifGroupBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SoundNotifGroupBorderBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="12" />
+    </Style>
+
+    <Style Selector="TextBlock.sound-header">
+      <Setter Property="Foreground" Value="{DynamicResource SoundNotifHeaderTextBrush}" />
+      <Setter Property="FontSize" Value="24" />
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="LetterSpacing" Value="1.4" />
+    </Style>
+
+    <Style Selector="TextBlock.sound-section">
+      <Setter Property="Foreground" Value="{DynamicResource SoundNotifHeaderTextBrush}" />
+      <Setter Property="FontSize" Value="18" />
+      <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+
+    <Style Selector="TextBlock.sound-label">
+      <Setter Property="Foreground" Value="{DynamicResource SoundNotifLabelBrush}" />
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="TextBlock.sound-hint">
+      <Setter Property="Foreground" Value="{DynamicResource SoundNotifHintBrush}" />
+      <Setter Property="FontSize" Value="14" />
+    </Style>
+
+    <Style Selector="TextBox.sound-field">
+      <Setter Property="Background" Value="{DynamicResource SoundNotifFieldBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SoundNotifFieldBorderBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="Padding" Value="10,6" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="Height" Value="32" />
+    </Style>
+
+    <Style Selector="Button.sound-browse">
+      <Setter Property="Height" Value="32" />
+      <Setter Property="Width" Value="34" />
+      <Setter Property="MinWidth" Value="34" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+  </Window.Styles>
+
+  <Border Classes="sound-shell" Padding="14">
+    <Grid RowDefinitions="Auto,*,Auto">
+      <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="2,2,2,10">
+        <TextBlock Grid.Column="0" Text="Sound Notifications" Classes="sound-header" VerticalAlignment="Center" />
+        <Button Grid.Column="1"
+                Classes="btn secondary"
+                Width="34"
+                Height="34"
+                Content="x"
+                Click="Close_Click" />
+      </Grid>
+
+      <Border Grid.Row="1" Classes="sound-group" Padding="12,12,12,10">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+          <StackPanel x:Name="SettingsPanel" Spacing="8">
+            <TextBlock Text="Unique" Classes="sound-section" Margin="0,0,0,4" />
+
+            <Grid ColumnDefinitions="Auto,170,*,Auto">
+              <ToggleSwitch x:Name="UniqueAppearedToggle" Grid.Column="0" OnContent="" OffContent="" VerticalAlignment="Center" Margin="0,0,6,0" />
+              <TextBlock Grid.Column="1" Text="Unique appeared:" Classes="sound-label" Margin="0,0,6,0" />
+              <TextBox x:Name="UniqueAppearedPathBox" Grid.Column="2" Classes="sound-field" Margin="0,0,6,0" />
+              <Button Grid.Column="3" Content="..." Classes="btn secondary sound-browse" Tag="uniqueAppeared" Click="BrowseSound_Click" />
+            </Grid>
+
+            <Grid ColumnDefinitions="Auto,170,*,Auto">
+              <ToggleSwitch x:Name="TigerGirlToggle" Grid.Column="0" OnContent="" OffContent="" VerticalAlignment="Center" Margin="0,0,6,0" />
+              <TextBlock Grid.Column="1" Text="Tiger Girl:" Classes="sound-label" Margin="0,0,6,0" />
+              <TextBox x:Name="TigerGirlPathBox" Grid.Column="2" Classes="sound-field" Margin="0,0,6,0" />
+              <Button Grid.Column="3" Content="..." Classes="btn secondary sound-browse" Tag="tigerGirl" Click="BrowseSound_Click" />
+            </Grid>
+
+            <Grid ColumnDefinitions="Auto,170,*,Auto">
+              <ToggleSwitch x:Name="CerberusToggle" Grid.Column="0" OnContent="" OffContent="" VerticalAlignment="Center" Margin="0,0,6,0" />
+              <TextBlock Grid.Column="1" Text="Cerberus:" Classes="sound-label" Margin="0,0,6,0" />
+              <TextBox x:Name="CerberusPathBox" Grid.Column="2" Classes="sound-field" Margin="0,0,6,0" />
+              <Button Grid.Column="3" Content="..." Classes="btn secondary sound-browse" Tag="cerberus" Click="BrowseSound_Click" />
+            </Grid>
+
+            <Grid ColumnDefinitions="Auto,170,*,Auto">
+              <ToggleSwitch x:Name="CaptainIvyToggle" Grid.Column="0" OnContent="" OffContent="" VerticalAlignment="Center" Margin="0,0,6,0" />
+              <TextBlock Grid.Column="1" Text="Captain Ivy:" Classes="sound-label" Margin="0,0,6,0" />
+              <TextBox x:Name="CaptainIvyPathBox" Grid.Column="2" Classes="sound-field" Margin="0,0,6,0" />
+              <Button Grid.Column="3" Content="..." Classes="btn secondary sound-browse" Tag="captainIvy" Click="BrowseSound_Click" />
+            </Grid>
+
+            <Grid ColumnDefinitions="Auto,170,*,Auto">
+              <ToggleSwitch x:Name="UruchiToggle" Grid.Column="0" OnContent="" OffContent="" VerticalAlignment="Center" Margin="0,0,6,0" />
+              <TextBlock Grid.Column="1" Text="Uruchi:" Classes="sound-label" Margin="0,0,6,0" />
+              <TextBox x:Name="UruchiPathBox" Grid.Column="2" Classes="sound-field" Margin="0,0,6,0" />
+              <Button Grid.Column="3" Content="..." Classes="btn secondary sound-browse" Tag="uruchi" Click="BrowseSound_Click" />
+            </Grid>
+
+            <Grid ColumnDefinitions="Auto,170,*,Auto">
+              <ToggleSwitch x:Name="IsyutaruToggle" Grid.Column="0" OnContent="" OffContent="" VerticalAlignment="Center" Margin="0,0,6,0" />
+              <TextBlock Grid.Column="1" Text="Isyutaru:" Classes="sound-label" Margin="0,0,6,0" />
+              <TextBox x:Name="IsyutaruPathBox" Grid.Column="2" Classes="sound-field" Margin="0,0,6,0" />
+              <Button Grid.Column="3" Content="..." Classes="btn secondary sound-browse" Tag="isyutaru" Click="BrowseSound_Click" />
+            </Grid>
+
+            <Grid ColumnDefinitions="Auto,170,*,Auto">
+              <ToggleSwitch x:Name="LordYarkanToggle" Grid.Column="0" OnContent="" OffContent="" VerticalAlignment="Center" Margin="0,0,6,0" />
+              <TextBlock Grid.Column="1" Text="Lord Yarkan:" Classes="sound-label" Margin="0,0,6,0" />
+              <TextBox x:Name="LordYarkanPathBox" Grid.Column="2" Classes="sound-field" Margin="0,0,6,0" />
+              <Button Grid.Column="3" Content="..." Classes="btn secondary sound-browse" Tag="lordYarkan" Click="BrowseSound_Click" />
+            </Grid>
+
+            <Grid ColumnDefinitions="Auto,170,*,Auto">
+              <ToggleSwitch x:Name="DemonShaitanToggle" Grid.Column="0" OnContent="" OffContent="" VerticalAlignment="Center" Margin="0,0,6,0" />
+              <TextBlock Grid.Column="1" Text="Demon Shaitan:" Classes="sound-label" Margin="0,0,6,0" />
+              <TextBox x:Name="DemonShaitanPathBox" Grid.Column="2" Classes="sound-field" Margin="0,0,6,0" />
+              <Button Grid.Column="3" Content="..." Classes="btn secondary sound-browse" Tag="demonShaitan" Click="BrowseSound_Click" />
+            </Grid>
+
+            <Grid ColumnDefinitions="Auto,170,*,Auto">
+              <ToggleSwitch x:Name="UniqueInRangeToggle" Grid.Column="0" OnContent="" OffContent="" VerticalAlignment="Center" Margin="0,0,6,0" />
+              <TextBlock Grid.Column="1" Text="Unique in range:" Classes="sound-label" Margin="0,0,6,0" />
+              <TextBox x:Name="UniqueInRangePathBox" Grid.Column="2" Classes="sound-field" Margin="0,0,6,0" />
+              <Button Grid.Column="3" Content="..." Classes="btn secondary sound-browse" Tag="uniqueInRange" Click="BrowseSound_Click" />
+            </Grid>
+
+            <Grid ColumnDefinitions="170,*">
+              <TextBlock Grid.Column="0" Text="Match (Regex):" Classes="sound-label" Margin="0,0,6,0" />
+              <TextBox x:Name="RegexBox" Grid.Column="1" Classes="sound-field" />
+            </Grid>
+          </StackPanel>
+        </ScrollViewer>
+      </Border>
+
+      <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto" Margin="0,10,0,0">
+        <TextBlock x:Name="StatusText" Grid.Column="0" Text="Player must be logged in" Classes="sound-hint" VerticalAlignment="Center" />
+        <Button Grid.Column="1" Classes="btn primary" Width="120" Content="OK" Click="Ok_Click" Margin="0,0,10,0" />
+        <Button Grid.Column="2" Classes="btn secondary" Width="120" Content="Cancel" Click="Cancel_Click" />
+      </Grid>
+    </Grid>
+  </Border>
+</Window>

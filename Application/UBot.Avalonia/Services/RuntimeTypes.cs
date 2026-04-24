@@ -155,6 +155,39 @@ public class AutoLoginAccountDto
     public List<string> Characters { get; set; } = new();
 }
 
+public class SoundNotificationSettingsDto
+{
+    [JsonPropertyName("isPlayerLoggedIn")] public bool IsPlayerLoggedIn { get; set; }
+
+    [JsonPropertyName("playUniqueAppeared")] public bool PlayUniqueAppeared { get; set; }
+    [JsonPropertyName("pathUniqueAppeared")] public string PathUniqueAppeared { get; set; } = "";
+    [JsonPropertyName("matchRegex")] public string MatchRegex { get; set; } = "^.*$";
+
+    [JsonPropertyName("playTigerGirl")] public bool PlayTigerGirl { get; set; }
+    [JsonPropertyName("pathTigerGirl")] public string PathTigerGirl { get; set; } = "";
+
+    [JsonPropertyName("playCerberus")] public bool PlayCerberus { get; set; }
+    [JsonPropertyName("pathCerberus")] public string PathCerberus { get; set; } = "";
+
+    [JsonPropertyName("playCaptainIvy")] public bool PlayCaptainIvy { get; set; }
+    [JsonPropertyName("pathCaptainIvy")] public string PathCaptainIvy { get; set; } = "";
+
+    [JsonPropertyName("playUruchi")] public bool PlayUruchi { get; set; }
+    [JsonPropertyName("pathUruchi")] public string PathUruchi { get; set; } = "";
+
+    [JsonPropertyName("playIsyutaru")] public bool PlayIsyutaru { get; set; }
+    [JsonPropertyName("pathIsyutaru")] public string PathIsyutaru { get; set; } = "";
+
+    [JsonPropertyName("playLordYarkan")] public bool PlayLordYarkan { get; set; }
+    [JsonPropertyName("pathLordYarkan")] public string PathLordYarkan { get; set; } = "";
+
+    [JsonPropertyName("playDemonShaitan")] public bool PlayDemonShaitan { get; set; }
+    [JsonPropertyName("pathDemonShaitan")] public string PathDemonShaitan { get; set; } = "";
+
+    [JsonPropertyName("playUniqueInRange")] public bool PlayUniqueInRange { get; set; }
+    [JsonPropertyName("pathUniqueInRange")] public string PathUniqueInRange { get; set; } = "";
+}
+
 public class MapLocationDto
 {
     [JsonPropertyName("id")]   public int    Id   { get; set; }

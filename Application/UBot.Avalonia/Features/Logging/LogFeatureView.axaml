@@ -6,7 +6,13 @@
   <Grid RowDefinitions="Auto,*">
     <Border Grid.Row="0" Classes="section-card">
       <Border Classes="section-header">
-        <TextBlock Text="Runtime Log" Classes="section-header-text"/>
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock Text="Runtime Log" Classes="section-header-text" VerticalAlignment="Center"/>
+          <Button Grid.Column="1"
+                  Content="Clear"
+                  Classes="legacy-btn compact"
+                  Click="ClearLogs_Click"/>
+        </Grid>
       </Border>
     </Border>
 

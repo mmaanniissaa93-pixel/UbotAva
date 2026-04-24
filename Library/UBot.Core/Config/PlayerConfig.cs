@@ -129,8 +129,6 @@ public static class PlayerConfig
             return;
 
         _config.Save();
-
-        Log.Notify("[Player] have been saved!");
         EventManager.FireEvent("OnSavePlayerConfig");
     }
 }

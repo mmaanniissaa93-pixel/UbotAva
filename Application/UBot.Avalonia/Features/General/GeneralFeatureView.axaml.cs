@@ -23,6 +23,7 @@ public partial class GeneralFeatureView : UserControl
         _vm = vm;
         _vm.UiStateChanged += OnVmUiStateChanged;
         _vm.RequestAccountSetupDialog = () => _ = OpenAccountSetupDialogAsync();
+        _vm.RequestSoundSettingsDialog = () => _ = OpenSoundSettingsDialogAsync();
 
         AccountSelect.SelectionChanged += AccountSelect_SelectionChanged;
         CharacterSelect.SelectionChanged += CharacterSelect_SelectionChanged;
@@ -241,6 +242,19 @@ public partial class GeneralFeatureView : UserControl
 
         await _vm.LoadConfigAsync();
         await _vm.RefreshUiModelFromConfigAsync();
+    }
+
+    private async System.Threading.Tasks.Task OpenSoundSettingsDialogAsync()
+    {
+        if (_vm == null)
+            return;
+
+        var owner = TopLevel.GetTopLevel(this) as Window;
+        var dialog = new SoundNotificationsWindow(_vm);
+        if (owner != null)
+            await dialog.ShowDialog(owner);
+        else
+            dialog.Show();
     }
 }
 
