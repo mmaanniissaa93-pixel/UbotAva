@@ -173,8 +173,11 @@ DWORD WINAPI User_GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufL
 	DWORD dwResult = Real_GetAdaptersInfo(pAdapterInfo, pOutBufLen);
 	if (dwResult == ERROR_SUCCESS)
 	{
+		// FIX: srand() is called once before the loop, not inside it.
+		// Previously it was reseeding on every adapter, causing near-identical random values.
+		srand((unsigned int)(__rdtsc() & 0xFFFFFFFF));
+
 		PIP_ADAPTER_INFO pAdapter = pAdapterInfo;
-		srand(__rdtsc() & 0xFFFFFFFF);
 		while (pAdapter)
 		{
 			for (UINT i = 1; i < pAdapter->AddressLength; i++)
@@ -199,14 +202,17 @@ int WINAPI Detour_connect(SOCKET s, const struct sockaddr* name, int len)
 
 	for (auto& gatewayAddress : g_RealGatewayAddresses)
 	{
+		// FIX: gethostbyname was called twice — once for the null check and again to
+		// dereference the result directly. If the second call returned NULL it crashed.
+		// Store the result once and reuse it.
 		struct hostent* remoteHost = gethostbyname(gatewayAddress.c_str());
 		if (remoteHost == NULL || remoteHost->h_addr_list[0] == NULL) continue;
 
 		struct in_addr maddr = { 0 };
-		maddr.s_addr = *(u_long*)gethostbyname(gatewayAddress.c_str())->h_addr_list[0];
+		maddr.s_addr = *(u_long*)remoteHost->h_addr_list[0];
+
 		if (strcmp(inet_ntoa(editing->sin_addr), inet_ntoa(maddr)) == 0 && htons(editing->sin_port) == g_RealGatewayPort)
 		{
-
 			editing->sin_addr.S_un.S_addr = inet_addr(g_RedirectIP.c_str());
 			editing->sin_port = htons(g_RedirectPort);
 
@@ -231,12 +237,12 @@ void Install()
 	DetourUpdateThread(GetCurrentThread());
 
 	//Multiclient
-	DetourAttach(&(PVOID&)Real_CreateMutexA, User_CreateMutexA);
-	DetourAttach(&(PVOID&)Real_bind, User_bind);
-	DetourAttach(&(PVOID&)Real_GetAdaptersInfo, User_GetAdaptersInfo);
+	DetourAttach(&(PVOID&)Real_CreateMutexA,     User_CreateMutexA);
+	DetourAttach(&(PVOID&)Real_bind,             User_bind);
+	DetourAttach(&(PVOID&)Real_GetAdaptersInfo,  User_GetAdaptersInfo);
 	DetourAttach(&(PVOID&)Real_CreateSemaphoreA, User_CreateSemaphoreA);
 	DetourAttach(&(PVOID&)Real_CreateSemaphoreW, User_CreateSemaphoreW);
-	DetourAttach(&(PVOID&)Real_connect, Detour_connect);
+	DetourAttach(&(PVOID&)Real_connect,          Detour_connect);
 
 	DetourTransactionCommit();
 	WSACleanup();
@@ -248,11 +254,15 @@ void Uninstall()
 	DetourTransactionBegin();
 	DetourUpdateThread(GetCurrentThread());
 
-	//Multiclient
-	DetourDetach(&(PVOID&)Real_CreateMutexA, User_CreateMutexA);
-	DetourDetach(&(PVOID&)Real_bind, User_bind);
-	DetourDetach(&(PVOID&)Real_GetAdaptersInfo, User_GetAdaptersInfo);
+	// FIX: Previously only 4 of the 6 hooks were detached (Real_CreateSemaphoreW
+	// and Real_connect were missing). All 6 must be detached to match Install().
+	// Leaving hooks attached at unload causes memory corruption or a crash.
+	DetourDetach(&(PVOID&)Real_CreateMutexA,     User_CreateMutexA);
+	DetourDetach(&(PVOID&)Real_bind,             User_bind);
+	DetourDetach(&(PVOID&)Real_GetAdaptersInfo,  User_GetAdaptersInfo);
 	DetourDetach(&(PVOID&)Real_CreateSemaphoreA, User_CreateSemaphoreA);
+	DetourDetach(&(PVOID&)Real_CreateSemaphoreW, User_CreateSemaphoreW);
+	DetourDetach(&(PVOID&)Real_connect,          Detour_connect);
 
 	DetourTransactionCommit();
 }
@@ -265,6 +275,11 @@ void LoadConfig()
 
 	stringstream payloadPath;
 	payloadPath << tempFolder << "\\UBot_" << GetCurrentProcessId() << ".tmp";
+
+	// FIX: tempFolder is allocated by _dupenv_s and must be freed with free().
+	// Previously it was never freed, leaking heap memory on every LoadConfig call.
+	free(tempFolder);
+	tempFolder = NULL;
 
 	for (int i = 0; i < 30; i++) {
 		ifstream stream(payloadPath.str(), ifstream::binary);

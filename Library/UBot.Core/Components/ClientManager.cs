@@ -1,4 +1,4 @@
-﻿using UBot.Core.Event;
+using UBot.Core.Event;
 using UBot.Core.Extensions;
 using System;
 using System.Collections.Generic;
@@ -138,9 +138,9 @@ public partial class ClientManager
     {
         return new Dictionary<GameClientType, string>
         {
-            [GameClientType.Turkey] = "6A 00 68 78 18 43 01 68 8C 18 43 01",
+            [GameClientType.Turkey]   = "6A 00 68 78 18 43 01 68 8C 18 43 01",
             [GameClientType.VTC_Game] = "6A 00 68 F8 91 3F 01 68 0C 92 3F 01",
-            [GameClientType.Taiwan] = "6A 00 68 30 58 43 01 68 44 58 43 01"
+            [GameClientType.Taiwan]   = "6A 00 68 30 58 43 01 68 44 58 43 01"
         };
     }
 
@@ -220,7 +220,8 @@ public partial class ClientManager
                 return false;
             }
 
-            var semaphore = new Semaphore(0, 1, pi.dwProcessId.ToString());
+            // FIX: The semaphore was created but never used (no WaitOne / Release / Dispose),
+            // leaking an OS handle until the GC ran. Removed entirely — it served no purpose.
 
             try
             {
@@ -463,9 +464,28 @@ public partial class ClientManager
                 return false;
             }
 
+            // FIX: A fixed Task.Delay(250) was used to wait for the process to
+            // initialise before accessing MainModule. This is non-deterministic —
+            // on a slow machine the module may not be loaded yet, causing a
+            // NullReferenceException or a failed memory read.
+            // Now we poll until MainModule is available (up to 10 seconds).
             ResumeThread(pi.hThread);
-            await Task.Delay(250);
+
+            var moduleLoadDeadline = DateTime.UtcNow.AddSeconds(10);
+            process.Refresh();
+            while (process.MainModule == null && DateTime.UtcNow < moduleLoadDeadline)
+            {
+                await Task.Delay(50);
+                process.Refresh();
+            }
+
             SuspendThread(pi.hThread);
+
+            if (process.MainModule == null)
+            {
+                Log.Error("Process main module did not load within 10 seconds. Cannot apply XIGNCODE patch.");
+                return false;
+            }
 
             var moduleMemory = new byte[process.MainModule.ModuleMemorySize];
             if (!ReadProcessMemory(
@@ -491,13 +511,13 @@ public partial class ClientManager
             }
 
             // Apply patches
-            var patchJmp = new byte[] { 0xEB };
+            var patchJmp  = new byte[] { 0xEB };
             var patchNop2 = new byte[] { 0x90, 0x90, 0x90, 0x90, 0x90 };
 
-            if (!WriteProcessMemory(pi.hProcess, address - 0x6F, patchJmp, 1, out _)
-                || !WriteProcessMemory(pi.hProcess, address + 0x13, patchJmp, 1, out _)
-                || !WriteProcessMemory(pi.hProcess, address + 0xC, patchNop2, 5, out _)
-                || !WriteProcessMemory(pi.hProcess, address + 0x95, patchJmp, 1, out _))
+            if (!WriteProcessMemory(pi.hProcess, address - 0x6F, patchJmp,  1, out _)
+                || !WriteProcessMemory(pi.hProcess, address + 0x13, patchJmp,  1, out _)
+                || !WriteProcessMemory(pi.hProcess, address + 0xC,  patchNop2, 5, out _)
+                || !WriteProcessMemory(pi.hProcess, address + 0x95, patchJmp,  1, out _))
             {
                 Log.Error("XIGNCODE patching failed while writing memory.");
                 return false;
@@ -603,24 +623,31 @@ public partial class ClientManager
         try
         {
             var tmpConfigFile = $"UBot_{processId}.tmp";
-            var division = Game.ReferenceManager.DivisionInfo.Divisions[divisionIndex];
+            var division    = Game.ReferenceManager.DivisionInfo.Divisions[divisionIndex];
             var gatewayPort = Game.ReferenceManager.GatewayInfo.Port;
-            var redirectIp = "127.0.0.1";
+            var redirectIp  = "127.0.0.1";
 
             using var writer = new BinaryWriter(
                 new FileStream(
                     Path.Combine(Path.GetTempPath(), tmpConfigFile),
                     FileMode.Create));
 
-            writer.Write(GlobalConfig.Get<bool>("UBot.Loader.DebugMode"));
-            writer.WriteAscii(redirectIp);
-            writer.Write(Kernel.Proxy.Port);
-            writer.Write(division.GatewayServers.Count);
+            writer.Write(GlobalConfig.Get<bool>("UBot.Loader.DebugMode")); // BYTE (1 byte)
+            writer.WriteAscii(redirectIp);                                  // int32 length + ASCII bytes
+
+            // FIX: Kernel.Proxy.Port must be written as ushort (2 bytes) so it matches
+            // the WORD that C++ reads with PayloadRead(stream, g_RedirectPort).
+            // If written as int (4 bytes) every subsequent field is misaligned and the
+            // bot connects to a garbage address.
+            writer.Write((ushort)Kernel.Proxy.Port);                        // WORD (2 bytes)
+
+            writer.Write(division.GatewayServers.Count);                    // int32 (4 bytes)
 
             foreach (var gatewayServer in division.GatewayServers)
-                writer.WriteAscii(gatewayServer);
+                writer.WriteAscii(gatewayServer);                           // int32 length + ASCII bytes
 
-            writer.Write(gatewayPort);
+            // FIX: Same cast for gatewayPort — must be ushort to match WORD on the C++ side.
+            writer.Write((ushort)gatewayPort);                              // WORD (2 bytes)
         }
         catch (Exception ex)
         {
@@ -629,26 +656,32 @@ public partial class ClientManager
     }
 
     /// <summary>
-    /// Searches the specified buffer for the first occurrence of a byte pattern
+    /// Searches the specified buffer for the first occurrence of a byte pattern.
+    /// Supports '??' wildcard tokens that match any byte.
     /// </summary>
     private static IntPtr FindPattern(string stringPattern, byte[] buffer, int baseAddress)
     {
         try
         {
-            var pattern = stringPattern
-                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
-                .Select(p => byte.Parse(p, NumberStyles.AllowHexSpecifier))
+            // FIX: The original scanner parsed every token as a concrete byte, so patterns
+            // containing '??' wildcard tokens threw a FormatException and always returned
+            // IntPtr.Zero — meaning XIGNCODE was never patched and the client never started.
+            // Each token is now stored as a nullable byte: null = wildcard (match anything).
+            var tokens = stringPattern.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            var pattern = tokens
+                .Select(p => p == "??" ? (byte?)null : byte.Parse(p, NumberStyles.AllowHexSpecifier))
                 .ToArray();
 
             var patternLength = pattern.Length;
-            var searchLength = buffer.Length - patternLength;
+            var searchLength  = buffer.Length - patternLength;
 
             for (var i = 0; i < searchLength; i++)
             {
                 var found = true;
                 for (var j = 0; j < patternLength; j++)
                 {
-                    if (buffer[i + j] != pattern[j])
+                    // null = wildcard: skip this position
+                    if (pattern[j].HasValue && buffer[i + j] != pattern[j].Value)
                     {
                         found = false;
                         break;
@@ -698,4 +731,3 @@ public partial class ClientManager
         }
     }
 }
-
