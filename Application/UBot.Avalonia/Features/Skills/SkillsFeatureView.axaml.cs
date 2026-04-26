@@ -263,10 +263,14 @@ public partial class SkillsFeatureView : UserControl
         var selectedId = (PlayerSkillsList.SelectedItem as SkillListRow)?.Id ?? 0;
         var showAttacks = EnableAttacksCheck.IsChecked == true;
         var showBuffs = EnableBuffsCheck.IsChecked == true;
+        var search = SkillSearchBox.Text?.Trim() ?? string.Empty;
 
         var filtered = _catalog.Where(skill =>
-            (showAttacks && skill.IsAttack && !skill.IsPassive && !skill.IsImbue)
+            ((showAttacks && skill.IsAttack && !skill.IsPassive && !skill.IsImbue)
             || (showBuffs && skill.IsBuff && !skill.IsImbue))
+            && (string.IsNullOrWhiteSpace(search)
+                || skill.Name.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || skill.Id.ToString(CultureInfo.InvariantCulture).Contains(search, StringComparison.OrdinalIgnoreCase)))
             .OrderBy(skill => skill.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
@@ -474,6 +478,11 @@ public partial class SkillsFeatureView : UserControl
 
         if (key is "enableAttacks" or "enableBuffs")
             RefreshAvailableRows();
+    }
+
+    private void SkillSearchBox_Changed(object? sender, TextChangedEventArgs e)
+    {
+        RefreshAvailableRows();
     }
 
     private void NumericBox_Changed(object? sender, TextChangedEventArgs e)

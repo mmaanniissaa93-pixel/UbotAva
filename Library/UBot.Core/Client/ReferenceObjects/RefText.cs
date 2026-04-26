@@ -54,30 +54,53 @@ public class RefText : IReference<string>
         if (!parser.TryParse(nameStrIndex, out NameStrId))
             return false;
 
-        var languageTab = 8;
-        if (Game.ClientType == GameClientType.RuSro)
-            languageTab = 12;
-
-        if (Game.ClientType == GameClientType.Japanese)
-            languageTab = 9;
-
-        var maxTabs = parser.GetColumnCount();
-
-        //Try parse with the already set language tab
-        parser.TryParse(languageTab, out Data);
-
-        while (IsEmptyString(Data) && languageTab <= maxTabs)
+        foreach (var languageTab in GetLanguageTabs(parser.GetColumnCount(), nameStrIndex))
         {
-            parser.TryParse(languageTab, out Data);
-
-            languageTab++;
+            if (parser.TryParse(languageTab, out Data) && !IsEmptyString(Data))
+                return true;
         }
 
-        // fix nullreferenceexception
-        if (IsEmptyString(Data))
-            Data = "0";
+        Data = NameStrId;
 
         return true;
+    }
+
+    private static System.Collections.Generic.IEnumerable<int> GetLanguageTabs(int columnCount, int nameStrIndex)
+    {
+        var yielded = new System.Collections.Generic.HashSet<int>();
+
+        foreach (var tab in GetPreferredLanguageTabs())
+            if (IsUsableLanguageTab(tab, columnCount, nameStrIndex) && yielded.Add(tab))
+                yield return tab;
+
+        for (var tab = nameStrIndex + 1; tab < columnCount; tab++)
+            if (IsUsableLanguageTab(tab, columnCount, nameStrIndex) && yielded.Add(tab))
+                yield return tab;
+    }
+
+    private static bool IsUsableLanguageTab(int tab, int columnCount, int nameStrIndex)
+    {
+        if (tab <= nameStrIndex || tab >= columnCount)
+            return false;
+
+        return Game.ClientType != GameClientType.Turkey || tab != nameStrIndex + 1;
+    }
+
+    private static System.Collections.Generic.IEnumerable<int> GetPreferredLanguageTabs()
+    {
+        if (Game.ClientType == GameClientType.Turkey)
+            yield return 13;
+
+        if (Game.ClientType == GameClientType.RuSro)
+            yield return 12;
+
+        if (Game.ClientType == GameClientType.Japanese)
+            yield return 9;
+
+        if (Game.ReferenceManager?.LanguageTab > 0)
+            yield return Game.ReferenceManager.LanguageTab;
+
+        yield return 8;
     }
 
     private bool IsEmptyString(string data)

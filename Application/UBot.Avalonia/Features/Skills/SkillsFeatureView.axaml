@@ -16,7 +16,7 @@
 
         <!-- Search Bar (Placeholder UI) -->
         <Border Grid.Row="1" Background="{DynamicResource CardSurfaceBrush}" Padding="12,8" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource SectionSeparatorBrush}">
-          <TextBox Watermark="Search skills..." Classes="field" Height="32" Padding="8,4" FontSize="12" />
+          <TextBox x:Name="SkillSearchBox" Watermark="Search skills..." Classes="field" Height="32" Padding="8,4" FontSize="12" TextChanged="SkillSearchBox_Changed" />
         </Border>
 
         <!-- Skill Lists Area (Internal Scroll) -->
