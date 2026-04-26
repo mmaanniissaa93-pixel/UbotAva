@@ -13,6 +13,8 @@ public class PacketManager
     private static readonly object _lock = new();
     private static readonly object _handlersLock = new();
     private static readonly object _hooksLock = new();
+    private static readonly Dictionary<PacketRouteKey, IPacketHandler[]> _handlerLookupCache = new();
+    private static readonly Dictionary<PacketRouteKey, IPacketHook[]> _hookLookupCache = new();
 
     /// <summary>
     ///     Gets the handlers.
@@ -42,7 +44,10 @@ public class PacketManager
             return;
 
         lock (_handlersLock)
+        {
             Handlers.Add(handler);
+            _handlerLookupCache.Clear();
+        }
     }
 
     /// <summary>
@@ -55,7 +60,10 @@ public class PacketManager
             return;
 
         lock (_handlersLock)
+        {
             Handlers.Remove(handler);
+            _handlerLookupCache.Clear();
+        }
     }
 
     /// <summary>
@@ -68,7 +76,10 @@ public class PacketManager
             return;
 
         lock (_hooksLock)
+        {
             Hooks.Add(hook);
+            _hookLookupCache.Clear();
+        }
     }
 
     /// <summary>
@@ -81,7 +92,10 @@ public class PacketManager
             return;
 
         lock (_hooksLock)
+        {
             Hooks.Remove(hook);
+            _hookLookupCache.Clear();
+        }
     }
 
     /// <summary>
@@ -94,19 +108,24 @@ public class PacketManager
         if (packet == null)
             return;
 
-        List<IPacketHandler> handlers;
+        IPacketHandler[] handlers;
         lock (_handlersLock)
         {
             if (Handlers.Count == 0)
                 return;
 
-            handlers = Handlers
-                .Where(handler =>
-                    handler != null
-                    && (handler.Opcode == packet.Opcode || handler.Opcode == 0)
-                    && handler.Destination == destination
-                )
-                .ToList();
+            var key = new PacketRouteKey(packet.Opcode, destination);
+            if (!_handlerLookupCache.TryGetValue(key, out handlers))
+            {
+                handlers = Handlers
+                    .Where(handler =>
+                        handler != null
+                        && (handler.Opcode == packet.Opcode || handler.Opcode == 0)
+                        && handler.Destination == destination
+                    )
+                    .ToArray();
+                _handlerLookupCache[key] = handlers;
+            }
         }
 
         foreach (
@@ -129,16 +148,21 @@ public class PacketManager
         if (packet == null)
             return null;
 
-        List<IPacketHook> hooks;
+        IPacketHook[] hooks;
         lock (_hooksLock)
         {
-            hooks = Hooks
-                .Where(hook =>
-                    hook != null
-                    && (hook.Opcode == packet.Opcode || hook.Opcode == 0)
-                    && hook.Destination == destination
-                )
-                .ToList();
+            var key = new PacketRouteKey(packet.Opcode, destination);
+            if (!_hookLookupCache.TryGetValue(key, out hooks))
+            {
+                hooks = Hooks
+                    .Where(hook =>
+                        hook != null
+                        && (hook.Opcode == packet.Opcode || hook.Opcode == 0)
+                        && hook.Destination == destination
+                    )
+                    .ToArray();
+                _hookLookupCache[key] = hooks;
+            }
         }
 
         foreach (var hook in hooks)
@@ -241,5 +265,23 @@ public class PacketManager
     {
         lock (_hooksLock)
             return opcode == null ? Hooks.ToList() : Hooks.Where(h => h.Opcode == opcode).ToList();
+    }
+
+    private readonly struct PacketRouteKey : IEquatable<PacketRouteKey>
+    {
+        public PacketRouteKey(ushort opcode, PacketDestination destination)
+        {
+            Opcode = opcode;
+            Destination = destination;
+        }
+
+        private ushort Opcode { get; }
+        private PacketDestination Destination { get; }
+
+        public bool Equals(PacketRouteKey other) => Opcode == other.Opcode && Destination == other.Destination;
+
+        public override bool Equals(object obj) => obj is PacketRouteKey other && Equals(other);
+
+        public override int GetHashCode() => HashCode.Combine(Opcode, Destination);
     }
 }

@@ -34,11 +34,18 @@ public class Config
             if (string.IsNullOrWhiteSpace(line))
                 continue;
 
-            var key = line.Split('{')[0];
-            var value = line.Split('{')[1].Split('}')[0];
+            var valueStart = line.IndexOf('{');
+            if (valueStart <= 0)
+                continue;
 
-            if (!_config.ContainsKey(key))
-                _config.TryAdd(key, value);
+            var valueEnd = line.IndexOf('}', valueStart + 1);
+            if (valueEnd <= valueStart)
+                continue;
+
+            var key = line[..valueStart];
+            var value = line[(valueStart + 1)..valueEnd];
+
+            _config.TryAdd(key, value);
         }
     }
 
@@ -125,7 +132,7 @@ public class Config
     private void CheckPath()
     {
         var directory = Path.GetDirectoryName(_path);
-        if (!Directory.Exists(directory))
+        if (!string.IsNullOrWhiteSpace(directory) && !Directory.Exists(directory))
             Directory.CreateDirectory(directory);
 
         if (!File.Exists(_path))

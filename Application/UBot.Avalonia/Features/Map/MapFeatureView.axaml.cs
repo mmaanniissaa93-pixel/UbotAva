@@ -27,6 +27,18 @@ public class MapEntityRow
 
 public partial class MapFeatureView : UserControl
 {
+    private static readonly IBrush UniqueDotBrush = new SolidColorBrush(Color.Parse("#F87171"));
+    private static readonly IBrush MonsterDotBrush = new SolidColorBrush(Color.Parse("#FB923C"));
+    private static readonly IBrush PartyDotBrush = new SolidColorBrush(Color.Parse("#34D399"));
+    private static readonly IBrush PlayerDotBrush = new SolidColorBrush(Color.Parse("#60A5FA"));
+    private static readonly IBrush NpcDotBrush = new SolidColorBrush(Color.Parse("#A78BFA"));
+    private static readonly IBrush CosDotBrush = new SolidColorBrush(Color.Parse("#38BDF8"));
+    private static readonly IBrush ItemDotBrush = new SolidColorBrush(Color.Parse("#FACC15"));
+    private static readonly IBrush PortalDotBrush = new SolidColorBrush(Color.Parse("#E879F9"));
+    private static readonly IBrush DefaultDotBrush = new SolidColorBrush(Color.Parse("#CBD5E1"));
+    private static readonly IBrush PlayerMarkerBrush = new SolidColorBrush(Color.Parse("#FFCD4C"));
+    private static readonly IBrush PlayerMarkerStrokeBrush = new SolidColorBrush(Color.Parse("#4A3412"));
+
     private sealed class MapRenderDot
     {
         public string Type { get; init; } = string.Empty;
@@ -245,8 +257,8 @@ public partial class MapFeatureView : UserControl
         {
             Width = 10,
             Height = 10,
-            Fill = new SolidColorBrush(Color.Parse("#FFCD4C")),
-            Stroke = new SolidColorBrush(Color.Parse("#4A3412")),
+            Fill = PlayerMarkerBrush,
+            Stroke = PlayerMarkerStrokeBrush,
             StrokeThickness = 2
         };
 
@@ -259,15 +271,15 @@ public partial class MapFeatureView : UserControl
     {
         return type.ToLowerInvariant() switch
         {
-            "unique" => new SolidColorBrush(Color.Parse("#F87171")),
-            "monster" => new SolidColorBrush(Color.Parse("#FB923C")),
-            "party" => new SolidColorBrush(Color.Parse("#34D399")),
-            "player" => new SolidColorBrush(Color.Parse("#60A5FA")),
-            "npc" => new SolidColorBrush(Color.Parse("#A78BFA")),
-            "cos" => new SolidColorBrush(Color.Parse("#38BDF8")),
-            "item" => new SolidColorBrush(Color.Parse("#FACC15")),
-            "portal" => new SolidColorBrush(Color.Parse("#E879F9")),
-            _ => new SolidColorBrush(Color.Parse("#CBD5E1"))
+            "unique" => UniqueDotBrush,
+            "monster" => MonsterDotBrush,
+            "party" => PartyDotBrush,
+            "player" => PlayerDotBrush,
+            "npc" => NpcDotBrush,
+            "cos" => CosDotBrush,
+            "item" => ItemDotBrush,
+            "portal" => PortalDotBrush,
+            _ => DefaultDotBrush
         };
     }
 

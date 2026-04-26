@@ -178,10 +178,45 @@ internal sealed class UbotMapService : UbotServiceBase
         }
 
         var rows = new List<MapEntityState>(all.Length);
+        var players = 0;
+        var party = 0;
+        var monsters = 0;
+        var npcs = 0;
+        var cos = 0;
+        var items = 0;
+        var portals = 0;
+        var uniques = 0;
+
         foreach (var entity in all)
         {
             if (entity == null)
                 continue;
+
+            switch (entity)
+            {
+                case SpawnedPlayer spawnedPlayer:
+                    players++;
+                    if (!string.IsNullOrWhiteSpace(spawnedPlayer.Name) && partyMemberNames.Contains(spawnedPlayer.Name))
+                        party++;
+                    break;
+                case SpawnedMonster spawnedMonster:
+                    monsters++;
+                    if (IsUniqueMonster(spawnedMonster))
+                        uniques++;
+                    break;
+                case SpawnedCos:
+                    cos++;
+                    break;
+                case SpawnedNpc:
+                    npcs++;
+                    break;
+                case SpawnedItem:
+                    items++;
+                    break;
+                case SpawnedPortal:
+                    portals++;
+                    break;
+            }
 
             var projectedX = entity.Position.XSectorOffset;
             var projectedY = entity.Position.YSectorOffset;
@@ -203,9 +238,11 @@ internal sealed class UbotMapService : UbotServiceBase
 
         TryAutoSelectUniqueMonster(player, all);
 
-        var payload = rows
-            .OrderBy(item => item.Distance)
-            .Select(item => new Dictionary<string, object?>
+        rows.Sort((left, right) => left.Distance.CompareTo(right.Distance));
+        var payload = new List<object?>(rows.Count);
+        foreach (var item in rows)
+        {
+            payload.Add(new Dictionary<string, object?>
             {
                 ["name"] = item.Name,
                 ["type"] = item.Type,
@@ -214,23 +251,21 @@ internal sealed class UbotMapService : UbotServiceBase
                 ["position"] = item.Position,
                 ["xOffset"] = item.XOffset,
                 ["yOffset"] = item.YOffset
-            })
-            .Cast<object?>()
-            .ToList();
+            });
+        }
 
         return new Dictionary<string, object?>
         {
             ["showFilter"] = showFilter,
             ["total"] = all.Length,
-            ["players"] = all.OfType<SpawnedPlayer>().Count(),
-            ["party"] = all.OfType<SpawnedPlayer>().Count(spawnedPlayer =>
-                !string.IsNullOrWhiteSpace(spawnedPlayer.Name) && partyMemberNames.Contains(spawnedPlayer.Name)),
-            ["monsters"] = all.OfType<SpawnedMonster>().Count(),
-            ["npcs"] = all.OfType<SpawnedNpc>().Count(entity => entity is not SpawnedMonster && entity is not SpawnedCos),
-            ["cos"] = all.OfType<SpawnedCos>().Count(),
-            ["items"] = all.OfType<SpawnedItem>().Count(),
-            ["portals"] = all.OfType<SpawnedPortal>().Count(),
-            ["uniques"] = all.OfType<SpawnedMonster>().Count(IsUniqueMonster),
+            ["players"] = players,
+            ["party"] = party,
+            ["monsters"] = monsters,
+            ["npcs"] = npcs,
+            ["cos"] = cos,
+            ["items"] = items,
+            ["portals"] = portals,
+            ["uniques"] = uniques,
             ["collisionDetection"] = Kernel.EnableCollisionDetection,
             ["autoSelectUniques"] = PlayerConfig.Get("UBot.Map.AutoSelectUnique", false),
             ["resetToPlayerAt"] = PlayerConfig.Get("UBot.Desktop.Map.ResetToPlayerAt", 0L),
