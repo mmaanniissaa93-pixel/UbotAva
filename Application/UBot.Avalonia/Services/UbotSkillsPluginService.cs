@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -62,15 +62,19 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
         config["learnMasteryBotStopped"] = PlayerConfig.Get("UBot.Skills.checkLearnMasteryBotStopped", false);
         config["masteryGap"] = Math.Clamp(PlayerConfig.Get("UBot.Skills.numMasteryGap", 0), 0, 120);
         config["warlockMode"] = PlayerConfig.Get("UBot.Skills.checkWarlockMode", false);
-        config["imbueSkillId"] = PlayerConfig.Get("UBot.Desktop.Skills.ImbueSkillId", 0U);
-        config["resurrectionSkillId"] = PlayerConfig.Get("UBot.Skills.ResurrectionSkill", 0U);
-        config["teleportSkillId"] = PlayerConfig.Get("UBot.Skills.TeleportSkill", 0U);
+        config["imbueSkillId"] = RedirectIdIfPossible(PlayerConfig.Get("UBot.Desktop.Skills.ImbueSkillId", 0U));
+        config["resurrectionSkillId"] = RedirectIdIfPossible(PlayerConfig.Get("UBot.Skills.ResurrectionSkill", 0U));
+        config["teleportSkillId"] = RedirectIdIfPossible(PlayerConfig.Get("UBot.Skills.TeleportSkill", 0U));
         config["selectedMasteryId"] = PlayerConfig.Get("UBot.Skills.selectedMastery", 0U);
 
         for (var i = 0; i < AttackRarityByIndex.Length; i++)
-            config[$"attackSkills_{i}"] = PlayerConfig.GetArray<uint>($"UBot.Skills.Attacks_{i}").Distinct().ToList();
+            config[$"attackSkills_{i}"] = PlayerConfig.GetArray<uint>($"UBot.Skills.Attacks_{i}")
+                .Select(RedirectIdIfPossible)
+                .Distinct().ToList();
 
-        config["buffSkills"] = PlayerConfig.GetArray<uint>("UBot.Skills.Buffs").Distinct().ToList();
+        config["buffSkills"] = PlayerConfig.GetArray<uint>("UBot.Skills.Buffs")
+            .Select(RedirectIdIfPossible)
+            .Distinct().ToList();
         config["skillCatalog"] = BuildSkillCatalog();
         config["masteryCatalog"] = BuildMasteryCatalog();
         config["activeBuffs"] = BuildActiveBuffSnapshot();
@@ -204,7 +208,7 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
 
     private static Dictionary<string, object?> BuildSkillsPluginState()
     {
-        return new Dictionary<string, object?>
+        var state = new Dictionary<string, object?>
         {
             ["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             ["playerReady"] = Game.Player != null,
@@ -212,53 +216,108 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
             ["masteryCatalog"] = BuildMasteryCatalog(),
             ["activeBuffs"] = BuildActiveBuffSnapshot()
         };
+
+        if (Game.Player != null)
+        {
+            state["imbueSkillId"] = RedirectIdIfPossible(PlayerConfig.Get("UBot.Desktop.Skills.ImbueSkillId", 0U));
+            state["resurrectionSkillId"] = RedirectIdIfPossible(PlayerConfig.Get("UBot.Skills.ResurrectionSkill", 0U));
+            state["teleportSkillId"] = RedirectIdIfPossible(PlayerConfig.Get("UBot.Skills.TeleportSkill", 0U));
+
+            for (var i = 0; i < AttackRarityByIndex.Length; i++)
+                state[$"attackSkills_{i}"] = PlayerConfig.GetArray<uint>($"UBot.Skills.Attacks_{i}")
+                    .Select(RedirectIdIfPossible)
+                    .Distinct().ToList();
+
+            state["buffSkills"] = PlayerConfig.GetArray<uint>("UBot.Skills.Buffs")
+                .Select(RedirectIdIfPossible)
+                .Distinct().ToList();
+        }
+
+        return state;
     }
 
     private static List<Dictionary<string, object?>> BuildSkillCatalog()
     {
         var entries = new List<Dictionary<string, object?>>();
+        var seenIds = new HashSet<uint>();
+
+        // 1. Current known/ability skills
         foreach (var skill in CollectKnownAndAbilitySkills())
         {
-            var record = skill.Record;
-            if (record == null)
-                continue;
+            if (seenIds.Add(skill.Id))
+                entries.Add(MapSkillToEntry(skill.Id, skill.Record, skill, true));
+        }
 
-            var name = record.GetRealName();
-            if (string.IsNullOrWhiteSpace(name))
-                name = record.Basic_Code;
-            if (string.IsNullOrWhiteSpace(name))
-                name = $"Skill {skill.Id}";
-
-            var isPassive = skill.IsPassive;
-            var isAttack = skill.IsAttack;
-            var isImbue = skill.IsImbue;
-            bool isLowLevel;
-            try
+        // 2. Referenced skills from config (to keep names valid during upgrade/sync)
+        foreach (var id in GetReferencedSkillIds())
+        {
+            if (id != 0 && seenIds.Add(id))
             {
-                isLowLevel = skill.IsLowLevel();
+                var record = Game.ReferenceManager?.GetRefSkill(id);
+                if (record != null)
+                    entries.Add(MapSkillToEntry(id, record, null, false));
             }
-            catch
-            {
-                isLowLevel = false;
-            }
-
-            entries.Add(new Dictionary<string, object?>
-            {
-                ["id"] = skill.Id,
-                ["name"] = name,
-                ["isPassive"] = isPassive,
-                ["isAttack"] = isAttack,
-                ["isBuff"] = !isPassive && !isAttack,
-                ["isImbue"] = isImbue,
-                ["isLowLevel"] = isLowLevel,
-                ["icon"] = record.UI_IconFile
-            });
         }
 
         return entries
+            .GroupBy(e => new { Name = e["name"]?.ToString(), GroupId = e.ContainsKey("groupId") ? (int)e["groupId"] : 0 })
+            .Select(g => g.OrderByDescending(e => e.ContainsKey("isLearned") && (bool)e["isLearned"]).First())
             .OrderBy(row => row.TryGetValue("name", out var n) ? n?.ToString() : string.Empty, StringComparer.OrdinalIgnoreCase)
             .ThenBy(row => row.TryGetValue("id", out var id) && id is uint u ? u : 0)
             .ToList();
+    }
+
+    private static HashSet<uint> GetReferencedSkillIds()
+    {
+        var ids = new HashSet<uint>();
+        ids.Add(PlayerConfig.Get("UBot.Desktop.Skills.ImbueSkillId", 0U));
+        ids.Add(PlayerConfig.Get("UBot.Skills.ResurrectionSkill", 0U));
+        ids.Add(PlayerConfig.Get("UBot.Skills.TeleportSkill", 0U));
+
+        for (var i = 0; i < AttackRarityByIndex.Length; i++)
+        {
+            foreach (var id in PlayerConfig.GetArray<uint>($"UBot.Skills.Attacks_{i}"))
+                ids.Add(id);
+        }
+
+        foreach (var id in PlayerConfig.GetArray<uint>("UBot.Skills.Buffs"))
+            ids.Add(id);
+
+        return ids;
+    }
+
+    private static Dictionary<string, object?> MapSkillToEntry(uint id, RefSkill record, SkillInfo? skill, bool isLearned)
+    {
+        var name = record.GetRealName();
+        if (string.IsNullOrWhiteSpace(name))
+            name = record.Basic_Code;
+        if (string.IsNullOrWhiteSpace(name))
+            name = $"Skill {id}";
+
+        var isPassive = record.Basic_Activity == 0;
+        var isAttack = record.Params.Contains(6386804);
+        var isImbue = record.Basic_Activity == 1 && isAttack;
+
+        bool isLowLevel = false;
+        if (skill != null)
+        {
+            try { isLowLevel = skill.IsLowLevel(); } catch { }
+        }
+
+        return new Dictionary<string, object?>
+        {
+            ["id"] = id,
+            ["name"] = name,
+            ["isPassive"] = isPassive,
+            ["isAttack"] = isAttack,
+            ["isBuff"] = !isPassive && !isAttack,
+            ["isImbue"] = isImbue,
+            ["isLowLevel"] = isLowLevel,
+            ["groupId"] = record.GroupID,
+            ["basicGroup"] = record.Basic_Group,
+            ["isLearned"] = isLearned,
+            ["icon"] = record.UI_IconFile
+        };
     }
 
     private static List<Dictionary<string, object?>> BuildMasteryCatalog()
@@ -356,5 +415,13 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
     internal Dictionary<string, object?> BuildConfig() => BuildSkillsPluginConfig();
     internal bool ApplyPatch(Dictionary<string, object?> patch) => ApplySkillsPluginPatch(patch);
     internal Dictionary<string, object?> BuildState() => BuildSkillsPluginState();
+
+    private static uint RedirectIdIfPossible(uint skillId)
+    {
+        if (skillId == 0) return 0;
+        var info = Game.Player?.Skills?.GetSkillInfoById(skillId);
+        return info?.Id ?? skillId;
+    }
 }
+
 

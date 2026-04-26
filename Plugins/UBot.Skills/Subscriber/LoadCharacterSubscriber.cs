@@ -81,7 +81,11 @@ internal static class LoadCharacterSubscriber
             {
                 var skillInfo = Game.Player.Skills.GetSkillInfoById(skillId);
                 if (skillInfo == null)
-                    continue;
+                {
+                    skillInfo = abilitySkills.FirstOrDefault(p => p.Id == skillId);
+                    if (skillInfo == null)
+                        continue;
+                }
 
                 switch (i)
                 {

@@ -1,4 +1,4 @@
-﻿#nullable enable annotations
+#nullable enable annotations
 
 using System.Collections.Generic;
 using System.Linq;
@@ -88,9 +88,20 @@ public class Skills
     /// </summary>
     /// <param name="skillId">The skill identifier.</param>
     /// <returns></returns>
-    public SkillInfo GetSkillInfoById(uint skillId)
+    public SkillInfo? GetSkillInfoById(uint skillId)
     {
-        return KnownSkills.Find(s => s.Id == skillId);
+        var exact = KnownSkills.Find(s => s.Id == skillId);
+        if (exact != null) return exact;
+
+        // Auto-upgrade redirection: find the best known skill in the same group
+        var refSkill = Game.ReferenceManager?.GetRefSkill(skillId);
+        if (refSkill == null || refSkill.GroupID == 0)
+            return null;
+
+        return KnownSkills
+            .Where(s => s.Record != null && s.Record.GroupID == refSkill.GroupID && s.Record.Basic_Group == refSkill.Basic_Group)
+            .OrderByDescending(s => s.Record.Basic_Level)
+            .FirstOrDefault();
     }
 
     /// <summary>
@@ -98,7 +109,7 @@ public class Skills
     /// </summary>
     /// <param name="skillGroupId">The skill group identifier.</param>
     /// <returns></returns>
-    public SkillInfo GetSkillInfoByGroupId(int skillGroupId)
+    public SkillInfo? GetSkillInfoByGroupId(int skillGroupId)
     {
         return KnownSkills.FirstOrDefault(s => s.Record.GroupID == skillGroupId);
     }
@@ -108,7 +119,7 @@ public class Skills
     /// </summary>
     /// <param name="masteryId">The mastery identifier.</param>
     /// <returns></returns>
-    public MasteryInfo GetMasteryInfoById(uint masteryId)
+    public MasteryInfo? GetMasteryInfoById(uint masteryId)
     {
         return Masteries.Find(m => m.Id == masteryId);
     }
@@ -132,7 +143,7 @@ public class Skills
     /// <returns></returns>
     public bool HasSkill(uint skillId)
     {
-        return KnownSkills.Any(p => p.Id == skillId);
+        return GetSkillInfoById(skillId) != null;
     }
 
     /// <summary>

@@ -16,8 +16,13 @@ public sealed class SkillCatalogEntry
     public bool IsBuff { get; set; }
     public bool IsImbue { get; set; }
     public bool IsLowLevel { get; set; }
+    public int GroupId { get; set; }
+    public string BasicGroup { get; set; } = string.Empty;
+    public bool IsLearned { get; set; }
     public string Icon { get; set; } = string.Empty;
 }
+
+
 
 public sealed class MasteryCatalogEntry
 {
@@ -151,7 +156,12 @@ public sealed class SkillsViewModel : PluginViewModelBase
                 IsBuff = TryReadBool(item, "isBuff", out var isBuff) && isBuff,
                 IsImbue = TryReadBool(item, "isImbue", out var isImbue) && isImbue,
                 IsLowLevel = TryReadBool(item, "isLowLevel", out var isLowLevel) && isLowLevel,
+                GroupId = TryReadInt(item, "groupId", out var groupId) ? groupId : 0,
+                BasicGroup = TryReadString(item, "basicGroup", out var basicGroup) ? basicGroup : string.Empty,
+                IsLearned = TryReadBool(item, "isLearned", out var isLearned) && isLearned,
                 Icon = TryReadString(item, "icon", out var icon) ? icon : string.Empty
+
+
             });
         }
 

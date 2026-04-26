@@ -138,12 +138,41 @@ public partial class SkillsFeatureView : UserControl
 
         if (refreshCatalog)
         {
+            // Sync current IDs from state (they might have been redirected/upgraded)
+            if (stateRoot.TryGetProperty("imbueSkillId", out var imbueProp)) _imbueSkillId = imbueProp.GetUInt32();
+            if (stateRoot.TryGetProperty("resurrectionSkillId", out var resProp)) _resurrectionSkillId = resProp.GetUInt32();
+            if (stateRoot.TryGetProperty("teleportSkillId", out var telProp)) _teleportSkillId = telProp.GetUInt32();
+
+            for (var i = 0; i < AttackTypeOptions.Length; i++)
+            {
+                if (stateRoot.TryGetProperty($"attackSkills_{i}", out var attackProp) && attackProp.ValueKind == JsonValueKind.Array)
+                {
+                    _attackSkillIds[i] = attackProp.EnumerateArray().Select(x => x.GetUInt32()).ToList();
+                }
+            }
+
+            if (stateRoot.TryGetProperty("buffSkills", out var buffProp) && buffProp.ValueKind == JsonValueKind.Array)
+            {
+                _buffSkillIds = buffProp.EnumerateArray().Select(x => x.GetUInt32()).ToList();
+            }
+
             var previousSync = _syncing;
             _syncing = true;
             PopulateSelectOptions();
-            RefreshAvailableRows();
-            RefreshAttackRows();
-            RefreshBuffRows();
+            
+            // If we were previously empty or just initialized, reload the actual character config 
+            // because PlayerConfig might have switched to a character-specific file.
+            if (_attackSkillIds.Values.All(list => list.Count == 0) && _buffSkillIds.Count == 0)
+            {
+                _ = LoadFromConfigAsync();
+            }
+            else
+            {
+                RefreshAvailableRows();
+                RefreshAttackRows();
+                RefreshBuffRows();
+            }
+            
             _syncing = previousSync;
         }
     }
@@ -209,6 +238,16 @@ public partial class SkillsFeatureView : UserControl
 
     private void PopulateSelectOptions()
     {
+        // Migrate IDs if they are not in catalog but have replacements
+        _imbueSkillId = MigrateId(_imbueSkillId);
+        _resurrectionSkillId = MigrateId(_resurrectionSkillId);
+        _teleportSkillId = MigrateId(_teleportSkillId);
+
+        foreach (var key in _attackSkillIds.Keys.ToList())
+            _attackSkillIds[key] = _attackSkillIds[key].Select(MigrateId).Distinct().ToList();
+
+        _buffSkillIds = _buffSkillIds.Select(MigrateId).Distinct().ToList();
+
         var attackTypeItems = new List<SelectOption>();
         foreach (var option in AttackTypeOptions)
             attackTypeItems.Add(new SelectOption(option.Id, option.Label));
@@ -216,14 +255,12 @@ public partial class SkillsFeatureView : UserControl
         AttackTypeSelect.Options = attackTypeItems;
         AttackTypeSelect.SelectedValue = _attackTypeIndex;
 
-        var imbueSkills = _catalog.Where(skill => skill.IsImbue).ToList();
-        ImbueSkillSelect.Options = BuildSkillOptions(imbueSkills, _imbueSkillId);
+        ImbueSkillSelect.Options = BuildSkillOptions(_catalog.Where(s => s.IsImbue), _imbueSkillId);
         ImbueSkillSelect.SelectedValue = _imbueSkillId;
 
-        var selectableSkills = _catalog.Where(skill => !skill.IsPassive).ToList();
-        ResurrectionSkillSelect.Options = BuildSkillOptions(selectableSkills, _resurrectionSkillId);
+        ResurrectionSkillSelect.Options = BuildSkillOptions(_catalog.Where(s => !s.IsPassive), _resurrectionSkillId);
         ResurrectionSkillSelect.SelectedValue = _resurrectionSkillId;
-        TeleportSkillSelect.Options = BuildSkillOptions(selectableSkills, _teleportSkillId);
+        TeleportSkillSelect.Options = BuildSkillOptions(_catalog.Where(s => !s.IsPassive), _teleportSkillId);
         TeleportSkillSelect.SelectedValue = _teleportSkillId;
 
         var masteryOptions = new List<SelectOption> { new(0u, "Not selected") };
@@ -243,8 +280,8 @@ public partial class SkillsFeatureView : UserControl
         foreach (var skill in catalog)
             options.Add(new SelectOption(skill.Id, skill.Name));
 
-        if (selectedId != 0 && _catalog.All(skill => skill.Id != selectedId))
-            options.Add(new SelectOption(selectedId, $"Unknown ({selectedId})"));
+        if (selectedId != 0 && options.All(opt => (uint)opt.Index != selectedId))
+            options.Add(new SelectOption(selectedId, ResolveSkillName(selectedId)));
 
         return options;
     }
@@ -344,7 +381,11 @@ public partial class SkillsFeatureView : UserControl
     {
         if (current.Count != next.Count) return false;
         for (int i = 0; i < current.Count; i++)
+        {
             if (current[i].Id != next[i].Id) return false;
+            if (current[i].Display != next[i].Name) return false;
+            if (current[i].Icon != next[i].Icon) return false;
+        }
         return true;
     }
 
@@ -352,7 +393,10 @@ public partial class SkillsFeatureView : UserControl
     {
         if (current.Count != next.Count) return false;
         for (int i = 0; i < current.Count; i++)
+        {
             if (current[i].Id != next[i]) return false;
+            if (current[i].Display.StartsWith("Unknown", StringComparison.OrdinalIgnoreCase)) return false;
+        }
         return true;
     }
 
@@ -394,16 +438,34 @@ public partial class SkillsFeatureView : UserControl
         return attackSkills;
     }
 
+    private SkillCatalogEntry? FindReplacementSkill(uint skillId)
+    {
+        var requested = _catalog.FirstOrDefault(s => s.Id == skillId);
+        if (requested == null || requested.GroupId == 0) return null;
+
+        // Find any learned skill in the same group/series.
+        // Usually, a character only knows one level of a skill at a time (the highest learned).
+        return _catalog.FirstOrDefault(s => s.IsLearned && s.GroupId == requested.GroupId && s.BasicGroup == requested.BasicGroup);
+    }
+
     private string ResolveSkillName(uint skillId)
     {
-        var skill = _catalog.FirstOrDefault(entry => entry.Id == skillId);
+        var skill = _catalog.FirstOrDefault(entry => entry.Id == skillId) ?? FindReplacementSkill(skillId);
         return skill?.Name ?? $"Unknown ({skillId})";
     }
 
     private string ResolveSkillIcon(uint skillId)
     {
-        var skill = _catalog.FirstOrDefault(entry => entry.Id == skillId);
+        var skill = _catalog.FirstOrDefault(entry => entry.Id == skillId) ?? FindReplacementSkill(skillId);
         return skill?.Icon ?? string.Empty;
+    }
+
+
+    private uint MigrateId(uint id)
+    {
+        if (id == 0 || _catalog.Any(s => s.Id == id)) return id;
+        var replacement = FindReplacementSkill(id);
+        return replacement?.Id ?? id;
     }
 
     private readonly Dictionary<string, Bitmap> _iconCache = new();
@@ -715,7 +777,12 @@ public partial class SkillsFeatureView : UserControl
                 IsBuff = TryReadBool(item, "isBuff", out var isBuff) && isBuff,
                 IsImbue = TryReadBool(item, "isImbue", out var isImbue) && isImbue,
                 IsLowLevel = TryReadBool(item, "isLowLevel", out var isLowLevel) && isLowLevel,
+                GroupId = TryReadInt(item, "groupId", out var groupId) ? groupId : 0,
+                BasicGroup = TryReadString(item, "basicGroup", out var basicGroup) ? basicGroup : string.Empty,
+                IsLearned = TryReadBool(item, "isLearned", out var isLearned) && isLearned,
                 Icon = TryReadString(item, "icon", out var icon) ? icon : string.Empty
+
+
             });
         }
 

@@ -46,9 +46,14 @@ public partial class ProtectionFeatureView : UserControl
         RefreshFromConfig();
     }
 
-    public void RefreshFromConfig()
+    public void UpdateFromState(System.Text.Json.JsonElement state) => RefreshFromConfig();
+
+
+    public async void RefreshFromConfig()
     {
         if (_vm is null) return;
+        await _vm.LoadConfigAsync();
+        
         _syncing = true;
 
         // Recovery rows

@@ -73,6 +73,7 @@ public sealed class FeatureViewFactory
             if (cached.View is TargetAssistFeatureView targetAssist) targetAssist.UpdateFromState(state);
             if (cached.View is TradeFeatureView trade) trade.UpdateFromState(state);
             if (cached.View is LureFeatureView lure) lure.UpdateFromState(state);
+            if (cached.View is ProtectionFeatureView prot) prot.UpdateFromState(state);
             if (cached.View is AlchemyFeatureView alchemy) alchemy.UpdateFromState(state);
             if (cached.View is CommandCenterFeatureView commandCenter) commandCenter.UpdateFromState(state);
         });
