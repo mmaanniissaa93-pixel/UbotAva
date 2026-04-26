@@ -6,6 +6,8 @@ namespace UBot.Protection.Components.Player;
 
 public class UniversalPillHandler
 {
+    private static readonly object EventOwner = new();
+
     /// <summary>
     ///     Initialize the <see cref="UniversalPillHandler" />
     /// </summary>
@@ -15,11 +17,19 @@ public class UniversalPillHandler
     }
 
     /// <summary>
+    ///     Unsubscribes all events.
+    /// </summary>
+    public static void UnsubscribeAll()
+    {
+        EventManager.UnsubscribeOwner(EventOwner);
+    }
+
+    /// <summary>
     ///     Subscribes the events.
     /// </summary>
     private static void SubscribeEvents()
     {
-        EventManager.SubscribeEvent("OnTick", OnPlayerBadEffect);
+        EventManager.SubscribeEvent("OnTick", OnPlayerBadEffect, EventOwner);
     }
 
     /// <summary>

@@ -13,6 +13,7 @@ namespace UBot.TargetAssist;
 
 internal static class TargetAssistRuntime
 {
+    private static readonly object EventOwner = new();
     private const int EffectTransferParam = 1701213281; // efta
     private const int RetargetCooldownMs = 900;
     private static readonly string[] BloodyStormCodeTokens = { "FANSTORM", "FAN_STORM" };
@@ -31,8 +32,13 @@ internal static class TargetAssistRuntime
         if (_initialized)
             return;
 
-        EventManager.SubscribeEvent("OnTick", OnTick);
+        EventManager.SubscribeEvent("OnTick", OnTick, EventOwner);
         _initialized = true;
+    }
+
+    public static void UnsubscribeAll()
+    {
+        EventManager.UnsubscribeOwner(EventOwner);
     }
 
     public static void SetActive(bool active)

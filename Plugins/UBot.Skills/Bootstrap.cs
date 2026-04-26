@@ -66,6 +66,8 @@ public class Bootstrap : IPlugin
     /// <inheritdoc />
     public void Disable()
     {
+        LoadCharacterSubscriber.UnsubscribeAll();
+
         if (View != null)
             View.Enabled = false;
     }

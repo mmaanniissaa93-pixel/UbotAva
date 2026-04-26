@@ -3,6 +3,7 @@ using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Plugins;
 using UBot.Party.Subscribers;
+using UBot.Party.Bundle;
 
 namespace UBot.Party;
 
@@ -67,6 +68,8 @@ public class Bootstrap : IPlugin
     /// <inheritdoc />
     public void Disable()
     {
+        Container.AutoParty?.UnsubscribeAll();
+
         if (View != null)
             View.Enabled = false;
     }

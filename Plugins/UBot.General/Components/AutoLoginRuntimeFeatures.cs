@@ -8,6 +8,7 @@ namespace UBot.General.Components;
 
 internal static class AutoLoginRuntimeFeatures
 {
+    private static readonly object Owner = new object();
     private static int _sessionSequence;
     private static int _actionSequence;
     private static int _reconnectSequence;
@@ -18,10 +19,15 @@ internal static class AutoLoginRuntimeFeatures
         if (Interlocked.Exchange(ref _initialized, 1) == 1)
             return;
 
-        EventManager.SubscribeEvent("OnEnterGame", new System.Action(OnEnterGame));
-        EventManager.SubscribeEvent("OnLoadCharacter", new System.Action(OnLoadCharacter));
-        EventManager.SubscribeEvent("OnStartClient", new System.Action(OnStartClient));
-        EventManager.SubscribeEvent("OnAgentServerDisconnected", new System.Action(OnAgentServerDisconnected));
+        EventManager.SubscribeEvent("OnEnterGame", new System.Action(OnEnterGame), Owner);
+        EventManager.SubscribeEvent("OnLoadCharacter", new System.Action(OnLoadCharacter), Owner);
+        EventManager.SubscribeEvent("OnStartClient", new System.Action(OnStartClient), Owner);
+        EventManager.SubscribeEvent("OnAgentServerDisconnected", new System.Action(OnAgentServerDisconnected), Owner);
+    }
+
+    public static void UnsubscribeAll()
+    {
+        EventManager.UnsubscribeOwner(Owner);
     }
 
     private static void OnEnterGame()

@@ -52,6 +52,7 @@ public class TargetAssistPlugin : IPlugin
 
     public void Disable()
     {
+        TargetAssistRuntime.UnsubscribeAll();
         TargetAssistRuntime.SetActive(false);
         TargetAssistRuntime.Reset();
     }

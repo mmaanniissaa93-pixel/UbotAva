@@ -6,6 +6,8 @@ namespace UBot.Protection.Components.Pet;
 
 internal class CosBadStatusHandler
 {
+    private static readonly object EventOwner = new();
+
     /// <summary>
     ///     Initializes this instance.
     /// </summary>
@@ -15,11 +17,19 @@ internal class CosBadStatusHandler
     }
 
     /// <summary>
+    ///     Unsubscribes all events.
+    /// </summary>
+    public static void UnsubscribeAll()
+    {
+        EventManager.UnsubscribeOwner(EventOwner);
+    }
+
+    /// <summary>
     ///     Subscribes the events.
     /// </summary>
     private static void SubscribeEvents()
     {
-        EventManager.SubscribeEvent("OnTick", OnTick);
+        EventManager.SubscribeEvent("OnTick", OnTick, EventOwner);
     }
 
     /// <summary>

@@ -7,15 +7,25 @@ namespace UBot.Protection.Components.Pet;
 
 public static class CosHealthRecoveryHandler
 {
+    private static readonly object Owner = new object();
+
     /// <summary>
     ///     Initializes this instance.
     /// </summary>
     public static void Initialize()
     {
-        EventManager.SubscribeEvent("OnGrowthHealthUpdate", OnGrowthHealthUpdate);
-        EventManager.SubscribeEvent("OnFellowHealthUpdate", OnFellowHealthUpdate);
-        EventManager.SubscribeEvent("OnUpdateTransportHealth", OnUpdateTransportHealth);
-        EventManager.SubscribeEvent("OnUpdateJobTransportHealth", OnUpdateJobTransportHealth);
+        EventManager.SubscribeEvent("OnGrowthHealthUpdate", OnGrowthHealthUpdate, Owner);
+        EventManager.SubscribeEvent("OnFellowHealthUpdate", OnFellowHealthUpdate, Owner);
+        EventManager.SubscribeEvent("OnUpdateTransportHealth", OnUpdateTransportHealth, Owner);
+        EventManager.SubscribeEvent("OnUpdateJobTransportHealth", OnUpdateJobTransportHealth, Owner);
+    }
+
+    /// <summary>
+    ///     Unsubscribes all events.
+    /// </summary>
+    public static void UnsubscribeAll()
+    {
+        EventManager.UnsubscribeOwner(Owner);
     }
 
     /// <summary>

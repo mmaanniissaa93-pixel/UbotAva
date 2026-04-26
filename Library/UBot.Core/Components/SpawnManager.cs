@@ -20,6 +20,11 @@ public static class SpawnManager
     private static List<SpawnedEntity> _entities = new(255);
 
     /// <summary>
+    ///     O(1) lookup index by UniqueId
+    /// </summary>
+    private static readonly Dictionary<uint, SpawnedEntity> _entityIndex = new();
+
+    /// <summary>
     ///     Get entity by unique id with specified generic type.
     /// </summary>
     /// <param name="uniqueId">The unique identifier.</param>
@@ -27,7 +32,7 @@ public static class SpawnManager
     public static T GetEntity<T>(uint uniqueId)
         where T : SpawnedEntity
     {
-        return (T)_entities.Find(p => p != null && p.UniqueId == uniqueId);
+        return _entityIndex.TryGetValue(uniqueId, out var entity) ? entity as T : null;
     }
 
     /// <summary>
@@ -171,15 +176,16 @@ public static class SpawnManager
     {
         lock (_lock)
         {
-            removedEntity = _entities.Find(p => p.UniqueId == uniqueId);
-            if (removedEntity == null)
+            if (!_entityIndex.TryGetValue(uniqueId, out removedEntity))
                 return false;
 
             if (Game.SelectedEntity?.UniqueId == uniqueId)
                 Game.SelectedEntity = null;
 
             removedEntity.Dispose();
-            return _entities.Remove(removedEntity);
+            _entityIndex.Remove(uniqueId);
+            _entities.Remove(removedEntity);
+            return true;
         }
     }
 
@@ -206,7 +212,9 @@ public static class SpawnManager
 
             if (refObjId == uint.MaxValue)
             {
-                _entities.Add(SpawnedSpellArea.FromPacket(packet));
+                var spellArea = SpawnedSpellArea.FromPacket(packet);
+                _entities.Add(spellArea);
+                AddToIndex(spellArea);
                 return;
             }
 
@@ -239,6 +247,7 @@ public static class SpawnManager
                                 spawnedPlayer.Deserialize(packet);
 
                                 _entities.Add(spawnedPlayer);
+                                AddToIndex(spawnedPlayer);
                                 EventManager.FireEvent("OnSpawnPlayer", spawnedPlayer);
                             }
                             break;
@@ -253,6 +262,7 @@ public static class SpawnManager
                                         spawnedMonster.Deserialize(packet);
 
                                         _entities.Add(spawnedMonster);
+                                        AddToIndex(spawnedMonster);
                                         EventManager.FireEvent("OnSpawnMonster", spawnedMonster);
                                     }
                                     break;
@@ -262,6 +272,7 @@ public static class SpawnManager
                                         var spawnedCos = new SpawnedCos(refObjId);
                                         spawnedCos.Deserialize(packet);
                                         _entities.Add(spawnedCos);
+                                        AddToIndex(spawnedCos);
                                         EventManager.FireEvent("OnSpawnCos", spawnedCos);
                                     }
                                     break;
@@ -271,6 +282,7 @@ public static class SpawnManager
                                         var spawnedFortressStructure = new SpawnedFortressStructure(refObjId);
                                         spawnedFortressStructure.Deserialize(packet);
                                         _entities.Add(spawnedFortressStructure);
+                                        AddToIndex(spawnedFortressStructure);
 
                                         EventManager.FireEvent("OnSpawnFortressStructure", spawnedFortressStructure);
                                     }
@@ -282,6 +294,7 @@ public static class SpawnManager
                                         spawnedNpc.ParseBionicDetails(packet);
                                         spawnedNpc.Deserialize(packet);
                                         _entities.Add(spawnedNpc);
+                                        AddToIndex(spawnedNpc);
                                         EventManager.FireEvent("OnSpawnNpc", spawnedNpc);
                                     }
                                     break;
@@ -295,6 +308,7 @@ public static class SpawnManager
                 case 3:
                     var spawnedItem = SpawnedItem.FromPacket(packet, refObjId);
                     _entities.Add(spawnedItem);
+                    AddToIndex(spawnedItem);
 
                     EventManager.FireEvent("OnSpawnItem", spawnedItem);
                     break;
@@ -302,6 +316,7 @@ public static class SpawnManager
                 case 4:
                     var spawnedPortal = SpawnedPortal.FromPacket(packet, refObjId);
                     _entities.Add(spawnedPortal);
+                    AddToIndex(spawnedPortal);
                     EventManager.FireEvent("OnSpawnPortal", spawnedPortal);
                     break;
             }
@@ -340,8 +355,25 @@ public static class SpawnManager
     {
         lock (_lock)
         {
-            //Entities.Clear();
-            _entities = [];
+            _entities = new List<SpawnedEntity>(255);
+            _entityIndex.Clear();
         }
+    }
+
+    /// <summary>
+    ///     Add entity to index
+    /// </summary>
+    private static void AddToIndex(SpawnedEntity entity)
+    {
+        if (entity != null)
+            _entityIndex[entity.UniqueId] = entity;
+    }
+
+    /// <summary>
+    ///     Remove entity from index
+    /// </summary>
+    private static void RemoveFromIndex(uint uniqueId)
+    {
+        _entityIndex.Remove(uniqueId);
     }
 }

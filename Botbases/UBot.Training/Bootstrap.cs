@@ -134,6 +134,8 @@ public class Bootstrap : IBotbase
     /// <inheritdoc />
     public void Disable()
     {
+        BundleSubscriber.UnsubscribeAll();
+
         if (View != null)
             View.Enabled = false;
     }

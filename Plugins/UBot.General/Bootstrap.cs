@@ -69,6 +69,8 @@ public class Bootstrap : IPlugin
     /// <inheritdoc />
     public void Disable()
     {
+        AutoLoginRuntimeFeatures.UnsubscribeAll();
+
         if (View != null)
             View.Enabled = false;
     }

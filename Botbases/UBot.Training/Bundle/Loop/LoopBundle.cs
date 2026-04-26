@@ -43,9 +43,8 @@ internal class LoopBundle : IBundle
         if (Config.UseVehicle && !Game.Player.HasActiveVehicle && !Game.Player.IsInDungeon)
         {
             Game.Player.SummonVehicle();
-
-            //Wait for the vehicle to spawn
             Thread.Sleep(1000);
+            return;
         }
 
         if (!Config.CastBuffs)

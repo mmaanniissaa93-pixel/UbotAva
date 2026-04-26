@@ -6,6 +6,8 @@ namespace UBot.Protection.Components.Player;
 
 public class HealthManaRecoveryHandler
 {
+    private static readonly object EventOwner = new();
+
     /// <summary>
     ///     Initialize the <see cref="HealthRecoveryHandler" />
     /// </summary>
@@ -15,11 +17,19 @@ public class HealthManaRecoveryHandler
     }
 
     /// <summary>
+    ///     Unsubscribes all events.
+    /// </summary>
+    public static void UnsubscribeAll()
+    {
+        EventManager.UnsubscribeOwner(EventOwner);
+    }
+
+    /// <summary>
     ///     Subscribes the events.
     /// </summary>
     private static void SubscribeEvents()
     {
-        EventManager.SubscribeEvent("OnTick", OnTick);
+        EventManager.SubscribeEvent("OnTick", OnTick, EventOwner);
     }
 
     /// <summary>

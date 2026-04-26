@@ -93,6 +93,11 @@ public class Bootstrap : IPlugin
     /// <inheritdoc />
     public void Disable()
     {
+        CosHealthRecoveryHandler.UnsubscribeAll();
+        UniversalPillHandler.UnsubscribeAll();
+        HealthManaRecoveryHandler.UnsubscribeAll();
+        CosBadStatusHandler.UnsubscribeAll();
+
         if (View != null)
             View.Enabled = false;
     }

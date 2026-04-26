@@ -82,10 +82,9 @@ internal class MovementBundle : IBundle
         while (Game.Player.Position.HasCollisionBetween(destination) && distance < Container.Bot.Area.Radius)
         {
             destination = Container.Bot.Area.GetRandomPosition();
+
             if (attempt++ > 3)
                 break;
-
-            Thread.Sleep(100);
         }
 
         Game.Player.MoveTo(destination, false);

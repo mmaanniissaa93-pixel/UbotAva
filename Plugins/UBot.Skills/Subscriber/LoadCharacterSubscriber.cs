@@ -11,16 +11,22 @@ namespace UBot.Skills.Subscriber;
 
 internal static class LoadCharacterSubscriber
 {
+    private static readonly object Owner = new object();
     private static int _lastMasteryUpdateTick;
 
     public static void SubscribeEvents()
     {
-        EventManager.SubscribeEvent("OnLoadCharacter", LoadSkillSettings);
-        EventManager.SubscribeEvent("OnResurrectionRequest", OnResurrectionRequest);
-        EventManager.SubscribeEvent("OnLoadCharacterStats", TryLearnSelectedMastery);
-        EventManager.SubscribeEvent("OnLearnSkillMastery", new System.Action<MasteryInfo>(_ => TryLearnSelectedMastery()));
-        EventManager.SubscribeEvent("OnLevelUp", new System.Action<byte>(_ => TryLearnSelectedMastery()));
-        EventManager.SubscribeEvent("OnExpSpUpdate", new System.Action(TryLearnSelectedMastery));
+        EventManager.SubscribeEvent("OnLoadCharacter", LoadSkillSettings, Owner);
+        EventManager.SubscribeEvent("OnResurrectionRequest", OnResurrectionRequest, Owner);
+        EventManager.SubscribeEvent("OnLoadCharacterStats", TryLearnSelectedMastery, Owner);
+        EventManager.SubscribeEvent("OnLearnSkillMastery", new System.Action<MasteryInfo>(_ => TryLearnSelectedMastery()), Owner);
+        EventManager.SubscribeEvent("OnLevelUp", new System.Action<byte>(_ => TryLearnSelectedMastery()), Owner);
+        EventManager.SubscribeEvent("OnExpSpUpdate", new System.Action(TryLearnSelectedMastery), Owner);
+    }
+
+    public static void UnsubscribeAll()
+    {
+        EventManager.UnsubscribeOwner(Owner);
     }
 
     private static void LoadSkillSettings()

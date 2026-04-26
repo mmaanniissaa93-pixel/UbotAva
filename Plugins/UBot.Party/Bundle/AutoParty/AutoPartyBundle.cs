@@ -12,6 +12,8 @@ namespace UBot.Party.Bundle.AutoParty;
 
 internal class AutoPartyBundle
 {
+    private static readonly object EventOwner = new();
+
     /// <summary>
     ///     Last tick for checking party members
     /// </summary>
@@ -32,7 +34,15 @@ internal class AutoPartyBundle
     /// </summary>
     public AutoPartyBundle()
     {
-        EventManager.SubscribeEvent("OnTick", OnTick);
+        EventManager.SubscribeEvent("OnTick", OnTick, EventOwner);
+    }
+
+    /// <summary>
+    ///     Unsubscribes all events.
+    /// </summary>
+    public void UnsubscribeAll()
+    {
+        EventManager.UnsubscribeOwner(EventOwner);
     }
 
     /// <summary>

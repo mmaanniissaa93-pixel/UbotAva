@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -85,8 +86,7 @@ public static class Kernel
         Bot = new Bot();
 
         //Network handlers/hooks
-        RegisterNetworkHandlers();
-        RegisterNetworkHooks();
+        NetworkHandlerRegistry.RegisterAll();
 
         _updaterTokenSource = new CancellationTokenSource();
 
@@ -102,7 +102,13 @@ public static class Kernel
     {
         var lastTick = TickCount;
         var lastClockTick = TickCount;
+        var lastPerfLogTick = TickCount;
         var playerMissingWhileReadyNotified = false;
+
+        var tickStopwatch = new Stopwatch();
+        var tickCount = 0;
+        var totalTickDurationMs = 0L;
+        var maxTickDurationMs = 0L;
 
         while (!_updaterTokenSource.IsCancellationRequested)
         {
@@ -123,13 +129,13 @@ public static class Kernel
 
             try
             {
+                tickStopwatch.Restart();
+
                 var elapsed = TickCount - lastTick;
                 var player = Game.Player;
 
                 if (player == null)
                 {
-                    // Some servers may send state updates before character data is fully available.
-                    // Avoid crashing the updater loop while waiting for a valid player object.
                     if (!playerMissingWhileReadyNotified)
                     {
                         Log.Debug("ComponentUpdater skipped: game is marked ready but player is not initialized yet.");
@@ -152,52 +158,33 @@ public static class Kernel
 
                 EventManager.FireEvent("OnTick");
 
+                tickStopwatch.Stop();
+                var tickDuration = tickStopwatch.ElapsedMilliseconds;
+                tickCount++;
+                totalTickDurationMs += tickDuration;
+                if (tickDuration > maxTickDurationMs)
+                    maxTickDurationMs = tickDuration;
+
                 lastTick = TickCount;
+
+                if (TickCount - lastPerfLogTick >= 30000)
+                {
+                    var avgTickDuration = tickCount > 0 ? totalTickDurationMs / tickCount : 0;
+                    var onTickListenerCount = EventManager.GetListenerCount("OnTick");
+                    Log.Debug(
+                        $"[PerfTick] Ticks=[{tickCount}], AvgDuration=[{avgTickDuration}ms], MaxDuration=[{maxTickDurationMs}ms], " +
+                        $"OnTickListeners=[{onTickListenerCount}], ElapsedSinceLastLog=[{(TickCount - lastPerfLogTick) / 1000}s]");
+
+                    tickCount = 0;
+                    totalTickDurationMs = 0;
+                    maxTickDurationMs = 0;
+                    lastPerfLogTick = TickCount;
+                }
             }
             catch (Exception e)
             {
                 Log.Fatal(e);
             }
-        }
-    }
-
-    /// <summary>
-    ///     Registers the network handler.
-    /// </summary>
-    private static void RegisterNetworkHandlers()
-    {
-        var type = typeof(IPacketHandler);
-        var types = AppDomain
-            .CurrentDomain.GetAssemblies()
-            .SelectMany(s => s.GetTypes())
-            .Where(p => type.IsAssignableFrom(p) && !p.IsInterface)
-            .ToArray();
-
-        foreach (var handler in types)
-        {
-            var instance = (IPacketHandler)Activator.CreateInstance(handler);
-
-            PacketManager.RegisterHandler(instance);
-        }
-    }
-
-    /// <summary>
-    ///     Registers the network hooks.
-    /// </summary>
-    private static void RegisterNetworkHooks()
-    {
-        var type = typeof(IPacketHook);
-        var types = AppDomain
-            .CurrentDomain.GetAssemblies()
-            .SelectMany(s => s.GetTypes())
-            .Where(p => type.IsAssignableFrom(p) && !p.IsInterface)
-            .ToArray();
-
-        foreach (var hook in types)
-        {
-            var instance = (IPacketHook)Activator.CreateInstance(hook);
-
-            PacketManager.RegisterHook(instance);
         }
     }
 }

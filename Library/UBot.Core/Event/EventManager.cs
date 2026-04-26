@@ -21,6 +21,7 @@ public class EventManager
     private static readonly List<(string name, Delegate handler)> _listeners = new();
     private static readonly object _listenersLock = new();
     private static readonly ConcurrentQueue<QueuedInvocation> _dispatchQueue = new();
+    private static readonly ConcurrentDictionary<object, List<(string name, Delegate handler)>> _ownerListeners = new();
     private static readonly SemaphoreSlim _dispatchSignal = new(0, int.MaxValue);
     private static int _dispatchQueueCount;
     private static int _droppedInvocationCount;
@@ -42,7 +43,12 @@ public class EventManager
             return;
 
         lock (_listenersLock)
+        {
+            if (_listeners.Any(l => l.name == name && l.handler.Equals(handler)))
+                return;
+
             _listeners.Add((name, handler));
+        }
     }
 
     /// <summary>
@@ -56,7 +62,123 @@ public class EventManager
             return;
 
         lock (_listenersLock)
+        {
+            if (_listeners.Any(l => l.name == name && l.handler.Equals(handler)))
+                return;
+
             _listeners.Add((name, handler));
+        }
+    }
+
+    /// <summary>
+    ///     Registers the event with owner tracking for later cleanup.
+    /// </summary>
+    /// <param name="name">The event name.</param>
+    /// <param name="handler">The handler delegate.</param>
+    /// <param name="owner">The owner object for cleanup tracking.</param>
+    public static void SubscribeEvent(string name, Delegate handler, object owner)
+    {
+        if (string.IsNullOrWhiteSpace(name) || handler == null || owner == null)
+            return;
+
+        lock (_listenersLock)
+        {
+            if (_listeners.Any(l => l.name == name && l.handler.Equals(handler)))
+                return;
+
+            _listeners.Add((name, handler));
+
+            if (!_ownerListeners.TryGetValue(owner, out var ownerList))
+            {
+                ownerList = new List<(string name, Delegate handler)>();
+                _ownerListeners[owner] = ownerList;
+            }
+
+            ownerList.Add((name, handler));
+        }
+    }
+
+    /// <summary>
+    ///     Registers the event with owner tracking for later cleanup.
+    /// </summary>
+    /// <param name="name">The event name.</param>
+    /// <param name="handler">The action handler.</param>
+    /// <param name="owner">The owner object for cleanup tracking.</param>
+    public static void SubscribeEvent(string name, Action handler, object owner)
+    {
+        if (string.IsNullOrWhiteSpace(name) || handler == null || owner == null)
+            return;
+
+        lock (_listenersLock)
+        {
+            if (_listeners.Any(l => l.name == name && l.handler.Equals(handler)))
+                return;
+
+            _listeners.Add((name, handler));
+
+            if (!_ownerListeners.TryGetValue(owner, out var ownerList))
+            {
+                ownerList = new List<(string name, Delegate handler)>();
+                _ownerListeners[owner] = ownerList;
+            }
+
+            ownerList.Add((name, handler));
+        }
+    }
+
+    /// <summary>
+    ///     Unsubscribes the event.
+    /// </summary>
+    /// <param name="name">The name.</param>
+    /// <param name="handler">The handler.</param>
+    public static void UnsubscribeEvent(string name, Delegate handler)
+    {
+        if (string.IsNullOrWhiteSpace(name) || handler == null)
+            return;
+
+        lock (_listenersLock)
+        {
+            _listeners.RemoveAll(l => l.name == name && l.handler.Equals(handler));
+        }
+    }
+
+    /// <summary>
+    ///     Unsubscribes the event.
+    /// </summary>
+    /// <param name="name">The name.</param>
+    /// <param name="handler">The handler.</param>
+    public static void UnsubscribeEvent(string name, Action handler)
+    {
+        if (string.IsNullOrWhiteSpace(name) || handler == null)
+            return;
+
+        lock (_listenersLock)
+        {
+            _listeners.RemoveAll(l => l.name == name && l.handler.Equals(handler));
+        }
+    }
+
+    /// <summary>
+    ///     Unsubscribes all events owned by the specified owner.
+    /// </summary>
+    /// <param name="owner">The owner object to unsubscribe all events for.</param>
+    public static void UnsubscribeOwner(object owner)
+    {
+        if (owner == null)
+            return;
+
+        if (!_ownerListeners.TryGetValue(owner, out var ownerList) || ownerList == null || ownerList.Count == 0)
+            return;
+
+        lock (_listenersLock)
+        {
+            foreach (var (eventName, handler) in ownerList.ToList())
+            {
+                _listeners.RemoveAll(l => l.name == eventName && l.handler.Equals(handler));
+            }
+        }
+
+        _ownerListeners.TryRemove(owner, out _);
     }
 
     /// <summary>
@@ -184,6 +306,55 @@ public class EventManager
 
         Interlocked.Exchange(ref _lastLoggedDropBucket, bucket);
         Log.Warn($"EventManager dropped {dropped} queued network callbacks due to queue pressure.");
+    }
+
+    /// <summary>
+    ///     Gets the total number of event listeners currently subscribed.
+    /// </summary>
+    /// <returns>Total listener count.</returns>
+    public static int GetListenerCount()
+    {
+        lock (_listenersLock)
+        {
+            return _listeners.Count;
+        }
+    }
+
+    /// <summary>
+    ///     Gets the number of listeners for a specific event name.
+    /// </summary>
+    /// <param name="eventName">The event name to count listeners for.</param>
+    /// <returns>Listener count for the event.</returns>
+    public static int GetListenerCount(string eventName)
+    {
+        if (string.IsNullOrWhiteSpace(eventName))
+            return 0;
+
+        lock (_listenersLock)
+        {
+            return _listeners.Count(l => l.name == eventName);
+        }
+    }
+
+    /// <summary>
+    ///     Gets the number of tracked owner subscriptions.
+    /// </summary>
+    /// <returns>Owner subscription count.</returns>
+    public static int GetOwnerCount()
+    {
+        return _ownerListeners.Count;
+    }
+
+    /// <summary>
+    ///     Gets all registered event names.
+    /// </summary>
+    /// <returns>Array of unique event names.</returns>
+    public static string[] GetEventNames()
+    {
+        lock (_listenersLock)
+        {
+            return _listeners.Select(l => l.name).Distinct().ToArray();
+        }
     }
 
     private sealed class QueuedInvocation

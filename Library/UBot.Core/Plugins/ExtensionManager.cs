@@ -163,10 +163,33 @@ public class ExtensionManager
             }
             catch (ReflectionTypeLoadException ex)
             {
-                assemblyTypes = ex.Types.Where(type => type != null).ToArray();
-                Log.Warn($"Assembly [{Path.GetFileName(file)}] had type load issues. Continuing with loadable types.");
-                foreach (var loaderException in ex.LoaderExceptions.Where(loaderException => loaderException != null))
-                    Log.Warn($"LoaderException [{Path.GetFileName(file)}]: {loaderException.Message}");
+                var loadedTypes = ex.Types.Where(type => type != null).ToArray();
+                var loaderExceptions = ex.LoaderExceptions ?? Array.Empty<Exception>();
+                var totalTypes = ex.Types.Length;
+                var failedTypes = totalTypes - loadedTypes.Length;
+
+                Log.Warn(
+                    $"Assembly type load issue. Assembly=[{Path.GetFileName(file)}], " +
+                    $"LoadedTypes=[{loadedTypes.Length}], TotalTypes=[{totalTypes}], " +
+                    $"FailedTypes=[{failedTypes}], LoaderExceptions=[{loaderExceptions.Length}]");
+
+                foreach (var loaderEx in loaderExceptions)
+                {
+                    if (loaderEx == null)
+                        continue;
+
+                    var extraInfo = string.Empty;
+                    if (loaderEx is FileNotFoundException fnfEx && !string.IsNullOrEmpty(fnfEx.FileName))
+                        extraInfo = $" (File: {fnfEx.FileName})";
+                    else if (!string.IsNullOrEmpty(loaderEx.StackTrace))
+                        extraInfo = $" (Stack: {loaderEx.StackTrace.Split('\n').FirstOrDefault()?.Trim()})";
+
+                    Log.Warn(
+                        $"LoaderException [{Path.GetFileName(file)}]: " +
+                        $"{loaderEx.GetType().Name}: {loaderEx.Message}{extraInfo}");
+                }
+
+                assemblyTypes = loadedTypes;
             }
 
             foreach (var type in assemblyTypes.Where(type =>
@@ -184,18 +207,26 @@ public class ExtensionManager
 
                     if (extension is IPlugin runtimePlugin)
                     {
-                        var contract = PluginContractManifestLoader.LoadForPlugin(file, runtimePlugin);
-                        _pluginContracts[runtimePlugin.Name] = contract;
-                        _pluginAssemblyPaths[runtimePlugin.Name] = file;
+                        try
+                        {
+                            var contract = PluginContractManifestLoader.LoadForPlugin(file, runtimePlugin);
+                            _pluginContracts[runtimePlugin.Name] = contract;
+                            _pluginAssemblyPaths[runtimePlugin.Name] = file;
+                        }
+                        catch (PluginContractException ex)
+                        {
+                            Log.Error(
+                                $"Plugin contract/manifest error. Assembly=[{Path.GetFileName(file)}], " +
+                                $"Plugin=[{runtimePlugin?.Name ?? runtimePlugin?.GetType().FullName ?? "unknown"}], Error=[{ex.Message}]. " +
+                                "Skipping this plugin and continuing with the remaining plugins.");
+                            continue;
+                        }
                     }
 
                     result.Add(extension);
                 }
                 catch (Exception ex)
                 {
-                    if (ex is PluginContractException)
-                        throw;
-
                     Log.Warn($"Skipping extension type [{type.FullName}] in [{Path.GetFileName(file)}]: {ex.Message}");
                 }
             }
@@ -269,8 +300,13 @@ public class ExtensionManager
         }
         catch (Exception ex)
         {
-            if (ex is PluginContractException)
-                throw;
+            if (ex is PluginContractException contractEx)
+            {
+                Log.Error(
+                    $"Plugin contract/manifest error during assembly inspection. Assembly=[{Path.GetFileName(file)}], Error=[{contractEx.Message}]. " +
+                    "Skipping this assembly and continuing with the remaining plugins.");
+                return new List<T>();
+            }
 
             Log.Error($"Failed to inspect assembly [{Path.GetFileName(file)}]: {ex.Message}");
         }
@@ -537,7 +573,10 @@ public class ExtensionManager
 
         var plugin = _extensions.FirstOrDefault(p => p.Name == internalName);
         if (plugin.Enabled)
+        {
+            Log.Warn($"Plugin [{plugin.Title}] is already enabled. Skipping duplicate enable.");
             return true;
+        }
 
         try
         {
@@ -559,7 +598,9 @@ public class ExtensionManager
             var policy = GetRestartPolicy(plugin.Name);
             if (!_faultIsolation.TryExecute(plugin.Name, "enable", policy, plugin.Enable, out var failure))
             {
-                Log.Error($"Failed to enable plugin [{plugin.Title}]: {failure?.Message}");
+                Log.Error(
+                    $"Operation=[EnablePlugin], Plugin=[{plugin.Title}], InternalName=[{internalName}], " +
+                    $"Type=[{plugin.GetType().FullName}], Failure=[{failure?.Message}]");
                 return false;
             }
 
@@ -587,7 +628,10 @@ public class ExtensionManager
         }
         catch (Exception ex)
         {
-            Log.Error($"Failed to enable plugin [{plugin.Title}]: {ex.Message}");
+            Log.Error(
+                $"Operation=[EnablePlugin], Plugin=[{plugin.Title}], InternalName=[{internalName}], " +
+                $"Type=[{plugin.GetType().FullName}], Exception=[{ex.GetType().Name}], " +
+                $"Message=[{ex.Message}], StackTrace=[{ex.StackTrace}]");
             return false;
         }
     }
@@ -604,7 +648,10 @@ public class ExtensionManager
 
         var plugin = _extensions.FirstOrDefault(p => p.Name == internalName);
         if (!plugin.Enabled)
+        {
+            Log.Warn($"Plugin [{plugin.Title}] is already disabled. Skipping duplicate disable.");
             return true;
+        }
 
         try
         {
@@ -621,7 +668,11 @@ public class ExtensionManager
             var policy = GetRestartPolicy(plugin.Name);
             if (!_faultIsolation.TryExecute(plugin.Name, "disable", policy, plugin.Disable, out var failure))
             {
-                Log.Error($"Failed to disable plugin [{plugin.Title}]: {failure?.Message}");
+                Log.Error(
+                    $"Operation=[DisablePlugin], Plugin=[{plugin.Title}], InternalName=[{internalName}], " +
+                    $"Type=[{plugin.GetType().FullName}], Failure=[{failure?.Message}]");
+
+                TryCleanupPluginPacketRegistrations(internalName, plugin);
                 return false;
             }
 
@@ -649,7 +700,12 @@ public class ExtensionManager
         }
         catch (Exception ex)
         {
-            Log.Error($"Failed to disable plugin [{plugin.Title}]: {ex.Message}");
+            Log.Error(
+                $"Operation=[DisablePlugin], Plugin=[{plugin.Title}], InternalName=[{internalName}], " +
+                $"Type=[{plugin.GetType().FullName}], Exception=[{ex.GetType().Name}], " +
+                $"Message=[{ex.Message}], StackTrace=[{ex.StackTrace}]");
+
+            TryCleanupPluginPacketRegistrations(internalName, plugin);
             return false;
         }
     }
@@ -978,5 +1034,46 @@ public class ExtensionManager
 
         GlobalConfig.Set("UBot.DisabledPlugins", string.Join(",", disabledPlugins));
         GlobalConfig.Save();
+    }
+
+    private static bool TryCleanupPluginPacketRegistrations(string internalName, IExtension extension)
+    {
+        var success = true;
+
+        try
+        {
+            if (PluginHandlers.ContainsKey(internalName))
+            {
+                foreach (var handler in PluginHandlers[internalName])
+                    PacketManager.RemoveHandler(handler);
+            }
+        }
+        catch (Exception ex)
+        {
+            success = false;
+            Log.Error(
+                $"Operation=[CleanupPluginHandlers], Plugin=[{extension.Title}], InternalName=[{internalName}], " +
+                $"Type=[{extension.GetType().FullName}], Exception=[{ex.GetType().Name}], " +
+                $"Message=[{ex.Message}], StackTrace=[{ex.StackTrace}]");
+        }
+
+        try
+        {
+            if (PluginHooks.ContainsKey(internalName))
+            {
+                foreach (var hook in PluginHooks[internalName])
+                    PacketManager.RemoveHook(hook);
+            }
+        }
+        catch (Exception ex)
+        {
+            success = false;
+            Log.Error(
+                $"Operation=[CleanupPluginHooks], Plugin=[{extension.Title}], InternalName=[{internalName}], " +
+                $"Type=[{extension.GetType().FullName}], Exception=[{ex.GetType().Name}], " +
+                $"Message=[{ex.Message}], StackTrace=[{ex.StackTrace}]");
+        }
+
+        return success;
     }
 }
