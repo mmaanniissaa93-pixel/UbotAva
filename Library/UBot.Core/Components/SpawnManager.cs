@@ -17,7 +17,7 @@ public static class SpawnManager
     /// <summary>
     ///     The game spawned entities on the area
     /// </summary>
-    private static List<SpawnedEntity> _entities = new(255);
+    private static List<SpawnedEntity> _entities = new(512);
 
     /// <summary>
     ///     O(1) lookup index by UniqueId
@@ -379,8 +379,18 @@ public static class SpawnManager
     /// </summary>
     private static void AddToIndex(SpawnedEntity entity)
     {
-        if (entity != null)
-            _entityIndex[entity.UniqueId] = entity;
+        if (entity == null)
+            return;
+
+        var uniqueId = entity.UniqueId;
+
+        if (_entityIndex.TryGetValue(uniqueId, out var existingEntity))
+        {
+            _entities.Remove(existingEntity);
+            Log.Debug($"SpawnManager: Duplicate uniqueId {uniqueId} replaced. Old entity removed from list.");
+        }
+
+        _entityIndex[uniqueId] = entity;
     }
 
     /// <summary>
