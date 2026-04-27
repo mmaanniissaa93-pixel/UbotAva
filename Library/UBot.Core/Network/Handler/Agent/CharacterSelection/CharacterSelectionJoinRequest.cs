@@ -1,4 +1,5 @@
-﻿using UBot.Core.Event;
+using UBot.Core.Components;
+using UBot.Core.Event;
 
 namespace UBot.Core.Network.Handler.Agent.CharacterSelection;
 
@@ -28,6 +29,7 @@ internal class CharacterSelectionJoinRequest : IPacketHandler
     {
         var characterName = packet.ReadString();
 
+        ProfileManager.SelectedCharacter = characterName;
         PlayerConfig.Load(characterName);
 
         EventManager.FireEvent("OnEnterGame");

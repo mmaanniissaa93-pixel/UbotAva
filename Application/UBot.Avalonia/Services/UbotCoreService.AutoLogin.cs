@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -234,7 +234,7 @@ internal sealed class UbotAutoLoginService : UbotServiceBase
 
     private static string GetAutoLoginDataFilePath()
     {
-        return Path.Combine(Kernel.BasePath, "User", ProfileManager.SelectedProfile, "autologin.data");
+        return Path.Combine(ProfileManager.GetProfileDirectory(ProfileManager.SelectedProfile), "autologin.data");
     }
 }
 

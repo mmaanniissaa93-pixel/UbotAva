@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using UBot.Core;
 using UBot.Core.Components;
+using UBot.Core.Plugins;
 
 namespace UBot.Avalonia.Dialogs;
 
@@ -21,6 +22,21 @@ public partial class ProfileSelectionWindow : Window
     {
         InitializeComponent();
         ProfileList.ItemsSource = _profiles;
+
+        var hasCharacter = !string.IsNullOrWhiteSpace(ProfileManager.SelectedCharacter);
+        ProfileList.IsEnabled = hasCharacter;
+        NewProfileBox.IsEnabled = hasCharacter;
+        AddBtn.IsEnabled = hasCharacter;
+        DeleteBtn.IsEnabled = hasCharacter;
+
+        if (!hasCharacter)
+        {
+            var msg = "Entering game is required for profile management.";
+            ToolTip.SetTip(ProfileList, "Select profile is disabled until character is loaded.");
+            ToolTip.SetTip(NewProfileBox, msg);
+            ToolTip.SetTip(AddBtn, msg);
+            ToolTip.SetTip(DeleteBtn, msg);
+        }
         try
         {
             LoadProfiles();
@@ -38,7 +54,10 @@ public partial class ProfileSelectionWindow : Window
 
     private void AddProfile_Click(object? sender, RoutedEventArgs e)
     {
-        var candidate = GetCandidateProfileName();
+        if (string.IsNullOrWhiteSpace(ProfileManager.SelectedCharacter))
+            return;
+
+        var candidate = (NewProfileBox.Text ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(candidate))
             candidate = GenerateProfileName();
 
@@ -48,7 +67,7 @@ public partial class ProfileSelectionWindow : Window
             return;
         }
 
-        if (!ProfileManager.Add(candidate))
+        if (!ProfileManager.Add(candidate, true))
             return;
 
         LoadProfiles(candidate);
@@ -56,6 +75,9 @@ public partial class ProfileSelectionWindow : Window
 
     private void DeleteProfile_Click(object? sender, RoutedEventArgs e)
     {
+        if (string.IsNullOrWhiteSpace(ProfileManager.SelectedCharacter))
+            return;
+
         var current = GetSelectedExistingProfile();
         if (string.IsNullOrWhiteSpace(current))
             return;
@@ -88,8 +110,15 @@ public partial class ProfileSelectionWindow : Window
 
             if (!ProfileManager.ProfileExists(selected))
             {
-                if (!ProfileManager.Add(selected))
+                if (string.IsNullOrWhiteSpace(ProfileManager.SelectedCharacter))
+                {
+                    // Fallback to Default if trying to use non-existent profile without character
+                    selected = "Default";
+                }
+                else if (!ProfileManager.Add(selected, true))
+                {
                     return;
+                }
             }
 
             if (!ProfileManager.SetSelectedProfile(selected))
@@ -98,12 +127,18 @@ public partial class ProfileSelectionWindow : Window
             try
             {
                 GlobalConfig.Load();
-                var selectedCharacter = GlobalConfig.Get("UBot.General.AutoLoginCharacter", string.Empty)?.Trim() ?? string.Empty;
-                if (!string.IsNullOrWhiteSpace(selectedCharacter))
+                
+                var activeChar = ProfileManager.SelectedCharacter;
+                if (string.IsNullOrWhiteSpace(activeChar))
+                    activeChar = GlobalConfig.Get("UBot.General.AutoLoginCharacter", string.Empty)?.Trim() ?? string.Empty;
+
+                if (!string.IsNullOrWhiteSpace(activeChar))
                 {
-                    ProfileManager.SelectedCharacter = selectedCharacter;
-                    PlayerConfig.Load(selectedCharacter);
+                    ProfileManager.SelectedCharacter = activeChar;
+                    PlayerConfig.Load(activeChar);
                 }
+
+                ExtensionManager.OnProfileChanged();
             }
             catch
             {
@@ -155,11 +190,18 @@ public partial class ProfileSelectionWindow : Window
 
     private string GetCandidateProfileName()
     {
-        var selected = GetSelectedExistingProfile();
-        if (!string.IsNullOrWhiteSpace(selected))
-            return selected;
+        var textValue = (NewProfileBox.Text ?? string.Empty).Trim();
+        var selectedValue = GetSelectedExistingProfile();
 
-        return (NewProfileBox.Text ?? string.Empty).Trim();
+        // If user typed something new that isn't the current selection, use that.
+        if (!string.IsNullOrWhiteSpace(textValue) && !string.Equals(textValue, selectedValue, StringComparison.OrdinalIgnoreCase))
+            return textValue;
+
+        // Otherwise use the selected value from dropdown.
+        if (!string.IsNullOrWhiteSpace(selectedValue))
+            return selectedValue;
+
+        return textValue;
     }
 
     private string GetSelectedExistingProfile()

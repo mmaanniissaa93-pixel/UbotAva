@@ -1,4 +1,4 @@
-﻿namespace UBot.Core.Plugins;
+namespace UBot.Core.Plugins;
 
 public interface IPlugin : IExtension
 {
@@ -34,4 +34,9 @@ public interface IPlugin : IExtension
     ///     Initialzes objects when user is loaded.
     /// </summary>
     void OnLoadCharacter();
+
+    /// <summary>
+    ///     Called when active profile is changed.
+    /// </summary>
+    void OnProfileChanged() => OnLoadCharacter();
 }

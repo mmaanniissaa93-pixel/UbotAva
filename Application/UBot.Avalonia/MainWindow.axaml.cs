@@ -694,7 +694,11 @@ public partial class MainWindow : Window
             dlg.Closed += async (_, _) =>
             {
                 if (dlg.Applied)
+                {
+                    if (_factory != null)
+                        await _factory.RefreshAllConfigsAsync();
                     await RefreshRuntimeStatusAsync(forceConnectionRefresh: true);
+                }
             };
             dlg.Show(this);
         }

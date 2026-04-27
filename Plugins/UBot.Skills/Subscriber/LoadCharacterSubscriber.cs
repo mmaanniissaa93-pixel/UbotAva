@@ -31,6 +31,9 @@ internal static class LoadCharacterSubscriber
 
     private static void LoadSkillSettings()
     {
+        if (Game.Player == null)
+            return;
+
         Game.Player.TryGetAbilitySkills(out var abilitySkills);
         SkillManager.Buffs.Clear();
         foreach (var key in SkillManager.Skills.Keys.ToArray())

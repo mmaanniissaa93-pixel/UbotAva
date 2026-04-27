@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using UBot.Core.Components;
 using UBot.Core.Event;
@@ -15,7 +15,7 @@ public static class PlayerConfig
     /// <summary>
     ///     The config directory
     /// </summary>
-    private static string _configDirectory => Path.Combine(Kernel.BasePath, "User", ProfileManager.SelectedProfile);
+    private static string _configDirectory => Path.Combine(Kernel.BasePath, "User", string.IsNullOrWhiteSpace(ProfileManager.SelectedCharacter) ? "Shared" : ProfileManager.SelectedCharacter);
 
     /// <summary>
     ///     Load config from file
@@ -23,7 +23,10 @@ public static class PlayerConfig
     /// <param name="file">The config file path</param>
     public static void Load(string charName)
     {
-        _config = new Config(Path.Combine(_configDirectory, charName + ".rs"));
+        if (!Directory.Exists(_configDirectory))
+            Directory.CreateDirectory(_configDirectory);
+
+        _config = new Config(Path.Combine(_configDirectory, ProfileManager.SelectedProfile + ".rs"));
 
         Log.Notify("[Player] settings have been loaded!");
     }

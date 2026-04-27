@@ -328,6 +328,7 @@ internal static class AutoLogin
         packet.WriteString(character);
         PacketManager.SendPacket(packet, PacketDestination.Server);
 
+        ProfileManager.SelectedCharacter = character;
         PlayerConfig.Load(character);
 
         EventManager.FireEvent("OnEnterGame");

@@ -1,4 +1,4 @@
-﻿using System.Windows.Forms;
+using System.Windows.Forms;
 using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Plugins;
@@ -56,7 +56,14 @@ public class Bootstrap : IPlugin
     /// <inheritdoc />
     public void OnLoadCharacter()
     {
-        // do nothing
+        // Settings are typically loaded here or on-demand
+    }
+
+    /// <inheritdoc />
+    public void OnProfileChanged()
+    {
+        Accounts.Load();
+        AutoLoginRuntimeFeatures.Initialize();
     }
 
     /// <inheritdoc />

@@ -1,4 +1,4 @@
-﻿using UBot.Core.Event;
+using UBot.Core.Event;
 using UBot.Core.Network;
 using System;
 using System.Collections.Generic;
@@ -86,6 +86,27 @@ public class ExtensionManager
     ///     Event for download progress updates.
     /// </summary>
     public static event EventHandler<DownloadProgressEventArgs> DownloadProgressChanged;
+
+    /// <summary>
+    ///     Notifies all enabled plugins that the active profile has changed.
+    /// </summary>
+    public static void OnProfileChanged()
+    {
+        foreach (var plugin in Plugins.Where(p => p.Enabled))
+        {
+            try
+            {
+                var policy = GetRestartPolicy(plugin.Name);
+                _faultIsolation.TryExecute(plugin.Name, "on-profile-changed", policy, plugin.OnProfileChanged, out _);
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Plugin [{plugin.Name}] failed to handle profile change: {ex.Message}");
+            }
+        }
+
+        EventManager.FireEvent("OnLoadCharacter");
+    }
 
     /// <summary>
     /// Loads the assemblies.

@@ -1,4 +1,4 @@
-﻿#nullable enable annotations
+#nullable enable annotations
 
 using System;
 using System.Collections.ObjectModel;
@@ -13,7 +13,7 @@ public class ProfileManager
     /// <summary>
     ///     The profile config
     /// </summary>
-    private static readonly Config _config;
+    private static Config _config;
 
     /// <summary>
     ///     Get active profiles
@@ -25,9 +25,24 @@ public class ProfileManager
     /// </summary>
     static ProfileManager()
     {
-        _config = new Config(GetProfileConfigFileName());
-        _profiles = new ObservableCollection<string>(_config.GetArray<string>("UBot.Profiles", '|'));
+        _profiles = new ObservableCollection<string>();
         _profiles.CollectionChanged += Profiles_CollectionChanged;
+        
+        // Initial load
+        var configPath = GetProfileConfigFileName();
+        _config = new Config(configPath);
+        LoadProfiles();
+    }
+
+    private static void LoadProfiles()
+    {
+        _profiles.Clear();
+        var profiles = _config.GetArray<string>("UBot.Profiles", '|');
+        foreach (var p in profiles)
+            _profiles.Add(p);
+
+        if (!_profiles.Any())
+            _profiles.Add("Default");
     }
 
     /// <summary>
@@ -43,7 +58,18 @@ public class ProfileManager
     /// <summary>
     ///     The selected character
     /// </summary>
-    public static string SelectedCharacter { get; set; }
+    private static string _selectedCharacter = string.Empty;
+    public static string SelectedCharacter
+    {
+        get => _selectedCharacter;
+        set
+        {
+            if (_selectedCharacter == value) return;
+            _selectedCharacter = value;
+            _config = new Config(GetProfileConfigFileName());
+            LoadProfiles();
+        }
+    }
 
     /// <summary>
     ///     The selected profile
@@ -161,11 +187,30 @@ public class ProfileManager
         {
             var oldProfileFilePath = GetProfileFile(SelectedProfile);
             var newProfileFilePath = GetProfileFile(profile);
+            
+            if (File.Exists(oldProfileFilePath))
+                File.Copy(oldProfileFilePath, newProfileFilePath);
+
+            // Copy Character specific profile (PlayerConfig) if character is selected
+            if (!string.IsNullOrWhiteSpace(SelectedCharacter))
+            {
+                var charDir = Path.Combine(Kernel.BasePath, "User", SelectedCharacter);
+                var oldPlayerConfig = Path.Combine(charDir, $"{SelectedProfile}.rs");
+                var newPlayerConfig = Path.Combine(charDir, $"{profile}.rs");
+
+                if (!Directory.Exists(charDir))
+                    Directory.CreateDirectory(charDir);
+
+                if (File.Exists(oldPlayerConfig))
+                    File.Copy(oldPlayerConfig, newPlayerConfig);
+            }
+
             var oldAutoLoginFile = Path.Combine(GetProfileDirectory(SelectedProfile), "autologin.data");
             var newAutoLoginFile = Path.Combine(GetProfileDirectory(profile), "autologin.data");
 
-            if (File.Exists(oldProfileFilePath))
-                File.Copy(oldProfileFilePath, newProfileFilePath);
+            var newProfileDir = GetProfileDirectory(profile);
+            if (!Directory.Exists(newProfileDir))
+                Directory.CreateDirectory(newProfileDir);
 
             if (File.Exists(oldAutoLoginFile))
                 File.Copy(oldAutoLoginFile, newAutoLoginFile);
@@ -182,6 +227,14 @@ public class ProfileManager
     /// <returns></returns>
     public static string GetProfileConfigFileName()
     {
+        if (!string.IsNullOrWhiteSpace(SelectedCharacter))
+        {
+            var charDir = Path.Combine(Kernel.BasePath, "User", SelectedCharacter);
+            if (!Directory.Exists(charDir))
+                Directory.CreateDirectory(charDir);
+                
+            return Path.Combine(charDir, "Profiles.rs");
+        }
         return Path.Combine(Kernel.BasePath, "User", "Profiles.rs");
     }
 

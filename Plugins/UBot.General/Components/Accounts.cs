@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -16,7 +16,7 @@ public static class Accounts
     public static Account Joined { get; set; }
 
     private static string _filePath =>
-        Path.Combine(Kernel.BasePath, "User", ProfileManager.SelectedProfile, "autologin.data");
+        Path.Combine(ProfileManager.GetProfileDirectory(ProfileManager.SelectedProfile), "autologin.data");
 
     private static void EnsureDirectoryExists()
     {

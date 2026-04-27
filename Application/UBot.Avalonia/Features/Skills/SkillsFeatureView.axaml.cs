@@ -111,6 +111,11 @@ public partial class SkillsFeatureView : UserControl
         _ = LoadFromConfigAsync();
     }
 
+    public void RefreshFromConfig()
+    {
+        _ = LoadFromConfigAsync();
+    }
+
     public void UpdateFromState(JsonElement moduleState)
     {
         var stateRoot = moduleState;

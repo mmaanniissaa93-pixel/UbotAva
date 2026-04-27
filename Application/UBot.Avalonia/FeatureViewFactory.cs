@@ -63,8 +63,22 @@ public sealed class FeatureViewFactory
     {
         if (!_cache.TryGetValue(pluginId, out var cached)) return;
         await cached.Vm.LoadConfigAsync();
+        
         if (cached.View is TrainingFeatureView training)
             training.RefreshFromConfig();
+        else if (cached.View is ProtectionFeatureView protection)
+            protection.RefreshFromConfig();
+        else if (cached.View is SkillsFeatureView skills)
+            skills.RefreshFromConfig();
+    }
+
+    public async Task RefreshAllConfigsAsync()
+    {
+        var tasks = new List<Task>();
+        foreach (var id in _cache.Keys)
+            tasks.Add(RefreshConfigAsync(id));
+        
+        await Task.WhenAll(tasks);
     }
 
     public void UpdateState(string pluginId, JsonElement state)
