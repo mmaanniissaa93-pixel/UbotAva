@@ -10,7 +10,7 @@ namespace UBot.Core.Event;
 public class EventManager
 {
     private const int DispatchQueueMaxBacklog = 2500;
-    private static readonly string[] DroppableNetworkEvents =
+    private static readonly HashSet<string> DroppableNetworkEvents = new(StringComparer.OrdinalIgnoreCase)
     {
         "OnPlayerMove",
         "OnPlayerMoveAngle",
@@ -323,16 +323,7 @@ public class EventManager
 
     private static bool IsDroppableEvent(string eventName)
     {
-        if (string.IsNullOrWhiteSpace(eventName))
-            return false;
-
-        foreach (var candidate in DroppableNetworkEvents)
-        {
-            if (eventName.Equals(candidate, StringComparison.OrdinalIgnoreCase))
-                return true;
-        }
-
-        return false;
+        return !string.IsNullOrWhiteSpace(eventName) && DroppableNetworkEvents.Contains(eventName);
     }
 
     private static void MaybeLogDroppedCount()

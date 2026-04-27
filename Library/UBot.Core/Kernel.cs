@@ -100,9 +100,10 @@ public static class Kernel
 
     private static async Task ComponentUpdaterAsync()
     {
-        var lastTick = TickCount;
-        var lastClockTick = TickCount;
-        var lastPerfLogTick = TickCount;
+        var cachedTickCount = Environment.TickCount & int.MaxValue;
+        var lastTick = cachedTickCount;
+        var lastClockTick = cachedTickCount;
+        var lastPerfLogTick = cachedTickCount;
         var playerMissingWhileReadyNotified = false;
 
         var tickStopwatch = new Stopwatch();
@@ -114,15 +115,17 @@ public static class Kernel
         {
             await Task.Delay(10);
 
-            if (TickCount - lastClockTick >= 1000)
+            cachedTickCount = Environment.TickCount & int.MaxValue;
+
+            if (cachedTickCount - lastClockTick >= 1000)
             {
-                lastClockTick = TickCount;
+                lastClockTick = cachedTickCount;
                 EventManager.FireEvent("OnClock");
             }
 
             if (!Game.Ready)
             {
-                lastTick = TickCount;
+                lastTick = cachedTickCount;
                 playerMissingWhileReadyNotified = false;
                 continue;
             }
@@ -131,7 +134,7 @@ public static class Kernel
             {
                 tickStopwatch.Restart();
 
-                var elapsed = TickCount - lastTick;
+                var elapsed = cachedTickCount - lastTick;
                 var player = Game.Player;
 
                 if (player == null)
@@ -142,7 +145,7 @@ public static class Kernel
                         playerMissingWhileReadyNotified = true;
                     }
 
-                    lastTick = TickCount;
+                    lastTick = cachedTickCount;
                     continue;
                 }
                 playerMissingWhileReadyNotified = false;
@@ -165,20 +168,20 @@ public static class Kernel
                 if (tickDuration > maxTickDurationMs)
                     maxTickDurationMs = tickDuration;
 
-                lastTick = TickCount;
+                lastTick = cachedTickCount;
 
-                if (TickCount - lastPerfLogTick >= 30000)
+                if (cachedTickCount - lastPerfLogTick >= 30000)
                 {
                     var avgTickDuration = tickCount > 0 ? totalTickDurationMs / tickCount : 0;
                     var onTickListenerCount = EventManager.GetListenerCount("OnTick");
                     Log.Debug(
                         $"[PerfTick] Ticks=[{tickCount}], AvgDuration=[{avgTickDuration}ms], MaxDuration=[{maxTickDurationMs}ms], " +
-                        $"OnTickListeners=[{onTickListenerCount}], ElapsedSinceLastLog=[{(TickCount - lastPerfLogTick) / 1000}s]");
+                        $"OnTickListeners=[{onTickListenerCount}], ElapsedSinceLastLog=[{(cachedTickCount - lastPerfLogTick) / 1000}s]");
 
                     tickCount = 0;
                     totalTickDurationMs = 0;
                     maxTickDurationMs = 0;
-                    lastPerfLogTick = TickCount;
+                    lastPerfLogTick = cachedTickCount;
                 }
             }
             catch (Exception e)
