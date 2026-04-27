@@ -220,133 +220,118 @@ public static class SpawnManager
     /// <param name="packet">The packet</param>
     public static void Parse(Packet packet, bool isGroup = false)
     {
-        lock (_lock)
-        {
-            var refObjId = packet.ReadUInt();
+        var refObjId = packet.ReadUInt();
 
-            if (refObjId == uint.MaxValue)
+        if (refObjId == uint.MaxValue)
+        {
+            var spellArea = SpawnedSpellArea.FromPacket(packet);
+            lock (_lock)
             {
-                var spellArea = SpawnedSpellArea.FromPacket(packet);
                 _entities.Add(spellArea);
                 AddToIndex(spellArea);
-                return;
             }
+            return;
+        }
 
-            // ghidra(isro client): FUN_009dd970 maybe flowers?
-            if (refObjId == 0xfffffffe)
-            {
-                packet.ReadUInt();
-                packet.ReadUInt();
-            }
+        // ghidra(isro client): FUN_009dd970 maybe flowers?
+        if (refObjId == 0xfffffffe)
+        {
+            packet.ReadUInt();
+            packet.ReadUInt();
+            return;
+        }
 
-            var obj = Game.ReferenceManager.GetRefObjCommon(refObjId);
-            if (obj == null)
-            {
-                Log.Debug($"SpawnManager::Parse error while getting RefObjCommon by id {refObjId}");
+        var obj = Game.ReferenceManager.GetRefObjCommon(refObjId);
+        if (obj == null)
+        {
+            Log.Debug($"SpawnManager::Parse error while getting RefObjCommon by id {refObjId}");
+            return;
+        }
 
-                return;
-            }
+        SpawnedEntity entity = null;
+        string eventName = null;
 
-            //Log.Debug($"Detected: {obj.GetRealName()}   {obj.CodeName}");
-
-            switch (obj.TypeID1)
-            {
-                case 1:
-
-                    switch (obj.TypeID2)
-                    {
-                        case 1:
-                            {
-                                var spawnedPlayer = new SpawnedPlayer(refObjId);
-                                spawnedPlayer.Deserialize(packet);
-
-                                _entities.Add(spawnedPlayer);
-                                AddToIndex(spawnedPlayer);
-                                EventManager.FireEvent("OnSpawnPlayer", spawnedPlayer);
-                            }
-                            break;
-
-                        case 2:
-
-                            switch (obj.TypeID3)
-                            {
-                                case 1:
-                                    {
-                                        var spawnedMonster = new SpawnedMonster(refObjId);
-                                        spawnedMonster.Deserialize(packet);
-
-                                        _entities.Add(spawnedMonster);
-                                        AddToIndex(spawnedMonster);
-                                        EventManager.FireEvent("OnSpawnMonster", spawnedMonster);
-                                    }
-                                    break;
-
-                                case 3:
-                                    {
-                                        var spawnedCos = new SpawnedCos(refObjId);
-                                        spawnedCos.Deserialize(packet);
-                                        _entities.Add(spawnedCos);
-                                        AddToIndex(spawnedCos);
-                                        EventManager.FireEvent("OnSpawnCos", spawnedCos);
-                                    }
-                                    break;
-
-                                case 5:
-                                    {
-                                        var spawnedFortressStructure = new SpawnedFortressStructure(refObjId);
-                                        spawnedFortressStructure.Deserialize(packet);
-                                        _entities.Add(spawnedFortressStructure);
-                                        AddToIndex(spawnedFortressStructure);
-
-                                        EventManager.FireEvent("OnSpawnFortressStructure", spawnedFortressStructure);
-                                    }
-                                    break;
-
-                                default:
-                                    {
-                                        var spawnedNpc = new SpawnedNpcNpc(refObjId);
-                                        spawnedNpc.ParseBionicDetails(packet);
-                                        spawnedNpc.Deserialize(packet);
-                                        _entities.Add(spawnedNpc);
-                                        AddToIndex(spawnedNpc);
-                                        EventManager.FireEvent("OnSpawnNpc", spawnedNpc);
-                                    }
-                                    break;
-                            }
-
-                            break;
-                    }
-
-                    break;
-
-                case 3:
-                    var spawnedItem = SpawnedItem.FromPacket(packet, refObjId);
-                    _entities.Add(spawnedItem);
-                    AddToIndex(spawnedItem);
-
-                    EventManager.FireEvent("OnSpawnItem", spawnedItem);
-                    break;
-
-                case 4:
-                    var spawnedPortal = SpawnedPortal.FromPacket(packet, refObjId);
-                    _entities.Add(spawnedPortal);
-                    AddToIndex(spawnedPortal);
-                    EventManager.FireEvent("OnSpawnPortal", spawnedPortal);
-                    break;
-            }
-
-            if (!isGroup)
-            {
-                if (obj.TypeID1 == 1 || obj.TypeID1 == 4)
+        switch (obj.TypeID1)
+        {
+            case 1:
+                switch (obj.TypeID2)
                 {
-                    packet.ReadByte(); //1 = Normal, 3 = Spawning, 4 = Running
+                    case 1:
+                        var spawnedPlayer = new SpawnedPlayer(refObjId);
+                        spawnedPlayer.Deserialize(packet);
+                        entity = spawnedPlayer;
+                        eventName = "OnSpawnPlayer";
+                        break;
+
+                    case 2:
+                        switch (obj.TypeID3)
+                        {
+                            case 1:
+                                var spawnedMonster = new SpawnedMonster(refObjId);
+                                spawnedMonster.Deserialize(packet);
+                                entity = spawnedMonster;
+                                eventName = "OnSpawnMonster";
+                                break;
+
+                            case 3:
+                                var spawnedCos = new SpawnedCos(refObjId);
+                                spawnedCos.Deserialize(packet);
+                                entity = spawnedCos;
+                                eventName = "OnSpawnCos";
+                                break;
+
+                            case 5:
+                                var spawnedFortressStructure = new SpawnedFortressStructure(refObjId);
+                                spawnedFortressStructure.Deserialize(packet);
+                                entity = spawnedFortressStructure;
+                                eventName = "OnSpawnFortressStructure";
+                                break;
+
+                            default:
+                                var spawnedNpc = new SpawnedNpcNpc(refObjId);
+                                spawnedNpc.ParseBionicDetails(packet);
+                                spawnedNpc.Deserialize(packet);
+                                entity = spawnedNpc;
+                                eventName = "OnSpawnNpc";
+                                break;
+                        }
+                        break;
                 }
-                else if (obj.TypeID1 == 3)
-                {
-                    packet.ReadByte(); //DropSource
-                    packet.ReadUInt(); //DropUID
-                }
+                break;
+
+            case 3:
+                entity = SpawnedItem.FromPacket(packet, refObjId);
+                eventName = "OnSpawnItem";
+                break;
+
+            case 4:
+                entity = SpawnedPortal.FromPacket(packet, refObjId);
+                eventName = "OnSpawnPortal";
+                break;
+        }
+
+        if (!isGroup && entity != null)
+        {
+            if (obj.TypeID1 == 1 || obj.TypeID1 == 4)
+            {
+                packet.ReadByte();
             }
+            else if (obj.TypeID1 == 3)
+            {
+                packet.ReadByte();
+                packet.ReadUInt();
+            }
+        }
+
+        if (entity == null)
+            return;
+
+        lock (_lock)
+        {
+            _entities.Add(entity);
+            AddToIndex(entity);
+            if (eventName != null)
+                EventManager.FireEvent(eventName, entity);
         }
     }
 
