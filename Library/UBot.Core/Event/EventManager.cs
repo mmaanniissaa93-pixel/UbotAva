@@ -44,8 +44,13 @@ public class EventManager
 
         lock (_listenersLock)
         {
-            if (_listeners.Any(l => l.name == name && l.handler.Equals(handler)))
-                return;
+            var count = _listeners.Count;
+            for (var i = 0; i < count; i++)
+            {
+                var listener = _listeners[i];
+                if (listener.name == name && listener.handler.Equals(handler))
+                    return;
+            }
 
             _listeners.Add((name, handler));
         }
@@ -63,8 +68,13 @@ public class EventManager
 
         lock (_listenersLock)
         {
-            if (_listeners.Any(l => l.name == name && l.handler.Equals(handler)))
-                return;
+            var count = _listeners.Count;
+            for (var i = 0; i < count; i++)
+            {
+                var listener = _listeners[i];
+                if (listener.name == name && listener.handler.Equals(handler))
+                    return;
+            }
 
             _listeners.Add((name, handler));
         }
@@ -83,8 +93,13 @@ public class EventManager
 
         lock (_listenersLock)
         {
-            if (_listeners.Any(l => l.name == name && l.handler.Equals(handler)))
-                return;
+            var count = _listeners.Count;
+            for (var i = 0; i < count; i++)
+            {
+                var listener = _listeners[i];
+                if (listener.name == name && listener.handler.Equals(handler))
+                    return;
+            }
 
             _listeners.Add((name, handler));
 
@@ -111,8 +126,13 @@ public class EventManager
 
         lock (_listenersLock)
         {
-            if (_listeners.Any(l => l.name == name && l.handler.Equals(handler)))
-                return;
+            var count = _listeners.Count;
+            for (var i = 0; i < count; i++)
+            {
+                var listener = _listeners[i];
+                if (listener.name == name && listener.handler.Equals(handler))
+                    return;
+            }
 
             _listeners.Add((name, handler));
 
@@ -188,21 +208,36 @@ public class EventManager
     /// <param name="parameters">The parameters.</param>
     public static void FireEvent(string name, params object[] parameters)
     {
+        if (string.IsNullOrWhiteSpace(name))
+            return;
+
         Delegate[] targets;
         lock (_listenersLock)
         {
-            targets = (
-                from o in _listeners
-                where o.name == name && o.handler.Method.GetParameters().Length == parameters.Length
-                select o.handler
-            ).ToArray();
+            var paramCount = parameters.Length;
+            var count = _listeners.Count;
+            var matches = new List<Delegate>(count);
+
+            for (var i = 0; i < count; i++)
+            {
+                var listener = _listeners[i];
+                if (listener.name == name && listener.handler.Method.GetParameters().Length == paramCount)
+                    matches.Add(listener.handler);
+            }
+
+            targets = matches.Count > 0 ? matches.ToArray() : null;
         }
+
+        if (targets == null)
+            return;
+
+        var isNetworkThread = Thread.CurrentThread.Name == "Network.PacketProcessor";
 
         foreach (var target in targets)
         {
             try
             {
-                if (Thread.CurrentThread.Name == "Network.PacketProcessor")
+                if (isNetworkThread)
                     EnqueueInvocation(name, target, parameters);
                 else
                     target.DynamicInvoke(parameters);
@@ -267,8 +302,14 @@ public class EventManager
             {
                 await _dispatchSignal.WaitAsync().ConfigureAwait(false);
             }
-            catch
+            catch (OperationCanceledException)
             {
+                break;
+            }
+            catch (Exception e)
+            {
+                Log.Error($"EventManager dispatch signal error: {e.Message}");
+                Thread.Sleep(100);
                 continue;
             }
 
@@ -332,7 +373,14 @@ public class EventManager
 
         lock (_listenersLock)
         {
-            return _listeners.Count(l => l.name == eventName);
+            var count = 0;
+            var listenerCount = _listeners.Count;
+            for (var i = 0; i < listenerCount; i++)
+            {
+                if (_listeners[i].name == eventName)
+                    count++;
+            }
+            return count;
         }
     }
 
@@ -353,7 +401,15 @@ public class EventManager
     {
         lock (_listenersLock)
         {
-            return _listeners.Select(l => l.name).Distinct().ToArray();
+            var uniqueNames = new HashSet<string>();
+            var count = _listeners.Count;
+            for (var i = 0; i < count; i++)
+            {
+                uniqueNames.Add(_listeners[i].name);
+            }
+            var result = new string[uniqueNames.Count];
+            uniqueNames.CopyTo(result);
+            return result;
         }
     }
 

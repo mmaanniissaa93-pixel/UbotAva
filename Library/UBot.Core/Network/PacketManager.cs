@@ -109,30 +109,35 @@ public class PacketManager
             return;
 
         IPacketHandler[] handlers;
+        var key = new PacketRouteKey(packet.Opcode, destination);
+
         lock (_handlersLock)
         {
             if (Handlers.Count == 0)
                 return;
 
-            var key = new PacketRouteKey(packet.Opcode, destination);
             if (!_handlerLookupCache.TryGetValue(key, out handlers))
             {
-                handlers = Handlers
-                    .Where(handler =>
-                        handler != null
-                        && (handler.Opcode == packet.Opcode || handler.Opcode == 0)
-                        && handler.Destination == destination
-                    )
-                    .ToArray();
+                var count = Handlers.Count;
+                var matches = new List<IPacketHandler>(count);
+                var opcode = packet.Opcode;
+
+                for (var i = 0; i < count; i++)
+                {
+                    var handler = Handlers[i];
+                    if (handler != null && (handler.Opcode == opcode || handler.Opcode == 0) && handler.Destination == destination)
+                        matches.Add(handler);
+                }
+
+                handlers = matches.ToArray();
                 _handlerLookupCache[key] = handlers;
             }
         }
 
-        foreach (
-            var handler in handlers
-        )
+        var handlerCount = handlers.Length;
+        for (var i = 0; i < handlerCount; i++)
         {
-            handler.Invoke(packet);
+            handlers[i].Invoke(packet);
             packet.SeekRead(0, SeekOrigin.Begin);
         }
     }
@@ -149,24 +154,31 @@ public class PacketManager
             return null;
 
         IPacketHook[] hooks;
+        var key = new PacketRouteKey(packet.Opcode, destination);
+
         lock (_hooksLock)
         {
-            var key = new PacketRouteKey(packet.Opcode, destination);
             if (!_hookLookupCache.TryGetValue(key, out hooks))
             {
-                hooks = Hooks
-                    .Where(hook =>
-                        hook != null
-                        && (hook.Opcode == packet.Opcode || hook.Opcode == 0)
-                        && hook.Destination == destination
-                    )
-                    .ToArray();
+                var count = Hooks.Count;
+                var matches = new List<IPacketHook>(count);
+                var opcode = packet.Opcode;
+
+                for (var i = 0; i < count; i++)
+                {
+                    var hook = Hooks[i];
+                    if (hook != null && (hook.Opcode == opcode || hook.Opcode == 0) && hook.Destination == destination)
+                        matches.Add(hook);
+                }
+
+                hooks = matches.ToArray();
                 _hookLookupCache[key] = hooks;
             }
         }
 
-        foreach (var hook in hooks)
-            packet = hook.ReplacePacket(packet);
+        var hookCount = hooks.Length;
+        for (var i = 0; i < hookCount; i++)
+            packet = hooks[i].ReplacePacket(packet);
 
         return packet;
     }
@@ -177,17 +189,29 @@ public class PacketManager
     /// <param name="packet">The packet.</param>
     internal static void CallCallback(Packet packet)
     {
+        if (packet == null)
+            return;
+
+        ushort opcode = packet.Opcode;
+        AwaitCallback[] toInvoke;
+
         lock (_lock)
         {
-            var tempCallbacks = _callbacks.Where(c => c.ResponseOpcode == packet.Opcode);
+            toInvoke = _callbacks.Where(c => c.ResponseOpcode == opcode).ToArray();
+            _callbacks.RemoveAll(c => c.IsClosed);
+        }
 
-            foreach (var callback in tempCallbacks)
+        foreach (var callback in toInvoke)
+        {
+            try
             {
                 packet.SeekRead(0, SeekOrigin.Begin);
                 callback.Invoke(packet);
             }
-
-            _callbacks.RemoveAll(c => c.IsClosed);
+            catch (Exception e)
+            {
+                Log.Error($"PacketManager.CallCallback: opcode=0x{opcode:X4}, callback={callback.GetType().Name} threw: {e.Message}");
+            }
         }
     }
 

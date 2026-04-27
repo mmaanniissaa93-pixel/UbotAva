@@ -1371,9 +1371,10 @@ namespace UBot.Core.Network
                 if (Locked)
                     throw new Exception("Cannot Write to a locked Packet.");
 
-                var bytes = Encoding.Unicode.GetBytes(value.ToString());
+                var str = value?.ToString() ?? string.Empty;
+                var bytes = Encoding.Unicode.GetBytes(str);
 
-                _writer.Write((ushort)value.ToString().Length);
+                _writer.Write((ushort)str.Length);
                 _writer.Write(bytes);
             }
         }

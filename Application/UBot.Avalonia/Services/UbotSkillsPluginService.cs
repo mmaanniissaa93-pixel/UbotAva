@@ -260,8 +260,12 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
         }
 
         return entries
-            .GroupBy(e => new { Name = e["name"]?.ToString(), GroupId = e.ContainsKey("groupId") ? (int)e["groupId"] : 0 })
-            .Select(g => g.OrderByDescending(e => e.ContainsKey("isLearned") && (bool)e["isLearned"]).First())
+            .GroupBy(e => new
+            {
+                Name = e["name"]?.ToString(),
+                GroupId = GetGroupIdFromEntry(e)
+            })
+            .Select(g => g.OrderByDescending(e => GetIsLearnedFromEntry(e)).First())
             .OrderBy(row => row.TryGetValue("name", out var n) ? n?.ToString() : string.Empty, StringComparer.OrdinalIgnoreCase)
             .ThenBy(row => row.TryGetValue("id", out var id) && id is uint u ? u : 0)
             .ToList();
@@ -421,6 +425,36 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
         if (skillId == 0) return 0;
         var info = Game.Player?.Skills?.GetSkillInfoById(skillId);
         return info?.Id ?? skillId;
+    }
+
+    private static int GetGroupIdFromEntry(Dictionary<string, object?> entry)
+    {
+        if (!entry.TryGetValue("groupId", out var value) || value == null)
+            return 0;
+
+        return value switch
+        {
+            int i => i,
+            long l => (int)l,
+            short s => s,
+            byte b => b,
+            _ => 0
+        };
+    }
+
+    private static bool GetIsLearnedFromEntry(Dictionary<string, object?> entry)
+    {
+        if (!entry.TryGetValue("isLearned", out var value) || value == null)
+            return false;
+
+        return value switch
+        {
+            bool b => b,
+            int i => i != 0,
+            long l => l != 0,
+            string s => s.Equals("true", StringComparison.OrdinalIgnoreCase) || s == "1",
+            _ => false
+        };
     }
 }
 

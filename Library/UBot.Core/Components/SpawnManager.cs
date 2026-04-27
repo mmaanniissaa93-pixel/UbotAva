@@ -110,9 +110,16 @@ public static class SpawnManager
     {
         lock (_lock)
         {
-            entities = _entities.FindAll(p => p is T).Cast<T>();
+            var result = new List<T>();
+            var count = _entities.Count;
+            for (var i = 0; i < count; i++)
+            {
+                if (_entities[i] is T entity)
+                    result.Add(entity);
+            }
 
-            return entities != null;
+            entities = result;
+            return result.Count > 0;
         }
     }
 
@@ -128,9 +135,16 @@ public static class SpawnManager
     {
         lock (_lock)
         {
-            entities = _entities.FindAll(p => p is T entityT && predicate(entityT)).Cast<T>();
+            var result = new List<T>();
+            var count = _entities.Count;
+            for (var i = 0; i < count; i++)
+            {
+                if (_entities[i] is T entity && predicate(entity))
+                    result.Add(entity);
+            }
 
-            return entities != null;
+            entities = result;
+            return result.Count > 0;
         }
     }
 
