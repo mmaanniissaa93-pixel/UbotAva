@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using UBot.Core.Components;
 using UBot.Core.Event;
@@ -52,7 +53,7 @@ public class Bot
         TokenSource = new CancellationTokenSource();
 
         Task.Factory.StartNew(
-            async e =>
+            async _ =>
             {
                 Running = true;
 
@@ -67,7 +68,15 @@ public class Bot
                         continue;
                     }
 
-                    Botbase.Tick();
+                    try
+                    {
+                        Botbase.Tick();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error($"Botbase.Tick() exception: {Botbase?.GetType().Name ?? "null"}: {ex.Message}");
+                    }
+
                     await Task.Delay(100);
                 }
             },

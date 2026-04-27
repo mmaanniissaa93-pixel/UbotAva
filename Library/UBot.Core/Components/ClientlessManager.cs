@@ -46,17 +46,24 @@ public class ClientlessManager
     /// </summary>
     private static async void OnAgentServerDisconnected()
     {
-        if (!Game.Clientless)
-            return;
+        try
+        {
+            if (!Game.Clientless)
+                return;
 
-        int delay = 10000;
-        if (GlobalConfig.Get("UBot.General.EnableWaitAfterDC", false))
-            delay = GlobalConfig.Get<int>("UBot.General.WaitAfterDC") * 60 * 1000;
+            int delay = 10000;
+            if (GlobalConfig.Get("UBot.General.EnableWaitAfterDC", false))
+                delay = GlobalConfig.Get<int>("UBot.General.WaitAfterDC") * 60 * 1000;
 
-        Log.Warn($"Attempting relogin in {delay / 1000} seconds...");
-        await Task.Delay(delay);
+            Log.Warn($"Attempting relogin in {delay / 1000} seconds...");
+            await Task.Delay(delay);
 
-        Game.Start();
+            Game.Start();
+        }
+        catch (Exception e)
+        {
+            Log.Error($"OnAgentServerDisconnected failed: {e.Message}");
+        }
     }
 
     /// <summary>
@@ -75,11 +82,18 @@ public class ClientlessManager
     /// </summary>
     private static async void KeepAlivePacketWorker()
     {
-        while (Kernel.Proxy.IsConnectedToAgentserver)
+        try
         {
-            await Task.Delay(10000);
+            while (Kernel.Proxy.IsConnectedToAgentserver)
+            {
+                await Task.Delay(10000);
 
-            PacketManager.SendPacket(new Packet(0x2002), PacketDestination.Server);
+                PacketManager.SendPacket(new Packet(0x2002), PacketDestination.Server);
+            }
+        }
+        catch (Exception e)
+        {
+            Log.Error($"KeepAlivePacketWorker failed: {e.Message}");
         }
     }
 }
