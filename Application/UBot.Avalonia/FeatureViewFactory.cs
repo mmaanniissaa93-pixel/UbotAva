@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Threading.Tasks;
 using UBot.Avalonia.Features;
 using UBot.Avalonia.Features.Alchemy;
 using UBot.Avalonia.Features.AutoDungeon;
@@ -56,6 +57,14 @@ public sealed class FeatureViewFactory
         vm.Attach(pluginId);
         _cache[pluginId] = (view, vm);
         return view;
+    }
+
+    public async Task RefreshConfigAsync(string pluginId)
+    {
+        if (!_cache.TryGetValue(pluginId, out var cached)) return;
+        await cached.Vm.LoadConfigAsync();
+        if (cached.View is TrainingFeatureView training)
+            training.RefreshFromConfig();
     }
 
     public void UpdateState(string pluginId, JsonElement state)

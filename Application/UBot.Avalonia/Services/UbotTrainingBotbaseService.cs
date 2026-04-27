@@ -107,7 +107,7 @@ internal sealed class UbotTrainingBotbaseService : UbotServiceBase
         }
 
         if (changed)
-            EventManager.FireEvent("OnSavePlayerConfig");
+            PlayerConfig.Save();
 
         return changed;
     }

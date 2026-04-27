@@ -310,6 +310,9 @@ public partial class MainWindow : Window
         ContentHost.Content = view;
         ApplyLanguageToActiveViewDeferred();
 
+        if (id == "UBot.Training")
+            _ = _factory.RefreshConfigAsync(id);
+
         if (view is CommandCenterFeatureView commandCenterView)
             commandCenterView.OpenPopup(this);
     }
