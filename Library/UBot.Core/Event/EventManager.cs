@@ -18,7 +18,7 @@ public class EventManager
         "OnChangeStatusText"
     };
 
-    private static readonly List<(string name, Delegate handler)> _listeners = new();
+    private static readonly List<(string name, Delegate handler, int parameterCount)> _listeners = new();
     private static readonly object _listenersLock = new();
     private static readonly ConcurrentQueue<QueuedInvocation> _dispatchQueue = new();
     private static readonly ConcurrentDictionary<object, List<(string name, Delegate handler)>> _ownerListeners = new();
@@ -42,6 +42,8 @@ public class EventManager
         if (handler == null)
             return;
 
+        var paramCount = handler.Method.GetParameters().Length;
+
         lock (_listenersLock)
         {
             var count = _listeners.Count;
@@ -52,7 +54,7 @@ public class EventManager
                     return;
             }
 
-            _listeners.Add((name, handler));
+            _listeners.Add((name, handler, paramCount));
         }
     }
 
@@ -66,6 +68,8 @@ public class EventManager
         if (handler == null)
             return;
 
+        var paramCount = handler.Method.GetParameters().Length;
+
         lock (_listenersLock)
         {
             var count = _listeners.Count;
@@ -76,7 +80,7 @@ public class EventManager
                     return;
             }
 
-            _listeners.Add((name, handler));
+            _listeners.Add((name, handler, paramCount));
         }
     }
 
@@ -91,6 +95,8 @@ public class EventManager
         if (string.IsNullOrWhiteSpace(name) || handler == null || owner == null)
             return;
 
+        var paramCount = handler.Method.GetParameters().Length;
+
         lock (_listenersLock)
         {
             var count = _listeners.Count;
@@ -101,7 +107,7 @@ public class EventManager
                     return;
             }
 
-            _listeners.Add((name, handler));
+            _listeners.Add((name, handler, paramCount));
 
             if (!_ownerListeners.TryGetValue(owner, out var ownerList))
             {
@@ -124,6 +130,8 @@ public class EventManager
         if (string.IsNullOrWhiteSpace(name) || handler == null || owner == null)
             return;
 
+        var paramCount = handler.Method.GetParameters().Length;
+
         lock (_listenersLock)
         {
             var count = _listeners.Count;
@@ -134,7 +142,7 @@ public class EventManager
                     return;
             }
 
-            _listeners.Add((name, handler));
+            _listeners.Add((name, handler, paramCount));
 
             if (!_ownerListeners.TryGetValue(owner, out var ownerList))
             {
@@ -221,7 +229,7 @@ public class EventManager
             for (var i = 0; i < count; i++)
             {
                 var listener = _listeners[i];
-                if (listener.name == name && listener.handler.Method.GetParameters().Length == paramCount)
+                if (listener.name == name && listener.parameterCount == paramCount)
                     matches.Add(listener.handler);
             }
 
