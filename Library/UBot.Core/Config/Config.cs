@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -31,21 +32,8 @@ public class Config
         _config = new ConcurrentDictionary<string, string>();
         foreach (var line in File.ReadAllLines(_path))
         {
-            if (string.IsNullOrWhiteSpace(line))
-                continue;
-
-            var valueStart = line.IndexOf('{');
-            if (valueStart <= 0)
-                continue;
-
-            var valueEnd = line.IndexOf('}', valueStart + 1);
-            if (valueEnd <= valueStart)
-                continue;
-
-            var key = line[..valueStart];
-            var value = line[(valueStart + 1)..valueEnd];
-
-            _config.TryAdd(key, value);
+            if (TryParseLine(line, out var key, out var value))
+                _config.TryAdd(key, value);
         }
     }
 
@@ -75,7 +63,7 @@ public class Config
     public T Get<T>(string key, T defaultValue = default)
     {
         if (!_isLoaded)
-            return (T)Convert.ChangeType(false, typeof(T));
+            return (T)Convert.ChangeType(false, typeof(T), CultureInfo.InvariantCulture);
 
         if (!_config.ContainsKey(key))
         {
@@ -88,7 +76,7 @@ public class Config
         if (string.IsNullOrEmpty(value))
             return defaultValue;
 
-        return (T)Convert.ChangeType(value, typeof(T));
+        return (T)Convert.ChangeType(value, typeof(T), CultureInfo.InvariantCulture);
     }
 
     /// <summary>
@@ -109,8 +97,8 @@ public class Config
         }
 
         TEnum result;
-        if (!Enum.TryParse(value, out result))
-            return default;
+        if (!Enum.TryParse(value, true, out result))
+            return defaultValue;
 
         return result;
     }
@@ -122,7 +110,7 @@ public class Config
     /// <param name="value">The value.</param>
     public void Set<T>(string key, T value)
     {
-        var setValue = value == null ? string.Empty : value.ToString();
+        var setValue = value == null ? string.Empty : Convert.ToString(value, CultureInfo.InvariantCulture);
         _config.AddOrUpdate(key, setValue, (k, v) => setValue);
     }
 
@@ -159,7 +147,7 @@ public class Config
             index++;
         }
 
-        File.WriteAllLines(_path, serializedConfig);
+        WriteAllLinesAtomic(_path, serializedConfig);
     }
 
     /// <summary>
@@ -173,7 +161,7 @@ public class Config
         if (values == null)
             return;
 
-        Set(key, string.Join(delimiter, values));
+        Set(key, string.Join(delimiter, values.Select(value => Convert.ToString(value, CultureInfo.InvariantCulture))));
     }
 
     /// <summary>
@@ -195,7 +183,7 @@ public class Config
         if (data == null || data.Length == 0)
             return new T[] { };
 
-        return data?.Select(p => (T)Convert.ChangeType(p, typeof(T))).ToArray();
+        return data?.Select(p => (T)Convert.ChangeType(p, typeof(T), CultureInfo.InvariantCulture)).ToArray();
     }
 
     /// <summary>
@@ -213,6 +201,66 @@ public class Config
         if (data == null || data.Length == 0)
             return new TEnum[] { };
 
-        return data?.Select(p => Enum.Parse<TEnum>(p)).ToArray();
+        return data?.Select(p => Enum.Parse<TEnum>(p, true)).ToArray();
+    }
+
+    private static bool TryParseLine(string line, out string key, out string value)
+    {
+        key = string.Empty;
+        value = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(line))
+            return false;
+
+        var valueStart = line.IndexOf('{');
+        if (valueStart <= 0)
+            return false;
+
+        var valueEnd = line.LastIndexOf('}');
+        if (valueEnd <= valueStart)
+            return false;
+
+        key = line[..valueStart];
+        value = line[(valueStart + 1)..valueEnd];
+        return true;
+    }
+
+    private static void WriteAllLinesAtomic(string path, string[] lines)
+    {
+        var directory = Path.GetDirectoryName(path);
+        var tempPath = Path.Combine(
+            string.IsNullOrWhiteSpace(directory) ? Environment.CurrentDirectory : directory,
+            $"{Path.GetFileName(path)}.{Guid.NewGuid():N}.tmp"
+        );
+
+        try
+        {
+            File.WriteAllLines(tempPath, lines);
+
+            if (File.Exists(path))
+            {
+                try
+                {
+                    File.Replace(tempPath, path, null);
+                    return;
+                }
+                catch (PlatformNotSupportedException)
+                {
+                }
+                catch (IOException)
+                {
+                }
+                catch (UnauthorizedAccessException)
+                {
+                }
+            }
+
+            File.Move(tempPath, path, true);
+        }
+        finally
+        {
+            if (File.Exists(tempPath))
+                File.Delete(tempPath);
+        }
     }
 }

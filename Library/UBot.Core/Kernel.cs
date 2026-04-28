@@ -12,10 +12,16 @@ namespace UBot.Core;
 
 public static class Kernel
 {
+    private static readonly object _lifecycleLock = new();
+    private static bool _initialized;
+    private static bool _networkHandlersRegistered;
+
     /// <summary>
     ///     The updater token source
     /// </summary>
     private static CancellationTokenSource _updaterTokenSource;
+
+    private static Task _updaterTask;
 
     /// <summary>
     ///     Gets the proxy.
@@ -83,22 +89,71 @@ public static class Kernel
     /// </summary>
     public static void Initialize()
     {
-        Bot = new Bot();
+        lock (_lifecycleLock)
+        {
+            if (_initialized)
+                return;
 
-        //Network handlers/hooks
-        NetworkHandlerRegistry.RegisterAll();
+            Bot ??= new Bot();
 
-        _updaterTokenSource = new CancellationTokenSource();
+            // Network handlers/hooks are process-wide registrations.
+            if (!_networkHandlersRegistered)
+            {
+                NetworkHandlerRegistry.RegisterAll();
+                _networkHandlersRegistered = true;
+            }
 
-        Task.Factory.StartNew(
-            ComponentUpdaterAsync,
-            _updaterTokenSource.Token,
-            TaskCreationOptions.LongRunning,
-            TaskScheduler.Current
-        );
+            _updaterTokenSource = new CancellationTokenSource();
+            _updaterTask = Task.Run(() => ComponentUpdaterAsync(_updaterTokenSource.Token));
+            _initialized = true;
+        }
     }
 
-    private static async Task ComponentUpdaterAsync()
+    public static void Shutdown()
+    {
+        CancellationTokenSource tokenSource;
+        Task updaterTask;
+
+        lock (_lifecycleLock)
+        {
+            if (!_initialized)
+                return;
+
+            tokenSource = _updaterTokenSource;
+            updaterTask = _updaterTask;
+            _updaterTokenSource = null;
+            _updaterTask = null;
+            _initialized = false;
+        }
+
+        try
+        {
+            ClientlessManager.Shutdown();
+
+            tokenSource?.Cancel();
+
+            if (updaterTask != null && !updaterTask.Wait(TimeSpan.FromSeconds(2)))
+                Log.Warn("Kernel updater did not stop within the shutdown timeout.");
+        }
+        catch (AggregateException ex) when (ex.InnerExceptions.All(e => e is OperationCanceledException))
+        {
+            // Expected during shutdown.
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected during shutdown.
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"Kernel shutdown failed while stopping updater: {ex.Message}");
+        }
+        finally
+        {
+            tokenSource?.Dispose();
+        }
+    }
+
+    private static async Task ComponentUpdaterAsync(CancellationToken cancellationToken)
     {
         var cachedTickCount = Environment.TickCount & int.MaxValue;
         var lastTick = cachedTickCount;
@@ -111,83 +166,90 @@ public static class Kernel
         var totalTickDurationMs = 0L;
         var maxTickDurationMs = 0L;
 
-        while (!_updaterTokenSource.IsCancellationRequested)
+        try
         {
-            await Task.Delay(10);
-
-            cachedTickCount = Environment.TickCount & int.MaxValue;
-
-            if (cachedTickCount - lastClockTick >= 1000)
+            while (!cancellationToken.IsCancellationRequested)
             {
-                lastClockTick = cachedTickCount;
-                EventManager.FireEvent("OnClock");
-            }
+                await Task.Delay(10, cancellationToken).ConfigureAwait(false);
 
-            if (!Game.Ready)
-            {
-                lastTick = cachedTickCount;
-                playerMissingWhileReadyNotified = false;
-                continue;
-            }
+                cachedTickCount = Environment.TickCount & int.MaxValue;
 
-            try
-            {
-                tickStopwatch.Restart();
-
-                var elapsed = cachedTickCount - lastTick;
-                var player = Game.Player;
-
-                if (player == null)
+                if (cachedTickCount - lastClockTick >= 1000)
                 {
-                    if (!playerMissingWhileReadyNotified)
-                    {
-                        Log.Debug("ComponentUpdater skipped: game is marked ready but player is not initialized yet.");
-                        playerMissingWhileReadyNotified = true;
-                    }
+                    lastClockTick = cachedTickCount;
+                    EventManager.FireEvent("OnClock");
+                }
 
+                if (!Game.Ready)
+                {
                     lastTick = cachedTickCount;
+                    playerMissingWhileReadyNotified = false;
                     continue;
                 }
-                playerMissingWhileReadyNotified = false;
 
-                player.Update(elapsed);
-                player.Transport?.Update(elapsed);
-                player.JobTransport?.Update(elapsed);
-                player.AbilityPet?.Update(elapsed);
-                player.Growth?.Update(elapsed);
-                player.Fellow?.Update(elapsed);
-
-                SpawnManager.Update(elapsed);
-
-                EventManager.FireEvent("OnTick");
-
-                tickStopwatch.Stop();
-                var tickDuration = tickStopwatch.ElapsedMilliseconds;
-                tickCount++;
-                totalTickDurationMs += tickDuration;
-                if (tickDuration > maxTickDurationMs)
-                    maxTickDurationMs = tickDuration;
-
-                lastTick = cachedTickCount;
-
-                if (cachedTickCount - lastPerfLogTick >= 30000)
+                try
                 {
-                    var avgTickDuration = tickCount > 0 ? totalTickDurationMs / tickCount : 0;
-                    var onTickListenerCount = EventManager.GetListenerCount("OnTick");
-                    Log.Debug(
-                        $"[PerfTick] Ticks=[{tickCount}], AvgDuration=[{avgTickDuration}ms], MaxDuration=[{maxTickDurationMs}ms], " +
-                        $"OnTickListeners=[{onTickListenerCount}], ElapsedSinceLastLog=[{(cachedTickCount - lastPerfLogTick) / 1000}s]");
+                    tickStopwatch.Restart();
 
-                    tickCount = 0;
-                    totalTickDurationMs = 0;
-                    maxTickDurationMs = 0;
-                    lastPerfLogTick = cachedTickCount;
+                    var elapsed = cachedTickCount - lastTick;
+                    var player = Game.Player;
+
+                    if (player == null)
+                    {
+                        if (!playerMissingWhileReadyNotified)
+                        {
+                            Log.Debug("ComponentUpdater skipped: game is marked ready but player is not initialized yet.");
+                            playerMissingWhileReadyNotified = true;
+                        }
+
+                        lastTick = cachedTickCount;
+                        continue;
+                    }
+                    playerMissingWhileReadyNotified = false;
+
+                    player.Update(elapsed);
+                    player.Transport?.Update(elapsed);
+                    player.JobTransport?.Update(elapsed);
+                    player.AbilityPet?.Update(elapsed);
+                    player.Growth?.Update(elapsed);
+                    player.Fellow?.Update(elapsed);
+
+                    SpawnManager.Update(elapsed);
+
+                    EventManager.FireEvent("OnTick");
+
+                    tickStopwatch.Stop();
+                    var tickDuration = tickStopwatch.ElapsedMilliseconds;
+                    tickCount++;
+                    totalTickDurationMs += tickDuration;
+                    if (tickDuration > maxTickDurationMs)
+                        maxTickDurationMs = tickDuration;
+
+                    lastTick = cachedTickCount;
+
+                    if (cachedTickCount - lastPerfLogTick >= 30000)
+                    {
+                        var avgTickDuration = tickCount > 0 ? totalTickDurationMs / tickCount : 0;
+                        var onTickListenerCount = EventManager.GetListenerCount("OnTick");
+                        Log.Debug(
+                            $"[PerfTick] Ticks=[{tickCount}], AvgDuration=[{avgTickDuration}ms], MaxDuration=[{maxTickDurationMs}ms], " +
+                            $"OnTickListeners=[{onTickListenerCount}], ElapsedSinceLastLog=[{(cachedTickCount - lastPerfLogTick) / 1000}s]");
+
+                        tickCount = 0;
+                        totalTickDurationMs = 0;
+                        maxTickDurationMs = 0;
+                        lastPerfLogTick = cachedTickCount;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.Fatal(e);
                 }
             }
-            catch (Exception e)
-            {
-                Log.Fatal(e);
-            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // Expected during shutdown.
         }
     }
 }

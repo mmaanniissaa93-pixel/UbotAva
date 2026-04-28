@@ -30,7 +30,7 @@ public class Server : NetBase
     /// </summary>
     /// <param name="ip">The ip.</param>
     /// <param name="port">The port.</param>
-    public void Connect(string ip, ushort port)
+    public bool Connect(string ip, ushort port)
     {
         IP = ip;
         Port = port;
@@ -51,11 +51,11 @@ public class Server : NetBase
 
                 if (ProxyConfig.TryGetProxy(ip, port, out var proxyConfig))
                 {
-                    if (!_socket.ConnectViaProxy(proxyConfig).Result)
+                    if (!_socket.ConnectViaProxy(proxyConfig).GetAwaiter().GetResult())
                     {
-                        Log.Warn("Proxy receiving has timeout!");
+                        Log.Warn($"Proxy connection to {ip}:{port} timed out.");
                         Disconnect();
-                        return;
+                        return false;
                     }
                 }
                 else
@@ -65,22 +65,22 @@ public class Server : NetBase
             }
             catch (AggregateException s)
             {
-                Log.Error(s.Message);
+                Log.Error($"Could not establish a proxy connection to {ip}:{port}: {s.GetBaseException().Message}");
                 Disconnect();
-                return;
+                return false;
             }
             catch (SocketProxyException s)
             {
-                Log.Error(s.Message);
+                Log.Error($"Could not establish a proxy connection to {ip}:{port}: {s.Message}");
                 Disconnect();
-                return;
+                return false;
             }
             catch (SocketException s)
             {
                 Log.Error($"Could not establish a connection to {ip}:{port}.");
                 Log.Error(s.Message);
                 Disconnect();
-                return;
+                return false;
             }
 
             StartNetWorker();
@@ -93,8 +93,14 @@ public class Server : NetBase
 
             EventManager.FireEvent("OnServerConnected");
             Log.Debug("Server connection established!");
+            return true;
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Log.Error($"Server.Connect failed for {ip}:{port}: {ex.Message}");
+            Disconnect();
+            return false;
+        }
     }
 
     /// <summary>
@@ -123,6 +129,8 @@ public class Server : NetBase
         {
             if (se.SocketErrorCode == SocketError.ConnectionReset) //Client OnDisconnected > Mostly occurs during GW->AS switch
                 OnDisconnected();
+            else
+                Log.Warn($"Server receive failed [{IP}:{Port}] with socket error {se.SocketErrorCode}: {se.Message}");
         }
         catch (HandshakeSecurityException)
         {
@@ -138,6 +146,7 @@ public class Server : NetBase
             }
             catch
             {
+                Log.Warn($"Server failed to continue receiving from {IP}:{Port}.");
                 OnDisconnected();
             }
         }
@@ -162,13 +171,15 @@ public class Server : NetBase
                 _socket.Close();
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Log.Warn($"Server disconnect failed [{IP}:{Port}]: {ex.Message}");
+        }
         finally
         {
             _socket = null;
             OnDisconnected();
+            IsClosing = false;
         }
-
-        IsClosing = false;
     }
 }

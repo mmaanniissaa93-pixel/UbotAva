@@ -31,7 +31,10 @@ public class Client() : NetBase(isClient: true)
             _listener.Listen(1);
             _listener.BeginAccept(OnClientConnect, null);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Log.Error($"Client listen failed on 127.0.0.1:{port}: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -48,7 +51,10 @@ public class Client() : NetBase(isClient: true)
 
             _listener.BeginAccept(OnClientConnect, null);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Log.Warn($"Client failed to return to listening state: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -83,7 +89,10 @@ public class Client() : NetBase(isClient: true)
             _protocol = null;
             _dispatcherThread = null;
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Log.Warn($"Client shutdown failed: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -107,8 +116,9 @@ public class Client() : NetBase(isClient: true)
 
             OnConnected();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Log.Warn($"Client accept failed: {ex.Message}");
             OnDisconnected();
             Listen();
         }
@@ -145,6 +155,10 @@ public class Client() : NetBase(isClient: true)
 
                 Listen();
             }
+            else
+            {
+                Log.Warn($"Client receive failed with socket error {se.SocketErrorCode}: {se.Message}");
+            }
         }
         catch (HandshakeSecurityException)
         {
@@ -159,7 +173,10 @@ public class Client() : NetBase(isClient: true)
                 if (receivedSize != 0 && _socket != null && _socket.Connected)
                     _socket.BeginReceive(_buffer, 0, _buffer.Length, SocketFlags.None, OnBeginReceiveCallback, null);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Log.Warn($"Client failed to continue receiving: {ex.Message}");
+            }
         }
     }
 }

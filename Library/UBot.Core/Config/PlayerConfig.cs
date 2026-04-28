@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using UBot.Core.Components;
@@ -23,6 +24,12 @@ public static class PlayerConfig
     /// <param name="file">The config file path</param>
     public static void Load(string charName)
     {
+        if (!string.IsNullOrWhiteSpace(charName)
+            && !string.Equals(ProfileManager.SelectedCharacter, charName, StringComparison.Ordinal))
+        {
+            ProfileManager.SelectedCharacter = charName;
+        }
+
         if (!Directory.Exists(_configDirectory))
             Directory.CreateDirectory(_configDirectory);
 

@@ -34,6 +34,26 @@ public class PacketManager
     /// </summary>
     private static readonly List<AwaitCallback> _callbacks = new();
 
+    internal static int PendingCallbackCount
+    {
+        get
+        {
+            lock (_lock)
+                return _callbacks.Count;
+        }
+    }
+
+    internal static void RemoveCallback(AwaitCallback callback)
+    {
+        if (callback == null)
+            return;
+
+        lock (_lock)
+        {
+            _callbacks.Remove(callback);
+        }
+    }
+
     /// <summary>
     ///     Registers the handler.
     /// </summary>
@@ -45,6 +65,9 @@ public class PacketManager
 
         lock (_handlersLock)
         {
+            if (Handlers.Contains(handler))
+                return;
+
             Handlers.Add(handler);
             _handlerLookupCache.Clear();
         }
@@ -77,6 +100,9 @@ public class PacketManager
 
         lock (_hooksLock)
         {
+            if (Hooks.Contains(hook))
+                return;
+
             Hooks.Add(hook);
             _hookLookupCache.Clear();
         }
@@ -178,7 +204,12 @@ public class PacketManager
 
         var hookCount = hooks.Length;
         for (var i = 0; i < hookCount; i++)
+        {
+            if (packet == null)
+                break;
+
             packet = hooks[i].ReplacePacket(packet);
+        }
 
         return packet;
     }
@@ -197,8 +228,8 @@ public class PacketManager
 
         lock (_lock)
         {
+            _callbacks.RemoveAll(c => c == null || c.IsClosed);
             toInvoke = _callbacks.Where(c => c.ResponseOpcode == opcode).ToArray();
-            _callbacks.RemoveAll(c => c.IsClosed);
         }
 
         foreach (var callback in toInvoke)
@@ -212,6 +243,11 @@ public class PacketManager
             {
                 Log.Error($"PacketManager.CallCallback: opcode=0x{opcode:X4}, callback={callback.GetType().Name} threw: {e.Message}");
             }
+        }
+
+        lock (_lock)
+        {
+            _callbacks.RemoveAll(c => c == null || c.IsClosed);
         }
     }
 
@@ -259,9 +295,18 @@ public class PacketManager
         if (Kernel.Proxy == null)
             return;
 
-        lock (_lock)
+        if (callbacks != null && callbacks.Length > 0)
         {
-            _callbacks.AddRange(callbacks);
+            lock (_lock)
+            {
+                _callbacks.RemoveAll(c => c == null || c.IsClosed);
+
+                foreach (var callback in callbacks)
+                {
+                    if (callback != null && !callback.IsClosed && !_callbacks.Contains(callback))
+                        _callbacks.Add(callback);
+                }
+            }
         }
 
         SendPacket(packet, destination);

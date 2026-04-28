@@ -95,35 +95,43 @@ public class Proxy
         _agentPort = 0;
         _gatewayIp = null;
         _gatewayPort = 0;
+        _pendingServerConnectionTarget = ServerConnectionTarget.None;
+        ClientConnected = false;
+        IsConnectedToAgentserver = false;
+        IsConnectedToGatewayserver = false;
     }
 
     /// <summary>
     ///     Connects to gatewayserver.
     /// </summary>
-    private void ConnectToGatewayserver()
+    private bool ConnectToGatewayserver()
     {
         Log.Notify($"Connecting to gateway server [{_gatewayIp}:{_gatewayPort}]...");
 
         CreateNewServerInstance();
+        _pendingServerConnectionTarget = ServerConnectionTarget.Gateway;
 
-        IsConnectedToAgentserver = false;
-        IsConnectedToGatewayserver = true;
+        if (Server.Connect(_gatewayIp, _gatewayPort))
+            return true;
 
-        Server.Connect(_gatewayIp, _gatewayPort);
+        _pendingServerConnectionTarget = ServerConnectionTarget.None;
+        return false;
     }
 
     /// <summary>
     ///     Connects to agentserver.
     /// </summary>
-    private void ConnectToAgentserver()
+    private bool ConnectToAgentserver()
     {
         Log.Notify($"Connecting to agentserver [{_agentIp}:{_agentPort}]...");
         CreateNewServerInstance();
+        _pendingServerConnectionTarget = ServerConnectionTarget.Agent;
 
-        IsConnectedToGatewayserver = false;
-        IsConnectedToAgentserver = true;
+        if (Server.Connect(_agentIp, _agentPort))
+            return true;
 
-        Server.Connect(_agentIp, _agentPort);
+        _pendingServerConnectionTarget = ServerConnectionTarget.None;
+        return false;
     }
 
     /// <summary>
@@ -198,6 +206,14 @@ public class Proxy
     private ushort _agentPort;
     private string _gatewayIp;
     private ushort _gatewayPort;
+    private ServerConnectionTarget _pendingServerConnectionTarget;
+
+    private enum ServerConnectionTarget
+    {
+        None,
+        Gateway,
+        Agent
+    }
 
     #endregion Fields
 
@@ -300,10 +316,27 @@ public class Proxy
     /// </summary>
     private void Server_OnConnected()
     {
-        if (IsConnectedToGatewayserver)
-            EventManager.FireEvent("OnGatewayServerConntected");
-        else if (IsConnectedToAgentserver)
-            EventManager.FireEvent("OnAgentServerConnected");
+        switch (_pendingServerConnectionTarget)
+        {
+            case ServerConnectionTarget.Gateway:
+                IsConnectedToGatewayserver = true;
+                IsConnectedToAgentserver = false;
+                _pendingServerConnectionTarget = ServerConnectionTarget.None;
+                EventManager.FireEvent("OnGatewayServerConnected");
+                EventManager.FireEvent("OnGatewayServerConntected");
+                break;
+
+            case ServerConnectionTarget.Agent:
+                IsConnectedToGatewayserver = false;
+                IsConnectedToAgentserver = true;
+                _pendingServerConnectionTarget = ServerConnectionTarget.None;
+                EventManager.FireEvent("OnAgentServerConnected");
+                break;
+
+            default:
+                Log.Warn("Server connected without a pending gateway/agent target.");
+                break;
+        }
     }
 
     #endregion Server

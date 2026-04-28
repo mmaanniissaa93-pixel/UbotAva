@@ -120,6 +120,15 @@ internal static class Program
 
         try
         {
+            Kernel.Shutdown();
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"Final shutdown failed while stopping kernel: {ex.Message}");
+        }
+
+        try
+        {
             Kernel.Proxy?.Shutdown();
             ClientManager.Kill();
         }

@@ -137,8 +137,9 @@ public class NetBase(bool isClient = false)
                     Thread.Sleep(1);
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Log.Debug($"Packet processor loop failed: {ex.Message}");
                 Thread.Sleep(10);
             }
         }
@@ -169,7 +170,10 @@ public class NetBase(bool isClient = false)
                     {
                         OnPacketReceived(packet);
                     }
-                    catch (Exception) { }
+                    catch (Exception ex)
+                    {
+                        Log.Warn($"Packet receive handler failed for opcode 0x{packet.Opcode:X4}: {ex.Message}");
+                    }
                 }
             }
 
@@ -185,7 +189,10 @@ public class NetBase(bool isClient = false)
                 _socket.Send(buffer);
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Log.Debug($"ProcessQueuedPackets failed: {ex.Message}");
+        }
     }
 
     /// <summary>

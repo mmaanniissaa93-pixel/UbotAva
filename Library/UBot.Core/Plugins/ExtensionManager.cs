@@ -627,19 +627,7 @@ public class ExtensionManager
 
             plugin.Enabled = true;
 
-            // Re-register packet handlers
-            if (PluginHandlers.ContainsKey(internalName))
-            {
-                foreach (var handler in PluginHandlers[internalName])
-                    PacketManager.RegisterHandler(handler);
-            }
-
-            // Re-register packet hooks
-            if (PluginHooks.ContainsKey(internalName))
-            {
-                foreach (var hook in PluginHooks[internalName])
-                    PacketManager.RegisterHook(hook);
-            }
+            RegisterPluginPacketRegistrations(internalName);
 
             SaveDisabledPlugins(); // Save state
             EventManager.FireEvent("OnPluginEnabled", plugin);
@@ -699,19 +687,7 @@ public class ExtensionManager
 
             plugin.Enabled = false;
 
-            // Unregister packet handlers
-            if (PluginHandlers.ContainsKey(internalName))
-            {
-                foreach (var handler in PluginHandlers[internalName])
-                    PacketManager.RemoveHandler(handler);
-            }
-
-            // Unregister packet hooks
-            if (PluginHooks.ContainsKey(internalName))
-            {
-                foreach (var hook in PluginHooks[internalName])
-                    PacketManager.RemoveHook(hook);
-            }
+            RemovePluginPacketRegistrations(internalName);
 
             SaveDisabledPlugins(); // Save state
             EventManager.FireEvent("OnPluginDisabled", plugin);
@@ -859,6 +835,8 @@ public class ExtensionManager
                 _initializedExtensions.Remove(plugin.Name);
 
             // Remove handlers and hooks
+            RemovePluginPacketRegistrations(internalName);
+
             if (PluginHandlers.ContainsKey(internalName))
                 PluginHandlers.Remove(internalName);
 
@@ -1063,11 +1041,7 @@ public class ExtensionManager
 
         try
         {
-            if (PluginHandlers.ContainsKey(internalName))
-            {
-                foreach (var handler in PluginHandlers[internalName])
-                    PacketManager.RemoveHandler(handler);
-            }
+            RemovePluginPacketRegistrations(internalName);
         }
         catch (Exception ex)
         {
@@ -1078,23 +1052,84 @@ public class ExtensionManager
                 $"Message=[{ex.Message}], StackTrace=[{ex.StackTrace}]");
         }
 
-        try
+        return success;
+    }
+
+    private static void RegisterPluginPacketRegistrations(string internalName)
+    {
+        if (PluginHandlers.TryGetValue(internalName, out var handlers))
         {
-            if (PluginHooks.ContainsKey(internalName))
+            foreach (var handler in handlers)
+                PacketManager.RegisterHandler(handler);
+        }
+
+        if (PluginHooks.TryGetValue(internalName, out var hooks))
+        {
+            foreach (var hook in hooks)
+                PacketManager.RegisterHook(hook);
+        }
+    }
+
+    private static void RemovePluginPacketRegistrations(string internalName)
+    {
+        if (PluginHandlers.TryGetValue(internalName, out var handlers))
+        {
+            foreach (var handler in handlers)
             {
-                foreach (var hook in PluginHooks[internalName])
+                if (!HasEnabledPeerUsingHandler(internalName, handler))
+                    PacketManager.RemoveHandler(handler);
+            }
+        }
+
+        if (PluginHooks.TryGetValue(internalName, out var hooks))
+        {
+            foreach (var hook in hooks)
+            {
+                if (!HasEnabledPeerUsingHook(internalName, hook))
                     PacketManager.RemoveHook(hook);
             }
         }
-        catch (Exception ex)
+    }
+
+    private static bool HasEnabledPeerUsingHandler(string internalName, IPacketHandler handler)
+    {
+        if (handler == null)
+            return false;
+
+        foreach (var entry in PluginHandlers)
         {
-            success = false;
-            Log.Error(
-                $"Operation=[CleanupPluginHooks], Plugin=[{extension.Title}], InternalName=[{internalName}], " +
-                $"Type=[{extension.GetType().FullName}], Exception=[{ex.GetType().Name}], " +
-                $"Message=[{ex.Message}], StackTrace=[{ex.StackTrace}]");
+            if (string.Equals(entry.Key, internalName, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var extension = _extensions.FirstOrDefault(p => string.Equals(p.Name, entry.Key, StringComparison.OrdinalIgnoreCase));
+            if (extension?.Enabled != true)
+                continue;
+
+            if (entry.Value.Contains(handler))
+                return true;
         }
 
-        return success;
+        return false;
+    }
+
+    private static bool HasEnabledPeerUsingHook(string internalName, IPacketHook hook)
+    {
+        if (hook == null)
+            return false;
+
+        foreach (var entry in PluginHooks)
+        {
+            if (string.Equals(entry.Key, internalName, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var extension = _extensions.FirstOrDefault(p => string.Equals(p.Name, entry.Key, StringComparison.OrdinalIgnoreCase));
+            if (extension?.Enabled != true)
+                continue;
+
+            if (entry.Value.Contains(hook))
+                return true;
+        }
+
+        return false;
     }
 }
