@@ -33,6 +33,7 @@
     </ProjectReference>
     <ProjectReference Include="..\UBot.Avalonia\UBot.Avalonia.csproj" />
     <ProjectReference Include="..\..\Plugins\UBot.General\UBot.General.csproj" />
+    <ProjectReference Include="..\..\Library\UBot.Core.Common\UBot.Core.Common.csproj" />
 </ItemGroup>
 
   <ItemGroup>

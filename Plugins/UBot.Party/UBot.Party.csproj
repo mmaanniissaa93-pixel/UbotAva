@@ -17,6 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Library\UBot.Core\UBot.Core.csproj" />
     <ProjectReference Include="..\..\Library\UBot.Core.Abstractions\UBot.Core.Abstractions.csproj" />
+    <ProjectReference Include="..\..\Library\UBot.Core.Common\UBot.Core.Common.csproj" />
 </ItemGroup>
 
   <ItemGroup>
