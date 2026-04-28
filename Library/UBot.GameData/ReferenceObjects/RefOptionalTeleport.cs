@@ -1,8 +1,9 @@
-using UBot.Core.Objects;
+using UBot.Core.Abstractions;
+using UBot.Core.Client;
 
-namespace UBot.Core.Client.ReferenceObjects;
+namespace UBot.GameData.ReferenceObjects;
 
-public class RefOptionalTeleport : IReference<int>
+public class RefOptionalTeleport : UBot.Core.Client.IReference<int>, UBot.Core.Abstractions.IReference
 {
     /// <summary>
     ///     Offset: 1
@@ -86,7 +87,7 @@ public class RefOptionalTeleport : IReference<int>
     ///     Offset: 4
     ///     The RegionID
     /// </summary>
-    public Region Region;
+    public IRegion Region;
 
     /// <summary>
     ///     Offset: 9
@@ -120,6 +121,19 @@ public class RefOptionalTeleport : IReference<int>
 
     public int PrimaryKey => ID;
 
+    uint UBot.Core.Abstractions.IReference.ID => (uint)ID;
+    public string CodeName => ZoneName128 ?? ID.ToString();
+
+    public string GetName()
+    {
+        return CodeName;
+    }
+
+    public string GetRealName(bool displayRarity = false)
+    {
+        return GetName();
+    }
+
     /// <summary>
     ///     Fills the fields from the tabs array.
     /// </summary>
@@ -132,7 +146,7 @@ public class RefOptionalTeleport : IReference<int>
         //parser.TryParse(2, out ObjName128);
         //parser.TryParse(3, out ZoneName128);
         if (parser.TryParse(4, out ushort regionId))
-            Region = regionId;
+            Region = new GameDataRegion(regionId);
 
         /*parser.TryParse(5, out Pos_X);
         parser.TryParse(6, out Pos_Z);

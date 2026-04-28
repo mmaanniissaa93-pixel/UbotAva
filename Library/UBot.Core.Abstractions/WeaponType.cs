@@ -1,4 +1,4 @@
-namespace UBot.Core.Objects;
+namespace UBot.Core.Abstractions;
 
 public enum WeaponType
 {

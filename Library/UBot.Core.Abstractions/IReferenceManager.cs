@@ -27,6 +27,9 @@ public interface IReferenceManager
     IEnumerable<object> GetShopTabs(string shopCodeName);
     IEnumerable<object> GetShops(string shopGroupCodeName);
     IEnumerable<object> GetShopGoods(string tabCodeName);
+    object GetTeleport(uint id);
+    IEnumerable<object> GetTeleportLinks(uint ownerTeleportId);
+    IEnumerable<uint> GetSkillLinks(int abilityLinkId);
 }
 
 public interface IReference

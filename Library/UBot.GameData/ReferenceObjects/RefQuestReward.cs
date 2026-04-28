@@ -1,8 +1,23 @@
-namespace UBot.Core.Client.ReferenceObjects;
+using UBot.Core.Client;
 
-public class RefQuestReward : IReference<uint>
+namespace UBot.GameData.ReferenceObjects;
+
+public class RefQuestReward : UBot.Core.Client.IReference<uint>, UBot.Core.Abstractions.IReference
 {
     public uint PrimaryKey => QuestId;
+
+    uint UBot.Core.Abstractions.IReference.ID => QuestId;
+    public string CodeName => QuestCodeName;
+
+    public string GetName()
+    {
+        return QuestCodeName;
+    }
+
+    public string GetRealName(bool displayRarity = false)
+    {
+        return GetName();
+    }
 
     public bool Load(ReferenceParser parser)
     {

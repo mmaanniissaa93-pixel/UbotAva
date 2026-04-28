@@ -1,23 +1,25 @@
-namespace UBot.Core.Client.ReferenceObjects;
+using UBot.Core.Abstractions;
+using UBot.Core.Client;
 
-public class RefTeleportLink : IReference
+namespace UBot.GameData.ReferenceObjects;
+
+public class RefTeleportLink : UBot.Core.Client.IReference, UBot.Core.Abstractions.IReference
 {
-    public RefTeleport Owner
+    public RefTeleport Owner => ReferenceProvider.Instance?.GetTeleport((uint)OwnerTeleport) as RefTeleport;
+
+    public RefTeleport Target => ReferenceProvider.Instance?.GetTeleport((uint)TargetTeleport) as RefTeleport;
+
+    uint UBot.Core.Abstractions.IReference.ID => (uint)OwnerTeleport;
+    public string CodeName => $"{OwnerTeleport}:{TargetTeleport}";
+
+    public string GetName()
     {
-        get
-        {
-            Game.ReferenceManager.EnsureTeleportDataLoaded();
-            return Game.ReferenceManager.TeleportData.Find(t => t.ID == OwnerTeleport);
-        }
+        return CodeName;
     }
 
-    public RefTeleport Target
+    public string GetRealName(bool displayRarity = false)
     {
-        get
-        {
-            Game.ReferenceManager.EnsureTeleportDataLoaded();
-            return Game.ReferenceManager.TeleportData.Find(t => t.ID == TargetTeleport);
-        }
+        return GetName();
     }
 
     #region IReference

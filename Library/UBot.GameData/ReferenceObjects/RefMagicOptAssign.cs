@@ -1,9 +1,23 @@
 using System.Collections.Generic;
+using UBot.Core.Client;
 
-namespace UBot.Core.Client.ReferenceObjects;
+namespace UBot.GameData.ReferenceObjects;
 
-public class RefMagicOptAssign : IReference
+public class RefMagicOptAssign : UBot.Core.Client.IReference, UBot.Core.Abstractions.IReference
 {
+    uint UBot.Core.Abstractions.IReference.ID => 0;
+    public string CodeName => $"{Race}:{TypeId3}:{TypeId4}";
+
+    public string GetName()
+    {
+        return CodeName;
+    }
+
+    public string GetRealName(bool displayRarity = false)
+    {
+        return GetName();
+    }
+
     #region Methods
 
     public bool Load(ReferenceParser parser)

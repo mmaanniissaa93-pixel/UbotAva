@@ -1,7 +1,22 @@
-namespace UBot.Core.Client.ReferenceObjects;
+using UBot.Core.Client;
 
-public class RefMappingShopWithTab : IReference
+namespace UBot.GameData.ReferenceObjects;
+
+public class RefMappingShopWithTab : UBot.Core.Client.IReference, UBot.Core.Abstractions.IReference
 {
+    uint UBot.Core.Abstractions.IReference.ID => 0;
+    public string CodeName => $"{Shop}:{Tab}";
+
+    public string GetName()
+    {
+        return CodeName;
+    }
+
+    public string GetRealName(bool displayRarity = false)
+    {
+        return GetName();
+    }
+
     public bool Load(ReferenceParser parser)
     {
         //Skip disabled

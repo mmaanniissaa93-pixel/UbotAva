@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using UBot.Core.Abstractions;
 using UBot.Core.Client;
 using UBot.Core.Client.ReferenceObjects;
-using UBot.Core.Objects;
 
 namespace UBot.GameData.ReferenceObjects;
 

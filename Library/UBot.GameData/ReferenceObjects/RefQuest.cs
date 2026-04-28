@@ -1,10 +1,26 @@
 using System.Collections.Generic;
+using System.Linq;
+using UBot.Core.Abstractions;
+using UBot.Core.Client;
 
-namespace UBot.Core.Client.ReferenceObjects;
+namespace UBot.GameData.ReferenceObjects;
 
-public class RefQuest : IReference<uint>
+public class RefQuest : UBot.Core.Client.IReference<uint>, UBot.Core.Abstractions.IReference
 {
     public uint PrimaryKey => ID;
+
+    uint UBot.Core.Abstractions.IReference.ID => ID;
+    string UBot.Core.Abstractions.IReference.CodeName => CodeName;
+
+    public string GetName()
+    {
+        return NameString ?? CodeName;
+    }
+
+    public string GetRealName(bool displayRarity = false)
+    {
+        return GetTranslatedName();
+    }
 
     public bool Load(ReferenceParser parser)
     {
@@ -34,13 +50,15 @@ public class RefQuest : IReference<uint>
 
     public string GetTranslatedName()
     {
-        return Game.ReferenceManager.GetTranslation(NameString);
+        return ReferenceProvider.Instance?.GetTranslation(NameString) ?? NameString ?? CodeName;
     }
 
     #region Properties
 
-    public RefQuestReward Reward => Game.ReferenceManager.GetQuestReward(ID);
-    public IEnumerable<RefQuestRewardItem> RewardItems => Game.ReferenceManager.GetQuestRewardItems(ID);
+    public RefQuestReward Reward => ReferenceProvider.Instance?.GetQuestReward(ID) as RefQuestReward;
+    public IEnumerable<RefQuestRewardItem> RewardItems =>
+        ReferenceProvider.Instance?.GetQuestRewardItems(ID).OfType<RefQuestRewardItem>()
+        ?? Enumerable.Empty<RefQuestRewardItem>();
 
     #endregion
 

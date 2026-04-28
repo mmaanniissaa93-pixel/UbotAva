@@ -1,12 +1,25 @@
 using System.Collections.Generic;
 using System.Linq;
 using UBot.Core.Abstractions;
-using UBot.Core.Objects;
+using UBot.Core.Client;
 
-namespace UBot.Core.Client.ReferenceObjects;
+namespace UBot.GameData.ReferenceObjects;
 
-public class RefTeleport : IReference<uint>
+public class RefTeleport : UBot.Core.Client.IReference<uint>, UBot.Core.Abstractions.IReference
 {
+    uint UBot.Core.Abstractions.IReference.ID => ID;
+    string UBot.Core.Abstractions.IReference.CodeName => CodeName;
+
+    public string GetName()
+    {
+        return ZoneName;
+    }
+
+    public string GetRealName(bool displayRarity = false)
+    {
+        return GetName();
+    }
+
     public bool Load(ReferenceParser parser)
     {
         //Skip disabled
@@ -40,8 +53,8 @@ public class RefTeleport : IReference<uint>
     /// <returns></returns>
     public List<RefTeleportLink> GetLinks()
     {
-        Game.ReferenceManager.EnsureTeleportDataLoaded();
-        return Game.ReferenceManager.TeleportLinks.Where(tl => tl.OwnerTeleport == ID).ToList();
+        return ReferenceProvider.Instance?.GetTeleportLinks(ID).OfType<RefTeleportLink>().ToList()
+            ?? new List<RefTeleportLink>();
     }
 
     /// <summary>
@@ -50,7 +63,7 @@ public class RefTeleport : IReference<uint>
     /// <returns></returns>
     public IPosition GetPosition()
     {
-        return new Position(GenRegionID, GenPos_X, GenPos_Y, GenPos_Z);
+        return new GameDataPosition(GenRegionID, GenPos_X, GenPos_Y, GenPos_Z);
     }
 
     #region Fields
@@ -68,8 +81,8 @@ public class RefTeleport : IReference<uint>
     public short GenAreaRadius;
     public byte CanBeResurrectPos;
     public byte CanGotoResurrectPos;
-    public string ZoneName => Game.ReferenceManager.GetTranslation(ZoneName128);
-    public RefObjChar Character => Game.ReferenceManager.GetRefObjChar(AssocRefObjId);
+    public string ZoneName => ReferenceProvider.Instance?.GetTranslation(ZoneName128) ?? ZoneName128;
+    public RefObjChar Character => ReferenceProvider.Instance?.GetRefObjChar(AssocRefObjId) as RefObjChar;
 
     public uint PrimaryKey => ID;
 

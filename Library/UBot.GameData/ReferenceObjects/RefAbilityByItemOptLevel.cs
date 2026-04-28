@@ -1,15 +1,29 @@
 using System.Collections.Generic;
-using System.Linq;
+using UBot.Core.Abstractions;
+using UBot.Core.Client;
 
-namespace UBot.Core.Client.ReferenceObjects;
+namespace UBot.GameData.ReferenceObjects;
 
-public class RefAbilityByItemOptLevel : IReference<int>
+public class RefAbilityByItemOptLevel : UBot.Core.Client.IReference<int>, UBot.Core.Abstractions.IReference
 {
     public int Id;
     public uint ItemId;
     public byte OptLevel;
 
     public int PrimaryKey => Id;
+
+    uint UBot.Core.Abstractions.IReference.ID => (uint)Id;
+    public string CodeName => Id.ToString();
+
+    public string GetName()
+    {
+        return CodeName;
+    }
+
+    public string GetRealName(bool displayRarity = false)
+    {
+        return GetName();
+    }
 
     public bool Load(ReferenceParser parser)
     {
@@ -31,7 +45,6 @@ public class RefAbilityByItemOptLevel : IReference<int>
     /// <returns></returns>
     public IEnumerable<uint> GetLinks()
     {
-        Game.ReferenceManager.EnsureOptLevelDataLoaded();
-        return Game.ReferenceManager.SkillByItemOptLevels.Where(tl => tl.Link == Id).Select(p => p.SkillId);
+        return ReferenceProvider.Instance?.GetSkillLinks(Id) ?? System.Linq.Enumerable.Empty<uint>();
     }
 }

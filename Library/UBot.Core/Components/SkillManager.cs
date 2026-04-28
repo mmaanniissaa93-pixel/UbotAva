@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using UBot.Core.Abstractions;
 using UBot.Core.Client.ReferenceObjects;
 using UBot.GameData.ReferenceObjects;
 using UBot.Core.Event;

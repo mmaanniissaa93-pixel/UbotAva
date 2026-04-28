@@ -1,12 +1,27 @@
-namespace UBot.Core.Client.ReferenceObjects;
+using UBot.Core.Client;
 
-public class RefExtraAbilityByEquipItemOptLevel : IReference
+namespace UBot.GameData.ReferenceObjects;
+
+public class RefExtraAbilityByEquipItemOptLevel : UBot.Core.Client.IReference, UBot.Core.Abstractions.IReference
 {
     private const int SKILL_COUNT = 5;
 
     public uint ItemId;
     public byte OptLevel;
     public uint[] Skills;
+
+    uint UBot.Core.Abstractions.IReference.ID => ItemId;
+    public string CodeName => $"{ItemId}:{OptLevel}";
+
+    public string GetName()
+    {
+        return CodeName;
+    }
+
+    public string GetRealName(bool displayRarity = false)
+    {
+        return GetName();
+    }
 
     public bool Load(ReferenceParser parser)
     {

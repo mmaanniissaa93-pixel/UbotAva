@@ -1120,6 +1120,24 @@ public class ReferenceManager : IReferenceManager
         return ShopGoods.Where(g => g.RefTabCodeName == tabCodeName).Cast<object>().ToList();
     }
 
+    object IReferenceManager.GetTeleport(uint id)
+    {
+        EnsureTeleportDataLoaded();
+        return TeleportData.Find(t => t.ID == id);
+    }
+
+    IEnumerable<object> IReferenceManager.GetTeleportLinks(uint ownerTeleportId)
+    {
+        EnsureTeleportDataLoaded();
+        return TeleportLinks.Where(tl => tl.OwnerTeleport == ownerTeleportId).Cast<object>().ToList();
+    }
+
+    IEnumerable<uint> IReferenceManager.GetSkillLinks(int abilityLinkId)
+    {
+        EnsureOptLevelDataLoaded();
+        return SkillByItemOptLevels.Where(tl => tl.Link == abilityLinkId).Select(p => p.SkillId).ToList();
+    }
+
     /// <summary>
     ///     Returns the reward for the specified quest
     /// </summary>

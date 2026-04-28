@@ -1,6 +1,10 @@
-namespace UBot.Core.Client.ReferenceObjects;
+using UBot.Core;
+using UBot.Core.Abstractions;
+using UBot.Core.Client;
 
-public class RefText : IReference<string>
+namespace UBot.GameData.ReferenceObjects;
+
+public class RefText : UBot.Core.Client.IReference<string>, UBot.Core.Abstractions.IReference
 {
     private const int LANG_OFFSET = 2;
     private const int LANG_COUNT = 14;
@@ -14,6 +18,19 @@ public class RefText : IReference<string>
     #region IRefrerence
 
     public string PrimaryKey => NameStrId;
+
+    uint UBot.Core.Abstractions.IReference.ID => 0;
+    public string CodeName => NameStrId;
+
+    public string GetName()
+    {
+        return NameStrId;
+    }
+
+    public string GetRealName(bool displayRarity = false)
+    {
+        return Data ?? NameStrId;
+    }
 
     #endregion IRefrerence
 
@@ -48,7 +65,7 @@ public class RefText : IReference<string>
             return false;
 
         var nameStrIndex = 1;
-        if (Game.ClientType >= GameClientType.Chinese)
+        if ((ReferenceProvider.Instance?.ClientType ?? GameClientType.Vietnam) >= GameClientType.Chinese)
             nameStrIndex = 2;
 
         if (!parser.TryParse(nameStrIndex, out NameStrId))
@@ -83,22 +100,25 @@ public class RefText : IReference<string>
         if (tab <= nameStrIndex || tab >= columnCount)
             return false;
 
-        return Game.ClientType != GameClientType.Turkey || tab != nameStrIndex + 1;
+        return (ReferenceProvider.Instance?.ClientType ?? GameClientType.Vietnam) != GameClientType.Turkey
+            || tab != nameStrIndex + 1;
     }
 
     private static System.Collections.Generic.IEnumerable<int> GetPreferredLanguageTabs()
     {
-        if (Game.ClientType == GameClientType.Turkey)
+        var clientType = ReferenceProvider.Instance?.ClientType ?? GameClientType.Vietnam;
+
+        if (clientType == GameClientType.Turkey)
             yield return 13;
 
-        if (Game.ClientType == GameClientType.RuSro)
+        if (clientType == GameClientType.RuSro)
             yield return 12;
 
-        if (Game.ClientType == GameClientType.Japanese)
+        if (clientType == GameClientType.Japanese)
             yield return 9;
 
-        if (Game.ReferenceManager?.LanguageTab > 0)
-            yield return Game.ReferenceManager.LanguageTab;
+        if (ReferenceProvider.Instance?.LanguageTab > 0)
+            yield return ReferenceProvider.Instance.LanguageTab;
 
         yield return 8;
     }
