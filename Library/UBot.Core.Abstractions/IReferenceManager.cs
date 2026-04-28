@@ -1,10 +1,12 @@
 using System.Collections.Generic;
+using UBot.Core;
 
 namespace UBot.Core.Abstractions;
 
 public interface IReferenceManager
 {
     int LanguageTab { get; }
+    GameClientType ClientType { get; }
 
     void EnsureTextDataLoaded();
     void EnsureCharacterDataLoaded();
@@ -34,9 +36,9 @@ public interface IReference
 
 public static class ReferenceProvider
 {
-    private static IReferenceManager? _instance;
+    private static IReferenceManager _instance;
 
-    public static IReferenceManager? Instance
+    public static IReferenceManager Instance
     {
         get => _instance;
         set => _instance = value;

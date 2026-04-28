@@ -90,6 +90,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UBot.NavMeshApi", "Library\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UBot.Core.Abstractions", "Library\UBot.Core.Abstractions\UBot.Core.Abstractions.csproj", "{07D1A280-0942-4BFA-95C1-5CD67B3D32DA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UBot.GameData", "Library\UBot.GameData\UBot.GameData.csproj", "{CF79C5C5-BBAE-49D8-82FE-88A4443A877A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -424,6 +426,18 @@ Global
 		{07D1A280-0942-4BFA-95C1-5CD67B3D32DA}.Release|x64.Build.0 = Release|Any CPU
 		{07D1A280-0942-4BFA-95C1-5CD67B3D32DA}.Release|x86.ActiveCfg = Release|Any CPU
 		{07D1A280-0942-4BFA-95C1-5CD67B3D32DA}.Release|x86.Build.0 = Release|Any CPU
+		{CF79C5C5-BBAE-49D8-82FE-88A4443A877A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF79C5C5-BBAE-49D8-82FE-88A4443A877A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF79C5C5-BBAE-49D8-82FE-88A4443A877A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CF79C5C5-BBAE-49D8-82FE-88A4443A877A}.Debug|x64.Build.0 = Debug|Any CPU
+		{CF79C5C5-BBAE-49D8-82FE-88A4443A877A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CF79C5C5-BBAE-49D8-82FE-88A4443A877A}.Debug|x86.Build.0 = Debug|Any CPU
+		{CF79C5C5-BBAE-49D8-82FE-88A4443A877A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF79C5C5-BBAE-49D8-82FE-88A4443A877A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CF79C5C5-BBAE-49D8-82FE-88A4443A877A}.Release|x64.ActiveCfg = Release|Any CPU
+		{CF79C5C5-BBAE-49D8-82FE-88A4443A877A}.Release|x64.Build.0 = Release|Any CPU
+		{CF79C5C5-BBAE-49D8-82FE-88A4443A877A}.Release|x86.ActiveCfg = Release|Any CPU
+		{CF79C5C5-BBAE-49D8-82FE-88A4443A877A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -456,6 +470,7 @@ Global
 		{43159571-287D-42E1-B262-A39DE07D6763} = {06762F99-9EA8-4E3E-91E8-73F2ED402CFB}
 		{E4DC5C65-9956-4696-9B89-043B20029EAA} = {06762F99-9EA8-4E3E-91E8-73F2ED402CFB}
 		{07D1A280-0942-4BFA-95C1-5CD67B3D32DA} = {06762F99-9EA8-4E3E-91E8-73F2ED402CFB}
+		{CF79C5C5-BBAE-49D8-82FE-88A4443A877A} = {06762F99-9EA8-4E3E-91E8-73F2ED402CFB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9E2A0162-C6BF-4792-97DC-C8824F69B98C}

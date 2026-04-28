@@ -1,6 +1,6 @@
 namespace UBot.Core.Client.ReferenceObjects;
 
-public class RefObjItem : RefObjCommon
+public class RefObjItem : RefObjCommon, IReference<uint>
 {
     public string Desc1;
     public string Desc2;

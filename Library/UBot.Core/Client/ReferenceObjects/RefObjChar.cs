@@ -1,6 +1,6 @@
 namespace UBot.Core.Client.ReferenceObjects;
 
-public class RefObjChar : RefObjCommon
+public class RefObjChar : RefObjCommon, IReference<uint>
 {
     public bool IsDimensionPillar => NameStrID == "SN_MOB_GOD_PILLAR";
     public bool IsSummonFlower => CodeName.StartsWith("STRUCTURE_SUMMON_FLOWER_");

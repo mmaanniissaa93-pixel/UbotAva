@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using UBot.Core.Abstractions;
 using UBot.Core.Objects;
 
 namespace UBot.Core.Client.ReferenceObjects;
@@ -47,7 +48,7 @@ public class RefTeleport : IReference<uint>
     ///     Gets the position of the teleporter.
     /// </summary>
     /// <returns></returns>
-    public Position GetPosition()
+    public IPosition GetPosition()
     {
         return new Position(GenRegionID, GenPos_X, GenPos_Y, GenPos_Z);
     }

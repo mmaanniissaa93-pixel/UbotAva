@@ -1,4 +1,5 @@
 ﻿using UBot.Core.Client.ReferenceObjects;
+using UBot.Core.Abstractions;
 using UBot.Core.Cryptography;
 using UBot.Core.Event;
 using UBot.Core.Extensions;
@@ -15,7 +16,7 @@ using System.Text.RegularExpressions;
 
 namespace UBot.Core.Client;
 
-public class ReferenceManager
+public class ReferenceManager : IReferenceManager
 {
     private const string ServerDep = "server_dep\\silkroad\\textdata";
     private const string LowMemoryModeConfigKey = "UBot.Desktop.LowMemoryMode";
@@ -34,6 +35,7 @@ public class ReferenceManager
     private bool _isMapInfoLoaded;
 
     public int LanguageTab { get; set; }
+    public GameClientType ClientType => Game.ClientType;
     public bool IsLowMemoryModeEnabled { get; private set; } = true;
 
     public Dictionary<string, RefText> TextData { get; } = new(70000);
@@ -64,6 +66,11 @@ public class ReferenceManager
     public VersionInfo VersionInfo { get; private set; }
     public List<RefMagicOpt> MagicOptions { get; } = new(1024);
     public List<RefMagicOptAssign> MagicOptionAssignments { get; } = new(128);
+
+    public ReferenceManager()
+    {
+        ReferenceProvider.Instance = this;
+    }
 
     public void Load(int languageTab, BackgroundWorker worker)
     {
@@ -1061,6 +1068,26 @@ public class ReferenceManager
     {
         EnsureQuestDataLoaded();
         return QuestRewardItems.Where(r => r.QuestId == questId);
+    }
+
+    object IReferenceManager.GetRefObjChar(uint id)
+    {
+        return GetRefObjChar(id);
+    }
+
+    object IReferenceManager.GetRefItem(string codeName)
+    {
+        return GetRefItem(codeName);
+    }
+
+    object IReferenceManager.GetQuestReward(uint id)
+    {
+        return GetQuestReward(id);
+    }
+
+    IEnumerable<object> IReferenceManager.GetQuestRewardItems(uint id)
+    {
+        return GetQuestRewardItems(id);
     }
 
     /// <summary>

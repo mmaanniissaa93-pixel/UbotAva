@@ -131,7 +131,8 @@ public class RefOptionalTeleport : IReference<int>
         parser.TryParse(1, out ID);
         //parser.TryParse(2, out ObjName128);
         //parser.TryParse(3, out ZoneName128);
-        parser.TryParse(4, out Region);
+        if (parser.TryParse(4, out ushort regionId))
+            Region = regionId;
 
         /*parser.TryParse(5, out Pos_X);
         parser.TryParse(6, out Pos_Z);

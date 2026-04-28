@@ -1,10 +1,11 @@
 ﻿using System.Runtime.InteropServices;
+using UBot.Core.Abstractions;
 using UBot.Core.Network;
 
 namespace UBot.Core.Objects;
 
 [StructLayout(LayoutKind.Explicit)]
-public struct Region
+public struct Region : IRegion
 {
     [FieldOffset(0)]
     public ushort Id;
@@ -16,6 +17,10 @@ public struct Region
     public byte Y;
 
     public bool IsDungeon => (Id & 0x8000) != 0;
+
+    ushort IRegion.RegionID => Id;
+    byte IRegion.X => X;
+    byte IRegion.Y => Y;
 
     public Region(ushort id)
         : this()

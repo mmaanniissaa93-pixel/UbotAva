@@ -18,6 +18,7 @@
     <ProjectReference Include="..\UBot.Core.Abstractions\UBot.Core.Abstractions.csproj" />
     <ProjectReference Include="..\UBot.Core.Network\UBot.Core.Network.csproj" />
     <ProjectReference Include="..\UBot.FileSystem\UBot.FileSystem.csproj" />
+    <ProjectReference Include="..\UBot.GameData\UBot.GameData.csproj" />
     <ProjectReference Include="..\UBot.NavMeshApi\UBot.NavMeshApi.csproj" />
   </ItemGroup>
 

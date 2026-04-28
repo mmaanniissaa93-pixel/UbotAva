@@ -1,15 +1,25 @@
 using System.Diagnostics;
-using System.Drawing;
-using UBot.Core.Extensions;
+using UBot.Core;
+using UBot.Core.Abstractions;
+using UBot.Core.Client;
+using UBot.Core.Client.ReferenceObjects;
 
-namespace UBot.Core.Client.ReferenceObjects;
+namespace UBot.GameData.ReferenceObjects;
 
 [DebuggerDisplay("ID = {ID}; Code = {CodeName}; Name = {ObjName}")]
-public abstract class RefObjCommon : IReference<uint>
+public abstract class RefObjCommon : IReference
 {
     #region IReference
 
+    uint IReference.ID => ID;
+    string IReference.CodeName => CodeName;
+
     public uint PrimaryKey => ID;
+
+    public string GetName()
+    {
+        return ObjName;
+    }
 
     #endregion IReference
 
@@ -102,33 +112,7 @@ public abstract class RefObjCommon : IReference<uint>
 
     public virtual string GetRealName(bool displayRarity = false)
     {
-        return Game.ReferenceManager.GetTranslation(NameStrID);
-    }
-
-    /// <summary>
-    ///     Gets the icon.
-    /// </summary>
-    /// <returns></returns>
-    public Image GetIcon()
-    {
-        Image bitmap = null;
-        try
-        {
-            var path = $"icon\\{AssocFileIcon}";
-
-            if (!Game.MediaPk2.TryGetFile(path, out var file))
-                file = Game.MediaPk2.GetFile("icon\\icon_default.ddj");
-
-            bitmap = file.ToImage();
-        }
-        catch { }
-        finally
-        {
-            if (bitmap == null)
-                bitmap = new Bitmap(24, 24);
-        }
-
-        return bitmap;
+        return ReferenceProvider.Instance?.GetTranslation(NameStrID) ?? NameStrID ?? ObjName ?? CodeName;
     }
 
     #region Fields
@@ -157,7 +141,8 @@ public abstract class RefObjCommon : IReference<uint>
     {
         get
         {
-            if (Game.ClientType > GameClientType.Vietnam)
+            var clientType = ReferenceProvider.Instance?.ClientType ?? GameClientType.Vietnam;
+            if (clientType > GameClientType.Vietnam)
                 return CashItem | Bionic | (TypeID1 << 4) | (TypeID2 << 10) | (TypeID3 << 16) | (TypeID4 << 24);
 
             return CashItem | Bionic | (TypeID1 << 2) | (TypeID2 << 5) | (TypeID3 << 7) | (TypeID4 << 11);

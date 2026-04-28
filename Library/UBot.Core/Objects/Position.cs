@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Numerics;
+using UBot.Core.Abstractions;
 using UBot.Core.Network;
 using UBot.NavMeshApi;
 
 namespace UBot.Core.Objects;
 
-public struct Position
+public struct Position : IPosition
 {
     /// <summary>
     ///     Gets the regional id.
@@ -38,6 +39,10 @@ public struct Position
     public short WorldId { get; set; }
 
     public short LayerId { get; set; }
+
+    IRegion IPosition.Region => Region;
+    ushort IPosition.RegionID => Region.Id;
+    float IPosition.Z => ZOffset;
 
     /// <summary>
     ///     Gets the x coordinate.

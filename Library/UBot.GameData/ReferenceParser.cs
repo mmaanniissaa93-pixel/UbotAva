@@ -1,10 +1,9 @@
-﻿using System;
+using System;
 using System.Globalization;
-using UBot.Core.Objects;
 
 namespace UBot.Core.Client;
 
-public sealed class ReferenceParser
+public class ReferenceParser
 {
     private readonly string[] _data;
     private readonly int _length;
@@ -128,24 +127,6 @@ public sealed class ReferenceParser
     public bool TryParse(int index, out ushort result, ushort @default)
     {
         if (index < _length && ushort.TryParse(_data[index], out result))
-            return true;
-
-        result = @default;
-        return false;
-    }
-
-    public bool TryParse(int index, out Region result)
-    {
-        if (index < _length && Region.TryParse(_data[index], out result))
-            return true;
-
-        result = default(ushort);
-        return false;
-    }
-
-    public bool TryParse(int index, out Region result, Region @default)
-    {
-        if (index < _length && Region.TryParse(_data[index], out result))
             return true;
 
         result = @default;
