@@ -1,10 +1,26 @@
-namespace UBot.Core.Client.ReferenceObjects;
+using UBot.Core.Abstractions;
+using UBot.Core.Client;
 
-public class RefPackageItemScrap : IReference<string>
+namespace UBot.GameData.ReferenceObjects;
+
+public class RefPackageItemScrap : UBot.Core.Client.IReference<string>, UBot.Core.Abstractions.IReference
 {
-    public RefObjItem RefItem => Game.ReferenceManager.GetRefItem(RefItemCodeName);
+    public RefObjItem RefItem => ReferenceProvider.Instance?.GetRefItem(RefItemCodeName) as RefObjItem;
 
     public string PrimaryKey => RefPackageItemCodeName;
+
+    uint UBot.Core.Abstractions.IReference.ID => 0;
+    public string CodeName => RefPackageItemCodeName;
+
+    public string GetName()
+    {
+        return RefPackageItemCodeName;
+    }
+
+    public string GetRealName(bool displayRarity = false)
+    {
+        return GetName();
+    }
 
     public bool Load(ReferenceParser parser)
     {

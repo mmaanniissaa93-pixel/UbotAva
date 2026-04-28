@@ -1,8 +1,25 @@
-namespace UBot.Core.Client.ReferenceObjects;
+using UBot.Core;
+using UBot.Core.Abstractions;
+using UBot.Core.Client;
 
-public class RefLevel : IReference<byte>
+namespace UBot.GameData.ReferenceObjects;
+
+public class RefLevel : UBot.Core.Client.IReference<byte>, UBot.Core.Abstractions.IReference
 {
     public byte PrimaryKey => Level;
+
+    uint UBot.Core.Abstractions.IReference.ID => Level;
+    string UBot.Core.Abstractions.IReference.CodeName => Level.ToString();
+
+    public string GetName()
+    {
+        return Level.ToString();
+    }
+
+    public string GetRealName(bool displayRarity = false)
+    {
+        return GetName();
+    }
 
     public bool Load(ReferenceParser parser)
     {
@@ -12,7 +29,7 @@ public class RefLevel : IReference<byte>
         parser.TryParse(1, out Exp_C);
         parser.TryParse(2, out Exp_M);
 
-        if (Game.ClientType >= GameClientType.Chinese_Old)
+        if ((ReferenceProvider.Instance?.ClientType ?? GameClientType.Vietnam) >= GameClientType.Chinese_Old)
         {
             parser.TryParse(9, out Exp_C_Pet2);
             parser.TryParse(10, out StoredSp_Pet2);

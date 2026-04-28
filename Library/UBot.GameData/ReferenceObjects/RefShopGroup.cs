@@ -1,9 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
+using UBot.Core.Abstractions;
+using UBot.Core.Client;
 
-namespace UBot.Core.Client.ReferenceObjects;
+namespace UBot.GameData.ReferenceObjects;
 
-public class RefShopGroup : IReference<string>
+public class RefShopGroup : UBot.Core.Client.IReference<string>, UBot.Core.Abstractions.IReference
 {
     /// <summary>
     ///     Gets or sets the name of the code.
@@ -47,6 +49,19 @@ public class RefShopGroup : IReference<string>
 
     public string PrimaryKey => CodeName;
 
+    uint UBot.Core.Abstractions.IReference.ID => (uint)Id;
+    string UBot.Core.Abstractions.IReference.CodeName => CodeName;
+
+    public string GetName()
+    {
+        return CodeName;
+    }
+
+    public string GetRealName(bool displayRarity = false)
+    {
+        return GetName();
+    }
+
     public bool Load(ReferenceParser parser)
     {
         //Skip disabled
@@ -67,12 +82,8 @@ public class RefShopGroup : IReference<string>
     /// <returns></returns>
     public List<RefShop> GetShops()
     {
-        Game.ReferenceManager.EnsureShopDataLoaded();
-        var mappedShops = Game.ReferenceManager.ShopGroupMapping.Where(m => m.Group == CodeName);
-
-        return mappedShops
-            .Select(mapping => Game.ReferenceManager.Shops.FirstOrDefault(s => s.Value.CodeName == mapping.Shop).Value)
-            .ToList();
+        return ReferenceProvider.Instance?.GetShops(CodeName).OfType<RefShop>().ToList()
+            ?? new List<RefShop>();
     }
 }
 

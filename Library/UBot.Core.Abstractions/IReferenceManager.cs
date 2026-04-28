@@ -24,6 +24,9 @@ public interface IReferenceManager
     object GetRefItem(string codeName);
     object GetQuestReward(uint id);
     IEnumerable<object> GetQuestRewardItems(uint id);
+    IEnumerable<object> GetShopTabs(string shopCodeName);
+    IEnumerable<object> GetShops(string shopGroupCodeName);
+    IEnumerable<object> GetShopGoods(string tabCodeName);
 }
 
 public interface IReference

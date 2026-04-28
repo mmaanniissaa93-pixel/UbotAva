@@ -1,11 +1,26 @@
 using System.Collections.Generic;
 using System.Linq;
+using UBot.Core.Abstractions;
+using UBot.Core.Client;
 
-namespace UBot.Core.Client.ReferenceObjects;
+namespace UBot.GameData.ReferenceObjects;
 
-public class RefShopTab : IReference<string>
+public class RefShopTab : UBot.Core.Client.IReference<string>, UBot.Core.Abstractions.IReference
 {
     public string PrimaryKey => CodeName;
+
+    uint UBot.Core.Abstractions.IReference.ID => (uint)Id;
+    string UBot.Core.Abstractions.IReference.CodeName => CodeName;
+
+    public string GetName()
+    {
+        return StrID128_Tab ?? CodeName;
+    }
+
+    public string GetRealName(bool displayRarity = false)
+    {
+        return ReferenceProvider.Instance?.GetTranslation(StrID128_Tab) ?? GetName();
+    }
 
     public bool Load(ReferenceParser parser)
     {
@@ -28,8 +43,8 @@ public class RefShopTab : IReference<string>
     /// <returns></returns>
     public List<RefShopGood> GetGoods()
     {
-        Game.ReferenceManager.EnsureShopDataLoaded();
-        return Game.ReferenceManager.ShopGoods.Where(g => g.RefTabCodeName == CodeName).ToList();
+        return ReferenceProvider.Instance?.GetShopGoods(CodeName).OfType<RefShopGood>().ToList()
+            ?? new List<RefShopGood>();
     }
 
     #region Fields

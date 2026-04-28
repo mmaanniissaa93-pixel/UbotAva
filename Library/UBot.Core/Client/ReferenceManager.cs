@@ -1091,6 +1091,35 @@ public class ReferenceManager : IReferenceManager
         return GetQuestRewardItems(id);
     }
 
+    IEnumerable<object> IReferenceManager.GetShopTabs(string shopCodeName)
+    {
+        EnsureShopDataLoaded();
+        var mapping = ShopTabMapping.Where(m => m.Shop == shopCodeName);
+
+        return (
+            from map in mapping
+            from tab in ShopTabs.Where(s => s.Value.RefTabGroupCodeName == map.Tab)
+            select tab.Value
+        ).Cast<object>().ToList();
+    }
+
+    IEnumerable<object> IReferenceManager.GetShops(string shopGroupCodeName)
+    {
+        EnsureShopDataLoaded();
+        return ShopGroupMapping
+            .Where(m => m.Group == shopGroupCodeName)
+            .Select(mapping => Shops.FirstOrDefault(s => s.Value.CodeName == mapping.Shop).Value)
+            .Where(shop => shop != null)
+            .Cast<object>()
+            .ToList();
+    }
+
+    IEnumerable<object> IReferenceManager.GetShopGoods(string tabCodeName)
+    {
+        EnsureShopDataLoaded();
+        return ShopGoods.Where(g => g.RefTabCodeName == tabCodeName).Cast<object>().ToList();
+    }
+
     /// <summary>
     ///     Returns the reward for the specified quest
     /// </summary>

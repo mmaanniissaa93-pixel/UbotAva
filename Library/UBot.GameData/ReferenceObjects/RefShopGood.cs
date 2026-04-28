@@ -1,7 +1,22 @@
-namespace UBot.Core.Client.ReferenceObjects;
+using UBot.Core.Client;
 
-public class RefShopGood : IReference
+namespace UBot.GameData.ReferenceObjects;
+
+public class RefShopGood : UBot.Core.Client.IReference, UBot.Core.Abstractions.IReference
 {
+    uint UBot.Core.Abstractions.IReference.ID => SlotIndex;
+    public string CodeName => RefPackageItemCodeName;
+
+    public string GetName()
+    {
+        return RefPackageItemCodeName;
+    }
+
+    public string GetRealName(bool displayRarity = false)
+    {
+        return GetName();
+    }
+
     public bool Load(ReferenceParser parser)
     {
         //Skip disabled

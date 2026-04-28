@@ -1,7 +1,22 @@
-namespace UBot.Core.Client.ReferenceObjects;
+using UBot.Core.Client;
 
-public class RefMappingShopGroup : IReference
+namespace UBot.GameData.ReferenceObjects;
+
+public class RefMappingShopGroup : UBot.Core.Client.IReference, UBot.Core.Abstractions.IReference
 {
+    uint UBot.Core.Abstractions.IReference.ID => 0;
+    public string CodeName => Group;
+
+    public string GetName()
+    {
+        return $"{Group}:{Shop}";
+    }
+
+    public string GetRealName(bool displayRarity = false)
+    {
+        return GetName();
+    }
+
     public bool Load(ReferenceParser parser)
     {
         //Skip disabled
