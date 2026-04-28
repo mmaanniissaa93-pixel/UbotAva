@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UBot.Core.Client.ReferenceObjects;
+using UBot.GameData.ReferenceObjects;
 using UBot.Core.Components;
 using UBot.Core.Event;
 using UBot.Core.Objects;

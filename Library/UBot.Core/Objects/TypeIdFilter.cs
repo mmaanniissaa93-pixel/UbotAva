@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using UBot.Core.Client.ReferenceObjects;
+using UBot.GameData.ReferenceObjects;
 
 namespace UBot.Core.Objects;
 

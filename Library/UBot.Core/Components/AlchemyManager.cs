@@ -1,8 +1,9 @@
-﻿#nullable enable annotations
+#nullable enable annotations
 
 using System.Collections.Generic;
 using System.Timers;
 using UBot.Core.Client.ReferenceObjects;
+using UBot.GameData.ReferenceObjects;
 using UBot.Core.Network;
 using UBot.Core.Network.Handler.Agent.Alchemy;
 using UBot.Core.Objects;

@@ -13,6 +13,7 @@ using UBot.Avalonia.Controls;
 using UBot.Avalonia.Services;
 using UBot.Avalonia.ViewModels;
 using UBot.Core.Client.ReferenceObjects;
+using UBot.GameData.ReferenceObjects;
 
 namespace UBot.Avalonia.Features.Items;
 

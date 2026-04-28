@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
@@ -7,6 +7,7 @@ using UBot.Alchemy.Extension;
 using UBot.Alchemy.Helper;
 using UBot.Core;
 using UBot.Core.Client.ReferenceObjects;
+using UBot.GameData.ReferenceObjects;
 using UBot.Core.Components;
 using UBot.Core.Event;
 using UBot.Core.Objects;

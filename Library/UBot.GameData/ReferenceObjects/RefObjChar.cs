@@ -1,6 +1,9 @@
-namespace UBot.Core.Client.ReferenceObjects;
+using UBot.Core.Client;
+using UBot.Core.Client.ReferenceObjects;
 
-public class RefObjChar : RefObjCommon, IReference<uint>
+namespace UBot.GameData.ReferenceObjects;
+
+public class RefObjChar : RefObjCommon, UBot.Core.Client.IReference<uint>
 {
     public bool IsDimensionPillar => NameStrID == "SN_MOB_GOD_PILLAR";
     public bool IsSummonFlower => CodeName.StartsWith("STRUCTURE_SUMMON_FLOWER_");

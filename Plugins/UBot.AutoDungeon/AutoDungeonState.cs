@@ -364,7 +364,7 @@ internal static class AutoDungeonState
         return Game.Player.Inventory.GetItem(item => IsDimensionalItem(item.Record));
     }
 
-    private static bool IsDimensionalItem(UBot.Core.Client.ReferenceObjects.RefObjItem record)
+    private static bool IsDimensionalItem(UBot.GameData.ReferenceObjects.RefObjItem record)
     {
         if (record == null)
             return false;

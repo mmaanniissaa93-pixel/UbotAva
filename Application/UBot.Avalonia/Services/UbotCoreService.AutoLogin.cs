@@ -18,6 +18,7 @@ using UBot.NavMeshApi.Edges;
 using UBot.NavMeshApi.Extensions;
 using UBot.NavMeshApi.Terrain;
 using UBot.Core.Client.ReferenceObjects;
+using UBot.GameData.ReferenceObjects;
 using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Event;

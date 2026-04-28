@@ -1,4 +1,5 @@
-﻿using UBot.Core.Client.ReferenceObjects;
+using UBot.Core.Client.ReferenceObjects;
+using UBot.GameData.ReferenceObjects;
 using UBot.Core.Network;
 
 namespace UBot.Core.Objects.Skill;

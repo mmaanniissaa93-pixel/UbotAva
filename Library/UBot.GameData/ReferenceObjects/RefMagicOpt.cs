@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UBot.Core.Abstractions;
+using UBot.Core.Client;
 
-namespace UBot.Core.Client.ReferenceObjects;
+namespace UBot.GameData.ReferenceObjects;
 
-public class RefMagicOpt : IReference
+public class RefMagicOpt : UBot.Core.Client.IReference, UBot.Core.Abstractions.IReference
 {
     #region Constants
 
@@ -51,6 +53,19 @@ public class RefMagicOpt : IReference
     #endregion Fields
 
     #region Methods
+
+    uint UBot.Core.Abstractions.IReference.ID => Id;
+    public string CodeName => Group;
+
+    public string GetName()
+    {
+        return Group;
+    }
+
+    public string GetRealName(bool displayRarity = false)
+    {
+        return Group;
+    }
 
     public bool Load(ReferenceParser parser)
     {

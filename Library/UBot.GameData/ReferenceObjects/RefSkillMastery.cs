@@ -1,8 +1,25 @@
-namespace UBot.Core.Client.ReferenceObjects;
+using UBot.Core;
+using UBot.Core.Abstractions;
+using UBot.Core.Client;
 
-public class RefSkillMastery : IReference<uint>
+namespace UBot.GameData.ReferenceObjects;
+
+public class RefSkillMastery : UBot.Core.Client.IReference<uint>, UBot.Core.Abstractions.IReference
 {
-    public string Name => Game.ReferenceManager.GetTranslation(NameCode);
+    public string Name => ReferenceProvider.Instance?.GetTranslation(NameCode) ?? NameCode;
+
+    uint UBot.Core.Abstractions.IReference.ID => ID;
+    public string CodeName => NameCode;
+
+    public string GetName()
+    {
+        return Name;
+    }
+
+    public string GetRealName(bool displayRarity = false)
+    {
+        return Name;
+    }
 
     #region Fields
 
@@ -34,7 +51,7 @@ public class RefSkillMastery : IReference<uint>
     {
         parser.TryParse(0, out ID);
         //parser.TryParseString(1, out Name);
-        if (Game.ClientType >= GameClientType.Chinese_Old)
+        if ((ReferenceProvider.Instance?.ClientType ?? GameClientType.Vietnam) >= GameClientType.Chinese_Old)
             parser.TryParse(3, out NameCode);
         else
             parser.TryParse(2, out NameCode);

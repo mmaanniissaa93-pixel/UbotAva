@@ -1,11 +1,12 @@
 using System.Collections.Generic;
-using System.Drawing;
-using UBot.Core.Extensions;
+using UBot.Core.Abstractions;
+using UBot.Core.Client;
+using UBot.Core.Client.ReferenceObjects;
 using UBot.Core.Objects;
 
-namespace UBot.Core.Client.ReferenceObjects;
+namespace UBot.GameData.ReferenceObjects;
 
-public class RefSkill : IReference<uint>
+public class RefSkill : UBot.Core.Client.IReference<uint>, UBot.Core.Abstractions.IReference
 {
     private const int PARAM_COUNT = 50;
 
@@ -16,35 +17,17 @@ public class RefSkill : IReference<uint>
     ///     Gets the ingame name of the spell
     /// </summary>
     /// <returns></returns>
-    public string GetRealName()
+    uint UBot.Core.Abstractions.IReference.ID => ID;
+    public string CodeName => Basic_Code;
+
+    public string GetName()
     {
-        return Game.ReferenceManager.GetTranslation(UI_SkillName);
+        return Basic_Name ?? Basic_Code;
     }
 
-    /// <summary>
-    ///     Gets the icon.
-    /// </summary>
-    /// <returns></returns>
-    public Image GetIcon()
+    public string GetRealName(bool displayRarity = false)
     {
-        Image bitmap = null;
-
-        try
-        {
-            var path = $"icon\\{UI_IconFile}";
-            if (!Game.MediaPk2.TryGetFile(path, out var file))
-                bitmap = Game.MediaPk2.GetFile("icon\\icon_default.ddj").ToImage();
-
-            bitmap = file.ToImage();
-        }
-        catch { }
-        finally
-        {
-            if (bitmap == null)
-                bitmap = new Bitmap(24, 24);
-        }
-
-        return bitmap;
+        return ReferenceProvider.Instance?.GetTranslation(UI_SkillName) ?? UI_SkillName ?? Basic_Name ?? Basic_Code;
     }
 
     public override string ToString()

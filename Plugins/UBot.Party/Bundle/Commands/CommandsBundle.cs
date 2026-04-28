@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using UBot.Core;
 using UBot.Core.Client.ReferenceObjects;
+using UBot.GameData.ReferenceObjects;
 using UBot.Core.Components;
 using UBot.Core.Event;
 using UBot.Core.Extensions;

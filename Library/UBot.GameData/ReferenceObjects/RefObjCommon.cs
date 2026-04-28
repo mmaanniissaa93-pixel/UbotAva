@@ -7,12 +7,12 @@ using UBot.Core.Client.ReferenceObjects;
 namespace UBot.GameData.ReferenceObjects;
 
 [DebuggerDisplay("ID = {ID}; Code = {CodeName}; Name = {ObjName}")]
-public abstract class RefObjCommon : IReference
+public abstract class RefObjCommon : UBot.Core.Abstractions.IReference
 {
     #region IReference
 
-    uint IReference.ID => ID;
-    string IReference.CodeName => CodeName;
+    uint UBot.Core.Abstractions.IReference.ID => ID;
+    string UBot.Core.Abstractions.IReference.CodeName => CodeName;
 
     public uint PrimaryKey => ID;
 

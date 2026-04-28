@@ -1,7 +1,8 @@
-﻿#nullable enable annotations
+#nullable enable annotations
 
 using System.ComponentModel.DataAnnotations;
 using UBot.Core.Client.ReferenceObjects;
+using UBot.GameData.ReferenceObjects;
 
 namespace UBot.Core.Objects;
 

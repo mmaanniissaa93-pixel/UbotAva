@@ -1,5 +1,6 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Client.ReferenceObjects;
+using UBot.GameData.ReferenceObjects;
 using UBot.Core.Objects;
 
 namespace UBot.Lure.Components;

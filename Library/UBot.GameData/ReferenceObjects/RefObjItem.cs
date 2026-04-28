@@ -1,6 +1,10 @@
-namespace UBot.Core.Client.ReferenceObjects;
+using UBot.Core.Abstractions;
+using UBot.Core.Client;
+using UBot.Core.Client.ReferenceObjects;
 
-public class RefObjItem : RefObjCommon, IReference<uint>
+namespace UBot.GameData.ReferenceObjects;
+
+public class RefObjItem : RefObjCommon, UBot.Core.Client.IReference<uint>
 {
     public string Desc1;
     public string Desc2;
@@ -399,20 +403,20 @@ public class RefObjItem : RefObjCommon, IReference<uint>
             switch (DegreeOffset)
             {
                 case 0:
-                    param = Game.ReferenceManager.GetTranslation("PARAM_RARE_FIRST");
+                    param = ReferenceProvider.Instance?.GetTranslation("PARAM_RARE_FIRST");
                     break;
 
                 case 1:
-                    param = Game.ReferenceManager.GetTranslation("PARAM_RARE_SECOND");
+                    param = ReferenceProvider.Instance?.GetTranslation("PARAM_RARE_SECOND");
                     break;
 
                 case 2:
-                    param = Game.ReferenceManager.GetTranslation("PARAM_RARE_THIRD");
+                    param = ReferenceProvider.Instance?.GetTranslation("PARAM_RARE_THIRD");
                     break;
             }
         else
             //Seal of Nova
-            param = Game.ReferenceManager.GetTranslation("PARAM_RARE_FIRST2");
+            param = ReferenceProvider.Instance?.GetTranslation("PARAM_RARE_FIRST2");
 
         return param;
     }

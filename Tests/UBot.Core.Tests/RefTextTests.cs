@@ -1,6 +1,7 @@
 using UBot.Core;
 using UBot.Core.Client;
 using UBot.Core.Client.ReferenceObjects;
+using UBot.GameData.ReferenceObjects;
 using Xunit;
 
 namespace UBot.Core.Tests;
