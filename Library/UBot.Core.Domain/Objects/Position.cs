@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Numerics;
 using UBot.Core.Abstractions;
-using UBot.Core.Network;
-using UBot.NavMeshApi;
 
 namespace UBot.Core.Objects;
 
@@ -155,75 +152,11 @@ public struct Position : IPosition
     }
 
     /// <summary>
-    ///     Reads all requierd data from the packet and returns a new Postion object.
-    /// </summary>
-    /// <param name="packet">The packet.</param>
-    /// <returns></returns>
-    public static Position FromPacket(Packet packet)
-    {
-        return new Position
-        {
-            Region = packet.ReadUShort(),
-            XOffset = packet.ReadFloat(),
-            ZOffset = packet.ReadFloat(),
-            YOffset = packet.ReadFloat(),
-            Angle = packet.ReadShort(),
-        };
-    }
-
-    /// <summary>
-    ///     Reads all requierd data from the packet and returns a new Postion object.
-    /// </summary>
-    /// <param name="packet">The packet.</param>
-    /// <returns></returns>
-    public static Position FromPacketInt(Packet packet)
-    {
-        return new Position
-        {
-            Region = packet.ReadUShort(),
-            XOffset = packet.ReadInt(),
-            ZOffset = packet.ReadInt(),
-            YOffset = packet.ReadInt(),
-        };
-    }
-
-    /// <summary>
-    ///     Reads all requierd data from the packet and returns a new Postion object.
-    /// </summary>
-    /// <param name="packet">The packet.</param>
-    /// <returns></returns>
-    public static Position FromPacketConditional(Packet packet, bool parseLayerWorldId = true)
-    {
-        Position position = new() { Region = packet.ReadUShort() };
-
-        if (!position.Region.IsDungeon)
-        {
-            position.XOffset = packet.ReadShort();
-            position.ZOffset = packet.ReadShort();
-            position.YOffset = packet.ReadShort();
-        }
-        else
-        {
-            position.XOffset = packet.ReadInt();
-            position.ZOffset = packet.ReadInt();
-            position.YOffset = packet.ReadInt();
-        }
-
-        if (parseLayerWorldId)
-        {
-            position.WorldId = packet.ReadShort();
-            position.LayerId = packet.ReadShort();
-        }
-
-        return position;
-    }
-
-    /// <summary>
     ///     Calculates the distance to the current player
     /// </summary>
     public double DistanceToPlayer()
     {
-        return DistanceTo(Game.Player.Position);
+        return RuntimeContext?.DistanceToPlayer(this) ?? 0;
     }
 
     /// <summary>
@@ -247,21 +180,10 @@ public struct Position : IPosition
         return $"X:{X:0.0} Y:{Y:0.0}";
     }
 
-    public bool TryGetNavMeshTransform(out NavMeshTransform transform)
+    public bool HasCollisionBetween(Position destination)
     {
-        transform = new NavMeshTransform(Region.Id, new Vector3(XOffset, ZOffset, YOffset));
-
-        return NavMeshManager.ResolveCellAndHeight(transform);
+        return RuntimeContext?.HasCollisionBetween(this, destination) ?? false;
     }
 
-    public bool HasCollisionBetween(Position destination, NavMeshRaycastType type = NavMeshRaycastType.Attack)
-    {
-        if (!Kernel.EnableCollisionDetection)
-            return false;
-
-        if (!TryGetNavMeshTransform(out var srcTransform) || !destination.TryGetNavMeshTransform(out var destTransform))
-            return false;
-
-        return !NavMeshManager.Raycast(srcTransform, destTransform, type);
-    }
+    public static IPositionRuntimeContext RuntimeContext { get; set; }
 }

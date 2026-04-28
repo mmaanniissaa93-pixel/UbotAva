@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UBot.Core.Event;
+using UBot.Core.Objects;
 using UBot.Core.Objects.Party;
 
 namespace UBot.Core.Network.Handler.Agent.Party;
@@ -41,7 +42,7 @@ internal class PartyCreateFromMatching : IPacketHandler
 
         var memberAmount = packet.ReadByte();
         for (var iMember = 0; iMember < memberAmount; iMember++)
-            Game.Party.Members.Add(PartyMember.FromPacket(packet));
+            Game.Party.Members.Add(packet.ReadPartyMember());
 
         Game.Party.Leader = Game.Party.GetMemberById(leaderId);
 

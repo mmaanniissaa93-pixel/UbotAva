@@ -298,7 +298,7 @@ public class InventoryItem
             item.Slot = packet.ReadByte();
 
         if (Game.ClientType > GameClientType.Thailand)
-            item.Rental = RentInfo.FromPacket(packet);
+            item.Rental = packet.ReadRentInfo(Game.ClientType);
 
         item.ItemId = packet.ReadUInt();
 
@@ -319,7 +319,7 @@ public class InventoryItem
             //Read magic options for the item
             var magicOptionsAmount = packet.ReadByte();
             for (var iMagicOption = 0; iMagicOption < magicOptionsAmount; iMagicOption++)
-                item.MagicOptions.Add(MagicOptionInfo.FromPacket(packet));
+                item.MagicOptions.Add(packet.ReadMagicOptionInfo());
 
             if (Game.ClientType > GameClientType.Thailand)
             {
@@ -349,7 +349,7 @@ public class InventoryItem
                     var bindingType = (BindingOptionType)packet.ReadByte();
                     var bindingAmount = packet.ReadByte();
                     for (var iSocketAmount = 0; iSocketAmount < bindingAmount; iSocketAmount++)
-                        item.BindingOptions.Add(BindingOption.FromPacket(packet, bindingType));
+                        item.BindingOptions.Add(packet.ReadBindingOption(bindingType));
                 }
             }
         }
@@ -364,7 +364,7 @@ public class InventoryItem
                 item.Cos.Name = packet.ReadString(); //Name
 
                 if (record.TypeID4 == 2)
-                    item.Cos.Rental = RentInfo.FromPacket(packet);
+                    item.Cos.Rental = packet.ReadRentInfo(Game.ClientType);
                 else if (Game.ClientType >= GameClientType.Chinese_Old)
                     item.Cos.Level = packet.ReadByte(); // cos level
 

@@ -353,11 +353,12 @@ public static class SkillManager
         var movingSleep = 0d;
 
         // tel3 warrior sprint teleport
-        var tel3Index = skill.Record.Params.FindIndex(p => p == 1952803891);
+        var skillRecord = skill.Record;
+        var tel3Index = skillRecord.Params.FindIndex(new Predicate<int>(p => p == 1952803891));
         if (tel3Index != -1)
         {
-            var tel3speed = skill.Record.Params[++tel3Index];
-            var tel3meter = skill.Record.Params[++tel3Index] / 10;
+            var tel3speed = skillRecord.Params[++tel3Index];
+            var tel3meter = skillRecord.Params[++tel3Index] / 10;
 
             if (distance < tel3meter)
                 movingSleep = distance / tel3speed;
@@ -366,7 +367,7 @@ public static class SkillManager
         }
         else
         {
-            var range = skill.Record.Action_Range / 10;
+            var range = skillRecord.Action_Range / 10;
             if (distance - 3 > range)
                 movingSleep = (distance - range) / speed;
         }

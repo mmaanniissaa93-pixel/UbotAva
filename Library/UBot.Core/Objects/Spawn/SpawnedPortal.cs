@@ -46,7 +46,7 @@ public sealed class SpawnedPortal : SpawnedBionic
     {
         var result = new SpawnedPortal(characterId);
         result.UniqueId = packet.ReadUInt();
-        result.Movement.Source = Position.FromPacket(packet);
+        result.Movement.Source = packet.ReadPosition();
 
         var teleportObj = Game.ReferenceManager.GetRefObjChar(result.Id);
         if (teleportObj != null)

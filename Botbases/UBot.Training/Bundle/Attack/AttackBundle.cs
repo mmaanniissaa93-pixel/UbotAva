@@ -158,7 +158,7 @@ internal class AttackBundle : IBundle
         if (record == null)
             return 0;
 
-        var parameters = record.Params;
+        var parameters = (System.Collections.Generic.List<int>)record.Params;
         if (parameters != null && parameters.Count > 0)
         {
             // tel3 marker used by movement skills such as Ghost Walk family.

@@ -73,6 +73,12 @@ public class ReferenceManager : IReferenceManager
         ReferenceProvider.Instance = this;
     }
 
+    object IReferenceManager.GetRefSkill(uint id) => GetRefSkill(id);
+
+    object IReferenceManager.GetRefSkillMastery(uint id) => GetRefSkillMastery(id);
+
+    object IReferenceManager.GetMagicOption(uint id) => GetMagicOption(id);
+
     public void Load(int languageTab, BackgroundWorker worker)
     {
         LanguageTab = languageTab; //until language wizard is reworked?

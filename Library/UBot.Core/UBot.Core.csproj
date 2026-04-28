@@ -21,6 +21,7 @@
     <ProjectReference Include="..\UBot.GameData\UBot.GameData.csproj" />
     <ProjectReference Include="..\UBot.NavMeshApi\UBot.NavMeshApi.csproj" />
     <ProjectReference Include="..\UBot.Core.Common\UBot.Core.Common.csproj" />
+    <ProjectReference Include="..\UBot.Core.Domain\UBot.Core.Domain.csproj" />
   </ItemGroup>
 
 </Project>

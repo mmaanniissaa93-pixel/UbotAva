@@ -22,6 +22,9 @@ public interface IReferenceManager
 
     object GetRefObjChar(uint id);
     object GetRefItem(string codeName);
+    object GetRefSkill(uint id);
+    object GetRefSkillMastery(uint id);
+    object GetMagicOption(uint id);
     object GetQuestReward(uint id);
     IEnumerable<object> GetQuestRewardItems(uint id);
     IEnumerable<object> GetShopTabs(string shopCodeName);

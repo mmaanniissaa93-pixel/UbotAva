@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using UBot.Core;
 using UBot.Core.Network;
 
@@ -20,7 +20,7 @@ internal class PartyMatchingInviteRequest : IPacketHandler
             //var memberPrimaryMastery = packet.ReadUInt();
             //var memberSecondaryMastery = packet.ReadUInt();
             //var unkByte0 = packet.ReadByte();
-            //var member = PartyMember.FromPacket(packet);
+            //var member = packet.ReadPartyMember();
 
             ushort opcode = 0x306E;
             if (Game.ClientType >= GameClientType.Chinese)

@@ -1,6 +1,5 @@
 ﻿using System.Runtime.InteropServices;
 using UBot.Core.Abstractions;
-using UBot.Core.Network;
 
 namespace UBot.Core.Objects;
 
@@ -63,15 +62,6 @@ public struct Region : IRegion
             new(X, (byte)(Y - 1)), //BC
             new((byte)(X + 1), (byte)(Y - 1)), //BR
         };
-    }
-
-    /// <summary>
-    ///     Write current value to the packet
-    /// </summary>
-    /// <param name="packet">The packet.</param>
-    internal void Serialize(Packet packet)
-    {
-        packet.WriteUShort(Id);
     }
 
     public static bool TryParse(string value, out Region parsedValue)

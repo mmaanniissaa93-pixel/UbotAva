@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using UBot.Core.Components;
 using UBot.Core.Event;
@@ -132,7 +132,7 @@ public class Action
                     // dont worry it will return true for knockdown states
                     if (state.HasFlag(ActionHitStateFlag.KnockBack))
                     {
-                        var position = Position.FromPacketInt(packet);
+                        var position = packet.ReadPositionInt();
                         if (entity == null)
                             continue;
 
@@ -144,7 +144,7 @@ public class Action
 
         if (Flag.HasFlag(ActionStateFlag.Teleport))
         {
-            var position = Position.FromPacketInt(packet);
+            var position = packet.ReadPositionInt();
             if (PlayerIsExecutor)
             {
                 Game.Player.SetSource(position);

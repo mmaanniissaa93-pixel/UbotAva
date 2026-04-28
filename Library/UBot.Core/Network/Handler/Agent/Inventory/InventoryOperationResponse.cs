@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UBot.Core.Components;
 using UBot.Core.Event;
 using UBot.Core.Objects;
@@ -684,7 +684,7 @@ internal class InventoryOperationResponse : IPacketHandler
                 };
 
                 if (Game.ClientType > GameClientType.Thailand)
-                    item.Rental = RentInfo.FromPacket(packet);
+                    item.Rental = packet.ReadRentInfo(Game.ClientType);
 
                 Game.Player.Inventory.Add(item);
             }

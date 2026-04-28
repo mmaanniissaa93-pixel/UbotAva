@@ -1,4 +1,4 @@
-﻿using UBot.Core.Components;
+using UBot.Core.Components;
 using UBot.Core.Event;
 using UBot.Core.Objects;
 using UBot.Core.Objects.Spawn;
@@ -35,7 +35,7 @@ internal class EntityUpdateMovementResponse : IPacketHandler
 
         var uniqueId = packet.ReadUInt();
 
-        var movement = Movement.MotionFromPacket(packet);
+        var movement = packet.ReadMotionMovement();
         if (uniqueId == player.UniqueId)
         {
             // Set source from movement

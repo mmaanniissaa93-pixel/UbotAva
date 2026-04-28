@@ -45,12 +45,12 @@ public class Skills
         packet.ReadByte(); //unknown
 
         while (packet.ReadByte() == 0x01)
-            result.Masteries.Add(MasteryInfo.FromPacket(packet));
+            result.Masteries.Add(packet.ReadMasteryInfo());
 
         packet.ReadByte(); //unknown
 
         while (packet.ReadByte() == 0x01)
-            result.KnownSkills.Add(SkillInfo.FromPacket(packet));
+            result.KnownSkills.Add(packet.ReadSkillInfo());
 
         return result;
     }

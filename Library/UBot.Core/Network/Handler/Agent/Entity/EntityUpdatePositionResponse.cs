@@ -1,4 +1,4 @@
-﻿using UBot.Core.Components;
+using UBot.Core.Components;
 using UBot.Core.Objects;
 using UBot.Core.Objects.Spawn;
 
@@ -29,7 +29,7 @@ internal class EntityUpdatePositionResponse : IPacketHandler
     public void Invoke(Packet packet)
     {
         var uniqueId = packet.ReadUInt();
-        var position = Position.FromPacket(packet);
+        var position = packet.ReadPosition();
         if (uniqueId == Game.Player.UniqueId)
         {
             Game.Player.StopMoving(position);

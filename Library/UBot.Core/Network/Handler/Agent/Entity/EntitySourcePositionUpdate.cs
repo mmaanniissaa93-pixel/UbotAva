@@ -1,4 +1,4 @@
-﻿using UBot.Core.Components;
+using UBot.Core.Components;
 using UBot.Core.Objects;
 using UBot.Core.Objects.Spawn;
 
@@ -32,7 +32,7 @@ internal class EntitySourcePositionUpdate : IPacketHandler
         if (player == null)
             return;
 
-        var position = Position.FromPacket(packet);
+        var position = packet.ReadPosition();
         var uniqueId = packet.ReadUInt();
 
         if (uniqueId == player.UniqueId)

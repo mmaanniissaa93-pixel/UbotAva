@@ -80,7 +80,7 @@ public class SpawnedItem : SpawnedEntity
             result.OwnerName = packet.ReadString();
 
         result.UniqueId = packet.ReadUInt();
-        result.Movement.Source = Position.FromPacket(packet);
+        result.Movement.Source = packet.ReadPosition();
         result.HasOwner = packet.ReadBool();
 
         if (result.HasOwner)

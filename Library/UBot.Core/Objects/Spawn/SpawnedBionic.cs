@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Timers;
@@ -77,7 +77,7 @@ public class SpawnedBionic : SpawnedEntity
     {
         UniqueId = packet.ReadUInt();
 
-        var movement = Movement.FromPacket(packet);
+        var movement = packet.ReadMovement();
         State.Deserialize(packet);
         SetMovement(movement);
     }

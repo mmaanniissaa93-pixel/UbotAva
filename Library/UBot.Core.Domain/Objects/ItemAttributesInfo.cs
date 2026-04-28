@@ -2,8 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using UBot.Core.Client.ReferenceObjects;
-using UBot.GameData.ReferenceObjects;
 using UBot.Core.Extensions;
 
 namespace UBot.Core.Objects;
@@ -186,7 +184,7 @@ public struct ItemAttributesInfo : IEquatable<ItemAttributesInfo>
         return (byte)value;
     }
 
-    public static IEnumerable<ItemAttributeGroup>? GetAvailableAttributeGroupsForItem(RefObjItem item)
+    public static IEnumerable<ItemAttributeGroup>? GetAvailableAttributeGroupsForItem(dynamic item)
     {
         if (item.IsArmor)
             return new[]
@@ -228,7 +226,7 @@ public struct ItemAttributesInfo : IEquatable<ItemAttributesInfo>
         return null;
     }
 
-    public static ItemAttributeGroup GetAttributeGroupBySlot(RefObjItem item, byte slot)
+    public static ItemAttributeGroup GetAttributeGroupBySlot(dynamic item, byte slot)
     {
         if ((item.IsWeapon || item.IsShield || item.IsArmor) && slot == 0)
             return ItemAttributeGroup.Durability;
@@ -282,7 +280,7 @@ public struct ItemAttributesInfo : IEquatable<ItemAttributesInfo>
         throw new Exception($"Unknown attribute type requested! [slot={slot}]");
     }
 
-    public static string? GetActualAttributeGroupNameForItem(RefObjItem item, ItemAttributeGroup group)
+    public static string? GetActualAttributeGroupNameForItem(dynamic item, ItemAttributeGroup group)
     {
         //Weapon attributes
         if (item.IsWeapon && group == ItemAttributeGroup.Durability)
@@ -354,7 +352,7 @@ public struct ItemAttributesInfo : IEquatable<ItemAttributesInfo>
         return null;
     }
 
-    public static byte GetAttributeSlotForItem(ItemAttributeGroup group, RefObjItem item)
+    public static byte GetAttributeSlotForItem(ItemAttributeGroup group, dynamic item)
     {
         //Weapon attributes
         if (item.IsWeapon && group == ItemAttributeGroup.Durability)
@@ -424,7 +422,7 @@ public struct ItemAttributesInfo : IEquatable<ItemAttributesInfo>
             return ArmorEvasionRatio;
 
         throw new ArgumentException(
-            $"Could not identify slot for the attribute {group.GetTranslation()} [ItemId = {item.ID}]"
+            $"Could not identify slot for the attribute {group} [ItemId = {item.ID}]"
         );
     }
 

@@ -1,4 +1,4 @@
-﻿using UBot.Core.Event;
+using UBot.Core.Event;
 using UBot.Core.Objects;
 using UBot.Core.Objects.Party;
 
@@ -43,7 +43,7 @@ internal class PartyUpdateResponse : IPacketHandler
                 break;
 
             case PartyUpdateType.Joined:
-                var memberJoined = PartyMember.FromPacket(packet);
+                var memberJoined = packet.ReadPartyMember();
                 Game.Party.Members?.Add(memberJoined);
                 EventManager.FireEvent("OnPartyMemberJoin", memberJoined);
                 break;
@@ -97,7 +97,7 @@ internal class PartyUpdateResponse : IPacketHandler
 
                     case PartyMemberUpdateType.Position:
 
-                        member.Position = Position.FromPacketConditional(packet);
+                        member.Position = packet.ReadPositionConditional();
 
                         break;
 

@@ -22,6 +22,7 @@
       <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\Library\UBot.Core.Common\UBot.Core.Common.csproj" />
+    <ProjectReference Include="..\..\Library\UBot.Core.Domain\UBot.Core.Domain.csproj" />
 </ItemGroup>
 </Project>
 

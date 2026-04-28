@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UBot.Core.Event;
 using UBot.Core.Objects;
 using UBot.Core.Objects.Item;
@@ -61,7 +61,7 @@ internal class InventoryUpdateItemResponse : IPacketHandler
             var magParamCount = packet.ReadByte();
 
             for (var i = 0; i < magParamCount; i++)
-                item.MagicOptions.Add(MagicOptionInfo.FromPacket(packet));
+                item.MagicOptions.Add(packet.ReadMagicOptionInfo());
         }
 
         if (itemUpdateFlag.HasFlag(ItemUpdateFlag.Unknown))
