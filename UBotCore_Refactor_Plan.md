@@ -21,8 +21,9 @@ Bu dokuman `Library/UBot.Core` analizi sonucunda bulunan kod hatalari, eksikler 
 - Faz 5 tamamlandi: Config parser, invariant culture conversion, enum parse, atomic save ve PlayerConfig.Load(charName) davranisi duzeltildi.
 - Faz 6 tamamlandi: Clientless keep-alive/relogin worker akisi tek worker garantisi ve cancellation token tabanli shutdown davranisiyla duzeltildi.
 - Faz 7 tamamlandi: Kullanilmayan WinForms `ListViewExtensions` helper'i Core'dan kaldirildi ve `AwaitCallback` icindeki `Application.DoEvents()` WinForms bagimliligi temizlendi. `IExtension.View` ve `LanguageManager.Translate(Control)` kontratlari plugin uyumlulugu icin bu fazda korunmustur.
-- Test kapsami genisletildi: PacketManager, ExtensionManager, Config ve ClientlessManager icin regresyon testleri eklendi; statik runtime state kullanan core testleri seri calisacak sekilde ayarlandi.
-- Son dogrulama: `dotnet test .\Tests\UBot.Core.Tests\UBot.Core.Tests.csproj` sonucunda 21/21 test basarili.
+- Faz 8 tamamlandi: Plugin manifest/version range ve Proxy gateway/agent state-event davranislari icin ek regresyon testleri eklendi.
+- Test kapsami genisletildi: PacketManager, ExtensionManager, Config, ClientlessManager, PluginContractManifestLoader, PluginVersionRange ve Proxy icin regresyon testleri eklendi; statik runtime state kullanan core testleri seri calisacak sekilde ayarlandi.
+- Son dogrulama: `dotnet test .\Tests\UBot.Core.Tests\UBot.Core.Tests.csproj` sonucunda 34/34 test basarili.
 - Son dogrulama: `powershell.exe -ExecutionPolicy Bypass .\build.ps1 -Configuration Debug -DoNotStart` sonucunda build basarili, 0 uyari, 0 hata.
 
 ## Oncelik Sirasi
