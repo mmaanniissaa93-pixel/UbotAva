@@ -3,8 +3,14 @@ using System.IO;
 using System.Text;
 using UBot.Core.Extensions;
 
+
 namespace UBot.Core.Network
 {
+    public static class GameClientTypeAccessor
+    {
+        public static GameClientType ActiveClientType { get; set; }
+    }
+
     public class Packet : IDisposable
     {
         private BinaryWriter _writer;
@@ -579,21 +585,21 @@ namespace UBot.Core.Network
                 var length = _reader.ReadUInt16();
                 var bytes = _reader.ReadBytes(length);
 
-                if (Game.ClientType == GameClientType.RuSro)
+                if (GameClientTypeAccessor.ActiveClientType == GameClientType.RuSro)
                     codepage = 1251;
 
-                if (Game.ClientType == GameClientType.Chinese || Game.ClientType == GameClientType.Taiwan)
+                if (GameClientTypeAccessor.ActiveClientType == GameClientType.Chinese || GameClientTypeAccessor.ActiveClientType == GameClientType.Taiwan)
                     codepage = 950;
 
-                if (Game.ClientType == GameClientType.Korean)
+                if (GameClientTypeAccessor.ActiveClientType == GameClientType.Korean)
                     codepage = 949;
 
-                if (Game.ClientType == GameClientType.Japanese)
+                if (GameClientTypeAccessor.ActiveClientType == GameClientType.Japanese)
                     codepage = 932;
 
-                if (Game.ClientType == GameClientType.Global
-                    || Game.ClientType == GameClientType.VTC_Game
-                    || Game.ClientType == GameClientType.Turkey)
+                if (GameClientTypeAccessor.ActiveClientType == GameClientType.Global
+                    || GameClientTypeAccessor.ActiveClientType == GameClientType.VTC_Game
+                    || GameClientTypeAccessor.ActiveClientType == GameClientType.Turkey)
                     codepage = 65001;
 
                 return Encoding.GetEncoding(codepage).GetString(bytes);
@@ -1129,21 +1135,21 @@ namespace UBot.Core.Network
                 if (value == null)
                     value = string.Empty;
 
-                if (Game.ClientType == GameClientType.RuSro)
+                if (GameClientTypeAccessor.ActiveClientType == GameClientType.RuSro)
                     codePage = 1251;
 
-                if (Game.ClientType == GameClientType.Chinese || Game.ClientType == GameClientType.Taiwan)
+                if (GameClientTypeAccessor.ActiveClientType == GameClientType.Chinese || GameClientTypeAccessor.ActiveClientType == GameClientType.Taiwan)
                     codePage = 950;
 
-                if (Game.ClientType == GameClientType.Korean)
+                if (GameClientTypeAccessor.ActiveClientType == GameClientType.Korean)
                     codePage = 949;
 
-                if (Game.ClientType == GameClientType.Japanese)
+                if (GameClientTypeAccessor.ActiveClientType == GameClientType.Japanese)
                     codePage = 932;
 
-                if (Game.ClientType == GameClientType.Global
-                    || Game.ClientType == GameClientType.VTC_Game
-                    || Game.ClientType == GameClientType.Turkey)
+                if (GameClientTypeAccessor.ActiveClientType == GameClientType.Global
+                    || GameClientTypeAccessor.ActiveClientType == GameClientType.VTC_Game
+                    || GameClientTypeAccessor.ActiveClientType == GameClientType.Turkey)
                     codePage = 65001;
 
                 var bytes = Encoding.GetEncoding(codePage).GetBytes(value);

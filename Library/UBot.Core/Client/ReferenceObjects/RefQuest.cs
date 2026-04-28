@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace UBot.Core.Client.ReferenceObjects;
 
@@ -65,7 +65,7 @@ public class RefQuest : IReference<uint>
 //ID                    29
 //CodeName              QSP_ALL_POTION_1
 //[Level]               20
-//DescName              재생의 물약 퀘스트
+//DescName              ??? ?? ???
 //NameString            SN_QSP_ALL_POTION_1
 //PayString             SN_PAY_QSP_ALL_POTION_1
 //ContentsString        xxx

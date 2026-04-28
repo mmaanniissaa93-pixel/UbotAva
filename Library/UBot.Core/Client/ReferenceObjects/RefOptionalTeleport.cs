@@ -1,4 +1,4 @@
-﻿using UBot.Core.Objects;
+using UBot.Core.Objects;
 
 namespace UBot.Core.Client.ReferenceObjects;
 

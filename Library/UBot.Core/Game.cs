@@ -184,6 +184,7 @@ public class Game
     public static void Initialize()
     {
         ClientType = GlobalConfig.GetEnum("UBot.Game.ClientType", GameClientType.Vietnam);
+        GameClientTypeAccessor.ActiveClientType = ClientType;
         ReferenceManager = new ReferenceManager();
         Party = new Party();
 

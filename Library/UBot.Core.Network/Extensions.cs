@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.IO;
 using System.Text;
 
 namespace UBot.Core.Extensions;
@@ -25,8 +26,7 @@ public static class ByteArrayExtensions
                 if (x > 0)
                 {
                     output.AppendFormat("  {0}{1}", ascii_output, Environment.NewLine);
-                    //ascii_output.Remove(0, ascii_output.Length);
-                    ascii_output.Clear(); //requires .NET 4.0 up
+                    ascii_output.Clear();
                 }
 
                 if (x != length)
@@ -51,4 +51,19 @@ public static class ByteArrayExtensions
 
         return output.ToString().TrimEnd('\r', '\n', ' ');
     }
+}
+
+public static class BinaryWriterExtensions
+{
+    public static void WriteAscii(this BinaryWriter writer, string value)
+    {
+        var encoding = Encoding.UTF8;
+
+        var buffer = encoding.GetBytes(value);
+
+        writer.Write(buffer.Length);
+        writer.Write(buffer);
+    }
+
+    public static byte[] GetSnapshot(this BinaryWriter binary) => ((MemoryStream)binary.BaseStream).ToArray();
 }

@@ -1,4 +1,4 @@
-﻿namespace UBot.Core.Client.ReferenceObjects;
+namespace UBot.Core.Client.ReferenceObjects;
 
 public class RefPackageItem
 {

@@ -1,4 +1,4 @@
-﻿namespace UBot.Core.Client.ReferenceObjects;
+namespace UBot.Core.Client.ReferenceObjects;
 
 public class RefSkillMastery : IReference<uint>
 {
@@ -57,7 +57,7 @@ public class RefSkillMastery : IReference<uint>
 }
 
 //Mastery ID: 257
-//Mastery Name - Do Not Use: 비천검법101
+//Mastery Name - Do Not Use: ????101
 //MasteryNameCode: UIIT_STT_MASTERY_VI
 //GroupNum: 10
 //Mastery Description ID: UIIT_STT_MASTERY_VI_EXPLANATION

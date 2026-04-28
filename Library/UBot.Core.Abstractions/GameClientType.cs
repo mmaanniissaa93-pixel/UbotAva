@@ -1,4 +1,4 @@
-﻿namespace UBot.Core;
+namespace UBot.Core;
 
 public enum GameClientType : byte
 {
