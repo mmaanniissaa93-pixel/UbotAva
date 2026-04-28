@@ -22,6 +22,7 @@ Bu dokuman `Library/UBot.Core` analizi sonucunda bulunan kod hatalari, eksikler 
 - Faz 6 tamamlandi: Clientless keep-alive/relogin worker akisi tek worker garantisi ve cancellation token tabanli shutdown davranisiyla duzeltildi.
 - Faz 7 tamamlandi: Kullanilmayan WinForms `ListViewExtensions` helper'i Core'dan kaldirildi ve `AwaitCallback` icindeki `Application.DoEvents()` WinForms bagimliligi temizlendi. `IExtension.View` ve `LanguageManager.Translate(Control)` kontratlari plugin uyumlulugu icin bu fazda korunmustur.
 - Faz 8 tamamlandi: Plugin manifest/version range ve Proxy gateway/agent state-event davranislari icin ek regresyon testleri eklendi.
+- Faz 9 tamamlandi: Uzun vadeli proje/katman bolme icin bagimlilik envanteri ve adimli migration blueprint'i `docs/UBotCore_Phase9_ProjectStructure.md` dosyasina eklendi. Ilk guvenli fiziksel ayrim olarak `UBot.Core.Abstractions` projesi olusturuldu, `PacketDestination` bu projeye tasindi ve public packet API kullanan projelere dogrudan abstraction referansi eklendi.
 - Test kapsami genisletildi: PacketManager, ExtensionManager, Config, ClientlessManager, PluginContractManifestLoader, PluginVersionRange ve Proxy icin regresyon testleri eklendi; statik runtime state kullanan core testleri seri calisacak sekilde ayarlandi.
 - Son dogrulama: `dotnet test .\Tests\UBot.Core.Tests\UBot.Core.Tests.csproj` sonucunda 34/34 test basarili.
 - Son dogrulama: `powershell.exe -ExecutionPolicy Bypass .\build.ps1 -Configuration Debug -DoNotStart` sonucunda build basarili, 0 uyari, 0 hata.

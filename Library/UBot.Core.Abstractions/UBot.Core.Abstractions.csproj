@@ -1,21 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Nullable>disable</Nullable>
-    <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>disable</ImplicitUsings>
-    <OutputPath>.\..\..\Build\Data\Plugins</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <Description>Automatically selects nearby valid player targets with safe retargeting cooldowns.</Description>
+    <Description>Shared contracts and dependency-light abstractions for UBot runtime, plugins, and network components.</Description>
     <Copyright>Copyright (c) 2018 - 2026, UBot Team</Copyright>
     <PackageProjectUrl>https://github.com/mmaanniissaa93-pixel/ubot</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mmaanniissaa93-pixel/ubot</RepositoryUrl>
-    <OutputType>Library</OutputType>
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\Library\UBot.Core\UBot.Core.csproj" />
-    <ProjectReference Include="..\..\Library\UBot.Core.Abstractions\UBot.Core.Abstractions.csproj" />
-  </ItemGroup>
 </Project>

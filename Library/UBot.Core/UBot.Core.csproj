@@ -15,6 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\UBot.Core.Abstractions\UBot.Core.Abstractions.csproj" />
     <ProjectReference Include="..\UBot.FileSystem\UBot.FileSystem.csproj" />
     <ProjectReference Include="..\UBot.NavMeshApi\UBot.NavMeshApi.csproj" />
   </ItemGroup>

@@ -1,4 +1,4 @@
-﻿namespace UBot.Core.Network;
+namespace UBot.Core.Network;
 
 public enum PacketDestination
 {

@@ -18,6 +18,9 @@
     <ProjectReference Include="..\..\Library\UBot.Core\UBot.Core.csproj">
       <Private>False</Private>
     </ProjectReference>
+    <ProjectReference Include="..\..\Library\UBot.Core.Abstractions\UBot.Core.Abstractions.csproj">
+      <Private>False</Private>
+    </ProjectReference>
 </ItemGroup>
 </Project>
 

@@ -17,6 +17,7 @@
   <ItemGroup>
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
     <ProjectReference Include="..\..\Library\UBot.Core\UBot.Core.csproj" />
+    <ProjectReference Include="..\..\Library\UBot.Core.Abstractions\UBot.Core.Abstractions.csproj" />
 <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 
