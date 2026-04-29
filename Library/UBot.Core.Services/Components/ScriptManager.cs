@@ -1,10 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
+using UBot.Core.Abstractions.Services;
 using UBot.Core.Components.Scripting;
-using UBot.Core.Event;
 using UBot.Core.Objects;
+using UBot.Core.Services;
 
 namespace UBot.Core.Components;
 
@@ -39,56 +41,18 @@ public class ScriptManager
 {
     private static readonly object _commandHandlersLock = new();
 
-    /// <summary>
-    ///     Gets the initial directory
-    /// </summary>
-    public static string InitialDirectory => Path.Combine(Kernel.BasePath, "Data", "Scripts");
+    public static string InitialDirectory => Path.Combine(Runtime?.BasePath ?? string.Empty, "Data", "Scripts");
 
-    /// <summary>
-    ///     Gets or sets the file.
-    /// </summary>
-    /// <value>
-    ///     The file.
-    /// </value>
     public static string File { get; set; }
 
-    /// <summary>
-    ///     Gets or sets the commands.
-    /// </summary>
-    /// <value>
-    ///     The commands.
-    /// </value>
     public static string[] Commands { get; set; }
 
-    /// <summary>
-    ///     Gets or sets a value indicating whether this <see cref="ScriptManager" /> is running.
-    /// </summary>
-    /// <value>
-    ///     <c>true</c> if running; otherwise, <c>false</c>.
-    /// </value>
     public static bool Running { get; set; }
 
-    /// <summary>
-    ///     Gets the command handlers.
-    /// </summary>
-    /// <value>The command handlers.</value>
     public static List<IScriptCommand> CommandHandlers { get; private set; }
 
-    /// <summary>
-    ///     Gets the index of the current line.
-    /// </summary>
-    /// <value>
-    ///     The index of the current line.
-    /// </value>
     public static int CurrentLineIndex { get; private set; }
 
-    /// <summary>
-    ///     Gets or sets the argument separator.
-    ///     Modify this value in case of custom script syntax support
-    /// </summary>
-    /// <value>
-    ///     The argument separator.
-    /// </value>
     public static char ArgumentSeparator { get; set; } = ' ';
 
     public static bool Paused { get; private set; }
@@ -155,15 +119,11 @@ public class ScriptManager
         }
     }
 
-    /// <summary>
-    ///     Loads the specified file.
-    /// </summary>
-    /// <param name="file">The file.</param>
     public static void Load(string file)
     {
         if (!System.IO.File.Exists(file))
         {
-            Log.Notify($"Cannot load file [{file}] (File does not exist)!");
+            ServiceRuntime.Log?.Notify($"Cannot load file [{file}] (File does not exist)!");
             return;
         }
 
@@ -171,38 +131,35 @@ public class ScriptManager
         File = file;
         Commands = System.IO.File.ReadAllLines(file);
 
-        EventManager.FireEvent("OnLoadScript");
+        Runtime?.FireEvent("OnLoadScript");
+        Report(ScriptExecutionState.Loaded, 0, "<load>", $"Loaded script {file}");
     }
 
-    /// <summary>
-    ///     Loads the specified commands.
-    /// </summary>
-    /// <param name="commands">The commands.</param>
     public static void Load(string[] commands)
     {
         Commands = commands;
-        EventManager.FireEvent("OnLoadScript");
+        Runtime?.FireEvent("OnLoadScript");
+        Report(ScriptExecutionState.Loaded, 0, "<load>", "Loaded script commands.");
     }
 
-    /// <summary>
-    ///     Pauses the command execution.
-    /// </summary>
     public static void Pause()
     {
         Paused = true;
 
-        EventManager.FireEvent("OnPauseScript");
+        Runtime?.FireEvent("OnPauseScript");
+        Report(ScriptExecutionState.Paused, CurrentLineIndex, "<pause>", "Script paused.");
     }
 
-    /// <summary>
-    ///     Runs this instance.
-    /// </summary>
     public static void RunScript(bool useNearbyWaypoint = true, bool ignoreBotRunning = false)
+    {
+        RunScriptAsync(useNearbyWaypoint, ignoreBotRunning).GetAwaiter().GetResult();
+    }
+
+    public static async Task RunScriptAsync(bool useNearbyWaypoint = true, bool ignoreBotRunning = false)
     {
         if (Commands == null || Commands.Length == 0)
         {
-            LogScriptMessage("No script loaded.", 0, LogLevel.Warning);
-
+            LogScriptMessage("No script loaded.", 0, ScriptValidationSeverity.Warning);
             return;
         }
 
@@ -217,14 +174,15 @@ public class ScriptManager
         {
             LogValidationIssues(validationResult);
             Running = false;
-            EventManager.FireEvent("OnScriptLintFailed", validationResult);
+            Runtime?.FireEvent("OnScriptLintFailed", validationResult);
+            Report(ScriptExecutionState.Failed, CurrentLineIndex, "<lint>", "Script validation failed.");
             return;
         }
 
         CurrentLineIndex = validationResult.StartLineIndex;
 
         if (CurrentLineIndex != 0)
-            Log.Debug($"[Script] Found nearby walk position at line #{CurrentLineIndex}");
+            ServiceRuntime.Log?.Debug($"[Script] Found nearby walk position at line #{CurrentLineIndex}");
 
         if (Commands == null || Commands.Length == 0 || Commands.Length <= CurrentLineIndex)
         {
@@ -235,30 +193,25 @@ public class ScriptManager
         var error = false;
         for (var lineIndex = CurrentLineIndex; lineIndex < Commands.Length; lineIndex++)
         {
-            if (!Running || Paused || (!Kernel.Bot.Running && !ignoreBotRunning))
+            if (!Running || Paused || (!IsBotRunning && !ignoreBotRunning))
             {
                 error = true;
-
                 break;
             }
 
             CurrentLineIndex = lineIndex;
 
-            Log.Debug($"[Script] Executing line #{lineIndex}");
-            Log.Status("Running walk script");
+            ServiceRuntime.Log?.Debug($"[Script] Executing line #{lineIndex}");
+            ServiceRuntime.Log?.Notify("Running walk script");
 
             var scriptLine = Commands[lineIndex];
             var arguments = SplitArguments(scriptLine);
             var commandName = arguments.Length == 0 ? string.Empty : arguments[0];
 
-            if (
-                string.IsNullOrEmpty(commandName)
-                || commandName.Trim().StartsWith("//")
-                || commandName.Trim().StartsWith("#")
-            )
+            if (IsCommentOrEmpty(scriptLine))
             {
                 CurrentLineIndex = lineIndex + 1;
-                continue; //No command name given / empty line
+                continue;
             }
 
             IScriptCommand handler;
@@ -268,10 +221,9 @@ public class ScriptManager
                 );
             if (handler == null)
             {
-                LogScriptMessage("No script command handler found.", lineIndex, LogLevel.Warning);
+                LogScriptMessage("No script command handler found.", lineIndex, ScriptValidationSeverity.Warning, commandName);
                 CurrentLineIndex = lineIndex + 1;
-
-                continue; //No matching handler found for this command
+                continue;
             }
 
             if (handler.IsBusy && Running && !Paused)
@@ -280,27 +232,27 @@ public class ScriptManager
                 LogScriptMessage(
                     "The script command is still busy, stopping script execution.",
                     lineIndex,
-                    LogLevel.Debug,
+                    ScriptValidationSeverity.Warning,
                     commandName
                 );
-
                 break;
             }
 
-            EventManager.FireEvent("OnScriptStartExecuteCommand", handler, lineIndex);
-            var executionResult = handler.Execute(arguments.Skip(1).ToArray());
-            EventManager.FireEvent("OnScriptFinishExecuteCommand", handler, executionResult, lineIndex);
+            Report(ScriptExecutionState.ExecutingCommand, lineIndex, commandName, $"Executing script command {commandName}.");
+            Runtime?.FireEvent("OnScriptStartExecuteCommand", handler, lineIndex);
+            var executionResult = await handler.ExecuteAsync(arguments.Skip(1).ToArray()).ConfigureAwait(false);
+            Runtime?.FireEvent("OnScriptFinishExecuteCommand", handler, executionResult, lineIndex);
+            Report(ScriptExecutionState.CommandFinished, lineIndex, commandName, $"Finished script command {commandName}.");
 
             if (executionResult == false)
             {
                 LogScriptMessage(
                     "The execution of the script command failed.",
                     lineIndex,
-                    LogLevel.Warning,
+                    ScriptValidationSeverity.Warning,
                     commandName
                 );
                 CurrentLineIndex = lineIndex + 1;
-
                 continue;
             }
 
@@ -318,14 +270,7 @@ public class ScriptManager
 
         if (sourceCommands == null || sourceCommands.Length == 0)
         {
-            result.Issues.Add(
-                new ScriptValidationIssue(
-                    0,
-                    "<none>",
-                    "No script is loaded.",
-                    ScriptValidationSeverity.Warning
-                )
-            );
+            result.Issues.Add(new ScriptValidationIssue(0, "<none>", "No script is loaded.", ScriptValidationSeverity.Warning));
             return result;
         }
 
@@ -349,81 +294,38 @@ public class ScriptManager
 
             if (handler == null)
             {
-                result.Issues.Add(
-                    new ScriptValidationIssue(
-                        lineIndex + 1,
-                        commandName,
-                        "No script command handler found.",
-                        ScriptValidationSeverity.Error
-                    )
-                );
+                result.Issues.Add(new ScriptValidationIssue(lineIndex + 1, commandName, "No script command handler found.", ScriptValidationSeverity.Error));
                 continue;
             }
 
             var expectedArguments = handler.Arguments?.Count ?? 0;
             if (commandArguments.Length < expectedArguments)
             {
-                result.Issues.Add(
-                    new ScriptValidationIssue(
-                        lineIndex + 1,
-                        commandName,
-                        $"Missing arguments. Expected at least {expectedArguments}, got {commandArguments.Length}.",
-                        ScriptValidationSeverity.Error
-                    )
-                );
+                result.Issues.Add(new ScriptValidationIssue(
+                    lineIndex + 1,
+                    commandName,
+                    $"Missing arguments. Expected at least {expectedArguments}, got {commandArguments.Length}.",
+                    ScriptValidationSeverity.Error
+                ));
                 continue;
             }
 
-            if (
-                commandName.Equals("move", StringComparison.OrdinalIgnoreCase)
-                && !ValidateMoveArguments(commandArguments)
-            )
-            {
-                result.Issues.Add(
-                    new ScriptValidationIssue(
-                        lineIndex + 1,
-                        commandName,
-                        "Invalid move argument format.",
-                        ScriptValidationSeverity.Error
-                    )
-                );
-            }
+            if (commandName.Equals("move", StringComparison.OrdinalIgnoreCase) && !ValidateMoveArguments(commandArguments))
+                result.Issues.Add(new ScriptValidationIssue(lineIndex + 1, commandName, "Invalid move argument format.", ScriptValidationSeverity.Error));
 
             if (commandName.Equals("wait", StringComparison.OrdinalIgnoreCase))
             {
                 if (!int.TryParse(commandArguments[0], out var waitTime))
-                {
-                    result.Issues.Add(
-                        new ScriptValidationIssue(
-                            lineIndex + 1,
-                            commandName,
-                            "Wait value must be a valid integer.",
-                            ScriptValidationSeverity.Error
-                        )
-                    );
-                }
+                    result.Issues.Add(new ScriptValidationIssue(lineIndex + 1, commandName, "Wait value must be a valid integer.", ScriptValidationSeverity.Error));
                 else if (waitTime < 0)
-                {
-                    result.Issues.Add(
-                        new ScriptValidationIssue(
-                            lineIndex + 1,
-                            commandName,
-                            "Wait value cannot be negative.",
-                            ScriptValidationSeverity.Error
-                        )
-                    );
-                }
+                    result.Issues.Add(new ScriptValidationIssue(lineIndex + 1, commandName, "Wait value cannot be negative.", ScriptValidationSeverity.Error));
             }
         }
 
         return result;
     }
 
-    public static ScriptValidationResult DryRun(
-        bool useNearbyWaypoint = true,
-        string[] commands = null,
-        bool logSimulation = true
-    )
+    public static ScriptValidationResult DryRun(bool useNearbyWaypoint = true, string[] commands = null, bool logSimulation = true)
     {
         var result = LintScript(commands);
         if (!result.IsValid)
@@ -458,15 +360,12 @@ public class ScriptManager
             result.SimulatedCommands++;
 
             if (logSimulation)
-                Log.Debug($"[Script:DryRun] line #{index}: {scriptLine}");
+                ServiceRuntime.Log?.Debug($"[Script:DryRun] line #{index}: {scriptLine}");
         }
 
         return result;
     }
 
-    /// <summary>
-    ///     Stops this instance.
-    /// </summary>
     public static void Stop(bool error = false)
     {
         Running = false;
@@ -480,16 +379,10 @@ public class ScriptManager
         foreach (var handler in handlersSnapshot)
             handler.Stop();
 
-        EventManager.FireEvent("OnFinishScript", error);
+        Runtime?.FireEvent("OnFinishScript", error);
+        Report(error ? ScriptExecutionState.Failed : ScriptExecutionState.Completed, CurrentLineIndex, "<stop>", error ? "Script stopped with errors." : "Script completed.");
     }
 
-    /// <summary>
-    ///     A convenience function that returns all positions in the walk script.
-    ///     Warning: This method is not extendable at the moment, that means that there can not be
-    ///     a custom implementation of the "move" command. The move command currently always needs to have the arguments
-    ///     XOffset, YOffset, ZOffset, XSector, YSector.
-    /// </summary>
-    /// <returns></returns>
     public static List<Position> GetWalkScript()
     {
         if (Commands == null || Commands.Length == 0)
@@ -503,12 +396,12 @@ public class ScriptManager
             .ToList();
     }
 
-    /// <summary>
-    ///     Parses the position from the given arguments.
-    /// </summary>
-    /// <param name="args">The arguments.</param>
-    /// <returns></returns>
-    private static Position ParsePosition(string[] args)
+    internal static string[] SplitArguments(string scriptLine)
+    {
+        return scriptLine?.Split(new[] { ArgumentSeparator }, StringSplitOptions.RemoveEmptyEntries) ?? [];
+    }
+
+    internal static Position ParsePosition(string[] args)
     {
         if (args == null || args.Length < 5)
             return default;
@@ -520,7 +413,7 @@ public class ScriptManager
             || !byte.TryParse(args[3], out var xSector)
             || !byte.TryParse(args[4], out var ySector)
         )
-            return default; //Invalid format
+            return default;
 
         return new Position(xSector, ySector, xOffset, yOffset, zOffset);
     }
@@ -536,35 +429,20 @@ public class ScriptManager
             && byte.TryParse(args[4], out _);
     }
 
-    /// <summary>
-    ///     Logs the script message.
-    /// </summary>
-    /// <param name="message">The message.</param>
-    /// <param name="line">The line.</param>
-    /// <param name="level">The level.</param>
-    /// <param name="command">The command.</param>
-    private static void LogScriptMessage(
-        string message,
-        int line,
-        LogLevel level = LogLevel.Notify,
-        string command = null
-    )
+    private static void LogScriptMessage(string message, int line, ScriptValidationSeverity severity = ScriptValidationSeverity.Warning, string command = null)
     {
-        if (command == null)
-            command = "<none>";
-
-        Log.Append(level, $"[Script] {message} (command={command}; line={line})");
+        command ??= "<none>";
+        var formatted = $"[Script] {message} (command={command}; line={line})";
+        if (severity == ScriptValidationSeverity.Error || severity == ScriptValidationSeverity.Warning)
+            ServiceRuntime.Log?.Warn(formatted);
+        else
+            ServiceRuntime.Log?.Debug(formatted);
     }
 
     private static void LogValidationIssues(ScriptValidationResult validationResult)
     {
         foreach (var issue in validationResult.Issues)
-        {
-            var level = issue.Severity == ScriptValidationSeverity.Error
-                ? LogLevel.Warning
-                : LogLevel.Debug;
-            LogScriptMessage(issue.Message, issue.LineNumber, level, issue.Command);
-        }
+            LogScriptMessage(issue.Message, issue.LineNumber, issue.Severity, issue.Command);
     }
 
     private static bool IsCommentOrEmpty(string scriptLine)
@@ -576,20 +454,12 @@ public class ScriptManager
         return trimmedCommand.StartsWith("//") || trimmedCommand.StartsWith("#");
     }
 
-    private static string[] SplitArguments(string scriptLine)
-    {
-        return scriptLine?.Split(
-            new[] { ArgumentSeparator },
-            StringSplitOptions.RemoveEmptyEntries
-        ) ?? [];
-    }
-
     private static int ResolveStartLineIndex(bool useNearbyWaypoint, bool overrideCommandsProvided)
     {
         if (!useNearbyWaypoint || overrideCommandsProvided)
             return 0;
 
-        if (Commands == null || Commands.Length == 0 || !Game.Ready || Game.Player == null)
+        if (Commands == null || Commands.Length == 0 || Runtime == null || !Runtime.GameReady || Runtime.PlayerMovementSource == null)
             return 0;
 
         try
@@ -598,19 +468,14 @@ public class ScriptManager
         }
         catch (Exception ex)
         {
-            Log.Debug($"[Script] Failed to find nearest move command: {ex.Message}");
+            ServiceRuntime.Log?.Debug($"[Script] Failed to find nearest move command: {ex.Message}");
             return 0;
         }
     }
 
-    /// <summary>
-    ///     Finds the nearest walk command line.
-    /// </summary>
-    /// <returns></returns>
     private static int FindNearestMoveCommandLine()
     {
-        var playerPos = Game.Player.Movement.Source;
-
+        var playerPos = Runtime.PlayerMovementSource;
         var line = -1;
         var moveCommands = new Dictionary<int, Position>();
 
@@ -619,25 +484,30 @@ public class ScriptManager
             line++;
 
             var trimmedCommand = command.Trim();
-            if (
-                trimmedCommand.StartsWith("//")
-                || trimmedCommand.StartsWith("#")
-                || string.IsNullOrWhiteSpace(trimmedCommand)
-            )
+            if (IsCommentOrEmpty(trimmedCommand))
                 continue;
 
             var splitArguments = SplitArguments(trimmedCommand);
-            if (splitArguments.Length == 0 || splitArguments[0] != "move")
+            if (splitArguments.Length == 0 || !splitArguments[0].Equals("move", StringComparison.OrdinalIgnoreCase))
                 continue;
 
             var args = splitArguments.Skip(1).ToArray();
             var curPos = ParsePosition(args);
-            var distance = curPos.DistanceToPlayer();
+            var distance = Runtime.DistanceToPlayer(curPos);
 
-            if (distance < 100 && !playerPos.HasCollisionBetween(curPos))
+            if (distance < 100 && !Runtime.HasCollisionBetween(playerPos, curPos))
                 moveCommands.Add(line, curPos);
         }
 
-        return moveCommands.Count == 0 ? 0 : moveCommands.MinBy(c => c.Value.DistanceToPlayer()).Key;
+        return moveCommands.Count == 0 ? 0 : moveCommands.MinBy(c => Runtime.DistanceToPlayer(c.Value)).Key;
     }
+
+    internal static void Report(ScriptExecutionState state, int lineIndex, string command, string message, object position = null)
+    {
+        ServiceRuntime.ScriptProgress?.Report(new ScriptProgressUpdate(state, lineIndex, command, message, position));
+    }
+
+    private static bool IsBotRunning => Runtime?.IsBotRunning == true;
+
+    internal static IScriptRuntime Runtime => ServiceRuntime.ScriptRuntime;
 }

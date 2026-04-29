@@ -398,9 +398,13 @@ internal static class CoreGameStateRuntimeContextBootstrap
         ServiceRuntime.ShoppingRuntime = new CoreShoppingRuntime();
         ServiceRuntime.AlchemyRuntime = new CoreAlchemyRuntime();
         ServiceRuntime.AlchemyProgress = new CoreAlchemyProgress(feedback);
+        ServiceRuntime.ScriptRuntime = new CoreScriptRuntime();
+        ServiceRuntime.ScriptProgress = new CoreScriptProgress(feedback);
+        ServiceRuntime.SpawnRuntime = new CoreSpawnRuntime();
         PickupManager.Initialize(new PickupService());
         ShoppingManager.Initialize(new ShoppingService());
         AlchemyManager.Initialize(new AlchemyService());
+        LanguageManager.Initialize(new LanguageService());
     }
 }
 

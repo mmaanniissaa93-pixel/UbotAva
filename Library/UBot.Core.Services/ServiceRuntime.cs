@@ -19,4 +19,8 @@ public static class ServiceRuntime
     public static IAlchemyRuntime AlchemyRuntime { get; set; }
     public static IAlchemyProgress AlchemyProgress { get; set; }
     public static IAlchemyService Alchemy { get; set; }
+    public static IScriptRuntime ScriptRuntime { get; set; }
+    public static IScriptProgress ScriptProgress { get; set; }
+    public static ISpawnRuntime SpawnRuntime { get; set; }
+    public static ILanguageService Language { get; set; }
 }
