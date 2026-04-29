@@ -1,6 +1,7 @@
+﻿using UBot.Core.Network;
 using UBot.Protocol;
 
-namespace UBot.Core.Network.Handler.Agent.Character;
+namespace UBot.Protocol.Handlers.Agent.Character;
 
 public class CharacterIncreaseIntResponse : IPacketHandler
 {
@@ -21,3 +22,4 @@ public class CharacterIncreaseIntResponse : IPacketHandler
         ProtocolRuntime.GameState?.FireEvent("OnIncreaseIntelligence");
     }
 }
+

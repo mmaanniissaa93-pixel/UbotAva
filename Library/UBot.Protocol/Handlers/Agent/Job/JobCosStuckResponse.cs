@@ -1,7 +1,8 @@
+﻿using UBot.Core.Network;
 using UBot.Core.Objects.Job;
 using UBot.Protocol;
 
-namespace UBot.Core.Network.Handler.Agent.Job;
+namespace UBot.Protocol.Handlers.Agent.Job;
 
 public class JobCosStuckResponse : IPacketHandler
 {
@@ -16,3 +17,4 @@ public class JobCosStuckResponse : IPacketHandler
         ProtocolRuntime.GameState?.LogNotify("[Job] Your transport is stuck!");
     }
 }
+

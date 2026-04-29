@@ -1,6 +1,7 @@
+﻿using UBot.Core.Network;
 using UBot.Protocol;
 
-namespace UBot.Core.Network.Handler.Agent.Inventory;
+namespace UBot.Protocol.Handlers.Agent.Inventory;
 
 public class InventoryUpdateDurabilityResponse : IPacketHandler
 {
@@ -23,3 +24,4 @@ public class InventoryUpdateDurabilityResponse : IPacketHandler
         ProtocolRuntime.GameState?.FireEvent("OnUpdateItemDurability", slot, durability);
     }
 }
+

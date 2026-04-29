@@ -5,8 +5,8 @@ using System.Timers;
 using UBot.Core.Client.ReferenceObjects;
 using UBot.GameData.ReferenceObjects;
 using UBot.Core.Network;
-using UBot.Core.Network.Handler.Agent.Alchemy;
 using UBot.Core.Objects;
+using UBot.Core.ProtocolLegacy.Handler.Agent.Alchemy;
 
 namespace UBot.Core.Components;
 

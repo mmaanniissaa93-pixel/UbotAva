@@ -1,6 +1,7 @@
+﻿using UBot.Core.Network;
 using UBot.Protocol;
 
-namespace UBot.Core.Network.Handler.Agent.Entity;
+namespace UBot.Protocol.Handlers.Agent.Entity;
 
 public class EntitySingleDespawnResponse : IPacketHandler
 {
@@ -13,3 +14,4 @@ public class EntitySingleDespawnResponse : IPacketHandler
         ProtocolRuntime.SpawnController?.Despawn(packet.ReadUInt());
     }
 }
+

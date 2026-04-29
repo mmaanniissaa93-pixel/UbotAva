@@ -1,6 +1,7 @@
+﻿using UBot.Core.Network;
 using UBot.Protocol;
 
-namespace UBot.Core.Network.Handler.Agent.Entity;
+namespace UBot.Protocol.Handlers.Agent.Entity;
 
 public class EntityGroupSpawnDataResponse : IPacketHandler
 {
@@ -13,3 +14,4 @@ public class EntityGroupSpawnDataResponse : IPacketHandler
         ProtocolRuntime.SpawnController?.AppendGroupData(packet.GetBytes());
     }
 }
+

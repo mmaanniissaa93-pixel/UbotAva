@@ -1,0 +1,39 @@
+﻿using UBot.Core.Network;
+using UBot.Core.Components;
+using UBot.Core.Event;
+
+namespace UBot.Core.ProtocolLegacy.Handler.Agent.CharacterSelection;
+
+internal class CharacterSelectionJoinRequest 
+{
+    /// <summary>
+    ///     Gets or sets the opcode.
+    /// </summary>
+    /// <value>
+    ///     The opcode.
+    /// </value>
+    public ushort Opcode => 0x7001;
+
+    /// <summary>
+    ///     Gets or sets the destination.
+    /// </summary>
+    /// <value>
+    ///     The destination.
+    /// </value>
+    public PacketDestination Destination => PacketDestination.Server;
+
+    /// <summary>
+    ///     Handles the packet.
+    /// </summary>
+    /// <param name="packet">The packet.</param>
+    public void Invoke(Packet packet)
+    {
+        var characterName = packet.ReadString();
+
+        ProfileManager.SelectedCharacter = characterName;
+        PlayerConfig.Load(characterName);
+
+        EventManager.FireEvent("OnEnterGame");
+    }
+}
+

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -8,7 +8,7 @@ using UBot.Core.Abstractions;
 using UBot.Core.Components;
 using UBot.Core.Event;
 using UBot.Core.Network;
-using UBot.Core.Network.ProtocolServices;
+using UBot.Core.ProtocolServices;
 using UBot.Core.Objects.Inventory;
 using UBot.Core.Objects.Spawn;
 using UBot.Protocol;
@@ -380,6 +380,7 @@ internal static class CoreGameStateRuntimeContextBootstrap
 
         ProtocolRuntime.GameState = GameStateRuntimeProvider.Instance;
         ProtocolRuntime.PacketDispatcher = new CorePacketDispatcher();
+        ProtocolRuntime.LegacyHandler = new CoreLegacyProtocolHandler();
         ProtocolRuntime.EventBus = eventBus;
         ProtocolRuntime.Feedback = feedback;
         ProtocolRuntime.SpawnController = new CoreSpawnController(eventBus, feedback);
@@ -387,3 +388,4 @@ internal static class CoreGameStateRuntimeContextBootstrap
         ProtocolRuntime.Cos = new CoreCosController();
     }
 }
+

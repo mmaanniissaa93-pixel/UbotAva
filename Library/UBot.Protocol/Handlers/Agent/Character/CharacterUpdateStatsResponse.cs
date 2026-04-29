@@ -1,6 +1,7 @@
+﻿using UBot.Core.Network;
 using UBot.Protocol;
 
-namespace UBot.Core.Network.Handler.Agent.Character;
+namespace UBot.Protocol.Handlers.Agent.Character;
 
 public class CharacterUpdateStatsResponse : IPacketHandler
 {
@@ -34,3 +35,4 @@ public class CharacterUpdateStatsResponse : IPacketHandler
         ProtocolRuntime.GameState?.FireEvent("OnLoadCharacterStats");
     }
 }
+

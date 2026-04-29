@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace UBot.Core.Network.Handler.Agent.Entity;
+namespace UBot.Protocol.Handlers.Agent.Entity;
 
 [Flags]
 public enum EntityUpdateStatusFlag : byte
@@ -12,3 +12,4 @@ public enum EntityUpdateStatusFlag : byte
     BadEffect = 4,
     Fellow = 13,
 }
+

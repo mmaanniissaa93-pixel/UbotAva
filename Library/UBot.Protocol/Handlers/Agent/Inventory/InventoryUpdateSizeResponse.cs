@@ -1,6 +1,7 @@
+﻿using UBot.Core.Network;
 using UBot.Protocol;
 
-namespace UBot.Core.Network.Handler.Agent.Inventory;
+namespace UBot.Protocol.Handlers.Agent.Inventory;
 
 public class InventoryUpdateSizeResponse : IPacketHandler
 {
@@ -37,3 +38,4 @@ public class InventoryUpdateSizeResponse : IPacketHandler
         }
     }
 }
+

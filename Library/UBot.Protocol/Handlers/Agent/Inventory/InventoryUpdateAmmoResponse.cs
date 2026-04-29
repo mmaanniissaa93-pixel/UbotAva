@@ -1,6 +1,7 @@
+﻿using UBot.Core.Network;
 using UBot.Protocol;
 
-namespace UBot.Core.Network.Handler.Agent.Inventory;
+namespace UBot.Protocol.Handlers.Agent.Inventory;
 
 public class InventoryUpdateAmmoResponse : IPacketHandler
 {
@@ -17,3 +18,4 @@ public class InventoryUpdateAmmoResponse : IPacketHandler
         ProtocolRuntime.GameState?.FireEvent("OnUpdateAmmunition");
     }
 }
+
