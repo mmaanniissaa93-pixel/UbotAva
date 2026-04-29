@@ -13,8 +13,6 @@ internal static class GenericAlchemyAckResponse
 {
     public static void Invoke(Packet packet, AlchemyType type)
     {
-        AlchemyManager.IsFusing = false;
-
         EventManager.FireEvent("OnAlchemy", type);
 
         var result = packet.ReadByte();
@@ -22,8 +20,9 @@ internal static class GenericAlchemyAckResponse
         //Error
         if (result == 2)
         {
-            EventManager.FireEvent("OnAlchemyError", packet.ReadUShort(), type);
-            AlchemyManager.ActiveAlchemyItems = null;
+            var errorCode = packet.ReadUShort();
+            EventManager.FireEvent("OnAlchemyError", errorCode, type);
+            AlchemyManager.MarkError(errorCode, type);
 
             return;
         }
@@ -32,7 +31,7 @@ internal static class GenericAlchemyAckResponse
         if (action == AlchemyAction.Cancel)
         {
             EventManager.FireEvent("OnAlchemyCanceled", type);
-            AlchemyManager.ActiveAlchemyItems = null;
+            AlchemyManager.MarkCanceled(type);
 
             return;
         }
@@ -54,7 +53,7 @@ internal static class GenericAlchemyAckResponse
             {
                 EventManager.FireEvent("OnAlchemyDestroyed", oldItem, type);
                 CoreGame.Player.Inventory.RemoveAt(slot);
-                AlchemyManager.ActiveAlchemyItems = null;
+                AlchemyManager.MarkDestroyed(oldItem, type);
 
                 return;
             }
@@ -67,7 +66,7 @@ internal static class GenericAlchemyAckResponse
 
         EventManager.FireEvent(isSuccess ? "OnAlchemySuccess" : "OnAlchemyFailed", oldItem, newItem, type);
         EventManager.FireEvent("OnInventoryUpdate");
-        AlchemyManager.ActiveAlchemyItems = null;
+        AlchemyManager.MarkResult(isSuccess, oldItem, newItem, type);
     }
 }
 

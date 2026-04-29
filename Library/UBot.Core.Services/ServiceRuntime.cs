@@ -16,4 +16,7 @@ public static class ServiceRuntime
     public static IInventoryRuntime InventoryRuntime { get; set; }
     public static IShoppingRuntime ShoppingRuntime { get; set; }
     public static IShoppingService Shopping { get; set; }
+    public static IAlchemyRuntime AlchemyRuntime { get; set; }
+    public static IAlchemyProgress AlchemyProgress { get; set; }
+    public static IAlchemyService Alchemy { get; set; }
 }

@@ -1,10 +1,9 @@
 ﻿using CoreGame = global::UBot.Core.Game;
-using UBot.Core.Network;
 using System.Collections.Generic;
+using UBot.Core.Network;
 using UBot.Core.Client.ReferenceObjects;
 using UBot.GameData.ReferenceObjects;
 using UBot.Core.Components;
-using UBot.Core.Event;
 using UBot.Core.Objects;
 
 namespace UBot.Core.ProtocolLegacy.Handler.Agent.Alchemy;
@@ -25,27 +24,23 @@ internal static class GenericAlchemyRequestHandler
             var socketItem = CoreGame.Player.Inventory.GetItemAt(packet.ReadByte()); //Target item
 
             if (item != null && socketItem != null)
-                AlchemyManager.ActiveAlchemyItems = new List<InventoryItem> { item, socketItem };
+                AlchemyManager.BeginFuseRequest(action, type, new List<InventoryItem> { item, socketItem });
 
             return;
         }
 
         var slots = packet.ReadBytes(packet.ReadByte());
-
-        AlchemyManager.ActiveAlchemyItems = new List<InventoryItem>(slots.Length);
+        var items = new List<InventoryItem>(slots.Length);
 
         foreach (var slot in slots)
         {
             var item = CoreGame.Player.Inventory.GetItemAt(slot);
 
             if (item != null)
-                AlchemyManager.ActiveAlchemyItems.Add(item);
+                items.Add(item);
         }
 
-        EventManager.FireEvent("OnFuseRequest", action, type);
-
-        AlchemyManager.IsFusing = true;
-        AlchemyManager.StartTimer();
+        AlchemyManager.BeginFuseRequest(action, type, items);
     }
 }
 
