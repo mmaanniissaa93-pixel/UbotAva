@@ -39,7 +39,7 @@ public interface IGameStateRuntimeContext
     double DistanceToPlayer(object position);
     bool StopBot();
     bool GetConfigBool(string key);
-    void FireEvent(string eventName);
+    void FireEvent(string eventName, params object[] args);
     void LogDebug(string message);
     void LogNotify(string message);
 }

@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\UBot.Core.Abstractions\UBot.Core.Abstractions.csproj" />
+    <ProjectReference Include="..\UBot.Core.Common\UBot.Core.Common.csproj" />
+    <ProjectReference Include="..\UBot.Core.Domain\UBot.Core.Domain.csproj" />
+    <ProjectReference Include="..\UBot.Core.GameState\UBot.Core.GameState.csproj" />
+    <ProjectReference Include="..\UBot.Core.Network\UBot.Core.Network.csproj" />
+    <ProjectReference Include="..\UBot.GameData\UBot.GameData.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Description>Silkroad protocol handlers, packet readers, and outgoing packet builders for UBot.</Description>
+    <Copyright>Copyright (c) 2018 - 2026, UBot Team</Copyright>
+    <PackageProjectUrl>https://github.com/mmaanniissaa93-pixel/ubot</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/mmaanniissaa93-pixel/ubot</RepositoryUrl>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+
+</Project>

@@ -10,6 +10,7 @@ using UBot.Core.Event;
 using UBot.Core.Network;
 using UBot.Core.Objects.Inventory;
 using UBot.Core.Objects.Spawn;
+using UBot.Protocol;
 
 namespace UBot.Core.Objects;
 
@@ -320,7 +321,7 @@ internal sealed class CoreGameStateRuntimeContext : IGameStateRuntimeContext
 
     public bool GetConfigBool(string key) => PlayerConfig.Get<bool>(key);
 
-    public void FireEvent(string eventName) => EventManager.FireEvent(eventName);
+    public void FireEvent(string eventName, params object[] args) => EventManager.FireEvent(eventName, args);
 
     public void LogDebug(string message) => Log.Debug(message);
 
@@ -373,5 +374,7 @@ internal static class CoreGameStateRuntimeContextBootstrap
     internal static void Initialize()
     {
         GameStateRuntimeProvider.Instance = new CoreGameStateRuntimeContext();
+        ProtocolRuntime.GameState = GameStateRuntimeProvider.Instance;
+        ProtocolRuntime.PacketDispatcher = new CorePacketDispatcher();
     }
 }

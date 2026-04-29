@@ -3,7 +3,7 @@
 namespace UBot.Core.Network.Handler.Agent.Entity;
 
 [Flags]
-internal enum EntityUpdateStatusFlag : byte
+public enum EntityUpdateStatusFlag : byte
 {
     None = 0,
     HP = 1,
