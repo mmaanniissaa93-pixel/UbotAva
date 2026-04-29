@@ -1,260 +1,496 @@
-# UBot
+# UBot — Silkroad Online Otomasyon Platformu
 
-UBot, Silkroad Online icin gelistirilmis moduler bir otomasyon platformudur.
+> Modüler, izolasyonlu plugin mimarisi · Avalonia 11 UI · .NET 8 · x86
 
-Bu README, repodaki mevcut kaynak kod, cozum yapisi ve build ciktilari tersine muhendislik edilerek yeniden yazilmistir.
+[![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-blue?logo=windows)](https://github.com/mmaanniissaa93-pixel/UbotAva)
+[![.NET](https://img.shields.io/badge/.NET-8.0-purple?logo=dotnet)](https://dotnet.microsoft.com/)
+[![UI](https://img.shields.io/badge/UI-Avalonia%2011-brightgreen)](https://avaloniaui.net/)
+[![License](https://img.shields.io/badge/License-GPL--3.0-red)](LICENSE)
+[![Build](https://img.shields.io/badge/Build-build.ps1%20%2F%20MSBuild%20x86-orange)](build.ps1)
 
-## 1) Teknoloji Ozeti
+---
 
-- Dil: C# ve C++ (native loader)
-- Ana runtime: .NET 8 (`net8.0-windows` agirlikli)
-- UI: Avalonia 11.1.0 (`Application/UBot.Avalonia`)
-- Core: `Library/UBot.Core`
-- Plugin/Botbase modeli: `IPlugin` ve `IBotbase`
-- Hedef platform: x86
+## İçindekiler
 
-## 2) Gereksinimler
+- [Proje Nedir?](#proje-nedir)
+- [Teknoloji Özeti](#teknoloji-özeti)
+- [Gereksinimler](#gereksinimler)
+- [Kurulum ve Build](#kurulum-ve-build)
+- [Çözüm Haritası](#çözüm-haritası)
+- [Botbase Katmanı](#botbase-katmanı)
+- [Plugin Katmanı](#plugin-katmanı)
+- [Plugin Manifest Sistemi](#plugin-manifest-sistemi)
+- [Konfigurasyon Sistemi](#konfigurasyon-sistemi)
+- [Runtime Başlatma Akışı](#runtime-başlatma-akışı)
+- [CLI Argümanları](#cli-argümanları)
+- [UI Mimarisi (Avalonia)](#ui-mimarisi-avalonia)
+- [Native Loader (C++)](#native-loader-c)
+- [Test ve Doğrulama](#test-ve-doğrulama)
+- [Sorun Giderme](#sorun-giderme)
+- [Lisans](#lisans)
 
-- Windows 10/11
-- Visual Studio 2022
-- MSBuild (VS ile gelir)
-- .NET 8 SDK
-- C++ Build Tools (Loader.Library icin)
-- Git (build script runtime asset restore adimi icin)
+---
 
-## 3) Build ve Calistirma
+## Proje Nedir?
 
-Bu repo icin canonical build yolu `build.ps1` scriptidir.
+**UBot**, Silkroad Online için geliştirilmiş, tamamen modüler bir otomasyon platformudur. Temel özellikler:
+
+- **Plugin/Botbase ayrımı:** Oyun içi her işlev bağımsız bir plugin veya botbase olarak yüklenir/kaldırılır.
+- **İzolasyon modelleri:** In-process fault izolasyonu ve out-of-process process izolasyonu desteklenir.
+- **Güncel UI:** Avalonia 11 tabanlı masaüstü arayüzü (WPF'den bağımsız, cross-runtime hazır).
+- **Native entegrasyon:** C++ Detours tabanlı `Client.Library.dll` ile Silkroad client'ına hook atar.
+- **Güvenli konfigurasyon:** Satır bazlı `key{value}` formatında profil + karakter bazlı config yönetimi.
+
+---
+
+## Teknoloji Özeti
+
+| Katman | Teknoloji |
+|--------|-----------|
+| Ana Dil | C# (.NET 8, `net8.0-windows`) |
+| Native Layer | C++ (Detours — `Client.Library.dll`) |
+| UI Framework | Avalonia 11.1.0 |
+| Platform Hedefi | x86 (tüm projeler) |
+| Build Sistemi | MSBuild via `build.ps1` (Visual Studio 2022) |
+| Test Framework | xUnit |
+| Config Formatı | Satır bazlı `key{value}` (`.rs` uzantılı dosyalar) |
+
+---
+
+## Gereksinimler
+
+| Gereksinim | Detay |
+|------------|-------|
+| İşletim Sistemi | Windows 10 / 11 |
+| Visual Studio | 2022 (Community / Professional / Enterprise / Preview) |
+| .NET SDK | 8.0 |
+| MSBuild | VS 2022 ile birlikte gelir |
+| C++ Build Tools | `UBot.Loader.Library` (native DLL) için gerekli |
+| Git | Build script'i runtime asset restore adımında kullanır |
+
+> **Not:** `build.ps1`, vswhere üzerinden VS 2022 Preview sürümlerini de tanır. Insider/Preview sürümü kullanıyorsanız ek yapılandırma gerekmez.
+
+---
+
+## Kurulum ve Build
+
+### Hızlı Başlangıç
 
 ```powershell
+# Debug build (varsayılan)
 powershell.exe -ExecutionPolicy Bypass .\build.ps1 -Configuration Debug
-```
 
-Yaygin parametreler:
-
-- `-Configuration Debug|Release`
-- `-Clean`
-- `-DoNotStart`
-- `-SkipIconCacheRefresh`
-
-Ornekler:
-
-```powershell
-powershell.exe -ExecutionPolicy Bypass .\build.ps1 -Configuration Debug
+# Release build
 powershell.exe -ExecutionPolicy Bypass .\build.ps1 -Configuration Release
+
+# Temiz build (User verilerini koruyarak)
 powershell.exe -ExecutionPolicy Bypass .\build.ps1 -Clean -Configuration Debug
+
+# Build sonrası UBot.exe'yi başlatma
 powershell.exe -ExecutionPolicy Bypass .\build.ps1 -Configuration Debug -DoNotStart
 ```
 
-`build.ps1` ozet akis:
+### Build Script Parametreleri
 
-1. `UBot.exe` ve `sro_client.exe` sureclerini sonlandirmayi dener.
-2. Repodaki dosyalari `Unblock-File` ile MOTW flag'lerinden arindirir.
-3. `UBot.sln` icin x86 MSBuild cagrisi yapar.
-4. Gerekirse `UBot.TargetAssist` projesini tekil derler.
-5. `Dependencies/*` icerigini `Build/Data` altina kopyalar.
-6. `Plugins/*/plugin.manifest.json` dosyalarini `Build/Data/Plugins/<Assembly>.manifest.json` formatinda yazar.
-7. Runtime data eksiginde `Build/Data/Languages` ve `Build/Data/Scripts/Towns` klasorlerini `git restore` ile toparlamayi dener.
-8. Parametreye gore icon cache yeniler ve `UBot.exe` baslatir.
+| Parametre | Varsayılan | Açıklama |
+|-----------|------------|----------|
+| `-Configuration` | `Debug` | `Debug` veya `Release` |
+| `-Clean` | `$false` | Build klasörünü sıfırlar (User verileri korunur) |
+| `-DoNotStart` | `$false` | Build sonrası `UBot.exe` otomatik başlatılmaz |
+| `-SkipIconCacheRefresh` | `$false` | Icon cache yenileme adımını atlar |
 
-Log dosyasi: `build.log`
+### Build Akışı (build.ps1 özeti)
 
-## 4) Cozum Haritasi
+```
+1. UBot.exe ve sro_client.exe sonlandırılır (varsa)
+2. Repo dosyaları Unblock-File ile MOTW flag'lerinden arındırılır
+3. MSBuild x86 → UBot.sln derlenir  →  build.log
+4. UBot.TargetAssist DLL eksikse ayrıca derlenir
+5. Dependencies/* → Build/Data/ altına kopyalanır
+6. Plugins/*/plugin.manifest.json → Build/Data/Plugins/<Assembly>.manifest.json
+7. Runtime data eksikse git restore ile Languages/Scripts/Towns toparlanır
+8. (isteğe bağlı) Icon cache yenilenir → UBot.exe başlatılır
+```
 
-### Application
+### Build Çıktıları
 
-- `Application/UBot` : Ana executable (`UBot.exe`), CLI arguman parse, shutdown orchestration
-- `Application/UBot.Avalonia` : Yeni UI katmani (View, ViewModel, service adapter)
-- `Application/UBot.Updater` : `update_temp/update.zip` acip update uygulayan updater
+```
+Build/
+├── UBot.exe                          ← Ana executable
+├── UBot.Updater.exe                  ← Otomatik güncelleyici
+├── UBot.Avalonia.dll                 ← UI katmanı
+├── Client.Library.dll                ← Native hook DLL (C++)
+└── Data/
+    ├── Bots/                         ← Botbase DLL'leri
+    │   ├── UBot.Training.dll
+    │   ├── UBot.Alchemy.dll
+    │   ├── UBot.Trade.dll
+    │   └── UBot.Lure.dll
+    ├── Plugins/                      ← Plugin DLL'leri + manifest'ler
+    │   ├── UBot.General.dll / .manifest.json
+    │   ├── UBot.Protection.dll / .manifest.json
+    │   └── ...
+    ├── Languages/                    ← Dil dosyaları
+    └── Scripts/Towns/                ← Town script'leri (.rbs)
+```
 
-### Library
+---
 
-- `Library/UBot.Core` : Kernel, network, event bus, plugin/botbase manager, config, scripting
-- `Library/UBot.FileSystem` : Dosya sistemi/arsiv yardimcilari
-- `Library/UBot.NavMeshApi` : NavMesh, dungeon, terrain, path altyapisi
-- `Library/UBot.Loader.Library` : C++ detours tabanli native `Client.Library.dll`
+## Çözüm Haritası
 
-### Botbases
+```
+UbotAva/
+├── Application/
+│   ├── UBot/                     ← Ana executable, CLI, process lifecycle
+│   ├── UBot.Avalonia/            ← Masaüstü UI (Avalonia 11)
+│   └── UBot.Updater/             ← update_temp/update.zip uygulayıcı
+│
+├── Library/
+│   ├── UBot.Core/                ← Kernel, event bus, plugin manager, scripting
+│   ├── UBot.Core.Abstractions/   ← IPlugin, IBotbase, paylaşılan kontratlar
+│   ├── UBot.Core.Common/         ← Yardımcı tipler ve extensions
+│   ├── UBot.Core.Domain/         ← Domain DTO'ları, game-state kontratları
+│   ├── UBot.Core.GameState/      ← Oyun durumu modeli (karakter, NPC, item)
+│   ├── UBot.Core.Network/        ← Network altyapısı, event'ler
+│   ├── UBot.Core.Services/       ← Uygulama servisleri
+│   ├── UBot.FileSystem/          ← Yerel + PK2 dosya sistemi (Blowfish şifreleme)
+│   ├── UBot.GameData/            ← RefObj*, RefSkill*, RefQuest* parser'ları
+│   ├── UBot.NavMeshApi/          ← NavMesh, dungeon, terrain, path altyapısı
+│   ├── UBot.Protocol/            ← SRO paket okuyucu/yazıcıları
+│   └── UBot.Loader.Library/      ← C++ Detours tabanlı native DLL
+│
+├── Botbases/
+│   ├── UBot.Training/
+│   ├── UBot.Alchemy/
+│   ├── UBot.Trade/
+│   └── UBot.Lure/
+│
+├── Plugins/
+│   ├── UBot.General/             ← Bağlantı kontrolü, client başlatma
+│   ├── UBot.Protection/          ← HP/MP/pet koruma (tier: critical)
+│   ├── UBot.Skills/              ← Skill rotasyonu, buff yönetimi
+│   ├── UBot.Items/               ← Item filtresi, autoloot politikası
+│   ├── UBot.Inventory/           ← Envanter takip ve aksiyonları
+│   ├── UBot.Party/               ← Party otomasyonu, eşleşme
+│   ├── UBot.Chat/                ← Chat gönderme, event'ler
+│   ├── UBot.CommandCenter/       ← Komut yönlendirme, emote komutları
+│   ├── UBot.Map/                 ← Dünya haritası, spawn görselleştirme
+│   ├── UBot.Statistics/          ← Runtime metrikleri, oturum istatistikleri
+│   ├── UBot.Log/                 ← Log akışı, temizleme
+│   ├── UBot.ServerInfo/          ← Sunucu inceleme
+│   ├── UBot.Quest/               ← Görev takibi (runtime id: UBot.QuestLog)
+│   ├── UBot.TargetAssist/        ← Hedef yardımı (tier: standard)
+│   ├── UBot.AutoDungeon/         ← Dungeon routing/control (out-of-proc)
+│   └── UBot.PacketInspector/     ← Paket yakalama/inceleme (out-of-proc)
+│
+├── Tests/
+│   └── UBot.Core.Tests/          ← xUnit test projesi
+│
+├── Dependencies/
+│   ├── Languages/                ← Kaynak dil dosyaları
+│   └── Scripts/                  ← Town script kaynakları (.rbs)
+│
+├── tools/
+│   ├── config/                   ← Config key envanteri ve migration araçları
+│   └── tests/
+│
+├── build.ps1                     ← Canonical build scripti
+├── UBot.sln                      ← Visual Studio solution
+├── client-signatures.cfg         ← Client imza tanımları
+└── ubot_keys.txt                 ← Key referansları
+```
 
-- `UBot.Training`
-- `UBot.Alchemy`
-- `UBot.Trade`
-- `UBot.Lure`
+---
 
-### Plugins
+## Botbase Katmanı
 
-- `UBot.General`
-- `UBot.Chat`
-- `UBot.CommandCenter`
-- `UBot.Inventory`
-- `UBot.Items`
-- `UBot.Log`
-- `UBot.Map`
-- `UBot.Party`
-- `UBot.Protection`
-- `UBot.Quest` (runtime id: `UBot.QuestLog`)
-- `UBot.ServerInfo`
-- `UBot.Skills`
-- `UBot.Statistics`
-- `UBot.TargetAssist`
-- `UBot.AutoDungeon`
-- `UBot.PacketInspector`
+Botbase'ler `IBotbase` interface'ini implemente eder. Her botbase bağımsız bir oyun döngüsü stratejisidir.
 
-### Tests
+| Botbase | Açıklama |
+|---------|----------|
+| `UBot.Training` | Standart grinding / levelling |
+| `UBot.Alchemy` | Efsun / alchemy otomasyonu |
+| `UBot.Trade` | Ticaret rota ve işlem yönetimi |
+| `UBot.Lure` | Monster çekme stratejisi |
 
-- `Tests/UBot.Core.Tests` (xUnit)
-- Mevcut test dosyasi: `ScriptManagerValidationTests.cs`
+**IBotbase kontratı:**
+```csharp
+// Library/UBot.Core.Abstractions
+interface IBotbase : IExtension
+{
+    string Area { get; }
+    void Start();
+    void Tick();
+    void Stop();
+}
+```
 
-### Tools
+Botbase DLL çıktı hedefi: `Build/Data/Bots/`
 
-- `tools/config/Export-UsedConfigKeyInventory.ps1`
-- `tools/config/Test-ConfigKeyMigrations.ps1`
-- `tools/config/config-key-migrations.json`
-- `tools/tests` su an sadece README iceriyor (script yok)
+---
 
-## 5) Runtime Baslatma Akisi
+## Plugin Katmanı
 
-`Application/UBot/Program.cs`:
+### Isolation Tier Matrisi
 
-1. CLI argumanlari parse edilir (`--character`, `--profile`, `--launch-client`, `--launch-clientless`, plugin host argumanlari).
-2. `ProcessLifetimeManager` ile child process cleanup politikasi devreye alinir.
-3. `--plugin-host` modunda `PluginHostRuntime.Run(...)` ile tek plugin host process olarak calisir.
-4. Normal modda `UBot.Avalonia.AvaloniaHost.Run(args)` cagrilir.
-5. Kapanista bot/proxy/plugin host/config shutdown-save zinciri calisir.
+| Plugin | Isolation Mode | Tier | Yetenekler |
+|--------|---------------|------|------------|
+| `UBot.General` | inproc | **critical** | connection-control, client-launch, session-bootstrap |
+| `UBot.Protection` | inproc | **critical** | hp-mp-protection, pet-protection |
+| `UBot.AutoDungeon` | **outproc** | experimental | dungeon-routing, dungeon-control |
+| `UBot.PacketInspector` | **outproc** | experimental | packet-capture, packet-inspection |
+| `UBot.Skills` | inproc | standard | skill-rotation, buff-management |
+| `UBot.Items` | inproc | standard | item-filtering, autoloot-policy |
+| `UBot.Inventory` | inproc | standard | inventory-tracking, inventory-actions |
+| `UBot.Party` | inproc | standard | party-automation, party-sharing, party-matching |
+| `UBot.Chat` | inproc | standard | chat-send, chat-events |
+| `UBot.CommandCenter` | inproc | standard | command-routing, emote-commands |
+| `UBot.Map` | inproc | standard | world-map, spawn-visualization, route-helpers |
+| `UBot.Statistics` | inproc | standard | runtime-metrics, session-stats |
+| `UBot.Log` | inproc | standard | log-stream, log-clear |
+| `UBot.ServerInfo` | inproc | standard | server-inspection |
+| `UBot.Quest` | inproc | standard | quest-tracking |
+| `UBot.TargetAssist` | inproc | standard | target-assist |
 
-## 6) CLI Argumanlari
+### Plugin Bağımlılıkları
 
-Desteklenen argumanlar:
+```
+UBot.Items       → UBot.Inventory (required, 1.0.0–2.0.0)
+UBot.Statistics  → UBot.Log      (optional, 1.0.0–2.0.0)
+UBot.Party       → UBot.General  (optional, 1.0.0–2.0.0)
+```
 
-- `--character <name>`
-- `--profile <name>`
-- `--launch-client`
-- `--launch-clientless`
-- `--plugin-host`
-- `--plugin-name <internal-plugin-name>`
-- `--plugin-path <absolute-dll-path>`
+### IPlugin / IExtension Kontratı
 
-`--plugin-host` modu out-of-proc plugin yasam dongusu icin kullanilir.
+```csharp
+// Library/UBot.Core.Abstractions
+interface IExtension
+{
+    string Name { get; }
+    string Version { get; }
+    void Initialize();
+    void Enable();
+    void Disable();
+    void Translate();
+    object View { get; }
+}
 
-## 7) Plugin ve Botbase Mimarisi
+interface IPlugin : IExtension
+{
+    bool DisplayAsTab { get; }
+    int Index { get; }
+    bool RequireIngame { get; }
+    void OnLoadCharacter();
+}
+```
 
-### Interface katmani
+---
 
-- `IExtension`: ortak metadata + `Initialize/Enable/Disable/Translate/View`
-- `IPlugin`: `DisplayAsTab`, `Index`, `RequireIngame`, `OnLoadCharacter`
-- `IBotbase`: `Area`, `Start/Tick/Stop`
+## Plugin Manifest Sistemi
 
-### ExtensionManager davranisi
+Her plugin kendi `plugin.manifest.json` dosyasını taşır. Build sırasında `Build/Data/Plugins/<AssemblyName>.manifest.json` olarak kopyalanır.
 
-`Library/UBot.Core/Plugins/ExtensionManager.cs` su akisi uygular:
+### Manifest Şeması
 
-1. `Build/Data/Plugins` ve `Build/Data/Bots` altindan assembly toplar.
-2. Plugin manifest yukler (`PluginContractManifestLoader`).
-3. Host version, dependency, capability ve isolation validasyonu yapar.
-4. Gerekli pluginleri out-of-proc host manager'a register eder.
-5. Enabled pluginlerde initialize/enable ve packet hook/handler kayitlarini yonetir.
-6. Disabled plugin listesini `UBot.DisabledPlugins` key'i uzerinden config'e yazar.
+```json
+{
+  "schemaVersion": 1,
+  "pluginName": "UBot.General",
+  "pluginVersion": "1.0.0",
+  "capabilities": ["connection-control", "client-launch", "session-bootstrap"],
+  "dependencies": [],
+  "hostCompatibility": {
+    "minVersion": "1.0.0",
+    "maxVersionExclusive": "2.0.0"
+  },
+  "isolation": {
+    "mode": "inproc",
+    "tier": "critical",
+    "restartPolicy": {
+      "enabled": true,
+      "maxRestarts": 2,
+      "windowSeconds": 60,
+      "baseDelayMs": 250,
+      "maxDelayMs": 3000
+    }
+  }
+}
+```
 
-### Isolation
+### PluginContractManifestLoader Zorunlu Kuralları
 
-- In-proc fault izolasyonu: `PluginFaultIsolationManager`
-- Out-of-proc process izolasyonu: `PluginOutOfProcessHostManager`
-- Restart policy: manifestte `restartPolicy` alanindan okunur
+- `pluginName` == runtime `IPlugin.Name` (tam eşleşme)
+- `pluginVersion` == runtime `IPlugin.Version` (tam eşleşme)
+- `isolation.mode` yalnızca `"inproc"` veya `"outproc"` olabilir
+- `hostCompatibility` version aralığı kontrol edilir
+- Bağımlılık ve yetenek validasyonu yapılır
 
-Kod tarafinda out-of-proc zorunlu pluginler:
+---
 
-- `UBot.PacketInspector`
-- `UBot.AutoDungeon`
+## Konfigurasyon Sistemi
 
-### Mevcut plugin manifest izolasyon durumu
+### Format
 
-- Outproc: `UBot.AutoDungeon`, `UBot.PacketInspector`
-- Inproc: diger tum pluginler
+```
+key{value}
+```
 
-## 8) UI (Avalonia) Teknik Durum
+Dosyalar `.rs` uzantılıdır ve `Build/User/` altında tutulur.
 
-UI katmani `Application/UBot.Avalonia` altinda feature tabanli organize edilmistir.
+### Dosya Hiyerarşisi
 
-- Ana shell: `MainWindow.axaml`
-- Service bridge: `IUbotCoreService` ve `UbotCoreService`
-- State store: `Services/AppState.cs`
-- Feature factory: `FeatureViewFactory.cs`
-- Styles: `Styles/Theme.axaml`, `Styles/Controls.axaml`, `Styles/Features.axaml`
+```
+Build/User/
+├── Profiles.rs                     ← Profil listesi
+├── <Profile>.rs                    ← Global profil config
+└── <Profile>/
+    └── <Character>.rs              ← Karakter bazlı config
+```
 
-Dikkat ceken UI teknik detaylari:
+### Facade Sınıfları
 
-- Ana pencere boyutu sabit: `1440x900`
-- Resize kapali (`CanResize=False`)
-- Tema/language toggle ve custom topbar/sidebar bilesenleri var
-- Plugin + botbase ekranlari feature view uzerinden dinamik uretiliyor
-- UI core ile in-process service siniflari uzerinden haberlesiyor (ws tabanli degil)
+| Sınıf | Kapsam |
+|-------|--------|
+| `GlobalConfig` | Tüm profiller |
+| `PlayerConfig` | Aktif karakter |
+| `ProfileManager` | Profil seçimi / geçişi |
 
-## 9) Konfigurasyon Sistemi
-
-Config depolama formati:
-
-- Satir bazli `key{value}`
-- `Config` sinifi (`Library/UBot.Core/Config/Config.cs`) tarafindan okunur/yazilir
-
-Dosya yapisi:
-
-- `Build/User/Profiles.rs`
-- `Build/User/<Profile>.rs` (global profile config)
-- `Build/User/<Profile>/<Character>.rs` (player config)
-
-Ana static facade'ler:
-
-- `GlobalConfig`
-- `PlayerConfig`
-- `ProfileManager`
-
-Config key governance yardimcilari:
+### Config Key Yönetimi
 
 ```powershell
+# Kullanılan tüm config key'lerini dışa aktar
 powershell.exe -ExecutionPolicy Bypass .\tools\config\Export-UsedConfigKeyInventory.ps1
+
+# Migration kontrolü çalıştır
 powershell.exe -ExecutionPolicy Bypass .\tools\config\Test-ConfigKeyMigrations.ps1 -RefreshInventory
 ```
 
-## 10) Runtime Data ve Build Ciktilari
+Yeni key naming standardı: `UBot.<Modül>.<Key>`
 
-Temel ciktilar:
+---
 
-- `Build/UBot.exe`
-- `Build/UBot.Updater.exe`
-- `Build/UBot.Avalonia.dll`
-- `Build/Client.Library.dll`
-- `Build/Data/Bots/*.dll`
-- `Build/Data/Plugins/*.dll`
-- `Build/Data/Plugins/*.manifest.json`
-- `Build/Data/Languages/**`
-- `Build/Data/Scripts/Towns/*.rbs`
+## Runtime Başlatma Akışı
 
-Repo tarafinda runtime data kaynagi:
+`Application/UBot/Program.cs` başlangıç noktasıdır:
 
-- `Dependencies/Languages/**`
-- `Dependencies/Scripts/Towns/*.rbs`
+```
+1. CLI argümanları parse edilir
+2. ProcessLifetimeManager devreye alınır
+3. --plugin-host modunda → PluginHostRuntime.Run(...)
+4. Normal modda        → UBot.Avalonia.AvaloniaHost.Run(args)
+5. Kapanışta bot / proxy / plugin host / config shutdown-save zinciri çalışır
+```
 
-## 11) Test ve Dogrulama
+### ExtensionManager Yükleme Akışı
 
-Unit test calistirma:
+```
+Build/Data/Plugins  →  assembly topla
+Build/Data/Bots     →  botbase topla
+                     ↓
+           manifest yükle (PluginContractManifestLoader)
+                     ↓
+    host version / dependency / capability / isolation validasyonu
+                     ↓
+     outproc plugin → PluginOutOfProcessHostManager'a register
+     inproc plugin  → PluginFaultIsolationManager ile wrap
+                     ↓
+          initialize / enable / packet hook kayıtları
+                     ↓
+    UBot.DisabledPlugins config key'ine disable listesi yazılır
+```
+
+---
+
+## CLI Argümanları
+
+```
+UBot.exe [seçenekler]
+
+--character <name>          Başlangıçta yüklenecek karakter adı
+--profile <name>            Kullanılacak profil adı
+--launch-client             Silkroad client'ını başlatır
+--launch-clientless         Client'sız (clientless) modda başlatır
+--plugin-host               Out-of-proc plugin host modu (dahili kullanım)
+--plugin-name <name>        Out-of-proc modda yüklenecek plugin adı
+--plugin-path <path>        Out-of-proc modda plugin DLL'inin tam yolu
+```
+
+---
+
+## UI Mimarisi (Avalonia)
+
+`Application/UBot.Avalonia` feature-bazlı organize edilmiştir.
+
+```
+UBot.Avalonia/
+├── MainWindow.axaml              ← Ana pencere (1440×900, resize kapalı)
+├── MainWindowViewModel.cs        ← Ana VM, tema/dil toggle
+├── Services/
+│   ├── IUbotCoreService.cs       ← Core bridge arayüzü
+│   ├── UbotCoreService.cs        ← In-process core adaptörü
+│   └── AppState.cs               ← Global UI durumu
+├── Features/                     ← Plugin/botbase feature view'ları
+│   └── <Feature>/
+│       ├── <Feature>View.axaml
+│       └── <Feature>ViewModel.cs
+├── FeatureViewFactory.cs         ← Dinamik view üretici
+└── Styles/
+    ├── Theme.axaml
+    ├── Controls.axaml
+    └── Features.axaml
+```
+
+**Teknik notlar:**
+- Pencere boyutu sabit: **1440×900**, `CanResize=False`
+- UI, core ile `IUbotCoreService` üzerinden in-process çalışır (WebSocket tabanlı değil)
+- Tema ve dil geçişleri `MainWindowViewModel` + `AppState` üzerinden yönetilir
+- Plugin ve botbase ekranları `FeatureViewFactory` tarafından dinamik üretilir
+
+---
+
+## Native Loader (C++)
+
+`Library/UBot.Loader.Library` projesi, Microsoft Detours kullanarak Silkroad client sürecine hook atar.
+
+- **Çıktı:** `Build/Client.Library.dll`
+- **Platform:** x86 (DLL injection hedefi 32-bit process)
+- **Teknoloji:** C++ / Detours
+- **İlişki:** `UBot.Core` tarafından P/Invoke veya DLL injection mekanizmasıyla çağrılır
+
+---
+
+## Test ve Doğrulama
 
 ```powershell
+# Tüm unit test'leri çalıştır
 dotnet test .\Tests\UBot.Core.Tests\UBot.Core.Tests.csproj
 ```
 
-Mevcut test kapsaminda:
+Mevcut test kapsamı (`ScriptManagerValidationTests.cs`):
 
-- Script lint davranisi
-- Script dry-run davranisi
+- Script lint doğrulaması
+- Script dry-run davranışı
 
-## 12) Sorun Giderme
+---
 
-- Build fail olursa: `build.log` ve `Build/boot-error.log` kontrol edin.
-- Plugin acilis/manifest hatasi: `Build/Data/Plugins/*.manifest.json` ile runtime plugin version/name uyumunu kontrol edin.
-- Reference data yuklenmiyorsa: profile ayarlarinda Silkroad yolu ve `media.pk2` varligini kontrol edin.
-- Out-of-proc plugin baslamiyorsa: `UBot.exe` ve ilgili plugin DLL path'lerinin `Build` altinda oldugunu kontrol edin.
+## Sorun Giderme
 
-## 13) Lisans
+| Belirti | Kontrol Edilecek |
+|---------|-----------------|
+| Build başarısız | `build.log` ve `Build/boot-error.log` dosyalarını inceleyin |
+| Plugin yüklenmiyor | `Build/Data/Plugins/<Plugin>.manifest.json` ile runtime `IPlugin.Name` / `IPlugin.Version` uyumunu kontrol edin |
+| Referans data eksik | Profil ayarlarında Silkroad yolu ve `media.pk2` varlığını doğrulayın |
+| Out-of-proc plugin başlamıyor | `UBot.exe` ve plugin DLL'inin `Build/` altında olduğundan emin olun |
+| MSBuild bulunamadı | Visual Studio Installer'da **MSBuild bileşeni** kurulu mu kontrol edin |
+| `sro_client` çakışması | Build script zaten `taskkill` çalıştırır; manuel olarak görevi sonlandırın |
 
-- `LICENSE` (GPL-3.0)
-- `AGREEMENT.md`
+---
+
+## Lisans
+
+Bu proje **GPL-3.0** lisansı altında dağıtılmaktadır.  
+Detaylar için [`LICENSE`](LICENSE) ve [`AGREEMENT.md`](AGREEMENT.md) dosyalarına bakın.
+
+---
+
+*Bu README, `UbotAva` repository'sindeki kaynak kod, çözüm yapısı, plugin manifest'leri ve build script tersine mühendislik edilerek oluşturulmuştur.*
