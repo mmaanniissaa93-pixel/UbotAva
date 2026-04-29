@@ -13,4 +13,7 @@ public static class ServiceRuntime
     public static IPickupRuntime PickupRuntime { get; set; }
     public static IPickupSettings PickupSettings { get; set; }
     public static IPickupService Pickup { get; set; }
+    public static IInventoryRuntime InventoryRuntime { get; set; }
+    public static IShoppingRuntime ShoppingRuntime { get; set; }
+    public static IShoppingService Shopping { get; set; }
 }

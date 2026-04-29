@@ -394,7 +394,10 @@ internal static class CoreGameStateRuntimeContextBootstrap
         ServiceRuntime.Log = new CoreServiceLog();
         ServiceRuntime.PickupRuntime = new CorePickupRuntime();
         ServiceRuntime.PickupSettings = new CorePickupSettings();
+        ServiceRuntime.InventoryRuntime = new CoreInventoryRuntime();
+        ServiceRuntime.ShoppingRuntime = new CoreShoppingRuntime();
         PickupManager.Initialize(new PickupService());
+        ShoppingManager.Initialize(new ShoppingService());
     }
 }
 
