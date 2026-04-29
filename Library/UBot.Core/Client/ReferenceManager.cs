@@ -81,7 +81,7 @@ public class ReferenceManager : IReferenceManager
 
     public void Load(int languageTab, BackgroundWorker worker)
     {
-        LanguageTab = languageTab; //until language wizard is reworked?
+        LanguageTab = languageTab;
         IsLowMemoryModeEnabled = GlobalConfig.Get(LowMemoryModeConfigKey, false);
 
         var sw = Stopwatch.StartNew();
@@ -89,49 +89,37 @@ public class ReferenceManager : IReferenceManager
         worker.ReportProgress(0, "Client info");
         LoadClientInfo();
 
-        worker.ReportProgress(5, IsLowMemoryModeEnabled ? "Map info (deferred)" : "Map info");
-        if (!IsLowMemoryModeEnabled)
-            LoadMapInfo();
+        worker.ReportProgress(5, "Map info");
+        LoadMapInfo();
 
-        worker.ReportProgress(10, IsLowMemoryModeEnabled ? "Texts (deferred)" : "Texts");
-        if (!IsLowMemoryModeEnabled)
-            LoadTextData();
+        worker.ReportProgress(10, "Texts");
+        LoadTextData();
 
-        worker.ReportProgress(20, IsLowMemoryModeEnabled ? "Characters (deferred)" : "Characters");
-        if (!IsLowMemoryModeEnabled)
-            LoadCharacterData();
+        worker.ReportProgress(20, "Characters");
+        LoadCharacterData();
 
-        worker.ReportProgress(30, IsLowMemoryModeEnabled ? "Items (deferred)" : "Items");
-        if (!IsLowMemoryModeEnabled)
-            LoadItemData();
+        worker.ReportProgress(30, "Items");
+        LoadItemData();
 
-        worker.ReportProgress(40, IsLowMemoryModeEnabled ? "Skills (deferred)" : "Skills");
-        if (!IsLowMemoryModeEnabled)
-            LoadSkillData();
+        worker.ReportProgress(40, "Skills");
+        LoadSkillData();
 
-        worker.ReportProgress(50, IsLowMemoryModeEnabled ? "Quests (deferred)" : "Quests");
-        if (!IsLowMemoryModeEnabled)
-            LoadQuestData();
+        worker.ReportProgress(50, "Quests");
+        LoadQuestData();
 
-        worker.ReportProgress(60, IsLowMemoryModeEnabled ? "Shops (deferred)" : "Shops");
-        if (!IsLowMemoryModeEnabled)
-            LoadShopData();
+        worker.ReportProgress(60, "Shops");
+        LoadShopData();
 
-        worker.ReportProgress(70, IsLowMemoryModeEnabled ? "Teleporters (deferred)" : "Teleporters");
-        if (!IsLowMemoryModeEnabled)
-            LoadTeleportData();
+        worker.ReportProgress(70, "Teleporters");
+        LoadTeleportData();
 
-        worker.ReportProgress(80, IsLowMemoryModeEnabled ? "Alchemy (deferred)" : "Alchemy");
-        if (!IsLowMemoryModeEnabled)
-            LoadAlchemyData();
+        worker.ReportProgress(80, "Alchemy");
+        LoadAlchemyData();
 
-        worker.ReportProgress(90, IsLowMemoryModeEnabled ? "Misc (deferred)" : "Misc");
-        if (!IsLowMemoryModeEnabled)
-            LoadOptLevelData();
-        if (!IsLowMemoryModeEnabled)
-            LoadLevelData();
-        if (!IsLowMemoryModeEnabled)
-            LoadEventRewardData();
+        worker.ReportProgress(90, "Misc");
+        LoadOptLevelData();
+        LoadLevelData();
+        LoadEventRewardData();
 
         sw.Stop();
 
