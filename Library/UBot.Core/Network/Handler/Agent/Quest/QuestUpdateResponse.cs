@@ -1,4 +1,5 @@
-﻿using UBot.Core.Event;
+using UBot.Core.Event;
+using UBot.Core.Objects;
 using UBot.Core.Objects.Quests;
 
 namespace UBot.Core.Network.Handler.Agent.Quest;
@@ -57,7 +58,7 @@ internal class QuestUpdateResponse : IPacketHandler
 
         if (type == QuestUpdateType.Add)
         {
-            var activeQuest = QuestLog.ParseActiveQuest(packet, questId);
+            var activeQuest = packet.ReadActiveQuest(questId);
             Game.Player.QuestLog.ActiveQuests.TryAdd(questId, activeQuest);
 
             Log.Notify($"Added quest [{activeQuest.Quest.GetTranslatedName()}");
@@ -65,7 +66,7 @@ internal class QuestUpdateResponse : IPacketHandler
 
         if (type == QuestUpdateType.Update)
         {
-            var activeQuest = QuestLog.ParseActiveQuest(packet, questId);
+            var activeQuest = packet.ReadActiveQuest(questId);
 
             Game.Player.QuestLog.ActiveQuests[questId] = activeQuest;
 

@@ -2,7 +2,6 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using UBot.Core.Network;
 using UBot.Core.Objects.Skill;
 
 namespace UBot.Core.Objects;
@@ -31,29 +30,7 @@ public class Skills
     /// <value>
     ///     The pending withdraw skill.
     /// </value>
-    internal uint PendingWithdrawSkill { get; set; }
-
-    /// <summary>
-    ///     Creates a new Skill object from the given packet
-    /// </summary>
-    /// <param name="packet">The packet.</param>
-    /// <returns></returns>
-    internal static Skills FromPacket(Packet packet)
-    {
-        var result = new Skills { KnownSkills = new List<SkillInfo>(), Masteries = new List<MasteryInfo>() };
-
-        packet.ReadByte(); //unknown
-
-        while (packet.ReadByte() == 0x01)
-            result.Masteries.Add(packet.ReadMasteryInfo());
-
-        packet.ReadByte(); //unknown
-
-        while (packet.ReadByte() == 0x01)
-            result.KnownSkills.Add(packet.ReadSkillInfo());
-
-        return result;
-    }
+    public uint PendingWithdrawSkill { get; set; }
 
     /// <summary>
     ///     Gets the name of the skill by.
@@ -94,7 +71,8 @@ public class Skills
         if (exact != null) return exact;
 
         // Auto-upgrade redirection: find the best known skill in the same group
-        var refSkill = Game.ReferenceManager?.GetRefSkill(skillId);
+        var refSkill = UBot.Core.Abstractions.GameStateRuntimeProvider.Instance?.GetReference("RefSkill", skillId)
+            as UBot.GameData.ReferenceObjects.RefSkill;
         if (refSkill == null || refSkill.GroupID == 0)
             return null;
 
@@ -129,7 +107,7 @@ public class Skills
     /// </summary>
     /// <param name="masteryId">The mastery identifier.</param>
     /// <param name="level">The level.</param>
-    internal void UpdateMasteryLevel(uint masteryId, byte level)
+    public void UpdateMasteryLevel(uint masteryId, byte level)
     {
         var mastery = Masteries.FirstOrDefault(m => m.Id == masteryId);
         if (mastery != null)

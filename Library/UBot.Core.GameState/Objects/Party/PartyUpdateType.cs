@@ -1,6 +1,6 @@
 ﻿namespace UBot.Core.Objects.Party;
 
-internal enum PartyUpdateType
+public enum PartyUpdateType
 {
     Dismissed = 1,
     Joined = 2,

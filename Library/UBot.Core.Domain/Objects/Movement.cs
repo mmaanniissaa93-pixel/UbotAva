@@ -44,8 +44,8 @@ public struct Movement
     /// </summary>
     public float Angle;
 
-    internal double MovingX,
+    public double MovingX,
         MovingY;
-    internal TimeSpan RemainingTime;
+    public TimeSpan RemainingTime;
 
 }

@@ -4,6 +4,7 @@ using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Event;
 using UBot.Core.Objects;
+using UBot.Core.Objects.Cos;
 using UBot.Core.Objects.Spawn;
 using UBot.Trade.Components;
 
@@ -186,7 +187,10 @@ internal class TransportBundle
         if (Game.Player.JobTransport == null)
             return true;
 
-        if (!SpawnManager.TryGetEntity<SpawnedBionic>(Game.Player.JobTransport.UniqueId, out var bionic))
+        if (Game.Player.JobTransport is not JobTransport jobTransport)
+            return true;
+
+        if (!SpawnManager.TryGetEntity<SpawnedBionic>(jobTransport.UniqueId, out var bionic))
             return true;
 
         return bionic.GetAttackers().Count == 0;

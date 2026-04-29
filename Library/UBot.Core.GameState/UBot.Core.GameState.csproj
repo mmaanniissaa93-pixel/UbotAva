@@ -4,6 +4,7 @@
     <ProjectReference Include="..\UBot.Core.Abstractions\UBot.Core.Abstractions.csproj" />
     <ProjectReference Include="..\UBot.Core.Common\UBot.Core.Common.csproj" />
     <ProjectReference Include="..\UBot.Core.Domain\UBot.Core.Domain.csproj" />
+    <ProjectReference Include="..\UBot.GameData\UBot.GameData.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

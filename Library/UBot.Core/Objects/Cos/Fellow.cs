@@ -166,7 +166,7 @@ public class Fellow : Cos
         var unknown2 = packet.ReadInt();
         Settings = packet.ReadInt();
         Name = packet.ReadString();
-        Inventory = new InventoryItemCollection(packet);
+        Inventory = packet.ReadInventoryItemCollection();
 
         if (string.IsNullOrWhiteSpace(Name))
             Name = LanguageManager.GetLangBySpecificKey("UBot", "LabelPetName");

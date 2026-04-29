@@ -14,12 +14,12 @@
     <NoWarn>CS8618;CS8619;CS8625;CS8602;CS8601;CS8604;CS8600</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia"                    Version="11.1.0" />
-    <PackageReference Include="Avalonia.Desktop"           Version="11.1.0" />
-    <PackageReference Include="Avalonia.Themes.Fluent"     Version="11.1.0" />
-    <PackageReference Include="Avalonia.Fonts.Inter"       Version="11.1.0" />
+    <PackageReference Include="Avalonia" Version="11.1.0" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.1.0" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.1.0" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.1.0" />
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.1.0" />
-    <PackageReference Include="CommunityToolkit.Mvvm"      Version="8.3.2"  />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
   </ItemGroup>
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
@@ -29,5 +29,6 @@
     <ProjectReference Include="..\..\Library\UBot.Core.Abstractions\UBot.Core.Abstractions.csproj" />
     <ProjectReference Include="..\..\Library\UBot.Core.Common\UBot.Core.Common.csproj" />
     <ProjectReference Include="..\..\Library\UBot.Core.Domain\UBot.Core.Domain.csproj" />
+    <ProjectReference Include="..\..\Library\UBot.Core.GameState\UBot.Core.GameState.csproj" />
   </ItemGroup>
 </Project>

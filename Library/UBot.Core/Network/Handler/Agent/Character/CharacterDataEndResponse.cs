@@ -117,20 +117,20 @@ internal class CharacterDataEndResponse : IPacketHandler
         character.Inventory.Deserialize(packet);
 
         if (Game.ClientType >= GameClientType.Thailand)
-            character.Avatars = new InventoryItemCollection(packet);
+            character.Avatars = packet.ReadInventoryItemCollection();
         else
             character.Avatars = new InventoryItemCollection(5);
 
         // JOB2
         if (Game.ClientType > GameClientType.Vietnam)
         {
-            character.Job2SpecialtyBag = new InventoryItemCollection(packet);
+            character.Job2SpecialtyBag = packet.ReadInventoryItemCollection();
 
-            character.Job2 = new InventoryItemCollection(packet);
+            character.Job2 = packet.ReadInventoryItemCollection();
         }
 
-        character.Skills = Skills.FromPacket(packet);
-        character.QuestLog = QuestLog.FromPacket(packet);
+        character.Skills = packet.ReadSkills();
+        character.QuestLog = packet.ReadQuestLog();
 
         packet.ReadByte(); // Unknown
 
@@ -148,7 +148,7 @@ internal class CharacterDataEndResponse : IPacketHandler
         character.ParseBionicDetails(packet);
 
         character.Name = packet.ReadString();
-        character.JobInformation = JobInfo.FromPacket(packet);
+        character.JobInformation = packet.ReadJobInfo();
         character.State.PvpState = (PvpState)packet.ReadByte();
         character.OnTransport = packet.ReadBool(); //On transport?
         character.InCombat = packet.ReadBool();
@@ -206,7 +206,8 @@ internal class CharacterDataEndResponse : IPacketHandler
         character.IsGameMaster = packet.ReadBool();
 
         // Load Notification sound settings
-        character.NotificationSounds.LoadPlayerSettings();
+        character.NotificationSounds = new NotificationSounds();
+        ((NotificationSounds)character.NotificationSounds).LoadPlayerSettings();
 
         //Set instance..
         Game.Player = character;

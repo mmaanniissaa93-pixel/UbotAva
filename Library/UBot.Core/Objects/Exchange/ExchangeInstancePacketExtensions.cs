@@ -15,7 +15,7 @@ internal static class ExchangeInstancePacketExtensions
         var itemCount = packet.ReadByte();
         for (var i = 0; i < itemCount; i++)
         {
-            var item = ExchangeItem.FromPacket(packet, playerIsSender);
+            var item = packet.ReadExchangeItem(playerIsSender);
 
             if (item.Item == null)
             {
@@ -27,5 +27,15 @@ internal static class ExchangeInstancePacketExtensions
         }
 
         exchange.SetItems(playerIsSender, items);
+    }
+
+    private static ExchangeItem ReadExchangeItem(this Packet packet, bool hasSource = false)
+    {
+        return new ExchangeItem
+        {
+            SourceSlot = hasSource ? packet.ReadByte() : (byte)0,
+            ExchangeSlot = packet.ReadByte(),
+            Item = packet.ReadInventoryItem(0xFF),
+        };
     }
 }

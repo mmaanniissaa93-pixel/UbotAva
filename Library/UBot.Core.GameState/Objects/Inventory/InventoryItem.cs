@@ -6,7 +6,6 @@ using System.Threading;
 using UBot.Core.Abstractions;
 using UBot.Core.Client.ReferenceObjects;
 using UBot.GameData.ReferenceObjects;
-using UBot.Core.Network;
 using UBot.Core.Objects.Inventory;
 using UBot.Core.Objects.Item;
 
@@ -170,7 +169,7 @@ public class InventoryItem
     /// <returns></returns>
     public bool Use()
     {
-        Log.Debug($"Using item tid: 0x{Record.Tid:x2} {Record.CodeName} {Record}");
+        _context.LogDebug($"Using item tid: 0x{Record.Tid:x2} {Record.CodeName} {Record}");
 
         return _context.SendUseInventoryItem(Slot, Record.Tid);
     }

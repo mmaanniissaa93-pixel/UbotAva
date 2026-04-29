@@ -134,13 +134,14 @@ public static class ShoppingManager
 
         if (Game.Player.HasActiveAbilityPet && SellPetItems)
         {
-            tempItemSellList = Game.Player.AbilityPet.Inventory.GetItems(item =>
+            var abilityPet = (Ability)Game.Player.AbilityPet;
+            tempItemSellList = abilityPet.Inventory.GetItems(item =>
                 SellFilter.Any(p => p == item.Record.CodeName)
             );
 
             foreach (var item in tempItemSellList)
             {
-                var playerSlot = Game.Player.AbilityPet.MoveItemToPlayer(item.Slot);
+                var playerSlot = abilityPet.MoveItemToPlayer(item.Slot);
                 if (playerSlot != 0xFF)
                     SellItem(Game.Player.Inventory.GetItemAt(playerSlot));
             }
@@ -474,13 +475,14 @@ public static class ShoppingManager
 
         if (Game.Player.HasActiveAbilityPet && StorePetItems)
         {
-            var petItemStoreList = Game.Player.AbilityPet.Inventory.GetItems(item =>
+            var abilityPet = (Ability)Game.Player.AbilityPet;
+            var petItemStoreList = abilityPet.Inventory.GetItems(item =>
                 StoreFilter.Any(p => p == item.Record.CodeName)
             );
 
             foreach (var item in petItemStoreList)
             {
-                var playerSlot = Game.Player.AbilityPet.MoveItemToPlayer(item.Slot);
+                var playerSlot = abilityPet.MoveItemToPlayer(item.Slot);
                 if (playerSlot != 0xFF)
                 {
                     var movedItem = Game.Player.Inventory.GetItemAt(playerSlot);

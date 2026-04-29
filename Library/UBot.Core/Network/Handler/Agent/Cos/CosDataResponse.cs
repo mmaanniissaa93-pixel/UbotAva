@@ -65,7 +65,7 @@ internal class CosDataResponse : IPacketHandler
                         UniqueId = uniqueId,
                         Health = hp,
                         MaxHealth = maxHp,
-                        Inventory = new InventoryItemCollection(packet),
+                        Inventory = packet.ReadInventoryItemCollection(),
                         OwnerUniqueId = packet.ReadUInt(),
                     };
 

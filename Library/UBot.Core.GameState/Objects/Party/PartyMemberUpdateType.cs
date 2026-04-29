@@ -1,6 +1,6 @@
 ﻿namespace UBot.Core.Objects.Party;
 
-internal enum PartyMemberUpdateType
+public enum PartyMemberUpdateType
 {
     NameRefObjID = 1,
     Level = 2,

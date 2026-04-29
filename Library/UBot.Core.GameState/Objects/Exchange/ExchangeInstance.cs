@@ -1,6 +1,6 @@
+using System;
 using System.Collections.Generic;
 using UBot.Core.Abstractions;
-using UBot.Core.Objects.Spawn;
 
 namespace UBot.Core.Objects.Exchange;
 
@@ -45,9 +45,9 @@ public class ExchangeInstance
     /// <value>
     ///     The exchange player.
     /// </value>
-    public SpawnedPlayer ExchangePlayer => _context.GetEntity(typeof(SpawnedPlayer), _exchangePlayerUniqueId) as SpawnedPlayer;
+    public dynamic ExchangePlayer => _context.GetEntity(Type.GetType("UBot.Core.Objects.Spawn.SpawnedPlayer, UBot.Core"), _exchangePlayerUniqueId);
 
-    internal void SetItems(bool playerIsSender, List<ExchangeItem> items)
+    public void SetItems(bool playerIsSender, List<ExchangeItem> items)
     {
         if (playerIsSender)
             SendingItems = items;

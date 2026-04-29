@@ -1,13 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using UBot.Core.Abstractions;
 using UBot.Core.Client.ReferenceObjects;
 using UBot.GameData.ReferenceObjects;
-using UBot.Core.Event;
-using UBot.Core.Network;
-using UBot.Core.Objects.Cos;
 using UBot.Core.Objects.Exchange;
 using UBot.Core.Objects.Inventory;
 using UBot.Core.Objects.Job;
@@ -416,7 +412,7 @@ public class Player : SpawnedBionic
     /// <value>
     ///     The attack pet.
     /// </value>
-    public Growth Growth { get; set; }
+    public dynamic Growth { get; set; }
 
     /// <summary>
     ///     Gets or sets the attack pet.
@@ -424,7 +420,7 @@ public class Player : SpawnedBionic
     /// <value>
     ///     The attack pet.
     /// </value>
-    public Fellow Fellow { get; set; }
+    public dynamic Fellow { get; set; }
 
     /// <summary>
     ///     Gets or sets the vehicle.
@@ -432,7 +428,7 @@ public class Player : SpawnedBionic
     /// <value>
     ///     The vehicle.
     /// </value>
-    public Transport Transport { get; set; }
+    public dynamic Transport { get; set; }
 
     /// <summary>
     ///     Gets or sets the vehicle.
@@ -440,7 +436,7 @@ public class Player : SpawnedBionic
     /// <value>
     ///     The vehicle.
     /// </value>
-    public JobTransport JobTransport { get; set; }
+    public dynamic JobTransport { get; set; }
 
     /// <summary>
     ///     Gets or sets the ability pet.
@@ -448,7 +444,7 @@ public class Player : SpawnedBionic
     /// <value>
     ///     The ability pet.
     /// </value>
-    public Ability AbilityPet { get; set; }
+    public dynamic AbilityPet { get; set; }
 
     /// <summary>
     ///     Gets or sets the mounted pet.
@@ -456,7 +452,7 @@ public class Player : SpawnedBionic
     /// <value>
     ///     The mounted pet.
     /// </value>
-    public Cos.Cos Vehicle { get; set; }
+    public dynamic Vehicle { get; set; }
 
     /// <summary>
     ///     Gets or sets the teleportation.
@@ -542,7 +538,7 @@ public class Player : SpawnedBionic
     /// <summary>
     ///     The exchange
     /// </summary>
-    public ExchangeInstance Exchange { get; internal set; }
+    public ExchangeInstance Exchange { get; set; }
 
     /// <summary>
     ///     Gets a value indicating whether this <see cref="Player" /> is berzerking.
@@ -563,12 +559,12 @@ public class Player : SpawnedBionic
     /// <summary>
     ///     Gets information about the current trade job.
     /// </summary>
-    public TradeInfo TradeInfo { get; internal set; } = null;
+    public TradeInfo TradeInfo { get; set; } = null;
 
     /// <summary>
     ///     Notification sounds
     /// </summary>
-    public NotificationSounds NotificationSounds { get; private set; } = new();
+    public dynamic NotificationSounds { get; set; }
 
     /// <summary>
     ///     Gets a value indicating whether this player is able to attack.
@@ -715,7 +711,7 @@ public class Player : SpawnedBionic
                 }
                 else
                 {
-                    Log.Debug($"Unknown poion type: {record}");
+                    _context.LogDebug($"Unknown poion type: {record}");
                 }
             }
 
@@ -730,11 +726,11 @@ public class Player : SpawnedBionic
             {
                 tick = _context.TickCount;
 
-                Log.Debug($"Potion [{potionItem.Record.GetRealName()}] used");
+                _context.LogDebug($"Potion [{potionItem.Record.GetRealName()}] used");
             }
             else
             {
-                Log.Debug(
+                _context.LogDebug(
                     $"[ERROR] Potion [{potionItem.Record.GetRealName()}] used Elapsed:{elapsed} Duration:{duration} Condition:{elapsed < duration}"
                 );
             }

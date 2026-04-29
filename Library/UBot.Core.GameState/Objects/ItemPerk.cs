@@ -2,6 +2,7 @@
 
 using System.ComponentModel.DataAnnotations;
 using UBot.Core.Client.ReferenceObjects;
+using UBot.Core.Abstractions;
 using UBot.GameData.ReferenceObjects;
 
 namespace UBot.Core.Objects;
@@ -20,7 +21,7 @@ public class ItemPerk
 
     public uint RemainingTime { get; set; }
 
-    public RefObjItem? Item => Game.ReferenceManager.GetRefItem(ItemId);
+    public RefObjItem? Item => GameStateRuntimeProvider.Instance?.GetReference("RefItem", ItemId) as RefObjItem;
 
     #endregion Properties
 }

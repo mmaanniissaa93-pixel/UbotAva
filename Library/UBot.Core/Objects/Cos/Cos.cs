@@ -295,7 +295,8 @@ public class Cos : SpawnedEntity
         if (sleep)
         {
             var vehicle = Game.Player.Vehicle;
-            if (vehicle != null && SpawnManager.TryGetEntity<SpawnedCos>(vehicle.UniqueId, out SpawnedCos spawnedCos))
+            SpawnedCos spawnedCos = null;
+            if (vehicle != null && SpawnManager.TryGetEntity<SpawnedCos>(vehicle.UniqueId, out spawnedCos))
             {
                 Thread.Sleep(Convert.ToInt32(distance / spawnedCos.ActualSpeed * 10000));
             }

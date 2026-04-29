@@ -1,48 +1,44 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UBot.Core.Network;
+using UBot.Core.Objects.Quests;
 
-namespace UBot.Core.Objects.Quests;
+namespace UBot.Core.Objects;
 
-public class QuestLog
+internal static class QuestLogPacketExtensions
 {
-    public Dictionary<uint, ActiveQuest> ActiveQuests;
-    public uint[] CompletedQuests;
-
-    public static QuestLog FromPacket(Packet packet)
+    internal static QuestLog ReadQuestLog(this Packet packet)
     {
         var result = new QuestLog();
         result.ParseCompletedQuests(packet);
         result.ParseActiveQuests(packet);
-
         return result;
     }
 
-    public void ParseCompletedQuests(Packet packet)
+    internal static void ParseCompletedQuests(this QuestLog questLog, Packet packet)
     {
         var count = packet.ReadUShort();
-        CompletedQuests = new uint[count];
+        questLog.CompletedQuests = new uint[count];
 
         for (var i = 0; i < count; i++)
-            CompletedQuests[i] = packet.ReadUInt();
+            questLog.CompletedQuests[i] = packet.ReadUInt();
     }
 
-    public void ParseActiveQuests(Packet packet)
+    internal static void ParseActiveQuests(this QuestLog questLog, Packet packet)
     {
         var count = packet.ReadByte();
-        ActiveQuests = new Dictionary<uint, ActiveQuest>(count);
+        questLog.ActiveQuests = new Dictionary<uint, ActiveQuest>(count);
 
         for (var i = 0; i < count; i++)
         {
             var questId = packet.ReadUInt();
-            var activeQuest = ParseActiveQuest(packet, questId);
-
-            ActiveQuests.TryAdd(activeQuest.Id, activeQuest);
+            var activeQuest = packet.ReadActiveQuest(questId);
+            questLog.ActiveQuests.TryAdd(activeQuest.Id, activeQuest);
         }
     }
 
-    public void AbandonQuest(uint questId)
+    internal static void AbandonQuest(this QuestLog questLog, uint questId)
     {
-        if (!ActiveQuests.ContainsKey(questId))
+        if (!questLog.ActiveQuests.ContainsKey(questId))
             return;
 
         var packet = new Packet(0x70D9);
@@ -50,11 +46,10 @@ public class QuestLog
 
         var callback = new AwaitCallback(null, 0xB0D9);
         PacketManager.SendPacket(packet, PacketDestination.Server, callback);
-
         callback.AwaitResponse();
     }
 
-    public static ActiveQuest ParseActiveQuest(Packet packet, uint questId)
+    internal static ActiveQuest ReadActiveQuest(this Packet packet, uint questId)
     {
         var activeQuest = new ActiveQuest { Id = questId };
 
@@ -104,37 +99,6 @@ public class QuestLog
 
         if ((activeQuest.Type & QuestType.RefObjects) == QuestType.RefObjects)
             activeQuest.Npcs = packet.ReadUIntArray(packet.ReadByte());
-
-        //var typeFlags = (byte)activeQuest.Type;
-
-        //if (typeFlags == 28 || typeFlags == 92)
-        //    activeQuest.RemainingTime = packet.ReadInt();
-
-        //activeQuest.Status = (QuestStatus)packet.ReadByte();
-
-        //if (typeFlags != 8)
-        //{
-        //    var objectiveAmount = packet.ReadByte();
-        //    activeQuest.Objectives = new QuestObjective[objectiveAmount];
-        //    for (int j = 0; j < objectiveAmount; j++)
-        //    {
-        //        QuestObjective objective;
-        //        objective.Id = packet.ReadByte();
-        //        objective.InProgress = packet.ReadBool();
-        //        objective.NameStrId = packet.ReadString();
-
-        //        var taskCount = packet.ReadByte();
-        //        objective.Tasks = packet.ReadUIntArray(taskCount);
-
-        //        activeQuest.Objectives[j] = objective;
-        //    }
-        //}
-
-        //if (typeFlags is 88 or 92)
-        //{
-        //    var npcAmount = packet.ReadByte();
-        //    activeQuest.Npcs = packet.ReadUIntArray(npcAmount);
-        //}
 
         return activeQuest;
     }

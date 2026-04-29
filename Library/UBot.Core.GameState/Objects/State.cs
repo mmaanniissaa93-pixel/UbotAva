@@ -1,6 +1,5 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
-using UBot.Core.Network;
 using UBot.Core.Objects.Skill;
 
 namespace UBot.Core.Objects;
@@ -107,48 +106,6 @@ public class State
     ///     Gets or sets the dialog state.
     /// </summary>
     public DialogState DialogState { get; set; }
-
-    /// <summary>
-    ///     Creates a new state object by the given packet
-    /// </summary>
-    /// <param name="packet">The packet.</param>
-    /// <returns></returns>
-    public void Deserialize(Packet packet)
-    {
-        LifeState = (LifeState)packet.ReadByte();
-
-        if (LifeState == 0)
-            LifeState = LifeState.Alive;
-
-        if (Game.ClientType > GameClientType.Thailand)
-            packet.ReadByte(); //unkByte0
-
-        MotionState = (MotionState)packet.ReadByte();
-        BodyState = (BodyState)packet.ReadByte();
-
-        if (Game.ClientType > GameClientType.Vietnam193)
-            packet.ReadByte(); // hasRedArrowEffect
-
-        WalkSpeed = packet.ReadFloat();
-        RunSpeed = packet.ReadFloat();
-        BerzerkSpeed = packet.ReadFloat();
-
-        var buffCount = packet.ReadByte();
-        for (var i = 0; i < buffCount; i++)
-        {
-            var id = packet.ReadUInt();
-            var token = packet.ReadUInt();
-
-            var buff = new SkillInfo(id, token);
-            if (buff.Record == null)
-                continue;
-
-            if (buff.Record.Params.Contains(1701213281))
-                packet.ReadBool(); //IsCreator
-
-            ActiveBuffs.Add(buff);
-        }
-    }
 
     /// <summary>
     ///     Gets the active buff by skill identifier.

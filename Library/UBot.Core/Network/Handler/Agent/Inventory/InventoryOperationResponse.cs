@@ -719,7 +719,7 @@ internal class InventoryOperationResponse : IPacketHandler
         if (!Game.Player.HasActiveAbilityPet || cos.UniqueId != petUniqueId)
             return;
 
-        Game.Player.Inventory.MoveTo(cos.Inventory, packet);
+        Game.Player.Inventory.MoveTo((InventoryItemCollection)cos.Inventory, packet);
     }
 
     /// <summary>

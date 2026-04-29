@@ -197,7 +197,7 @@ public class SpawnedEntity
         }
     }
 
-    internal void SetAngle(float angle)
+    public void SetAngle(float angle)
     {
         Movement.Angle = angle * MathF.PI / short.MaxValue;
     }

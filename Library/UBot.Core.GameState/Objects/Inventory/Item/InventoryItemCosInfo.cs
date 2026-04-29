@@ -1,4 +1,7 @@
-﻿namespace UBot.Core.Objects.Item;
+using UBot.Core.Abstractions;
+using UBot.GameData.ReferenceObjects;
+
+namespace UBot.Core.Objects.Item;
 
 public struct InventoryItemCosInfo
 {
@@ -21,10 +24,11 @@ public struct InventoryItemCosInfo
     {
         get
         {
-            if (Game.ClientType >= GameClientType.Chinese_Old)
+            var context = GameStateRuntimeProvider.Instance;
+            if (context?.ClientType >= GameClientType.Chinese_Old)
                 return _level;
 
-            var record = Game.ReferenceManager.GetRefObjChar(Id);
+            var record = context?.GetReference("RefObjChar", Id) as RefObjChar;
             if (record != null)
                 return record.Level;
 

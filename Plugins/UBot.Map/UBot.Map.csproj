@@ -19,6 +19,7 @@
     <ProjectReference Include="..\..\Library\UBot.Core.Abstractions\UBot.Core.Abstractions.csproj" />
     <ProjectReference Include="..\..\Library\UBot.Core.Common\UBot.Core.Common.csproj" />
     <ProjectReference Include="..\..\Library\UBot.Core.Domain\UBot.Core.Domain.csproj" />
+    <ProjectReference Include="..\..\Library\UBot.Core.GameState\UBot.Core.GameState.csproj" />
 </ItemGroup>
 
 </Project>

@@ -26,6 +26,7 @@ using UBot.Core.Extensions;
 using UBot.Core.Network;
 using UBot.Core.Network.Protocol;
 using UBot.Core.Objects;
+using UBot.Core.Objects.Cos;
 using UBot.Core.Objects.Party;
 using UBot.Core.Objects.Spawn;
 using UBot.Core.Objects.Skill;
@@ -525,19 +526,19 @@ internal sealed class UbotItemsPluginService : UbotServiceBase
                     }
                     break;
                 case "Grab Pet":
-                    if (player.AbilityPet?.Inventory != null)
+                    if (player.AbilityPet is Ability abilityPet && abilityPet.Inventory != null)
                     {
-                        items = player.AbilityPet.Inventory.Where(x => x?.Record != null).Select(ToInventoryItemDto).ToList();
-                        freeSlots = player.AbilityPet.Inventory.FreeSlots;
-                        totalSlots = player.AbilityPet.Inventory.Capacity;
+                        items = abilityPet.Inventory.Where(x => x?.Record != null).Select(ToInventoryItemDto).ToList();
+                        freeSlots = abilityPet.Inventory.FreeSlots;
+                        totalSlots = abilityPet.Inventory.Capacity;
                     }
                     break;
                 case "Job Transport":
-                    if (player.JobTransport?.Inventory != null)
+                    if (player.JobTransport is JobTransport jobTransport && jobTransport.Inventory != null)
                     {
-                        items = player.JobTransport.Inventory.Where(x => x?.Record != null).Select(ToInventoryItemDto).ToList();
-                        freeSlots = player.JobTransport.Inventory.FreeSlots;
-                        totalSlots = player.JobTransport.Inventory.Capacity;
+                        items = jobTransport.Inventory.Where(x => x?.Record != null).Select(ToInventoryItemDto).ToList();
+                        freeSlots = jobTransport.Inventory.FreeSlots;
+                        totalSlots = jobTransport.Inventory.Capacity;
                     }
                     break;
                 case "Specialty":
@@ -557,11 +558,11 @@ internal sealed class UbotItemsPluginService : UbotServiceBase
                     }
                     break;
                 case "Fellow Pet":
-                    if (player.Fellow?.Inventory != null)
+                    if (player.Fellow is Fellow fellow && fellow.Inventory != null)
                     {
-                        items = player.Fellow.Inventory.Where(x => x?.Record != null).Select(ToInventoryItemDto).ToList();
-                        freeSlots = player.Fellow.Inventory.FreeSlots;
-                        totalSlots = player.Fellow.Inventory.Capacity;
+                        items = fellow.Inventory.Where(x => x?.Record != null).Select(ToInventoryItemDto).ToList();
+                        freeSlots = fellow.Inventory.FreeSlots;
+                        totalSlots = fellow.Inventory.Capacity;
                     }
                     break;
             }

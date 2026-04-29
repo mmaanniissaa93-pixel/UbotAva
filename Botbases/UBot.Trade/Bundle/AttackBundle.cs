@@ -3,6 +3,7 @@ using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Event;
 using UBot.Core.Objects;
+using UBot.Core.Objects.Cos;
 using UBot.Core.Objects.Spawn;
 using UBot.Trade.Components;
 
@@ -103,8 +104,8 @@ internal class AttackBundle
             return true;
 
         //Priority 1: Protect transport?
-        if (TradeConfig.ProtectTransport && Game.Player.JobTransport != null)
-            if (SpawnManager.TryGetEntity<SpawnedBionic>(Game.Player.JobTransport.UniqueId, out var bionic))
+        if (TradeConfig.ProtectTransport && Game.Player.JobTransport is JobTransport jobTransport)
+            if (SpawnManager.TryGetEntity<SpawnedBionic>(jobTransport.UniqueId, out var bionic))
             {
                 var attacker = bionic
                     .GetAttackers()

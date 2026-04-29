@@ -1,4 +1,5 @@
 using UBot.Core.Client.ReferenceObjects;
+using UBot.Core.Abstractions;
 using UBot.GameData.ReferenceObjects;
 
 namespace UBot.Core.Objects.Quests;
@@ -17,5 +18,5 @@ public struct ActiveQuest
     public QuestStatus Status;
     public QuestObjective[] Objectives;
     public uint[] Npcs;
-    public RefQuest Quest => Game.ReferenceManager.GetRefQuest(Id);
+    public RefQuest Quest => GameStateRuntimeProvider.Instance?.GetReference("RefQuest", Id) as RefQuest;
 }

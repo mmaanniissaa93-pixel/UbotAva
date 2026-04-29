@@ -39,6 +39,7 @@ internal sealed class CoreGameStateRuntimeContext : IGameStateRuntimeContext
             "RefSkill" => key is string skillCode
                 ? Game.ReferenceManager.GetRefSkill(skillCode)
                 : Game.ReferenceManager.GetRefSkill(Convert.ToUInt32(key)),
+            "RefQuest" => Game.ReferenceManager.GetRefQuest(Convert.ToUInt32(key)),
             "AbilityItem" => ((uint itemId, byte optLevel))key is var tuple
                 ? Game.ReferenceManager.GetAbilityItem(tuple.itemId, tuple.optLevel)
                 : null,

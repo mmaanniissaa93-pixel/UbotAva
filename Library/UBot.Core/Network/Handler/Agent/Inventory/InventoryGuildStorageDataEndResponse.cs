@@ -1,4 +1,5 @@
-﻿using UBot.Core.Event;
+using UBot.Core.Event;
+using UBot.Core.Objects;
 
 namespace UBot.Core.Network.Handler.Agent.Inventory;
 
