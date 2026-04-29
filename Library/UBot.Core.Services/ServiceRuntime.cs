@@ -10,4 +10,7 @@ public static class ServiceRuntime
     public static IPacketDispatcher PacketDispatcher { get; set; }
     public static IServiceRuntimeEnvironment Environment { get; set; }
     public static IServiceLog Log { get; set; }
+    public static IPickupRuntime PickupRuntime { get; set; }
+    public static IPickupSettings PickupSettings { get; set; }
+    public static IPickupService Pickup { get; set; }
 }

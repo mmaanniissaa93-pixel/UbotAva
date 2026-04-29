@@ -392,6 +392,9 @@ internal static class CoreGameStateRuntimeContextBootstrap
         ServiceRuntime.PacketDispatcher = ProtocolRuntime.PacketDispatcher;
         ServiceRuntime.Environment = new CoreServiceRuntimeEnvironment();
         ServiceRuntime.Log = new CoreServiceLog();
+        ServiceRuntime.PickupRuntime = new CorePickupRuntime();
+        ServiceRuntime.PickupSettings = new CorePickupSettings();
+        PickupManager.Initialize(new PickupService());
     }
 }
 

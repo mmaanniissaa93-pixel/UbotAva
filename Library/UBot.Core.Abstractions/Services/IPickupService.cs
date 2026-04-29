@@ -6,7 +6,7 @@ public interface IPickupService
 {
     bool RunningPlayerPickup { get; }
     bool RunningAbilityPetPickup { get; }
-    IReadOnlyList<(string CodeName, bool PickOnlyChar)> PickupFilter { get; }
+    List<(string CodeName, bool PickOnlyChar)> PickupFilter { get; }
 
     void RunPlayer(object playerPosition, object centerPosition, int radius = 50);
     void RunAbilityPet(object centerPosition, int radius = 50);
