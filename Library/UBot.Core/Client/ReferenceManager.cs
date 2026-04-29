@@ -82,7 +82,7 @@ public class ReferenceManager : IReferenceManager
     public void Load(int languageTab, BackgroundWorker worker)
     {
         LanguageTab = languageTab; //until language wizard is reworked?
-        IsLowMemoryModeEnabled = GlobalConfig.Get(LowMemoryModeConfigKey, true);
+        IsLowMemoryModeEnabled = GlobalConfig.Get(LowMemoryModeConfigKey, false);
 
         var sw = Stopwatch.StartNew();
 

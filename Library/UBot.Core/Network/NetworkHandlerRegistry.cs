@@ -20,7 +20,7 @@ public static class NetworkHandlerRegistry
         var types = AppDomain
             .CurrentDomain.GetAssemblies()
             .SelectMany(SafeGetTypes)
-            .Where(p => type.IsAssignableFrom(p) && !p.IsInterface)
+            .Where(p => type.IsAssignableFrom(p) && !p.IsInterface && !p.IsAbstract)
             .ToArray();
 
         foreach (var handler in types)
@@ -37,7 +37,7 @@ public static class NetworkHandlerRegistry
         var types = AppDomain
             .CurrentDomain.GetAssemblies()
             .SelectMany(SafeGetTypes)
-            .Where(p => type.IsAssignableFrom(p) && !p.IsInterface)
+            .Where(p => type.IsAssignableFrom(p) && !p.IsInterface && !p.IsAbstract)
             .ToArray();
 
         foreach (var hook in types)

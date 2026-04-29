@@ -16,6 +16,7 @@ internal sealed class CoreLegacyProtocolHandler : IProtocolLegacyHandler
         _types = typeof(CoreLegacyProtocolHandler)
             .Assembly.GetTypes()
             .Where(type => type.Namespace != null && type.Namespace.StartsWith("UBot.Core.ProtocolLegacy"))
+            .Where(type => !type.IsAbstract && !type.IsInterface)
             .GroupBy(type => type.Name)
             .ToDictionary(group => group.Key, group => group.First());
     }
@@ -41,6 +42,9 @@ internal sealed class CoreLegacyProtocolHandler : IProtocolLegacyHandler
             return instance;
 
         if (!_types.TryGetValue(name, out var type))
+            return null;
+
+        if (type.IsAbstract || type.IsInterface)
             return null;
 
         instance = Activator.CreateInstance(type);

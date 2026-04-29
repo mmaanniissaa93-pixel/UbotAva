@@ -102,7 +102,7 @@ public class ScriptManager
         var types = AppDomain
             .CurrentDomain.GetAssemblies()
             .SelectMany(s => s.GetTypes())
-            .Where(p => type.IsAssignableFrom(p) && !p.IsInterface)
+            .Where(p => type.IsAssignableFrom(p) && !p.IsInterface && !p.IsAbstract)
             .ToArray();
 
         foreach (var handler in types)
