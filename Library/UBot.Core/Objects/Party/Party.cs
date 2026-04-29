@@ -1,11 +1,18 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
-using UBot.Core.Network;
+using UBot.Core.Abstractions;
 
 namespace UBot.Core.Objects.Party;
 
 public class Party
 {
+    private readonly IGameStateRuntimeContext _context;
+
+    public Party(IGameStateRuntimeContext context = null)
+    {
+        _context = context ?? GameStateRuntimeProvider.Instance;
+    }
+
     /// <summary>
     ///     Gets a value indicating whether other party members can invite or not.
     /// </summary>
@@ -20,9 +27,7 @@ public class Party
     /// <value>
     ///     <c>true</c> if this instance has pending request; otherwise, <c>false</c>.
     /// </value>
-    public bool HasPendingRequest =>
-        Game.AcceptanceRequest?.Type == InviteRequestType.Party1
-        || (Game.AcceptanceRequest?.Type == InviteRequestType.Party2 && Game.AcceptanceRequest.Player != null);
+    public bool HasPendingRequest => _context.HasPendingPartyRequest();
 
     /// <summary>
     ///     Gets a value indicating whether the current player is the party leader or not.
@@ -38,7 +43,7 @@ public class Party
     /// <value>
     ///     <c>true</c> if this instance is leader; otherwise, <c>false</c>.
     /// </value>
-    public bool IsLeader => Leader?.Name != null && Game.Player?.Name != null && Leader.Name == Game.Player.Name;
+    public bool IsLeader => Leader?.Name != null && _context.PlayerName != null && Leader.Name == _context.PlayerName;
 
     /// <summary>
     ///     Gets or sets the leader.
@@ -90,21 +95,7 @@ public class Party
     /// <param name="playerUniqueId">The player unique identifier.</param>
     public void Invite(uint playerUniqueId)
     {
-        if (!IsInParty)
-        {
-            var packet = new Packet(0x7060);
-            packet.WriteUInt(playerUniqueId);
-            packet.WriteByte(Settings.GetPartyType());
-
-            PacketManager.SendPacket(packet, PacketDestination.Server);
-        }
-        else
-        {
-            var packet = new Packet(0x7062);
-            packet.WriteUInt(playerUniqueId);
-
-            PacketManager.SendPacket(packet, PacketDestination.Server);
-        }
+        _context.SendPartyInvite(playerUniqueId, IsInParty, Settings.GetPartyType());
     }
 
     /// <summary>
@@ -112,7 +103,7 @@ public class Party
     /// </summary>
     public void Leave()
     {
-        PacketManager.SendPacket(new Packet(0x7061), PacketDestination.Server);
+        _context.SendPartyLeave();
     }
 
     /// <summary>

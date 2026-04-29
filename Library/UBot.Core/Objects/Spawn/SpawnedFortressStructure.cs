@@ -62,7 +62,7 @@ public sealed class SpawnedFortressStructure : SpawnedNpc
         RefEventStructID = packet.ReadUInt();
         CurrentState = packet.ReadUShort();
 
-        ParseBionicDetails(packet);
+        this.ParseBionicDetails(packet);
 
         base.Deserialize(packet);
 

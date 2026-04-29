@@ -28,7 +28,7 @@ public class StorageBoxTakeItemResponse : IPacketHandler
         var count = packet.ReadInt();
         for (var i = 0; i < count; i++)
         {
-            var item = InventoryItem.FromPacket(packet);
+            var item = packet.ReadInventoryItem();
             if (item == null)
                 continue;
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using UBot.Core.Abstractions;
 using UBot.Core.Client.ReferenceObjects;
 using UBot.GameData.ReferenceObjects;
 using UBot.Core.Event;
@@ -62,8 +63,8 @@ public class Player : SpawnedBionic
     ///     <inheritdoc />
     /// </summary>
     /// <param name="objId"></param>
-    public Player(uint objId)
-        : base(objId) { }
+    public Player(uint objId, IGameStateRuntimeContext context = null)
+        : base(objId, context) { }
 
     /// <summary>
     ///     Gets or sets the scale.
@@ -663,7 +664,7 @@ public class Player : SpawnedBionic
     /// <returns></returns>
     public AmmunitionType GetCurrentAmmunitionType()
     {
-        return Game.Player.Race switch
+        return Race switch
         {
             ObjectCountry.Europe => AmmunitionType.Bolt,
             ObjectCountry.Chinese => AmmunitionType.Arrow,
@@ -679,64 +680,7 @@ public class Player : SpawnedBionic
     /// <returns></returns>
     public bool MoveTo(Position destination, bool sleep = true)
     {
-        var distance = Game.Player.Movement.Source.DistanceTo(destination);
-        if (distance > 150)
-        {
-            Log.Debug($"Player.Move: Target position too far away! Target distance: {Math.Round(distance, 2)}");
-
-            return false;
-        }
-
-        if (HasActiveVehicle)
-        {
-            Vehicle.MoveTo(destination, sleep);
-            return true;
-        }
-
-        var packet = new Packet(0x7021);
-        packet.WriteByte(1);
-
-        if (!Game.Player.IsInDungeon)
-        {
-            destination.Region.Serialize(packet);
-            packet.WriteShort(destination.XOffset);
-            packet.WriteShort(destination.ZOffset);
-            packet.WriteShort(destination.YOffset);
-        }
-        else
-        {
-            Game.Player.Position.Region.Serialize(packet);
-            packet.WriteInt(destination.XOffset);
-            packet.WriteInt(destination.ZOffset);
-            packet.WriteInt(destination.YOffset);
-        }
-
-        var awaitCallback = new AwaitCallback(
-            response =>
-            {
-                var uniqueId = response.ReadUInt();
-                return uniqueId == Game.Player.UniqueId
-                    ? AwaitCallbackResult.Success
-                    : AwaitCallbackResult.ConditionFailed;
-            },
-            0xB021
-        );
-
-        PacketManager.SendPacket(packet, PacketDestination.Server, awaitCallback);
-        awaitCallback.AwaitResponse();
-
-        if (awaitCallback.IsCompleted)
-        {
-            if (!sleep)
-                return true;
-
-            //Wait to finish the step
-            Thread.Sleep(Convert.ToInt32(distance / Game.Player.ActualSpeed * 10000));
-
-            return true;
-        }
-
-        return false;
+        return _context.SendPlayerMove(destination, sleep);
     }
 
     private bool UsePotion(TypeIdFilter filter, ref int tick, ref int duration)
@@ -746,7 +690,7 @@ public class Player : SpawnedBionic
             if (State.LifeState == LifeState.Dead)
                 return false;
 
-            if (Game.SelectedEntity is SpawnedNpcNpc)
+            if (_context.IsSelectedEntityNpc())
                 return false;
 
             var potionItem = Inventory.GetItem(filter);
@@ -775,7 +719,7 @@ public class Player : SpawnedBionic
                 }
             }
 
-            var elapsed = Kernel.TickCount - tick;
+            var elapsed = _context.TickCount - tick;
 
             if (elapsed < duration)
                 return false;
@@ -784,7 +728,7 @@ public class Player : SpawnedBionic
 
             if (result)
             {
-                tick = Kernel.TickCount;
+                tick = _context.TickCount;
 
                 Log.Debug($"Potion [{potionItem.Record.GetRealName()}] used");
             }
@@ -833,7 +777,7 @@ public class Player : SpawnedBionic
         if (State.LifeState == LifeState.Dead)
             return false;
 
-        var elapsed = Kernel.TickCount - _lastUniversalPillTick;
+        var elapsed = _context.TickCount - _lastUniversalPillTick;
         if (elapsed < 1050)
             return false;
 
@@ -843,7 +787,7 @@ public class Player : SpawnedBionic
 
         var result = slotItem.Use();
         if (result)
-            _lastUniversalPillTick = Kernel.TickCount;
+            _lastUniversalPillTick = _context.TickCount;
 
         return result;
     }
@@ -857,7 +801,7 @@ public class Player : SpawnedBionic
         if (State.LifeState == LifeState.Dead)
             return false;
 
-        var elapsed = Kernel.TickCount - _lastPurificationPillTick;
+        var elapsed = _context.TickCount - _lastPurificationPillTick;
         if (elapsed < 20050)
             return false;
 
@@ -867,7 +811,7 @@ public class Player : SpawnedBionic
 
         var result = slotItem.Use();
         if (result)
-            _lastPurificationPillTick = Kernel.TickCount;
+            _lastPurificationPillTick = _context.TickCount;
 
         return result;
     }
@@ -897,15 +841,15 @@ public class Player : SpawnedBionic
     {
         if (
             HasActiveVehicle
-            || Game.Player.State.BattleState == BattleState.InBattle
-            || Game.Player.JobTransport != null
+            || State.BattleState == BattleState.InBattle
+            || JobTransport != null
         )
             return false;
 
         var typeIdFilter = new TypeIdFilter(3, 3, 3, 2);
         var vehicleItem = Inventory.GetItem(item =>
             typeIdFilter.EqualsRefItem(item.Record)
-            && item.Record.ReqLevel1 <= Game.Player.Level
+            && item.Record.ReqLevel1 <= Level
             && !item.Record.CodeName.Contains("COS_T")
         );
         if (vehicleItem == null)
@@ -925,7 +869,7 @@ public class Player : SpawnedBionic
 
         var typeIdFilter = new TypeIdFilter(3, 3, 3, 1);
         var slotItem = Inventory.GetItem(item =>
-            typeIdFilter.EqualsRefItem(item.Record) && item.Record.ReqLevel1 <= Game.Player.Level
+            typeIdFilter.EqualsRefItem(item.Record) && item.Record.ReqLevel1 <= Level
         );
         if (slotItem == null)
             return false;
@@ -938,7 +882,7 @@ public class Player : SpawnedBionic
     /// </summary>
     public void EquipAmmunition()
     {
-        if (!Kernel.Bot.Running)
+        if (!_context.IsBotRunning)
             return;
 
         var currentWeapon = Inventory.GetItemAt(6);
@@ -962,14 +906,14 @@ public class Player : SpawnedBionic
             return;
         }
 
-        if (!PlayerConfig.Get<bool>("UBot.Protection.checkNoArrows"))
+        if (!_context.GetConfigBool("UBot.Protection.checkNoArrows"))
         {
-            Kernel.Bot.Stop();
+            _context.StopBot();
             return;
         }
 
-        Log.Notify("Could not auto-equip ammunition: No correct ammunition type was found in the player's inventory");
-        EventManager.FireEvent("OnUpdateAmmunition");
+        _context.LogNotify("Could not auto-equip ammunition: No correct ammunition type was found in the player's inventory");
+        _context.FireEvent("OnUpdateAmmunition");
     }
 
     /// <summary>
@@ -1055,7 +999,7 @@ public class Player : SpawnedBionic
         if (petItem.State == InventoryItemState.Summoned || petItem.State == InventoryItemState.Dead)
             return false;
 
-        var usingItem = Game.Player.Inventory.GetItem(p => p.Record.IsFellowHpPotion);
+        var usingItem = Inventory.GetItem(p => p.Record.IsFellowHpPotion);
         if (usingItem == null)
             return false;
 
@@ -1070,12 +1014,7 @@ public class Player : SpawnedBionic
         if (!CanEnterBerzerk)
             return;
 
-        var packet = new Packet(0x70A7);
-        packet.WriteByte(0x1); //Enter HWAN
-
-        var callback = new AwaitCallback(null, 0xB0A7);
-        PacketManager.SendPacket(packet, PacketDestination.Server, callback);
-        callback.AwaitResponse(500);
+        _context.SendEnterBerzerkMode();
     }
 
     /// <summary>
@@ -1084,15 +1023,14 @@ public class Player : SpawnedBionic
     /// <param name="abilitySkills">The ability skills</param>
     public bool TryGetAbilitySkills(out List<SkillInfo> abilitySkills)
     {
-        var player = Game.Player;
         abilitySkills = new List<SkillInfo>();
 
-        foreach (var item in player.Inventory.GetEquippedPartItems().Union(player.Avatars))
+        foreach (var item in Inventory.GetEquippedPartItems().Union(Avatars))
         {
             if (item.HasAbility(out var abilityItem))
                 abilitySkills.AddRange(abilityItem.GetLinks().Select(skillId => new SkillInfo(skillId, true)));
 
-            if (Game.ClientType >= GameClientType.Chinese_Old)
+            if (_context.ClientType >= GameClientType.Chinese_Old)
             {
                 if (!item.HasExtraAbility(out var extraAbilityItems))
                     continue;

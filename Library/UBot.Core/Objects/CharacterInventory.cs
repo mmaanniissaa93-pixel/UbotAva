@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using UBot.Core.Network;
+using UBot.Core.Abstractions;
 
 namespace UBot.Core.Objects;
 
@@ -10,33 +10,23 @@ namespace UBot.Core.Objects;
 /// </summary>
 public class CharacterInventory : InventoryItemCollection
 {
+    private readonly IGameStateRuntimeContext _context;
+
     /// <summary>
     ///     Minimum slot of NormalPart.
     /// </summary>
-    public static byte NORMAL_PART_MIN_SLOT
-    {
-        get
-        {
-            return (
-                Game.ClientType == GameClientType.Global
-                || Game.ClientType == GameClientType.Korean
-                || Game.ClientType == GameClientType.VTC_Game
-                || Game.ClientType == GameClientType.RuSro
-                || Game.ClientType == GameClientType.Turkey
-                || Game.ClientType == GameClientType.Taiwan
-                || Game.ClientType == GameClientType.Japanese
-            )
-                ? (byte)17 //4 slots for relics
-                : (byte)13;
-        }
-    }
+    public static byte NORMAL_PART_MIN_SLOT =>
+        GetNormalPartMinSlot(GameStateRuntimeProvider.Instance?.ClientType ?? GameClientType.Vietnam);
 
     /// <summary>
     ///     The constructor.
     /// </summary>
-    /// <param name="size">The size.</param>
-    public CharacterInventory(Packet packet)
-        : base(packet) { }
+    /// <param name="context">The runtime context.</param>
+    public CharacterInventory(IGameStateRuntimeContext context = null)
+        : base(0)
+    {
+        _context = context ?? GameStateRuntimeProvider.Instance;
+    }
 
     /// <summary>
     ///     Gets the size of NormalPart.
@@ -130,46 +120,16 @@ public class CharacterInventory : InventoryItemCollection
         if (amount == 0)
             amount = itemAtSource.Amount;
 
-        var packet = new Packet(0x7034);
-        packet.WriteByte(0); //kinda flag
-        packet.WriteByte(sourceSlot);
-        packet.WriteByte(destinationSlot);
-        packet.WriteUShort(amount);
-
-        var asyncResult = new AwaitCallback(
-            response =>
-            {
-                var result = response.ReadByte();
-                if (result == 0x01)
-                {
-                    var operation = response.ReadByte();
-                    if (operation != 0)
-                        return AwaitCallbackResult.ConditionFailed;
-
-                    var source = response.ReadByte();
-                    var destination = response.ReadByte();
-                    if (source == sourceSlot && destination == destinationSlot)
-                        return AwaitCallbackResult.Success;
-                }
-
-                return AwaitCallbackResult.Fail;
-            },
-            0xB034
-        );
-
-        PacketManager.SendPacket(packet, PacketDestination.Server, asyncResult);
-        asyncResult.AwaitResponse(500);
-
-        return asyncResult.IsCompleted;
+        return _context.SendInventoryMove(sourceSlot, destinationSlot, amount);
     }
 
     public void Sort()
     {
-        if (IsSorting || Game.Player.InAction)
+        if (IsSorting || _context.IsPlayerInAction)
             return;
 
         IsSorting = true;
-        Log.Debug("Sorting the character inventory...");
+        _context.LogDebug("Sorting the character inventory...");
 
         //Use iterations to avoid deadlocks!
         const int maxIterations = 10;
@@ -178,15 +138,7 @@ public class CharacterInventory : InventoryItemCollection
         //Ignore items which move operations failed in the next iteration
         var blacklistedItems = new List<uint>(4);
 
-        int firstSlot = 13;
-        if (Game.ClientType == GameClientType.Global
-            || Game.ClientType == GameClientType.Korean
-            || Game.ClientType == GameClientType.VTC_Game
-            || Game.ClientType == GameClientType.RuSro
-            || Game.ClientType == GameClientType.Turkey
-            || Game.ClientType == GameClientType.Taiwan
-            || Game.ClientType == GameClientType.Japanese)
-            firstSlot = 17; //4 slots for relics
+        var firstSlot = GetNormalPartMinSlot(_context.ClientType);
 
         for (var iIteration = 0; iIteration < maxIterations; iIteration++)
         {
@@ -224,6 +176,21 @@ public class CharacterInventory : InventoryItemCollection
         }
 
         IsSorting = false;
-        Log.Debug($"Sorting finished after {iterations}/{maxIterations}");
+        _context.LogDebug($"Sorting finished after {iterations}/{maxIterations}");
+    }
+
+    private static byte GetNormalPartMinSlot(GameClientType clientType)
+    {
+        return (
+            clientType == GameClientType.Global
+            || clientType == GameClientType.Korean
+            || clientType == GameClientType.VTC_Game
+            || clientType == GameClientType.RuSro
+            || clientType == GameClientType.Turkey
+            || clientType == GameClientType.Taiwan
+            || clientType == GameClientType.Japanese
+        )
+            ? (byte)17 //4 slots for relics
+            : (byte)13;
     }
 }

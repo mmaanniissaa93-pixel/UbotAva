@@ -3,6 +3,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using UBot.Core.Abstractions;
 using UBot.Core.Client.ReferenceObjects;
 using UBot.GameData.ReferenceObjects;
 using UBot.Core.Network;
@@ -13,7 +14,13 @@ namespace UBot.Core.Objects;
 
 public class InventoryItem
 {
+    private readonly IGameStateRuntimeContext _context;
     private byte _optLevel;
+
+    public InventoryItem(IGameStateRuntimeContext context = null)
+    {
+        _context = context ?? GameStateRuntimeProvider.Instance;
+    }
 
     /// <summary>
     ///     Gets or sets the state.
@@ -53,7 +60,7 @@ public class InventoryItem
     /// <value>
     ///     The record.
     /// </value>
-    public RefObjItem Record => Game.ReferenceManager.GetRefItem(ItemId);
+    public RefObjItem Record => _context.GetReference("RefItem", ItemId) as RefObjItem;
 
     /// <summary>
     ///     Gets or sets the opt level.
@@ -141,12 +148,15 @@ public class InventoryItem
             //ToDo: Refine this whole check to act 1:1 like the client. I think Action_Overlap is a bitmap and not an actual value to work with.
             var refSkill = GetRefSkill();
 
+            if (_context.Player is not Player player)
+                return false;
+
             if (refSkill != null)
-                return Game.Player.State.ActiveBuffs.FirstOrDefault(b =>
+                return player.State.ActiveBuffs.FirstOrDefault(b =>
                         b.Record.ID == refSkill.ID || b.Record.Action_Overlap == refSkill.Action_Overlap
                     ) != null;
 
-            var perk = Game.Player.State.ActiveItemPerks.Values.FirstOrDefault(p =>
+            var perk = player.State.ActiveItemPerks.Values.FirstOrDefault(p =>
                 p.ItemId == Record.ID || (Record.Param1 > 0 && p.Item.Param1 == Record.Param1)
             );
 
@@ -162,23 +172,7 @@ public class InventoryItem
     {
         Log.Debug($"Using item tid: 0x{Record.Tid:x2} {Record.CodeName} {Record}");
 
-        var packet = new Packet(0x704C);
-        packet.WriteByte(Slot);
-
-        if (Game.ClientType > GameClientType.Vietnam)
-            packet.WriteInt(Record.Tid);
-        else
-            packet.WriteUShort(Record.Tid);
-
-        var asyncCallback = new AwaitCallback(
-            response => response.ReadByte() == 0x01 ? AwaitCallbackResult.Success : AwaitCallbackResult.Fail,
-            0xB04C
-        );
-
-        PacketManager.SendPacket(packet, PacketDestination.Server, asyncCallback);
-        asyncCallback.AwaitResponse(500);
-
-        return asyncCallback.IsCompleted;
+        return _context.SendUseInventoryItem(Slot, Record.Tid);
     }
 
     /// <summary>
@@ -187,28 +181,7 @@ public class InventoryItem
     /// <param name="destinationSlot">The destination item slot</param>
     public bool UseTo(byte destinationSlot, int mapId = -1)
     {
-        var packet = new Packet(0x704C);
-        packet.WriteByte(Slot);
-
-        if (Game.ClientType > GameClientType.Vietnam)
-            packet.WriteInt(Record.Tid);
-        else
-            packet.WriteUShort(Record.Tid);
-
-        packet.WriteByte(destinationSlot);
-
-        if (mapId > -1)
-            packet.WriteInt(mapId);
-
-        var asyncCallback = new AwaitCallback(
-            response => response.ReadByte() == 0x01 ? AwaitCallbackResult.Success : AwaitCallbackResult.Fail,
-            0xB04C
-        );
-
-        PacketManager.SendPacket(packet, PacketDestination.Server, asyncCallback);
-        asyncCallback.AwaitResponse(500);
-
-        return asyncCallback.IsCompleted;
+        return _context.SendUseInventoryItemTo(Slot, Record.Tid, destinationSlot, mapId);
     }
 
     /// <summary>
@@ -217,17 +190,7 @@ public class InventoryItem
     /// <param name="destinationSlot">The destination item slot</param>
     public void UseFor(uint uniqueId)
     {
-        var packet = new Packet(0x704C);
-        packet.WriteByte(Slot);
-
-        if (Game.ClientType > GameClientType.Vietnam)
-            packet.WriteInt(Record.Tid);
-        else
-            packet.WriteUShort(Record.Tid);
-
-        packet.WriteUInt(uniqueId);
-
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        _context.SendUseInventoryItemFor(Slot, Record.Tid, uniqueId);
     }
 
     /// <summary>
@@ -238,9 +201,10 @@ public class InventoryItem
     {
         var attempt = 0;
         while (
-            !Game.Player.Inventory.MoveItem(Slot, slot)
-            && Kernel.Bot.Running
-            && Game.Player.State.ScrollState == ScrollState.Cancel
+            _context.Player is Player player
+            && !player.Inventory.MoveItem(Slot, slot)
+            && _context.IsBotRunning
+            && player.State.ScrollState == ScrollState.Cancel
         )
         {
             if (attempt++ > 5)
@@ -260,173 +224,7 @@ public class InventoryItem
         if (Record.CanDrop == ObjectDropType.No)
             return false;
 
-        var packet = new Packet(0x7034);
-        if (cos)
-        {
-            packet.WriteByte(InventoryOperation.SP_DROP_ITEM_COS);
-            packet.WriteUInt(cosUniqueId);
-        }
-        else
-        {
-            packet.WriteByte(InventoryOperation.SP_DROP_ITEM);
-        }
-
-        packet.WriteByte(Slot);
-        PacketManager.SendPacket(packet, PacketDestination.Server);
-
-        return true;
-    }
-
-    /// <summary>
-    ///     Parse from incoming packet
-    /// </summary>
-    /// <param name="packet">The packet</param>
-    /// <param name="destinationSlot">The destination slot</param>
-    /// <param name="hasDestinationSlot">The has destination slot</param>
-    /// <returns></returns>
-    public static InventoryItem FromPacket(Packet packet, byte destinationSlot = 0xFE)
-    {
-        var item = new InventoryItem
-        {
-            MagicOptions = new List<MagicOptionInfo>(),
-            BindingOptions = new List<BindingOption>(),
-            Amount = 1,
-            Slot = destinationSlot,
-        };
-
-        if (destinationSlot == 0xFE)
-            item.Slot = packet.ReadByte();
-
-        if (Game.ClientType > GameClientType.Thailand)
-            item.Rental = packet.ReadRentInfo(Game.ClientType);
-
-        item.ItemId = packet.ReadUInt();
-
-        var record = item.Record;
-        if (record == null)
-        {
-            Log.Notify("No item found for " + item.ItemId);
-
-            return null;
-        }
-
-        if (record.IsEquip || record.IsFellowEquip || record.IsJobEquip)
-        {
-            item.OptLevel = packet.ReadByte();
-            item.Attributes = new ItemAttributesInfo(packet.ReadULong());
-            item.Durability = packet.ReadUInt();
-
-            //Read magic options for the item
-            var magicOptionsAmount = packet.ReadByte();
-            for (var iMagicOption = 0; iMagicOption < magicOptionsAmount; iMagicOption++)
-                item.MagicOptions.Add(packet.ReadMagicOptionInfo());
-
-            if (Game.ClientType > GameClientType.Thailand)
-            {
-                //Read sockets & advanced elixirs
-
-                var bindingCount = 2;
-                switch (Game.ClientType)
-                {
-                    case GameClientType.Chinese_Old:
-                    case GameClientType.Chinese:
-                    case GameClientType.Global:
-                    case GameClientType.Turkey:
-                    case GameClientType.Rigid:
-                    case GameClientType.RuSro:
-                    case GameClientType.VTC_Game:
-                    case GameClientType.Japanese:
-                    case GameClientType.Taiwan:
-                        bindingCount = 4;
-                        break;
-                    case GameClientType.Korean:
-                        bindingCount = 3;
-                        break;
-                }
-
-                for (var bindingIndex = 0; bindingIndex < bindingCount; bindingIndex++)
-                {
-                    var bindingType = (BindingOptionType)packet.ReadByte();
-                    var bindingAmount = packet.ReadByte();
-                    for (var iSocketAmount = 0; iSocketAmount < bindingAmount; iSocketAmount++)
-                        item.BindingOptions.Add(packet.ReadBindingOption(bindingType));
-                }
-            }
-        }
-        else if (record.IsPet)
-        {
-            item.State = (InventoryItemState)packet.ReadByte();
-            item.Amount = 1;
-
-            if (item.State != InventoryItemState.Inactive)
-            {
-                item.Cos.Id = packet.ReadUInt(); //RefCharID
-                item.Cos.Name = packet.ReadString(); //Name
-
-                if (record.TypeID4 == 2)
-                    item.Cos.Rental = packet.ReadRentInfo(Game.ClientType);
-                else if (Game.ClientType >= GameClientType.Chinese_Old)
-                    item.Cos.Level = packet.ReadByte(); // cos level
-
-                var buffCount = packet.ReadByte();
-                for (var i = 0; i < buffCount; i++)
-                {
-                    var buffType = packet.ReadByte();
-                    if (buffType == 0 || buffType == 20 || buffType == 6)
-                    {
-                        var itemId = packet.ReadUInt(); // buffType: 0 => skillId ? 20 => itemId
-                        var leftTime = packet.ReadUInt();
-                    }
-
-                    if (buffType == 5)
-                    {
-                        var itemId = packet.ReadUInt();
-                        var leftTime = packet.ReadUInt();
-                        var leftTime2 = packet.ReadUInt();
-                        var unk2 = packet.ReadByte();
-                    }
-                }
-            }
-        }
-        else if (record.IsTransmonster)
-        {
-            item.Cos.Id = packet.ReadUInt(); //Monster ObjectId
-        }
-        else if (record.IsMagicCube)
-        {
-            item.Amount = (ushort)packet.ReadUInt(); //Quantity
-        }
-        else if (record.IsSpecialtyGoodBox)
-        {
-            item.Amount = (ushort)packet.ReadUInt(); //Quantity
-        }
-        else if (record.IsStackable) //ITEM_ETC
-        {
-            item.Amount = packet.ReadUShort();
-
-            if (record.TypeID3 == 11) //Magic/Attr stone
-            {
-                if (record.TypeID4 == 1 || record.TypeID4 == 2)
-                    packet.ReadByte();
-            }
-            else if (record.TypeID3 == 14 && record.TypeID4 == 2)
-            {
-                //ITEM_MALL_GACHA_CARD_WIN
-                //ITEM_MALL_GACHA_CARD_LOSE
-                var magParamCount = packet.ReadByte();
-                for (var i = 0; i < magParamCount; i++)
-                {
-                    packet.ReadUInt();
-                    packet.ReadUInt();
-                }
-            }
-
-            if (record.IsTrading)
-                //Owner name (Player name)
-                packet.ReadString();
-        }
-
-        return item;
+        return _context.SendDropInventoryItem(Slot, cos, cosUniqueId);
     }
 
     /// <summary>
@@ -445,15 +243,18 @@ public class InventoryItem
 
     public bool CanBeEquipped()
     {
+        if (_context.Player is not Player player)
+            return false;
+
         if (Record.IsAmmunition)
             return true;
         if (!Record.IsEquip)
             return false;
-        if (Record.ReqLevel1 > Game.Player.Level)
+        if (Record.ReqLevel1 > player.Level)
             return false;
-        if (Record.ReqGender != 2 && Record.ReqGender != (byte)Game.Player.Gender)
+        if (Record.ReqGender != 2 && Record.ReqGender != (byte)player.Gender)
             return false;
-        if (Record.Country != Game.Player.Record.Country)
+        if (Record.Country != player.Record.Country)
             return false;
 
         return true;
@@ -461,14 +262,16 @@ public class InventoryItem
 
     public bool HasAbility(out RefAbilityByItemOptLevel abilityItem)
     {
-        abilityItem = Game.ReferenceManager.GetAbilityItem(ItemId, OptLevel);
+        abilityItem = _context.GetReference("AbilityItem", (ItemId, OptLevel)) as RefAbilityByItemOptLevel;
 
         return abilityItem != null;
     }
 
     public bool HasExtraAbility(out IEnumerable<RefExtraAbilityByEquipItemOptLevel> abilityItems)
     {
-        abilityItems = Game.ReferenceManager.GetExtraAbilityItems(ItemId, OptLevel);
+        abilityItems =
+            _context.GetReference("ExtraAbilityItems", (ItemId, OptLevel))
+            as IEnumerable<RefExtraAbilityByEquipItemOptLevel>;
 
         return abilityItems != null;
     }
@@ -486,7 +289,7 @@ public class InventoryItem
         if (string.IsNullOrEmpty(Record.Desc1))
             return null;
 
-        return Game.ReferenceManager.GetRefSkill(Record.Desc1);
+        return _context.GetReference("RefSkill", Record.Desc1) as RefSkill;
     }
 
     public InventoryItem Clone()

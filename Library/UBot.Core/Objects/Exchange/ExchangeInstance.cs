@@ -1,6 +1,5 @@
-﻿using System.Collections.Generic;
-using UBot.Core.Components;
-using UBot.Core.Network;
+using System.Collections.Generic;
+using UBot.Core.Abstractions;
 using UBot.Core.Objects.Spawn;
 
 namespace UBot.Core.Objects.Exchange;
@@ -9,6 +8,7 @@ public class ExchangeInstance
 {
     #region Fields
 
+    private readonly IGameStateRuntimeContext _context;
     private readonly uint _exchangePlayerUniqueId;
 
     #endregion Fields
@@ -17,9 +17,10 @@ public class ExchangeInstance
     ///     Initializes a new instance of the <see cref="ExchangeInstance" /> class.
     /// </summary>
     /// <param name="exchangePlayerUniqueId">The exchange player unique identifier.</param>
-    public ExchangeInstance(uint exchangePlayerUniqueId)
+    public ExchangeInstance(uint exchangePlayerUniqueId, IGameStateRuntimeContext context = null)
     {
         _exchangePlayerUniqueId = exchangePlayerUniqueId;
+        _context = context ?? GameStateRuntimeProvider.Instance;
     }
 
     /// <summary>
@@ -44,38 +45,14 @@ public class ExchangeInstance
     /// <value>
     ///     The exchange player.
     /// </value>
-    public SpawnedPlayer ExchangePlayer => SpawnManager.GetEntity<SpawnedPlayer>(_exchangePlayerUniqueId);
+    public SpawnedPlayer ExchangePlayer => _context.GetEntity(typeof(SpawnedPlayer), _exchangePlayerUniqueId) as SpawnedPlayer;
 
-    /// <summary>
-    ///     Updates the items.
-    /// </summary>
-    /// <param name="packet">The packet.</param>
-    public void UpdateItems(Packet packet)
+    internal void SetItems(bool playerIsSender, List<ExchangeItem> items)
     {
-        var ownerUniqueId = packet.ReadUInt();
-        var playerIsSender = ownerUniqueId == Game.Player.UniqueId;
-
         if (playerIsSender)
-            SendingItems = new List<ExchangeItem>(12);
+            SendingItems = items;
         else
-            ReceivingItems = new List<ExchangeItem>(12);
-
-        var itemCount = packet.ReadByte();
-        for (var i = 0; i < itemCount; i++)
-        {
-            var item = ExchangeItem.FromPacket(packet, playerIsSender);
-
-            if (item.Item == null)
-            {
-                Log.Debug($"Could not detect item at exchange slot #{item.ExchangeSlot}");
-                continue;
-            }
-
-            if (playerIsSender)
-                SendingItems.Add(item);
-            else
-                ReceivingItems.Add(item);
-        }
+            ReceivingItems = items;
     }
 
     /// <summary>
@@ -83,17 +60,17 @@ public class ExchangeInstance
     /// </summary>
     public void Complete()
     {
-        if (ReceivingItems == null)
+        if (ReceivingItems == null || _context.Player is not Player player)
             return;
 
         foreach (var item in ReceivingItems)
         {
-            item.Item.Slot = Game.Player.Inventory.GetFreeSlot();
-            Game.Player.Inventory.Add(item.Item);
+            item.Item.Slot = player.Inventory.GetFreeSlot();
+            player.Inventory.Add(item.Item);
         }
 
         if (SendingItems != null)
             foreach (var item in SendingItems)
-                Game.Player.Inventory.RemoveAt(item.SourceSlot);
+                player.Inventory.RemoveAt(item.SourceSlot);
     }
 }

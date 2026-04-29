@@ -272,7 +272,7 @@ internal class InventoryOperationResponse : IPacketHandler
             return;
         }
 
-        var item = InventoryItem.FromPacket(packet, destinationSlot);
+        var item = packet.ReadInventoryItem(destinationSlot);
         var itemAtSlot = inventory.GetItemAt(item.Slot);
 
         if (itemAtSlot != null)
@@ -487,7 +487,7 @@ internal class InventoryOperationResponse : IPacketHandler
         var destinationSlot = packet.ReadByte();
         packet.ReadByte(); //Reason?
 
-        Game.Player.Inventory.Add(InventoryItem.FromPacket(packet, destinationSlot));
+        Game.Player.Inventory.Add(packet.ReadInventoryItem(destinationSlot));
     }
 
     /// <summary>
@@ -737,7 +737,7 @@ internal class InventoryOperationResponse : IPacketHandler
         }
         else
         {
-            var item = InventoryItem.FromPacket(packet, destinationSlot);
+            var item = packet.ReadInventoryItem(destinationSlot);
             var itemAtSlot = Game.Player.Inventory.GetItemAt(destinationSlot);
 
             if (itemAtSlot == null)

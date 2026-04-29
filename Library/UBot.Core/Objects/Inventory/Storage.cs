@@ -1,12 +1,14 @@
-﻿using UBot.Core.Network;
-using UBot.Core.Objects.Spawn;
 using System.Collections.Generic;
 using System.Linq;
+using UBot.Core.Abstractions;
+using UBot.Core.Objects.Spawn;
 
 namespace UBot.Core.Objects.Inventory;
 
 public class Storage : InventoryItemCollection
 {
+    private readonly IGameStateRuntimeContext _context;
+
     /// <summary>
     ///     Gets a value indicating whether this instance is sorting.
     /// </summary>
@@ -24,8 +26,11 @@ public class Storage : InventoryItemCollection
     ///     Create instance of the <seealso cref="Storage" />
     /// </summary>
     /// <param name="size">The standart 150(5 page)</param>
-    public Storage(byte size = 150)
-        : base(size) { }
+    public Storage(byte size = 150, IGameStateRuntimeContext context = null)
+        : base(size)
+    {
+        _context = context ?? GameStateRuntimeProvider.Instance;
+    }
 
     /// <summary>
     ///     Moves the item inside Character's Inventory.
@@ -33,7 +38,7 @@ public class Storage : InventoryItemCollection
     /// <param name="sourceSlot">The source slot.</param>
     /// <param name="destinationSlot">The destination slot.</param>
     /// <param name="amount">The amount.</param>
-    /// <param name="npcId">Id of selected storage NPC.</param>
+    /// <param name="npc">Selected storage NPC.</param>
     /// <returns><c>true</c> if successfully moved; otherwise, <c>false</c>.</returns>
     public bool MoveItem(byte sourceSlot, byte destinationSlot, ushort amount = 0, SpawnedBionic npc = null)
     {
@@ -41,54 +46,22 @@ public class Storage : InventoryItemCollection
         if (itemAtSource == null)
             return false;
 
-        if (npc.UniqueId == 0)
+        if (npc == null || npc.UniqueId == 0)
             return false;
 
         if (amount == 0)
             amount = itemAtSource.Amount;
 
-        var packet = new Packet(0x7034);
-        packet.WriteByte(npc.Record.CodeName.Contains("WAREHOUSE") ? 0x01 : 0x1D); //Move Item Flag (01 - warehouse; 1D - guild)
-        packet.WriteByte(sourceSlot);
-        packet.WriteByte(destinationSlot);
-        packet.WriteUShort(amount);
-        packet.WriteUInt(npc.UniqueId);
-
-        var asyncResult = new AwaitCallback(
-            response =>
-            {
-                var result = response.ReadByte();
-                if (result == 0x01)
-                {
-                    var operation = response.ReadByte();
-                    if (operation != 0x01 && operation != 0x1D)
-                        return AwaitCallbackResult.ConditionFailed;
-
-                    var source = response.ReadByte();
-                    var destination = response.ReadByte();
-                    var amountMoved = response.ReadUShort();
-                    if (source == sourceSlot && destination == destinationSlot)
-                        return AwaitCallbackResult.Success;
-                }
-
-                return AwaitCallbackResult.Fail;
-            },
-            0xB034
-        );
-
-        PacketManager.SendPacket(packet, PacketDestination.Server, asyncResult);
-        asyncResult.AwaitResponse(500);
-
-        return asyncResult.IsCompleted;
+        return _context.SendStorageMove(sourceSlot, destinationSlot, amount, npc);
     }
 
     public void Sort(SpawnedBionic npc)
     {
-        if (IsSorting || Game.Player.InAction)
+        if (IsSorting || _context.IsPlayerInAction)
             return;
 
         IsSorting = true;
-        Log.Debug("Sorting the storage...");
+        _context.LogDebug("Sorting the storage...");
 
         //Use iterations to avoid deadlocks!
         const int maxIterations = 10;
@@ -102,7 +75,6 @@ public class Storage : InventoryItemCollection
             iterations++;
 
             var itemsToStackGroups = this.Where(i =>
-                    //i.Slot > 12 &&
                     i.Record.IsStackable
                     && i.Record.MaxStack > i.Amount
                     && !blacklistedItems.Contains(i.ItemId)
@@ -133,6 +105,6 @@ public class Storage : InventoryItemCollection
         }
 
         IsSorting = false;
-        Log.Debug($"Sorting finished after {iterations}/{maxIterations}");
+        _context.LogDebug($"Sorting finished after {iterations}/{maxIterations}");
     }
 }

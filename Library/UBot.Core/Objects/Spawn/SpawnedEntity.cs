@@ -1,4 +1,5 @@
 using System;
+using UBot.Core.Abstractions;
 using UBot.Core.Client.ReferenceObjects;
 using UBot.GameData.ReferenceObjects;
 
@@ -6,9 +7,16 @@ namespace UBot.Core.Objects.Spawn;
 
 public class SpawnedEntity
 {
+    protected readonly IGameStateRuntimeContext _context;
+
     private bool _lastCollisionResult;
 
     private long _lastCollisionTick;
+
+    public SpawnedEntity(IGameStateRuntimeContext context = null)
+    {
+        _context = context ?? GameStateRuntimeProvider.Instance;
+    }
 
     /// <summary>
     ///     The Movement
@@ -55,7 +63,7 @@ public class SpawnedEntity
     /// <value>
     ///     The record.
     /// </value>
-    public RefObjChar Record => Game.ReferenceManager.GetRefObjChar(Id);
+    public RefObjChar Record => _context.GetReference("RefObjChar", Id) as RefObjChar;
 
     /// <summary>
     ///     Gets the race.
@@ -100,10 +108,10 @@ public class SpawnedEntity
         get
         {
             //It's enough to check for collision every 1 second
-            if (Kernel.TickCount - _lastCollisionTick >= 1000)
+            if (_context.TickCount - _lastCollisionTick >= 1000)
             {
-                _lastCollisionTick = Kernel.TickCount;
-                _lastCollisionResult = Game.Player != null && Game.Player.Position.HasCollisionBetween(Position);
+                _lastCollisionTick = _context.TickCount;
+                _lastCollisionResult = _context.IsBehindObstacle(Position);
             }
 
             return _lastCollisionResult;

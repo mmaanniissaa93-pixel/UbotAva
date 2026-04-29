@@ -2,6 +2,7 @@
 using UBot.Core.Event;
 using UBot.Core.Objects;
 using UBot.Core.Objects.Quests;
+using UBot.Core.Objects.Spawn;
 
 namespace UBot.Core.Network.Handler.Agent.Character;
 
@@ -112,7 +113,8 @@ internal class CharacterDataEndResponse : IPacketHandler
                 packet.ReadUShort();
         }
 
-        character.Inventory = new CharacterInventory(packet);
+        character.Inventory = new CharacterInventory();
+        character.Inventory.Deserialize(packet);
 
         if (Game.ClientType >= GameClientType.Thailand)
             character.Avatars = new InventoryItemCollection(packet);

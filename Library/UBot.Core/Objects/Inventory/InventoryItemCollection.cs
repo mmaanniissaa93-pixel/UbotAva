@@ -489,7 +489,7 @@ public class InventoryItemCollection : ICollection<InventoryItem>
         var amount = packet.ReadByte();
         for (var i = 0; i < amount; i++)
         {
-            var item = InventoryItem.FromPacket(packet);
+            var item = packet.ReadInventoryItem();
 
             if (item == null) { }
 

@@ -1,4 +1,5 @@
-﻿using UBot.Core.Event;
+using UBot.Core.Event;
+using UBot.Core.Objects.Exchange;
 
 namespace UBot.Core.Network.Handler.Agent.Exchange;
 
@@ -13,7 +14,7 @@ internal class ExchangeUpdateItemsResponse : IPacketHandler
     /// <inheritdoc />
     public void Invoke(Packet packet)
     {
-        Game.Player.Exchange?.UpdateItems(packet);
+        Game.Player.Exchange?.UpdateItems(packet, Game.Player.UniqueId);
 
         EventManager.FireEvent("OnUpdateExchangeItems");
     }

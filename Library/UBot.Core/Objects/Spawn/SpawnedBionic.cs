@@ -2,8 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Timers;
-using UBot.Core.Components;
-using UBot.Core.Network;
+using UBot.Core.Abstractions;
 
 namespace UBot.Core.Objects.Spawn;
 
@@ -13,7 +12,8 @@ public class SpawnedBionic : SpawnedEntity
     ///     <inheritdoc />
     /// </summary>
     /// <param name="objId">The ref obj id</param>
-    public SpawnedBionic(uint objId)
+    public SpawnedBionic(uint objId, IGameStateRuntimeContext context = null)
+        : base(context)
     {
         Id = objId;
 
@@ -27,7 +27,7 @@ public class SpawnedBionic : SpawnedEntity
     /// <value>
     ///     The distance to player.
     /// </value>
-    public double DistanceToPlayer => Game.Player.Movement.Source.DistanceTo(Movement.Source);
+    public double DistanceToPlayer => _context.DistanceToPlayer(Movement.Source);
 
     /// <summary>
     ///     Gets a value indicating whether [attacking player].
@@ -70,19 +70,6 @@ public class SpawnedBionic : SpawnedEntity
     public uint TargetId { get; set; }
 
     /// <summary>
-    ///     Parse the bionic details
-    /// </summary>
-    /// <param name="packet">The packet</param>
-    internal void ParseBionicDetails(Packet packet)
-    {
-        UniqueId = packet.ReadUInt();
-
-        var movement = packet.ReadMovement();
-        State.Deserialize(packet);
-        SetMovement(movement);
-    }
-
-    /// <summary>
     ///     Starts the attacking timer.
     /// </summary>
     /// <param name="duration">The duration.</param>
@@ -104,7 +91,7 @@ public class SpawnedBionic : SpawnedEntity
     /// <param name="e">The <see cref="ElapsedEventArgs" /> instance containing the event data.</param>
     private void Timer_Elapsed(object sender, ElapsedEventArgs e)
     {
-        Log.Debug("Attacking timer has elapsed.");
+        _context.LogDebug("Attacking timer has elapsed.");
         AttackingPlayer = false;
     }
 
@@ -115,34 +102,13 @@ public class SpawnedBionic : SpawnedEntity
     /// <returns></returns>
     public bool TrySelect()
     {
-        if (Game.SelectedEntity?.UniqueId == UniqueId)
+        if ((_context.SelectedEntity as SpawnedBionic)?.UniqueId == UniqueId)
             return true;
 
-        Log.Debug(
+        _context.LogDebug(
             $"Trying to select the entity: {UniqueId} State: {State.LifeState} Health: {Health} HasHealth: {HasHealth} Dst: {Math.Round(DistanceToPlayer, 1)}"
         );
-
-        var packet = new Packet(0x7045);
-        packet.WriteUInt(UniqueId);
-
-        var awaitCallback = new AwaitCallback(
-            response =>
-            {
-                var result = response.ReadByte() == 0x01;
-                if (result)
-                    return response.ReadUInt() == UniqueId
-                        ? AwaitCallbackResult.Success
-                        : AwaitCallbackResult.ConditionFailed;
-
-                return AwaitCallbackResult.Fail;
-            },
-            0xB045
-        );
-
-        PacketManager.SendPacket(packet, PacketDestination.Server, awaitCallback);
-        awaitCallback.AwaitResponse();
-
-        return awaitCallback.IsCompleted;
+        return _context.SendSelectEntity(UniqueId);
     }
 
     /// <summary>
@@ -151,34 +117,8 @@ public class SpawnedBionic : SpawnedEntity
     /// <returns></returns>
     public bool TryDeselect()
     {
-        Log.Debug($"Entity deselected: {UniqueId}");
-
-        var packet = new Packet(0x704B);
-        packet.WriteUInt(UniqueId);
-
-        var awaitResult = new AwaitCallback(
-            response =>
-            {
-                var successFlag = response.ReadByte();
-
-                if (successFlag == 2)
-                {
-                    var errorCode = response.ReadUShort();
-
-                    Log.Debug($"Error deselecting Entity {UniqueId} [Code={errorCode:X4}]");
-
-                    return AwaitCallbackResult.Fail;
-                }
-
-                return AwaitCallbackResult.Success;
-            },
-            0xB04B
-        );
-
-        PacketManager.SendPacket(packet, PacketDestination.Server, awaitResult);
-        awaitResult.AwaitResponse();
-
-        return awaitResult.IsCompleted;
+        _context.LogDebug($"Entity deselected: {UniqueId}");
+        return _context.SendDeselectEntity(UniqueId);
     }
 
     /// <summary>
@@ -187,8 +127,8 @@ public class SpawnedBionic : SpawnedEntity
     /// <returns></returns>
     public List<SpawnedBionic> GetAttackers()
     {
-        return !SpawnManager.TryGetEntities<SpawnedBionic>(e => e.TargetId == UniqueId, out var attackers)
-            ? null
-            : attackers.ToList();
+        return (_context.GetEntities(typeof(SpawnedBionic), entity => ((SpawnedBionic)entity).TargetId == UniqueId)
+                as IEnumerable<SpawnedBionic>)
+            ?.ToList();
     }
 }

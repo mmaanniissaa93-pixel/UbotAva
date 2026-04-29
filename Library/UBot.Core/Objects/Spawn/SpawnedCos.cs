@@ -45,7 +45,7 @@ public sealed class SpawnedCos : SpawnedNpc
 
     internal override void Deserialize(Packet packet)
     {
-        ParseBionicDetails(packet);
+        this.ParseBionicDetails(packet);
         base.Deserialize(packet);
 
         var refObj = Record;

@@ -25,7 +25,7 @@ internal class MagicOptionUpdateResponse : IPacketHandler
             var slot = packet.ReadByte();
 
             var oldItem = Game.Player.Inventory.GetItemAt(slot);
-            var item = InventoryItem.FromPacket(packet, slot);
+            var item = packet.ReadInventoryItem(slot);
 
             EventManager.FireEvent("OnMagicOptionUpdate", oldItem, item);
         }

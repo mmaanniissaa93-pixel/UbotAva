@@ -27,7 +27,7 @@ namespace UBot.Chat.Bundle.Network
                 
                 var uid = packet.ReadULong(); //item unique ID from chat message
                 
-                var inventoryItem = InventoryItem.FromPacket(packet, i);
+                var inventoryItem = packet.ReadInventoryItem(i);
 
                 if (!Chat.LinkedItems.ContainsKey(uid))
                 {

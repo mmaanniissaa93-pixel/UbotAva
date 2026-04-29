@@ -281,7 +281,7 @@ public sealed class SpawnedPlayer : SpawnedBionic
             }
         }
 
-        ParseBionicDetails(packet);
+        this.ParseBionicDetails(packet);
 
         Name = packet.ReadString();
         Job = (JobType)packet.ReadByte();

@@ -22,6 +22,7 @@
     <ProjectReference Include="..\UBot.NavMeshApi\UBot.NavMeshApi.csproj" />
     <ProjectReference Include="..\UBot.Core.Common\UBot.Core.Common.csproj" />
     <ProjectReference Include="..\UBot.Core.Domain\UBot.Core.Domain.csproj" />
+    <ProjectReference Include="..\UBot.Core.GameState\UBot.Core.GameState.csproj" />
   </ItemGroup>
 
 </Project>

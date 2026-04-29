@@ -65,7 +65,7 @@ public sealed class SpawnedMonster : SpawnedNpc
     /// <param name="packet">The packet</param>
     internal override void Deserialize(Packet packet)
     {
-        ParseBionicDetails(packet);
+        this.ParseBionicDetails(packet);
 
         base.Deserialize(packet);
 
