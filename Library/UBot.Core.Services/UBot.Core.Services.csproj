@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\UBot.Core.Abstractions\UBot.Core.Abstractions.csproj" />
+    <ProjectReference Include="..\UBot.Core.Common\UBot.Core.Common.csproj" />
+    <ProjectReference Include="..\UBot.Core.Domain\UBot.Core.Domain.csproj" />
+    <ProjectReference Include="..\UBot.Core.GameState\UBot.Core.GameState.csproj" />
+    <ProjectReference Include="..\UBot.Protocol\UBot.Protocol.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <PlatformTarget>x86</PlatformTarget>
+    <Description>Reusable runtime services for UBot core orchestration.</Description>
+  </PropertyGroup>
+
+</Project>

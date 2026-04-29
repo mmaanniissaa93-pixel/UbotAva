@@ -11,6 +11,7 @@ using UBot.Core.Network;
 using UBot.Core.ProtocolServices;
 using UBot.Core.Objects.Inventory;
 using UBot.Core.Objects.Spawn;
+using UBot.Core.Services;
 using UBot.Protocol;
 
 namespace UBot.Core.Objects;
@@ -386,6 +387,11 @@ internal static class CoreGameStateRuntimeContextBootstrap
         ProtocolRuntime.SpawnController = new CoreSpawnController(eventBus, feedback);
         ProtocolRuntime.Shopping = new CoreShoppingController();
         ProtocolRuntime.Cos = new CoreCosController();
+
+        ServiceRuntime.GameState = GameStateRuntimeProvider.Instance;
+        ServiceRuntime.PacketDispatcher = ProtocolRuntime.PacketDispatcher;
+        ServiceRuntime.Environment = new CoreServiceRuntimeEnvironment();
+        ServiceRuntime.Log = new CoreServiceLog();
     }
 }
 

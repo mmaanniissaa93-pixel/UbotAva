@@ -24,6 +24,7 @@
     <ProjectReference Include="..\UBot.Core.Domain\UBot.Core.Domain.csproj" />
     <ProjectReference Include="..\UBot.Core.GameState\UBot.Core.GameState.csproj" />
     <ProjectReference Include="..\UBot.Protocol\UBot.Protocol.csproj" />
+    <ProjectReference Include="..\UBot.Core.Services\UBot.Core.Services.csproj" />
   </ItemGroup>
 
 </Project>

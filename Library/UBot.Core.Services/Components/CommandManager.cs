@@ -1,7 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using UBot.Core.Abstractions.Services;
 using UBot.Core.Components.Command;
+using UBot.Core.Services;
 
 namespace UBot.Core.Components;
 
@@ -30,21 +32,18 @@ public static class CommandManager
             _commands.Add(instance);
         }
 
-        Log.Debug($"[CommandManager] Found and registered {_commands.Count} commands");
+        ServiceRuntime.Log?.Debug($"[CommandManager] Found and registered {_commands.Count} commands");
     }
 
     /// <summary>
     ///     Executes the given command
     /// </summary>
-    /// <param name="command"></param>
-    /// <param name="silent"></param>
-    /// <returns></returns>
     public static bool Execute(string command, bool silent = false)
     {
         if (string.IsNullOrEmpty(command) || command == "none")
             return true;
 
-        Log.Notify($"[CommandManager] Executing command {command}");
+        ServiceRuntime.Log?.Notify($"[CommandManager] Executing command {command}");
 
         var executor = GetExecutor(command);
 
@@ -54,8 +53,6 @@ public static class CommandManager
     /// <summary>
     ///     Gets a command executor instance by a command name
     /// </summary>
-    /// <param name="commandName"></param>
-    /// <returns></returns>
     public static ICommandExecutor GetExecutor(string commandName)
     {
         return _commands.FirstOrDefault(c => c.CommandName == commandName);
@@ -66,7 +63,6 @@ public static class CommandManager
     ///     Key = Command name
     ///     Value = Command description
     /// </summary>
-    /// <returns></returns>
     public static Dictionary<string, string> GetCommandDescriptions()
     {
         var result = new Dictionary<string, string>(16) { { "none", "No action" } };
@@ -76,4 +72,15 @@ public static class CommandManager
 
         return result;
     }
+}
+
+public sealed class CommandService : ICommandService
+{
+    public void Initialize() => CommandManager.Initialize();
+
+    public bool Execute(string command, bool silent = false) => CommandManager.Execute(command, silent);
+
+    public object GetExecutor(string commandName) => CommandManager.GetExecutor(commandName);
+
+    public Dictionary<string, string> GetCommandDescriptions() => CommandManager.GetCommandDescriptions();
 }
