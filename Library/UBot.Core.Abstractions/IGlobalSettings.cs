@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace UBot.Core.Abstractions;
@@ -10,7 +11,10 @@ public interface IGlobalSettings
     TEnum GetEnum<TEnum>(string key, TEnum defaultValue = default)
         where TEnum : struct;
     void Set<T>(string key, T value);
-    T[] GetArray<T>(string key, char delimiter = ',', System.StringSplitOptions options = System.StringSplitOptions.RemoveEmptyEntries);
+    T[] GetArray<T>(
+        string key,
+        char delimiter = ',',
+        StringSplitOptions options = StringSplitOptions.RemoveEmptyEntries);
     void SetArray<T>(string key, IEnumerable<T> values, string delimiter = ",");
     void Save();
 }

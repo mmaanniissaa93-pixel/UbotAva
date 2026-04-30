@@ -412,6 +412,16 @@ public class EventManager
         }
     }
 
+    public static void ClearSubscribers()
+    {
+        lock (_listenersLock)
+        {
+            _listeners.Clear();
+        }
+
+        _ownerListeners.Clear();
+    }
+
     private sealed class QueuedInvocation
     {
         public QueuedInvocation(string eventName, Delegate target, object[] parameters)

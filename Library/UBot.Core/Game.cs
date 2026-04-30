@@ -17,9 +17,6 @@ namespace UBot.Core;
 
 public class Game
 {
-    private static bool _skillEventsRegistered;
-    private static bool _clientlessEventsRegistered;
-
     /// <summary>
     ///     The acceptance request
     /// </summary>
@@ -39,7 +36,7 @@ public class Game
     /// <value>
     ///     The port.
     /// </value>
-    public static ushort Port { get; private set; }
+    public static ushort Port { get; internal set; }
 
     /// <summary>
     ///     Gets or sets the Media.pk2 reader.
@@ -137,26 +134,7 @@ public class Game
     /// </summary>
     public static void Start()
     {
-        Started = false;
-
-        if (Kernel.Bot.Running)
-            Kernel.Bot.Stop();
-
-        Kernel.Proxy?.Shutdown();
-
-        var divisionIndex = GlobalConfig.Get<int>("UBot.DivisionIndex");
-        var severIndex = GlobalConfig.Get<int>("UBot.GatewayIndex");
-
-        Port = NetworkUtilities.GetFreePort(33673, 39999, 1);
-
-        Kernel.Proxy = new Proxy();
-        Kernel.Proxy.Start(
-            Port,
-            ReferenceManager.DivisionInfo.Divisions[divisionIndex].GatewayServers[severIndex],
-            ReferenceManager.GatewayInfo.Port
-        );
-
-        Started = true;
+        Runtime.GameSession.Shared.Start();
     }
 
     /// <summary>
@@ -165,22 +143,7 @@ public class Game
     /// <returns></returns>
     public static bool InitializeArchiveFiles()
     {
-        var directory = GlobalConfig.Get<string>("UBot.SilkroadDirectory");
-        var pk2Key = GlobalConfig.Get<string>("UBot.Pk2Key", "169841");
-
-        try
-        {
-            MediaPk2 = new PackFileSystem(Path.Combine(directory, "media.pk2"), pk2Key);
-            DataPk2 = new PackFileSystem(Path.Combine(directory, "data.pk2"), pk2Key);
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex);
-
-            return false;
-        }
+        return Runtime.GameSession.Shared.InitializeArchiveFiles();
     }
 
     /// <summary>
@@ -188,39 +151,7 @@ public class Game
     /// </summary>
     public static void Initialize()
     {
-        ClientType = GlobalConfig.GetEnum("UBot.Game.ClientType", GameClientType.Vietnam);
-        GameClientTypeAccessor.ActiveClientType = ClientType;
-        ReferenceManager = new ReferenceManager();
-        Party = new Party();
-
-        SkillManager.Initialize(ServiceRuntime.Skill ?? new SkillService());
-        RegisterSkillServiceEvents();
-        ShoppingManager.Initialize();
-        ClientlessManager.Initialize(ServiceRuntime.Clientless ?? new ClientlessService());
-        RegisterClientlessServiceEvents();
-        ProfileManager.Initialize(ServiceRuntime.Profile ?? new ProfileService());
-        ClientManager.Initialize(ServiceRuntime.ClientLaunchPolicy ?? new ClientLaunchPolicyService());
-        ScriptManager.Initialize();
-    }
-
-    private static void RegisterSkillServiceEvents()
-    {
-        if (_skillEventsRegistered)
-            return;
-
-        EventManager.SubscribeEvent("OnLoadGameData", new System.Action(SkillManager.ResetBaseSkills));
-        EventManager.SubscribeEvent("OnCastSkill", new System.Action<uint>(SkillManager.NotifySkillCasted));
-        _skillEventsRegistered = true;
-    }
-
-    private static void RegisterClientlessServiceEvents()
-    {
-        if (_clientlessEventsRegistered)
-            return;
-
-        EventManager.SubscribeEvent("OnAgentServerDisconnected", new System.Action(ClientlessManager.OnAgentServerDisconnected));
-        EventManager.SubscribeEvent("OnAgentServerConnected", new System.Action(ClientlessManager.OnAgentServerConnected));
-        _clientlessEventsRegistered = true;
+        Runtime.GameSession.Shared.Initialize();
     }
 
     /// <summary>
@@ -229,13 +160,6 @@ public class Game
     /// <param name="message"></param>
     public static void ShowNotification(string message)
     {
-        if (!Ready)
-            return;
-
-        var chatPacket = new Packet(0x3026);
-        chatPacket.WriteByte(ChatType.Notice);
-        chatPacket.WriteConditonalString(message);
-
-        PacketManager.SendPacket(chatPacket, PacketDestination.Client);
+        Runtime.GameSession.Shared.ShowNotification(message);
     }
 }

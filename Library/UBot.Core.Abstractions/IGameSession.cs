@@ -1,25 +1,19 @@
-using UBot.Core.Abstractions.Services;
-
 namespace UBot.Core.Abstractions;
 
 public interface IGameSession
 {
     GameClientType ClientType { get; set; }
-    object Player { get; internal set; }
+    object Player { get; }
     object SelectedEntity { get; set; }
-    bool Clientless { get; set; }
+    object AcceptanceRequest { get; }
     bool Started { get; set; }
-    bool Ready { get; internal set; }
+    bool Ready { get; }
+    bool Clientless { get; set; }
     ushort Port { get; }
-    IReferenceManager ReferenceManager { get; set; }
-    object MediaPk2 { get; set; }
-    object DataPk2 { get; set; }
-    object Party { get; internal set; }
-    byte[] MacAddress { get; set; }
-    object AcceptanceRequest { get; set; }
+    IReferenceManager ReferenceManager { get; }
 
-    void Start();
     void Initialize();
+    void Start();
     bool InitializeArchiveFiles();
     void ShowNotification(string message);
 }

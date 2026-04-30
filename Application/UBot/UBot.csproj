@@ -38,6 +38,7 @@
     <ProjectReference Include="..\..\Library\UBot.Core.GameState\UBot.Core.GameState.csproj" />
     <ProjectReference Include="..\..\Library\UBot.Protocol\UBot.Protocol.csproj" />
     <ProjectReference Include="..\..\Library\UBot.Core.Services\UBot.Core.Services.csproj" />
+    <ProjectReference Include="..\..\Library\UBot.Core.Bootstrap\UBot.Core.Bootstrap.csproj" />
 </ItemGroup>
 
   <ItemGroup>
@@ -46,4 +47,3 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
   </ItemGroup>
 </Project>
-

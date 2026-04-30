@@ -168,6 +168,11 @@ public class PacketManager
         }
     }
 
+    public static void HandlePacket(Packet packet, PacketDestination destination)
+    {
+        CallHandler(packet, destination);
+    }
+
     /// <summary>
     ///     Calls the registered hooks and returns a replaced packet.
     /// </summary>

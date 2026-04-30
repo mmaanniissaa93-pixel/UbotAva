@@ -31,6 +31,8 @@ public class ClientlessManager
 
 public sealed class ClientlessService : IClientlessService
 {
+    private readonly IClientConnectionRuntime _runtime;
+    private readonly IServiceLog _log;
     private readonly object _keepAliveLock = new();
     private CancellationTokenSource _keepAliveCancellationTokenSource;
     private Task _keepAliveTask;
@@ -39,9 +41,19 @@ public sealed class ClientlessService : IClientlessService
     private CancellationTokenSource _reloginCancellationTokenSource;
     private Task _reloginTask;
 
+    public ClientlessService()
+    {
+    }
+
+    public ClientlessService(IClientConnectionRuntime runtime, IServiceLog log)
+    {
+        _runtime = runtime;
+        _log = log;
+    }
+
     public void Initialize()
     {
-        ServiceRuntime.Log?.Debug("Initialized [ClientlessManager]!");
+        Log?.Debug("Initialized [ClientlessManager]!");
     }
 
     public void GoClientless()
@@ -93,7 +105,7 @@ public sealed class ClientlessService : IClientlessService
         {
             var delay = Runtime?.GetReloginDelayMilliseconds() ?? 10000;
 
-            ServiceRuntime.Log?.Warn($"Attempting relogin in {delay / 1000} seconds...");
+            Log?.Warn($"Attempting relogin in {delay / 1000} seconds...");
             await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
 
             if (cancellationToken.IsCancellationRequested || Runtime?.IsClientless != true)
@@ -106,7 +118,7 @@ public sealed class ClientlessService : IClientlessService
         }
         catch (Exception e)
         {
-            ServiceRuntime.Log?.Warn($"OnAgentServerDisconnected failed: {e.Message}");
+            Log?.Warn($"OnAgentServerDisconnected failed: {e.Message}");
         }
     }
 
@@ -126,7 +138,7 @@ public sealed class ClientlessService : IClientlessService
         }
         catch (Exception e)
         {
-            ServiceRuntime.Log?.Warn($"KeepAlivePacketWorker failed: {e.Message}");
+            Log?.Warn($"KeepAlivePacketWorker failed: {e.Message}");
         }
     }
 
@@ -224,5 +236,6 @@ public sealed class ClientlessService : IClientlessService
         }
     }
 
-    private static IClientConnectionRuntime Runtime => ServiceRuntime.ClientConnectionRuntime;
+    private IClientConnectionRuntime Runtime => _runtime ?? ServiceRuntime.ClientConnectionRuntime;
+    private IServiceLog Log => _log ?? ServiceRuntime.Log;
 }

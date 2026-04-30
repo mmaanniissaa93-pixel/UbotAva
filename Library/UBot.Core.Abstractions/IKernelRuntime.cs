@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 namespace UBot.Core.Abstractions;
 
 public interface IKernelRuntime
@@ -12,5 +14,6 @@ public interface IKernelRuntime
     bool Debug { get; set; }
 
     void Initialize();
+    Task StartAsync();
     void Shutdown();
 }

@@ -31,5 +31,6 @@
     <ProjectReference Include="..\..\Library\UBot.Core.Domain\UBot.Core.Domain.csproj" />
     <ProjectReference Include="..\..\Library\UBot.Core.GameState\UBot.Core.GameState.csproj" />
     <ProjectReference Include="..\..\Library\UBot.Core.Services\UBot.Core.Services.csproj" />
+    <ProjectReference Include="..\..\Library\UBot.Core.Bootstrap\UBot.Core.Bootstrap.csproj" />
   </ItemGroup>
 </Project>

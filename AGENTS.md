@@ -88,6 +88,7 @@ Agent'ın değişiklik yaptığı alanı doğru katmana yerleştirmesi için:
 |-------|-----------|
 | `Library/UBot.Core` | Kernel, event bus, plugin/botbase manager, config, scripting |
 | `Library/UBot.Core.Abstractions` | `IPlugin`, `IBotbase`, `IExtension` — paylaşılan kontratlar |
+| `Library/UBot.Core.Bootstrap` | Dependency injection composition root ve runtime servis kayıtları |
 | `Library/UBot.Core.Common` | Yardımcı tipler, extension methodlar |
 | `Library/UBot.Core.Domain` | Domain DTO'ları, lightweight game-state kontratları |
 | `Library/UBot.Core.GameState` | Oyun durumu modeli (karakter, NPC, item, skill) |
@@ -98,6 +99,13 @@ Agent'ın değişiklik yaptığı alanı doğru katmana yerleştirmesi için:
 | `Library/UBot.NavMeshApi` | NavMesh, dungeon, terrain, path altyapısı |
 | `Library/UBot.Protocol` | Silkroad paket okuyucu/yazıcıları |
 | `Library/UBot.Loader.Library` | C++ Detours tabanlı native `Client.Library.dll` |
+
+### DI Composition Root
+
+- Runtime DI girişi `Library/UBot.Core.Bootstrap/ServiceProviderFactory.cs` içindedir.
+- `ServiceProviderFactory.CreateServices()` yalnızca uygulama entry point'lerinde çağrılmalıdır.
+- Yeni core servisleri `GameServiceCollectionExtensions.AddGameRuntime()` içine singleton olarak kaydedilmelidir.
+- `ServiceProviderFactory.Dispose()` uygulama kapanışında çağrılır; `IDisposable` servislerin temizliği container üzerinden yapılır.
 
 ### Extension Katmanı
 

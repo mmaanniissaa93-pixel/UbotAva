@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using CommandLine;
 using CommandLine.Text;
 using UBot.Core;
+using UBot.Core.Bootstrap;
 using UBot.Core.Components;
 using UBot.Core.Plugins;
 
@@ -103,6 +104,7 @@ internal static class Program
         finally
         {
             PerformFinalShutdown();
+            ServiceProviderFactory.Dispose();
         }
     }
 

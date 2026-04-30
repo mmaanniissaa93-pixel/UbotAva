@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using UBot.Core.Bootstrap;
 using UBot.Avalonia.Services;
 
 namespace UBot.Avalonia;
@@ -13,6 +14,7 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            ServiceProviderFactory.CreateServices();
             IUbotCoreService core = new UbotCoreService();
             var state = new AppState();
 

@@ -19,17 +19,51 @@ namespace UBot.Core.Objects;
 
 internal sealed class CoreGameStateRuntimeContext : IGameStateRuntimeContext
 {
-    public GameClientType ClientType => Game.ClientType;
-    public IReferenceManager References => Game.ReferenceManager;
-    public int TickCount => Kernel.TickCount;
+    private readonly IGameSession _game;
+    private readonly IKernelRuntime _kernel;
+    private readonly IGlobalSettings _globalSettings;
+    private readonly IPlayerSettings _playerSettings;
+    private readonly UBot.Core.Abstractions.Network.IPacketDispatcher _packetDispatcher;
+    private readonly UBot.Core.Abstractions.Services.IScriptEventBus _eventBus;
+
+    public CoreGameStateRuntimeContext()
+        : this(
+            Runtime.GameSession.Shared,
+            new Runtime.KernelRuntime(),
+            new GlobalSettings(),
+            new PlayerSettings(),
+            new Network.PacketDispatcher(),
+            new Event.ScriptEventBus())
+    {
+    }
+
+    public CoreGameStateRuntimeContext(
+        IGameSession game,
+        IKernelRuntime kernel,
+        IGlobalSettings globalSettings,
+        IPlayerSettings playerSettings,
+        UBot.Core.Abstractions.Network.IPacketDispatcher packetDispatcher,
+        UBot.Core.Abstractions.Services.IScriptEventBus eventBus)
+    {
+        _game = game ?? throw new ArgumentNullException(nameof(game));
+        _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
+        _globalSettings = globalSettings ?? throw new ArgumentNullException(nameof(globalSettings));
+        _playerSettings = playerSettings ?? throw new ArgumentNullException(nameof(playerSettings));
+        _packetDispatcher = packetDispatcher ?? throw new ArgumentNullException(nameof(packetDispatcher));
+        _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
+    }
+
+    public GameClientType ClientType => _game.ClientType;
+    public IReferenceManager References => _game.ReferenceManager;
+    public int TickCount => _kernel.TickCount;
     public bool IsBotRunning => Kernel.Bot?.Running == true;
     public bool IsPlayerInAction => Game.Player?.InAction == true;
     public string PlayerName => Game.Player?.Name;
     public uint PlayerUniqueId => Game.Player?.UniqueId ?? 0;
     public int PlayerLevel => Game.Player?.Level ?? 0;
-    public object Player => Game.Player;
-    public object SelectedEntity => Game.SelectedEntity;
-    public object AcceptanceRequest => Game.AcceptanceRequest;
+    public object Player => _game.Player;
+    public object SelectedEntity => _game.SelectedEntity;
+    public object AcceptanceRequest => _game.AcceptanceRequest;
 
     public object GetReference(string kind, object key)
     {
@@ -322,9 +356,9 @@ internal sealed class CoreGameStateRuntimeContext : IGameStateRuntimeContext
         return true;
     }
 
-    public bool GetConfigBool(string key) => PlayerConfig.Get<bool>(key);
+    public bool GetConfigBool(string key) => _playerSettings.Get<bool>(key);
 
-    public void FireEvent(string eventName, params object[] args) => EventManager.FireEvent(eventName, args);
+    public void FireEvent(string eventName, params object[] args) => _eventBus.RaiseEvent(eventName, args);
 
     public void LogDebug(string message) => Log.Debug(message);
 
@@ -376,46 +410,6 @@ internal static class CoreGameStateRuntimeContextBootstrap
 #pragma warning restore CA2255
     internal static void Initialize()
     {
-        GameStateRuntimeProvider.Instance = new CoreGameStateRuntimeContext();
-        var eventBus = new CoreScriptEventBus();
-        var feedback = new CoreUIFeedbackService();
-
-        ProtocolRuntime.GameState = GameStateRuntimeProvider.Instance;
-        ProtocolRuntime.PacketDispatcher = new CorePacketDispatcher();
-        ProtocolRuntime.LegacyRuntime = new CoreProtocolLegacyRuntime();
-        ProtocolRuntime.EventBus = eventBus;
-        ProtocolRuntime.Feedback = feedback;
-        ProtocolRuntime.SpawnController = new CoreSpawnController(eventBus, feedback);
-        ProtocolRuntime.Shopping = new CoreShoppingController();
-        ProtocolRuntime.Cos = new CoreCosController();
-
-        ServiceRuntime.GameState = GameStateRuntimeProvider.Instance;
-        ServiceRuntime.PacketDispatcher = ProtocolRuntime.PacketDispatcher;
-        ServiceRuntime.Environment = new CoreServiceRuntimeEnvironment();
-        ServiceRuntime.Log = new CoreServiceLog();
-        ServiceRuntime.PickupRuntime = new CorePickupRuntime();
-        ServiceRuntime.PickupSettings = new CorePickupSettings();
-        ServiceRuntime.InventoryRuntime = new CoreInventoryRuntime();
-        ServiceRuntime.ShoppingRuntime = new CoreShoppingRuntime();
-        ServiceRuntime.AlchemyRuntime = new CoreAlchemyRuntime();
-        ServiceRuntime.AlchemyProgress = new CoreAlchemyProgress(feedback);
-        ServiceRuntime.ScriptRuntime = new CoreScriptRuntime();
-        ServiceRuntime.ScriptProgress = new CoreScriptProgress(feedback);
-        ServiceRuntime.SpawnRuntime = new CoreSpawnRuntime();
-        ServiceRuntime.SkillRuntime = new SkillRuntimeAdapter();
-        ServiceRuntime.SkillConfig = new CoreSkillConfig();
-        ServiceRuntime.ClientConnectionRuntime = new ClientConnectionRuntimeAdapter();
-        ServiceRuntime.Clientless = new ClientlessService();
-        ServiceRuntime.ClientNativeRuntime = new ClientNativeRuntimeAdapter();
-        ServiceRuntime.ClientLaunchConfigProvider = new CoreClientLaunchConfigProvider();
-        ServiceRuntime.ClientLaunchPolicy = new ClientLaunchPolicyService();
-        ServiceRuntime.ProfileStorage = new ProfileFileStorage(new CoreAppPaths());
-        ServiceRuntime.Profile = new ProfileService();
-        PickupManager.Initialize(new PickupService());
-        ShoppingManager.Initialize(new ShoppingService());
-        AlchemyManager.Initialize(new AlchemyService());
-        LanguageManager.Initialize(new LanguageService());
-        ClientManager.Initialize(ServiceRuntime.ClientLaunchPolicy);
+        Runtime.CoreRuntimeBootstrapper.Initialize();
     }
 }
-

@@ -153,6 +153,7 @@ UbotAva/
 │   ├── UBot.Core.GameState/      ← Oyun durumu modeli (karakter, NPC, item)
 │   ├── UBot.Core.Network/        ← Network altyapısı, event'ler
 │   ├── UBot.Core.Services/       ← Uygulama servisleri
+│   ├── UBot.Core.Bootstrap/      ← DI composition root ve runtime kayıtları
 │   ├── UBot.FileSystem/          ← Yerel + PK2 dosya sistemi (Blowfish şifreleme)
 │   ├── UBot.GameData/            ← RefObj*, RefSkill*, RefQuest* parser'ları
 │   ├── UBot.NavMeshApi/          ← NavMesh, dungeon, terrain, path altyapısı
@@ -199,6 +200,14 @@ UbotAva/
 ├── client-signatures.cfg         ← Client imza tanımları
 └── ubot_keys.txt                 ← Key referansları
 ```
+
+---
+
+## Dependency Injection
+
+Runtime composition root `Library/UBot.Core.Bootstrap` altındadır. Uygulama başlangıcında
+`ServiceProviderFactory.CreateServices()` çağrılır; core runtime servisleri
+`GameServiceCollectionExtensions.AddGameRuntime()` üzerinden singleton olarak kaydedilir.
 
 ---
 
