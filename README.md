@@ -711,6 +711,7 @@ Bu proje **GPL-3.0** lisansı altında dağıtılmaktadır.
 Detaylar için [`LICENSE`](LICENSE) ve [`AGREEMENT.md`](AGREEMENT.md) dosyalarına bakın.  
 Copyright © 2018 – 2026 UBot Team
 
+
 ---
 
 *Bu README, `UbotAva` repository'sindeki kaynak kod, interface tanımları, plugin manifest'leri, DI composition root, servis katmanı ve build script tersine mühendislik edilerek oluşturulmuştur.*
