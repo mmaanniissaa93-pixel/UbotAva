@@ -198,6 +198,7 @@ public class Game
         ShoppingManager.Initialize();
         ClientlessManager.Initialize(ServiceRuntime.Clientless ?? new ClientlessService());
         RegisterClientlessServiceEvents();
+        ProfileManager.Initialize(ServiceRuntime.Profile ?? new ProfileService());
         ScriptManager.Initialize();
     }
 

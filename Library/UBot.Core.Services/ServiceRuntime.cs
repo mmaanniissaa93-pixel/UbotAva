@@ -28,4 +28,6 @@ public static class ServiceRuntime
     public static ISkillService Skill { get; set; }
     public static IClientConnectionRuntime ClientConnectionRuntime { get; set; }
     public static IClientlessService Clientless { get; set; }
+    public static IProfileStorage ProfileStorage { get; set; }
+    public static IProfileService Profile { get; set; }
 }

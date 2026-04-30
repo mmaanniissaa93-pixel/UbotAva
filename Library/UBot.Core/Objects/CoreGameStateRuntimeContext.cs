@@ -7,6 +7,7 @@ using System.Threading;
 using UBot.Core.Abstractions;
 using UBot.Core.Components;
 using UBot.Core.Event;
+using UBot.Core.IO;
 using UBot.Core.Network;
 using UBot.Core.ProtocolServices;
 using UBot.Core.Objects.Inventory;
@@ -405,6 +406,8 @@ internal static class CoreGameStateRuntimeContextBootstrap
         ServiceRuntime.SkillConfig = new CoreSkillConfig();
         ServiceRuntime.ClientConnectionRuntime = new ClientConnectionRuntimeAdapter();
         ServiceRuntime.Clientless = new ClientlessService();
+        ServiceRuntime.ProfileStorage = new ProfileFileStorage(new CoreAppPaths());
+        ServiceRuntime.Profile = new ProfileService();
         PickupManager.Initialize(new PickupService());
         ShoppingManager.Initialize(new ShoppingService());
         AlchemyManager.Initialize(new AlchemyService());
