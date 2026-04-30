@@ -208,7 +208,7 @@ UbotAva/
 ├── build.ps1                     ← Canonical build scripti
 ├── UBot.sln                      ← Visual Studio solution
 ├── client-signatures.cfg         ← Client imza tanımları
-└── ubot_keys.txt                 ← Key referansları
+└── UBot_Keys_Refactored.md       ← Key referansları
 ```
 
 ---
