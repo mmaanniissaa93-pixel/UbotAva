@@ -1,8 +1,8 @@
 using System.Reflection;
 using System.Threading.Tasks;
+using UBot.Core.Abstractions.Services;
 using UBot.Core.Components;
-using UBot.Core.Event;
-using UBot.Core.Network;
+using UBot.Core.Services;
 using Xunit;
 
 namespace UBot.Core.Tests;
@@ -31,10 +31,10 @@ public class ClientlessManagerTests
         ClientlessManager.Initialize();
         ClientlessManager.GoClientless();
 
-        EventManager.FireEvent("OnAgentServerDisconnected");
+        ClientlessManager.OnAgentServerDisconnected();
         var firstReloginTask = scope.GetReloginTask();
 
-        EventManager.FireEvent("OnAgentServerDisconnected");
+        ClientlessManager.OnAgentServerDisconnected();
         var secondReloginTask = scope.GetReloginTask();
 
         Assert.NotNull(firstReloginTask);
@@ -44,47 +44,67 @@ public class ClientlessManagerTests
     private sealed class ClientlessScope : System.IDisposable
     {
         private static readonly FieldInfo KeepAliveTaskField =
-            typeof(ClientlessManager).GetField("_keepAliveTask", BindingFlags.NonPublic | BindingFlags.Static);
+            typeof(ClientlessService).GetField("_keepAliveTask", BindingFlags.NonPublic | BindingFlags.Instance);
 
         private static readonly FieldInfo ReloginTaskField =
-            typeof(ClientlessManager).GetField("_reloginTask", BindingFlags.NonPublic | BindingFlags.Static);
+            typeof(ClientlessService).GetField("_reloginTask", BindingFlags.NonPublic | BindingFlags.Instance);
 
-        private static readonly PropertyInfo AgentConnectedProperty =
-            typeof(Proxy).GetProperty("IsConnectedToAgentserver", BindingFlags.Public | BindingFlags.Instance);
+        private readonly IClientConnectionRuntime _previousRuntime;
+        private readonly IClientlessService _previousService;
+        private readonly ClientlessService _service;
 
-        private readonly Proxy _previousProxy;
-        private readonly bool _previousClientless;
-
-        private ClientlessScope(Proxy previousProxy, bool previousClientless)
+        private ClientlessScope(
+            IClientConnectionRuntime previousRuntime,
+            IClientlessService previousService,
+            ClientlessService service
+        )
         {
-            _previousProxy = previousProxy;
-            _previousClientless = previousClientless;
+            _previousRuntime = previousRuntime;
+            _previousService = previousService;
+            _service = service;
         }
 
         public static ClientlessScope Create(bool agentConnected)
         {
             ClientlessManager.Shutdown();
 
-            var previousProxy = Kernel.Proxy;
-            var previousClientless = Game.Clientless;
-            var proxy = new Proxy();
-            AgentConnectedProperty.SetValue(proxy, agentConnected);
+            var previousRuntime = ServiceRuntime.ClientConnectionRuntime;
+            var previousService = ServiceRuntime.Clientless;
+            var service = new ClientlessService();
 
-            Kernel.Proxy = proxy;
-            Game.Clientless = false;
+            ServiceRuntime.ClientConnectionRuntime = new FakeClientConnectionRuntime(agentConnected);
+            ClientlessManager.Initialize(service);
 
-            return new ClientlessScope(previousProxy, previousClientless);
+            return new ClientlessScope(previousRuntime, previousService, service);
         }
 
-        public Task GetKeepAliveTask() => (Task)KeepAliveTaskField.GetValue(null);
+        public Task GetKeepAliveTask() => (Task)KeepAliveTaskField.GetValue(_service);
 
-        public Task GetReloginTask() => (Task)ReloginTaskField.GetValue(null);
+        public Task GetReloginTask() => (Task)ReloginTaskField.GetValue(_service);
 
         public void Dispose()
         {
             ClientlessManager.Shutdown();
-            Kernel.Proxy = _previousProxy;
-            Game.Clientless = _previousClientless;
+            ServiceRuntime.ClientConnectionRuntime = _previousRuntime;
+            ServiceRuntime.Clientless = _previousService;
         }
+    }
+
+    private sealed class FakeClientConnectionRuntime : IClientConnectionRuntime
+    {
+        public FakeClientConnectionRuntime(bool agentConnected)
+        {
+            IsConnectedToAgentServer = agentConnected;
+        }
+
+        public bool IsClientless { get; set; }
+        public bool IsConnectedToGatewayServer => true;
+        public bool IsConnectedToAgentServer { get; }
+
+        public int GetReloginDelayMilliseconds() => 10000;
+        public void ShutdownClientConnection() { }
+        public void StartGame() { }
+        public void SendServerListRequest() { }
+        public void SendKeepAlive() { }
     }
 }

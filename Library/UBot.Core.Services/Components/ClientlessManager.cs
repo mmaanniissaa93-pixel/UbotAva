@@ -1,121 +1,124 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using UBot.Core.Event;
-using UBot.Core.Network;
+using UBot.Core.Abstractions.Services;
+using UBot.Core.Services;
 
 namespace UBot.Core.Components;
 
 public class ClientlessManager
 {
-    private static readonly object _keepAliveLock = new();
-    private static CancellationTokenSource _keepAliveCancellationTokenSource;
-    private static Task _keepAliveTask;
+    private static IClientlessService _service = new ClientlessService();
 
-    private static readonly object _reloginLock = new();
-    private static CancellationTokenSource _reloginCancellationTokenSource;
-    private static Task _reloginTask;
-
-    /// <summary>
-    ///     Subscribes the events.
-    /// </summary>
-    internal static void Initialize()
+    public static void Initialize()
     {
-        EventManager.SubscribeEvent("OnAgentServerDisconnected", OnAgentServerDisconnected);
-        EventManager.SubscribeEvent("OnAgentServerConnected", OnAgentServerConnected);
+        Initialize(ServiceRuntime.Clientless ?? new ClientlessService());
     }
 
-    /// <summary>
-    ///     Kills the client.
-    /// </summary>
-    public static void GoClientless()
+    public static void Initialize(IClientlessService service)
     {
-        Kernel.Proxy?.Client?.Shutdown();
+        _service = service ?? throw new ArgumentNullException(nameof(service));
+        ServiceRuntime.Clientless = _service;
+        _service.Initialize();
+    }
 
-        Game.Clientless = true;
+    public static void GoClientless() => _service.GoClientless();
+    public static void Shutdown() => _service.Shutdown();
+    public static void RequestServerList() => _service.RequestServerList();
+    public static void OnAgentServerDisconnected() => _service.OnAgentServerDisconnected();
+    public static void OnAgentServerConnected() => _service.OnAgentServerConnected();
+}
+
+public sealed class ClientlessService : IClientlessService
+{
+    private readonly object _keepAliveLock = new();
+    private CancellationTokenSource _keepAliveCancellationTokenSource;
+    private Task _keepAliveTask;
+
+    private readonly object _reloginLock = new();
+    private CancellationTokenSource _reloginCancellationTokenSource;
+    private Task _reloginTask;
+
+    public void Initialize()
+    {
+        ServiceRuntime.Log?.Debug("Initialized [ClientlessManager]!");
+    }
+
+    public void GoClientless()
+    {
+        Runtime?.ShutdownClientConnection();
+
+        if (Runtime != null)
+            Runtime.IsClientless = true;
 
         StartKeepAlivePacketWorker();
     }
 
-    public static void Shutdown()
+    public void Shutdown()
     {
         StopKeepAlivePacketWorker(waitForStop: true);
         StopReloginWorker(waitForStop: true);
     }
 
-    /// <summary>
-    ///     Requests the server list.
-    /// </summary>
-    public static void RequestServerList()
+    public void RequestServerList()
     {
-        if (!Kernel.Proxy.IsConnectedToGatewayserver)
+        if (Runtime?.IsConnectedToGatewayServer != true)
             return;
 
-        PacketManager.SendPacket(new Packet(0x6101, true), PacketDestination.Server);
+        Runtime.SendServerListRequest();
     }
 
-    /// <summary>
-    ///     Called when [agent server disconnected].
-    /// </summary>
-    private static void OnAgentServerDisconnected()
+    public void OnAgentServerDisconnected()
     {
         StopKeepAlivePacketWorker();
 
-        if (!Game.Clientless)
+        if (Runtime?.IsClientless != true)
             return;
 
         StartReloginWorker();
     }
 
-    private static async Task ReloginAfterDisconnectAsync(CancellationToken cancellationToken)
+    public void OnAgentServerConnected()
     {
-        try
-        {
-            int delay = 10000;
-            if (GlobalConfig.Get("UBot.General.EnableWaitAfterDC", false))
-                delay = GlobalConfig.Get<int>("UBot.General.WaitAfterDC") * 60 * 1000;
-
-            Log.Warn($"Attempting relogin in {delay / 1000} seconds...");
-            await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
-
-            if (cancellationToken.IsCancellationRequested || !Game.Clientless)
-                return;
-
-            Game.Start();
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-        }
-        catch (Exception e)
-        {
-            Log.Error($"OnAgentServerDisconnected failed: {e.Message}");
-        }
-    }
-
-    /// <summary>
-    ///     Called when [agent server connected].
-    /// </summary>
-    private static void OnAgentServerConnected()
-    {
-        if (!Game.Clientless)
+        if (Runtime?.IsClientless != true)
             return;
 
         StopReloginWorker();
         StartKeepAlivePacketWorker();
     }
 
-    /// <summary>
-    ///     Pings the server.
-    /// </summary>
-    private static async Task KeepAlivePacketWorkerAsync(CancellationToken cancellationToken)
+    private async Task ReloginAfterDisconnectAsync(CancellationToken cancellationToken)
     {
         try
         {
-            while (!cancellationToken.IsCancellationRequested && Kernel.Proxy?.IsConnectedToAgentserver == true)
+            var delay = Runtime?.GetReloginDelayMilliseconds() ?? 10000;
+
+            ServiceRuntime.Log?.Warn($"Attempting relogin in {delay / 1000} seconds...");
+            await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+
+            if (cancellationToken.IsCancellationRequested || Runtime?.IsClientless != true)
+                return;
+
+            Runtime.StartGame();
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+        }
+        catch (Exception e)
+        {
+            ServiceRuntime.Log?.Warn($"OnAgentServerDisconnected failed: {e.Message}");
+        }
+    }
+
+    private async Task KeepAlivePacketWorkerAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested && Runtime?.IsConnectedToAgentServer == true)
             {
                 await Task.Delay(10000, cancellationToken).ConfigureAwait(false);
 
-                PacketManager.SendPacket(new Packet(0x2002), PacketDestination.Server);
+                Runtime?.SendKeepAlive();
             }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -123,11 +126,11 @@ public class ClientlessManager
         }
         catch (Exception e)
         {
-            Log.Error($"KeepAlivePacketWorker failed: {e.Message}");
+            ServiceRuntime.Log?.Warn($"KeepAlivePacketWorker failed: {e.Message}");
         }
     }
 
-    private static void StartKeepAlivePacketWorker()
+    private void StartKeepAlivePacketWorker()
     {
         lock (_keepAliveLock)
         {
@@ -140,7 +143,7 @@ public class ClientlessManager
         }
     }
 
-    private static void StopKeepAlivePacketWorker(bool waitForStop = false)
+    private void StopKeepAlivePacketWorker(bool waitForStop = false)
     {
         CancellationTokenSource tokenSource;
         Task task;
@@ -165,7 +168,7 @@ public class ClientlessManager
         }
     }
 
-    private static void StartReloginWorker()
+    private void StartReloginWorker()
     {
         lock (_reloginLock)
         {
@@ -178,7 +181,7 @@ public class ClientlessManager
         }
     }
 
-    private static void StopReloginWorker(bool waitForStop = false)
+    private void StopReloginWorker(bool waitForStop = false)
     {
         CancellationTokenSource tokenSource;
         Task task;
@@ -211,7 +214,7 @@ public class ClientlessManager
         try
         {
             if (!task.Wait(TimeSpan.FromSeconds(1)))
-                Log.Warn($"{workerName} worker did not stop within the shutdown timeout.");
+                ServiceRuntime.Log?.Warn($"{workerName} worker did not stop within the shutdown timeout.");
         }
         catch (AggregateException ex) when (ex.InnerException is OperationCanceledException)
         {
@@ -220,4 +223,6 @@ public class ClientlessManager
         {
         }
     }
+
+    private static IClientConnectionRuntime Runtime => ServiceRuntime.ClientConnectionRuntime;
 }

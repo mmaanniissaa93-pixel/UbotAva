@@ -18,6 +18,7 @@ namespace UBot.Core;
 public class Game
 {
     private static bool _skillEventsRegistered;
+    private static bool _clientlessEventsRegistered;
 
     /// <summary>
     ///     The acceptance request
@@ -195,7 +196,8 @@ public class Game
         SkillManager.Initialize(ServiceRuntime.Skill ?? new SkillService());
         RegisterSkillServiceEvents();
         ShoppingManager.Initialize();
-        ClientlessManager.Initialize();
+        ClientlessManager.Initialize(ServiceRuntime.Clientless ?? new ClientlessService());
+        RegisterClientlessServiceEvents();
         ScriptManager.Initialize();
     }
 
@@ -207,6 +209,16 @@ public class Game
         EventManager.SubscribeEvent("OnLoadGameData", new System.Action(SkillManager.ResetBaseSkills));
         EventManager.SubscribeEvent("OnCastSkill", new System.Action<uint>(SkillManager.NotifySkillCasted));
         _skillEventsRegistered = true;
+    }
+
+    private static void RegisterClientlessServiceEvents()
+    {
+        if (_clientlessEventsRegistered)
+            return;
+
+        EventManager.SubscribeEvent("OnAgentServerDisconnected", new System.Action(ClientlessManager.OnAgentServerDisconnected));
+        EventManager.SubscribeEvent("OnAgentServerConnected", new System.Action(ClientlessManager.OnAgentServerConnected));
+        _clientlessEventsRegistered = true;
     }
 
     /// <summary>

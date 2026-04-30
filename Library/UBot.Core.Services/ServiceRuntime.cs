@@ -26,4 +26,6 @@ public static class ServiceRuntime
     public static ISkillRuntime SkillRuntime { get; set; }
     public static ISkillConfig SkillConfig { get; set; }
     public static ISkillService Skill { get; set; }
+    public static IClientConnectionRuntime ClientConnectionRuntime { get; set; }
+    public static IClientlessService Clientless { get; set; }
 }
