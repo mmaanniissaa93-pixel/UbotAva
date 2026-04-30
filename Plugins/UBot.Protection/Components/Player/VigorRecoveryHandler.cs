@@ -31,21 +31,21 @@ internal class VigorRecoveryHandler
         if ((UBot.Core.RuntimeAccess.Session.Player.BadEffect & BadEffect.Zombie) == BadEffect.Zombie)
             return;
 
-        var useManaPotion = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkUseVigorMP");
+        var useManaPotion = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckUseVigorMP");
         if (useManaPotion)
         {
-            var minMana = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.numPlayerMPVigorPotionMin", 50);
+            var minMana = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.ThresholdPlayerMPVigorPotionMin", 50);
 
             var manaPercent = 100.0 * UBot.Core.RuntimeAccess.Session.Player.Mana / UBot.Core.RuntimeAccess.Session.Player.MaximumMana;
             if (manaPercent <= minMana && UBot.Core.RuntimeAccess.Session.Player.UseVigorPotion())
                 return;
         }
 
-        var useHealthPotion = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkUseVigorHP");
+        var useHealthPotion = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckUseVigorHP");
         if (!useHealthPotion)
             return;
 
-        var minHealth = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.numPlayerHPVigorPotionMin", 50);
+        var minHealth = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.ThresholdPlayerHPVigorPotionMin", 50);
 
         var healthPercent = 100.0 * UBot.Core.RuntimeAccess.Session.Player.Health / UBot.Core.RuntimeAccess.Session.Player.MaximumHealth;
         if (healthPercent <= minHealth)

@@ -10,6 +10,52 @@
       "description": "Legacy typo key is kept for backward compatibility writes."
     },
     {
+      "id": "jcplanet_login_case",
+      "from": "UBot.JCPlanet.login",
+      "to": "UBot.JCPlanet.Login",
+      "severity": "warning",
+      "configSeverity": "warning",
+      "allowCodeUsage": false,
+      "description": "JCPlanet login key normalized to PascalCase."
+    },
+    {
+      "id": "jsro_login_case",
+      "from": "UBot.JSRO.login",
+      "to": "UBot.JSRO.Login",
+      "severity": "warning",
+      "configSeverity": "warning",
+      "allowCodeUsage": false,
+      "description": "JSRO login key normalized to PascalCase."
+    },
+    {
+      "id": "jsro_token_case",
+      "from": "UBot.JSRO.token",
+      "to": "UBot.JSRO.Token",
+      "severity": "warning",
+      "configSeverity": "warning",
+      "allowCodeUsage": false,
+      "description": "JSRO token key normalized to PascalCase."
+    },
+    {
+      "id": "skills_attacks_underscore",
+      "from": "UBot.Skills.Attacks_",
+      "to": "UBot.Skills.Attacks",
+      "severity": "warning",
+      "configSeverity": "warning",
+      "allowCodeUsage": false,
+      "description": "Skills Attacks key trailing underscore removed."
+    },
+    {
+      "id": "protection_check_prefix",
+      "from": "UBot.Protection.check",
+      "to": "UBot.Protection.Check",
+      "severity": "warning",
+      "configSeverity": "warning",
+      "allowCodeUsage": false,
+      "description": "Protection check* prefix normalized to Check* PascalCase."
+    },
+    
+    {
       "id": "rusro_session_key",
       "from": "UBot.RuSro.session",
       "to": "UBot.RuSro.sessionId",

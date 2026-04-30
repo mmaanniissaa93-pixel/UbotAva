@@ -238,7 +238,7 @@ internal static class AutoLogin
         else if (UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Japanese)
         {
             loginPacket.WriteString(string.Empty);
-            loginPacket.WriteString(UBot.Core.RuntimeAccess.Global.Get<string>("UBot.JSRO.token"));
+            loginPacket.WriteString(UBot.Core.RuntimeAccess.Global.Get<string>("UBot.JSRO.Token"));
         }
         else
         {

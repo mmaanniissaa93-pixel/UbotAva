@@ -37,7 +37,7 @@ public class AutoSummonAttackPet
         if (UBot.Core.RuntimeAccess.Session.Player.Growth != null || UBot.Core.RuntimeAccess.Session.Player.Fellow != null)
             return;
 
-        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkAutoSummonAttackPet"))
+        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckAutoSummonAttackPet"))
             return;
 
         //if (UBot.Core.RuntimeAccess.Session.Player.State.BattleState != BattleState.InPeace)
@@ -56,7 +56,7 @@ public class AutoSummonAttackPet
         if (UBot.Core.RuntimeAccess.Session.Player.Growth != null || UBot.Core.RuntimeAccess.Session.Player.Fellow != null)
             return;
 
-        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkAutoSummonAttackPet"))
+        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckAutoSummonAttackPet"))
             return;
 
         if (UBot.Core.RuntimeAccess.Session.Player.State.BattleState != BattleState.InPeace)

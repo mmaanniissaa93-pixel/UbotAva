@@ -78,7 +78,7 @@ internal static class LoadCharacterSubscriber
 
         for (var i = 0; i < 9; i++)
         {
-            var skillIds = UBot.Core.RuntimeAccess.Player.GetArray<uint>("UBot.Skills.Attacks_" + i);
+            var skillIds = UBot.Core.RuntimeAccess.Player.GetArray<uint>("UBot.Skills.Attacks" + i);
 
             foreach (var skillId in skillIds)
             {

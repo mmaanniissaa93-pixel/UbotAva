@@ -39,7 +39,7 @@ public class NoManaPotionsHandler : AbstractTownHandler
 
     private static bool CheckForMpPotions()
     {
-        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkNoMPPotions"))
+        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckNoMPPotions"))
             return false;
 
         if (PlayerInTownScriptRegion())
@@ -51,7 +51,7 @@ public class NoManaPotionsHandler : AbstractTownHandler
         var typeIdFilter = new TypeIdFilter(3, 3, 1, 2);
         if (
             UBot.Core.RuntimeAccess.Session.Player.Inventory.GetSumAmount(typeIdFilter)
-            > UBot.Core.RuntimeAccess.Player.Get<int>("UBot.Protection.numMPPotionsLeft")
+            > UBot.Core.RuntimeAccess.Player.Get<int>("UBot.Protection.ThresholdMPPotionsLeft")
         )
             return false;
 

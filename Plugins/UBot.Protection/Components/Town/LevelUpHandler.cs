@@ -29,7 +29,7 @@ public class LevelUpHandler : AbstractTownHandler
         if (!UBot.Core.RuntimeAccess.Core.Bot.Running)
             return;
 
-        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkLevelUp"))
+        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckLevelUp"))
             return;
 
         if (PlayerInTownScriptRegion())

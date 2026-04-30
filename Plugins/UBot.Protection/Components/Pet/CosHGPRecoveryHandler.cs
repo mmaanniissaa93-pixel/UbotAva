@@ -30,11 +30,11 @@ public class CosHGPRecoveryHandler
         if (UBot.Core.RuntimeAccess.Session.Player.Growth == null)
             return;
 
-        var use = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkUseHGP");
+        var use = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckUseHGP");
         if (!use)
             return;
 
-        var min = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.numPetMinHGP", 90);
+        var min = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.ThresholdPetMinHGP", 90);
 
         var percent = 100.0 * UBot.Core.RuntimeAccess.Session.Player.Growth.CurrentHungerPoints / UBot.Core.RuntimeAccess.Session.Player.Growth.MaxHungerPoints;
         if (percent < min)
@@ -49,11 +49,11 @@ public class CosHGPRecoveryHandler
         if (UBot.Core.RuntimeAccess.Session.Player.Fellow == null)
             return;
 
-        var use = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkUseHGP");
+        var use = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckUseHGP");
         if (!use)
             return;
 
-        var min = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.numPetMinHGP", 90);
+        var min = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.ThresholdPetMinHGP", 90);
 
         var percent = 100.0 * UBot.Core.RuntimeAccess.Session.Player.Fellow.Satiety / 36000;
         if (percent < min)

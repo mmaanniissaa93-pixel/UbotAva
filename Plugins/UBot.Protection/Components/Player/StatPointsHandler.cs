@@ -33,8 +33,8 @@ public class StatPointsHandler
         if (UBot.Core.RuntimeAccess.Session.Player == null)
             return;
 
-        var incStr = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkIncStr");
-        var incInt = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkIncInt");
+        var incStr = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckIncStr");
+        var incInt = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckIncInt");
         GetNormalizedDistribution(out var numStr, out var numInt);
 
         var pointsPerStep = (incStr ? numStr : 0) + (incInt ? numInt : 0);
@@ -54,7 +54,7 @@ public class StatPointsHandler
     /// </summary>
     private static void OnPlayerLevelUp(byte oldLevel)
     {
-        var enabledIfBotIsStopped = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkIncBotStopped", true);
+        var enabledIfBotIsStopped = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckIncBotStopped", true);
         if (!UBot.Core.RuntimeAccess.Core.Bot.Running && !enabledIfBotIsStopped)
             return;
 
@@ -65,8 +65,8 @@ public class StatPointsHandler
 
     public static void IncreaseStatPoints(int stepCount)
     {
-        var incStr = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkIncStr");
-        var incInt = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkIncInt");
+        var incStr = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckIncStr");
+        var incInt = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckIncInt");
         GetNormalizedDistribution(out var numStr, out var numInt);
 
         for (var iLevelUp = 0; iLevelUp < stepCount; iLevelUp++)
@@ -144,8 +144,8 @@ public class StatPointsHandler
 
     private static void GetNormalizedDistribution(out int numStr, out int numInt)
     {
-        numInt = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.numIncInt", 0), 0, 3);
-        numStr = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.numIncStr", 0), 0, 3);
+        numInt = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.IncrementInt", 0), 0, 3);
+        numStr = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.IncrementStr", 0), 0, 3);
 
         if (numInt + numStr > 3)
             numStr = Math.Max(0, 3 - numInt);

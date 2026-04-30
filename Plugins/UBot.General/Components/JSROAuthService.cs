@@ -72,7 +72,7 @@ internal static class JSROAuthService
             Match match = Regex.Match(responseBody, pattern);
             if (match.Success)
             {
-                UBot.Core.RuntimeAccess.Global.Set("UBot.JSRO.token", match.Value);
+                UBot.Core.RuntimeAccess.Global.Set("UBot.JSRO.Token", match.Value);
                 UBot.Core.RuntimeAccess.Global.Save();
                 return true;
             }

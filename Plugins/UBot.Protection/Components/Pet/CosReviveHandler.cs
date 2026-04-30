@@ -32,7 +32,7 @@ public class CosReviveHandler
         if (!UBot.Core.RuntimeAccess.Core.Bot.Running)
             return;
 
-        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkReviveAttackPet"))
+        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckReviveAttackPet"))
             return;
 
         var item = UBot.Core.RuntimeAccess.Session.Player.Inventory.GetItemAt(slot);
@@ -63,7 +63,7 @@ public class CosReviveHandler
         if (!UBot.Core.RuntimeAccess.Core.Bot.Running)
             return;
 
-        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkReviveAttackPet"))
+        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckReviveAttackPet"))
             return;
 
         if (UBot.Core.RuntimeAccess.Session.Player.ReviveFellow())

@@ -131,7 +131,7 @@ internal class LoopBundle : IBundle
             return;
         }
 
-        if (UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkStopBotOnReturnToTown"))
+        if (UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckStopBotOnReturnToTown"))
         {
             UBot.Core.RuntimeAccess.Core.Bot.Stop();
             return;

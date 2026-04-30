@@ -92,13 +92,13 @@ internal class AgentLoginRequestHook : IPacketHook
         }
         else if (UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Japanese)
         {
-            packet.WriteString(UBot.Core.RuntimeAccess.Global.Get<string>("UBot.JSRO.login"));
-            packet.WriteString(Sha256.ComputeHash(UBot.Core.RuntimeAccess.Global.Get<string>("UBot.JSRO.token")));
+            packet.WriteString(UBot.Core.RuntimeAccess.Global.Get<string>("UBot.JSRO.Login"));
+            packet.WriteString(Sha256.ComputeHash(UBot.Core.RuntimeAccess.Global.Get<string>("UBot.JSRO.Token")));
         }
         else
         {
             if (UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Global && selectedAccount.Channel == 0x02)
-                packet.WriteString(UBot.Core.RuntimeAccess.Global.Get<string>("UBot.JCPlanet.login"));
+                packet.WriteString(UBot.Core.RuntimeAccess.Global.Get<string>("UBot.JCPlanet.Login"));
             else
                 packet.WriteString(selectedAccount.Username);
 

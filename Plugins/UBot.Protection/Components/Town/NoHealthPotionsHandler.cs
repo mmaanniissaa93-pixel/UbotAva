@@ -39,7 +39,7 @@ public class NoHealthPotionsHandler : AbstractTownHandler
 
     private static bool CheckForHpPotions()
     {
-        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkNoHPPotions"))
+        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckNoHPPotions"))
             return false;
 
         if (PlayerInTownScriptRegion())
@@ -51,7 +51,7 @@ public class NoHealthPotionsHandler : AbstractTownHandler
         var typeIdFilter = new TypeIdFilter(3, 3, 1, 1);
         if (
             UBot.Core.RuntimeAccess.Session.Player.Inventory.GetSumAmount(typeIdFilter)
-            > UBot.Core.RuntimeAccess.Player.Get<int>("UBot.Protection.numHPPotionsLeft")
+            > UBot.Core.RuntimeAccess.Player.Get<int>("UBot.Protection.ThresholdHPPotionsLeft")
         )
             return false;
 

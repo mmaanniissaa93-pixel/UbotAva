@@ -38,7 +38,7 @@ public class PetInventoryFullHandler : AbstractTownHandler
         if (!UBot.Core.RuntimeAccess.Core.Bot.Running)
             return false;
 
-        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkFullPetInventory"))
+        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckFullPetInventory"))
             return false;
 
         if (UBot.Core.RuntimeAccess.Session.Player.AbilityPet == null)

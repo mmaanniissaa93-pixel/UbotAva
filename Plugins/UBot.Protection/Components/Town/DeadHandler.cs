@@ -57,7 +57,7 @@ public class DeadHandler : AbstractTownHandler
             return;
         }
 
-        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkDead"))
+        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckDead"))
             return;
 
         if (UBot.Core.RuntimeAccess.Session.Player.State.LifeState != LifeState.Dead)
@@ -74,7 +74,7 @@ public class DeadHandler : AbstractTownHandler
             return;
         }
 
-        var timeOut = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.numDeadTimeout", 30);
+        var timeOut = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.TimeoutDead", 30);
 
         Log.WarnLang("ResurrectSPointSeconds", timeOut);
 

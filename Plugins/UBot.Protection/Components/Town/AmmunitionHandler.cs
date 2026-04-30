@@ -37,7 +37,7 @@ public class AmmunitionHandler : AbstractTownHandler
 
     private static bool CheckForAmmunition()
     {
-        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkNoArrows"))
+        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckNoArrows"))
             return false;
 
         var currentAmmunition = UBot.Core.RuntimeAccess.Session.Player.GetAmmunitionAmount(true);

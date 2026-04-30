@@ -37,7 +37,7 @@ public class UniversalPillHandler
     /// </summary>
     private static void OnPlayerBadEffect()
     {
-        var useUniversalPill = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkUseUniversalPills", true);
+        var useUniversalPill = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckUseUniversalPills", true);
         if (!useUniversalPill)
             return;
 

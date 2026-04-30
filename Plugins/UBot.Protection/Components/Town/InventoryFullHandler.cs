@@ -38,7 +38,7 @@ public class InventoryFullHandler : AbstractTownHandler
         if (!UBot.Core.RuntimeAccess.Core.Bot.Running)
             return false;
 
-        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkInventory"))
+        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckInventory"))
             return false;
 
         if (!UBot.Core.RuntimeAccess.Session.Player.Inventory.Full)

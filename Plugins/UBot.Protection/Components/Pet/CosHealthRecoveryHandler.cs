@@ -33,11 +33,11 @@ public static class CosHealthRecoveryHandler
     /// </summary>
     private static void OnCosHealthUpdate(Cos cos)
     {
-        var useHPPotions = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkUsePetHP");
+        var useHPPotions = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckUsePetHP");
         if (!useHPPotions)
             return;
 
-        var minHp = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.numPetMinHP", 80);
+        var minHp = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.ThresholdPetMinHP", 80);
 
         if (cos == null)
             return;

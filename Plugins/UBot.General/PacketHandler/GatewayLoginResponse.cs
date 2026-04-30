@@ -46,7 +46,7 @@ internal class GatewayLoginResponse : IPacketHandler
                 packet.ReadUInt(); //Token
                 packet.ReadString(); //IP
                 packet.ReadUShort(); //Port
-                UBot.Core.RuntimeAccess.Global.Set("UBot.JSRO.login", packet.ReadString()); //Login
+                UBot.Core.RuntimeAccess.Global.Set("UBot.JSRO.Login", packet.ReadString()); //Login
                 packet.ReadByte(); //Channel
             }
 
@@ -60,7 +60,7 @@ internal class GatewayLoginResponse : IPacketHandler
                 packet.ReadString(); //IP
                 packet.ReadUShort(); //Port
                 packet.ReadByte(); //Channel
-                UBot.Core.RuntimeAccess.Global.Set("UBot.JCPlanet.login", packet.ReadString()); //Login
+                UBot.Core.RuntimeAccess.Global.Set("UBot.JCPlanet.Login", packet.ReadString()); //Login
             }
 
             return;

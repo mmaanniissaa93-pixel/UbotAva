@@ -67,13 +67,13 @@ internal class GlobalIdentificationRequest : IPacketHandler
             }
             else if (UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Japanese)
             {
-                response.WriteString(UBot.Core.RuntimeAccess.Global.Get<string>("UBot.JSRO.login"));
-                response.WriteString(Sha256.ComputeHash(UBot.Core.RuntimeAccess.Global.Get<string>("UBot.JSRO.token")));
+                response.WriteString(UBot.Core.RuntimeAccess.Global.Get<string>("UBot.JSRO.Login"));
+                response.WriteString(Sha256.ComputeHash(UBot.Core.RuntimeAccess.Global.Get<string>("UBot.JSRO.Token")));
             }
             else
             {
                 if (UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Global && selectedAccount.Channel == 0x02)
-                    response.WriteString(UBot.Core.RuntimeAccess.Global.Get<string>("UBot.JCPlanet.login"));
+                    response.WriteString(UBot.Core.RuntimeAccess.Global.Get<string>("UBot.JCPlanet.Login"));
                 else
                     response.WriteString(selectedAccount.Username);
 

@@ -25,7 +25,7 @@ public class FatigueHandler : AbstractTownHandler
         _disconnectTimer?.Dispose();
         _disconnectTimer = null;
 
-        int shardFatigueSecondsToDC = UBot.Core.RuntimeAccess.Player.Get<int>("UBot.Protection.numShardFatigueMinToDC") * 60;
+        int shardFatigueSecondsToDC = UBot.Core.RuntimeAccess.Player.Get<int>("UBot.Protection.ThresholdShardFatigueMinToDC") * 60;
 
         int secondsToDC = ShardFatigueFullExpSeconds - shardFatigueSecondsToDC;
 
@@ -35,7 +35,7 @@ public class FatigueHandler : AbstractTownHandler
             return;
         }
 
-        if (UBot.Core.RuntimeAccess.Core.Bot.Running && UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkShardFatigue"))
+        if (UBot.Core.RuntimeAccess.Core.Bot.Running && UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckShardFatigue"))
         {
             TimeSpan remaining = TimeSpan.FromSeconds(secondsToDC);
             Log.Debug(
@@ -62,7 +62,7 @@ public class FatigueHandler : AbstractTownHandler
             return;
         }
 
-        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkShardFatigue"))
+        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckShardFatigue"))
             return;
 
         UBot.Core.RuntimeAccess.Core.Bot.Stop();

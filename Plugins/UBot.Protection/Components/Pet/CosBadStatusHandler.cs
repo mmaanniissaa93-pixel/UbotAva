@@ -37,7 +37,7 @@ internal class CosBadStatusHandler
     /// </summary>
     private static void OnTick()
     {
-        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkUseAbnormalStatePotion", true))
+        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckUseAbnormalStatePotion", true))
             return;
 
         if (

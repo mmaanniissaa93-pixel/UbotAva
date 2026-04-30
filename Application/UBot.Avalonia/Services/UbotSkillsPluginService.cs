@@ -69,7 +69,7 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
         config["selectedMasteryId"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.selectedMastery", 0U);
 
         for (var i = 0; i < AttackRarityByIndex.Length; i++)
-            config[$"attackSkills_{i}"] = UBot.Core.RuntimeAccess.Player.GetArray<uint>($"UBot.Skills.Attacks_{i}")
+            config[$"attackSkills_{i}"] = UBot.Core.RuntimeAccess.Player.GetArray<uint>($"UBot.Skills.Attacks{i}")
                 .Select(RedirectIdIfPossible)
                 .Distinct().ToList();
 
@@ -146,7 +146,7 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
             if (!TryGetUIntListValue(patch, $"attackSkills_{i}", out var attackSkills))
                 continue;
 
-            UBot.Core.RuntimeAccess.Player.SetArray($"UBot.Skills.Attacks_{i}", attackSkills);
+            UBot.Core.RuntimeAccess.Player.SetArray($"UBot.Skills.Attacks{i}", attackSkills);
             changed = true;
         }
 
@@ -186,7 +186,7 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
         for (var i = 0; i < AttackRarityByIndex.Length; i++)
         {
             var rarity = AttackRarityByIndex[i];
-            foreach (var attackSkillId in UBot.Core.RuntimeAccess.Player.GetArray<uint>($"UBot.Skills.Attacks_{i}").Distinct())
+            foreach (var attackSkillId in UBot.Core.RuntimeAccess.Player.GetArray<uint>($"UBot.Skills.Attacks{i}").Distinct())
             {
                 var skill = ResolveSkillInfoById(attackSkillId, abilitySkills);
                 if (skill != null)
@@ -225,7 +225,7 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
             state["teleportSkillId"] = RedirectIdIfPossible(UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.TeleportSkill", 0U));
 
             for (var i = 0; i < AttackRarityByIndex.Length; i++)
-                state[$"attackSkills_{i}"] = UBot.Core.RuntimeAccess.Player.GetArray<uint>($"UBot.Skills.Attacks_{i}")
+                state[$"attackSkills_{i}"] = UBot.Core.RuntimeAccess.Player.GetArray<uint>($"UBot.Skills.Attacks{i}")
                     .Select(RedirectIdIfPossible)
                     .Distinct().ToList();
 
@@ -281,7 +281,7 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
 
         for (var i = 0; i < AttackRarityByIndex.Length; i++)
         {
-            foreach (var id in UBot.Core.RuntimeAccess.Player.GetArray<uint>($"UBot.Skills.Attacks_{i}"))
+            foreach (var id in UBot.Core.RuntimeAccess.Player.GetArray<uint>($"UBot.Skills.Attacks{i}"))
                 ids.Add(id);
         }
 

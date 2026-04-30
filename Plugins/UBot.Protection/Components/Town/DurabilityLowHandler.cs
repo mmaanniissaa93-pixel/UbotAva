@@ -57,7 +57,7 @@ public class DurabilityLowHandler : AbstractTownHandler
         if (!UBot.Core.RuntimeAccess.Core.Bot.Running)
             return false;
 
-        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkDurability"))
+        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckDurability"))
             return false;
 
         if (!forceImmediate && UBot.Core.RuntimeAccess.Core.TickCount - _lastTick < 10000)

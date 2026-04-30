@@ -38,14 +38,14 @@ public class HealthManaRecoveryHandler
     /// <exception cref="System.NotImplementedException"></exception>
     private static void OnUpdateHP()
     {
-        var autoHealth = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkUseHPPotionsPlayer", true);
+        var autoHealth = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckUseHPPotionsPlayer", true);
         if (!autoHealth)
             return;
 
         if ((UBot.Core.RuntimeAccess.Session.Player.BadEffect & BadEffect.Zombie) == BadEffect.Zombie)
             return;
 
-        var minHealth = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.numPlayerHPPotionMin", 75);
+        var minHealth = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.ThresholdPlayerHPPotionMin", 75);
 
         var healthPercent = 100.0 * UBot.Core.RuntimeAccess.Session.Player.Health / UBot.Core.RuntimeAccess.Session.Player.MaximumHealth;
         if (healthPercent <= minHealth)
@@ -58,11 +58,11 @@ public class HealthManaRecoveryHandler
     /// <exception cref="System.NotImplementedException"></exception>
     private static void OnUpdateMP()
     {
-        var autoMana = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkUseMPPotionsPlayer", true);
+        var autoMana = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckUseMPPotionsPlayer", true);
         if (!autoMana)
             return;
 
-        var minMana = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.numPlayerMPPotionMin", 75);
+        var minMana = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.ThresholdPlayerMPPotionMin", 75);
 
         var manaPercent = 100.0 * UBot.Core.RuntimeAccess.Session.Player.Mana / UBot.Core.RuntimeAccess.Session.Player.MaximumMana;
         if (manaPercent <= minMana)
