@@ -406,12 +406,16 @@ internal static class CoreGameStateRuntimeContextBootstrap
         ServiceRuntime.SkillConfig = new CoreSkillConfig();
         ServiceRuntime.ClientConnectionRuntime = new ClientConnectionRuntimeAdapter();
         ServiceRuntime.Clientless = new ClientlessService();
+        ServiceRuntime.ClientNativeRuntime = new ClientNativeRuntimeAdapter();
+        ServiceRuntime.ClientLaunchConfigProvider = new CoreClientLaunchConfigProvider();
+        ServiceRuntime.ClientLaunchPolicy = new ClientLaunchPolicyService();
         ServiceRuntime.ProfileStorage = new ProfileFileStorage(new CoreAppPaths());
         ServiceRuntime.Profile = new ProfileService();
         PickupManager.Initialize(new PickupService());
         ShoppingManager.Initialize(new ShoppingService());
         AlchemyManager.Initialize(new AlchemyService());
         LanguageManager.Initialize(new LanguageService());
+        ClientManager.Initialize(ServiceRuntime.ClientLaunchPolicy);
     }
 }
 

@@ -199,6 +199,7 @@ public class Game
         ClientlessManager.Initialize(ServiceRuntime.Clientless ?? new ClientlessService());
         RegisterClientlessServiceEvents();
         ProfileManager.Initialize(ServiceRuntime.Profile ?? new ProfileService());
+        ClientManager.Initialize(ServiceRuntime.ClientLaunchPolicy ?? new ClientLaunchPolicyService());
         ScriptManager.Initialize();
     }
 

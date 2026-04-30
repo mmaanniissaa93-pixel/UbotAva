@@ -28,6 +28,9 @@ public static class ServiceRuntime
     public static ISkillService Skill { get; set; }
     public static IClientConnectionRuntime ClientConnectionRuntime { get; set; }
     public static IClientlessService Clientless { get; set; }
+    public static IClientNativeRuntime ClientNativeRuntime { get; set; }
+    public static IClientLaunchConfigProvider ClientLaunchConfigProvider { get; set; }
+    public static IClientLaunchPolicy ClientLaunchPolicy { get; set; }
     public static IProfileStorage ProfileStorage { get; set; }
     public static IProfileService Profile { get; set; }
 }
