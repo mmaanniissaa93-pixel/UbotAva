@@ -2,7 +2,8 @@ using UBot.Core.Abstractions;
 using UBot.Core.Network;
 using UBot.Core.Objects.Item;
 using UBot.Core.Objects.Quests;
-using GameClientType = UBot.Core.GameClientType;
+using GameClientType = UBot.Core.GameClientType;
+using UBot.Core;
 
 namespace UBot.Protocol;
 

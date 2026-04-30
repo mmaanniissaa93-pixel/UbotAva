@@ -1,16 +1,43 @@
-﻿using UBot.Core.Network;
-using UBot.Protocol;
+using UBot.Core.Network;
+using UBot.Protocol.Legacy;
 
 namespace UBot.Protocol.Commands.Agent.Inventory;
 
-public class StorageOpenRequest : IPacketHandler
+public class StorageOpenRequest : IPacketHandler 
 {
-    public ushort Opcode => 0x703C;
+    #region Methods
 
-    public PacketDestination Destination => PacketDestination.Server;
-
+    /// <summary>
+    ///     Handles the packet.
+    /// </summary>
+    /// <param name="packet">The packet.</param>
     public void Invoke(Packet packet)
     {
-        ProtocolRuntime.LegacyHandler?.Invoke(nameof(StorageOpenRequest), packet);
+        var entityId = packet.ReadUInt();
+
+        EventManager.FireEvent("OnStorageOpenRequest", entityId);
     }
+
+    #endregion Methods
+
+    #region Properties
+
+    /// <summary>
+    ///     Gets or sets the opcode.
+    /// </summary>
+    /// <value>
+    ///     The opcode.
+    /// </value>
+    public ushort Opcode => 0x703C;
+
+    /// <summary>
+    ///     Gets or sets the destination.
+    /// </summary>
+    /// <value>
+    ///     The destination.
+    /// </value>
+    public PacketDestination Destination => PacketDestination.Server;
+
+    #endregion Properties
 }
+

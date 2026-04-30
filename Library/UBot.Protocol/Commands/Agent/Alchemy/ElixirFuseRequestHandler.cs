@@ -1,9 +1,8 @@
-﻿using UBot.Core.Network;
-using UBot.Protocol;
-
+using UBot.Core.Network;
+using UBot.Protocol.Legacy;
 namespace UBot.Protocol.Commands.Agent.Alchemy;
 
-public class ElixirFuseRequestHandler : IPacketHandler
+public class ElixirFuseRequestHandler : IPacketHandler 
 {
     public ushort Opcode => 0x7150;
 
@@ -11,6 +10,7 @@ public class ElixirFuseRequestHandler : IPacketHandler
 
     public void Invoke(Packet packet)
     {
-        ProtocolRuntime.LegacyHandler?.Invoke(nameof(ElixirFuseRequestHandler), packet);
+        GenericAlchemyRequestHandler.Invoke(packet);
     }
 }
+

@@ -1,16 +1,38 @@
-﻿using UBot.Core.Network;
-using UBot.Protocol;
+using UBot.Core.Network;
+using UBot.Protocol.Legacy;
 
 namespace UBot.Protocol.Commands.Agent.CharacterSelection;
 
-public class CharacterSelectionJoinRequest : IPacketHandler
+public class CharacterSelectionJoinRequest : IPacketHandler 
 {
+    /// <summary>
+    ///     Gets or sets the opcode.
+    /// </summary>
+    /// <value>
+    ///     The opcode.
+    /// </value>
     public ushort Opcode => 0x7001;
 
+    /// <summary>
+    ///     Gets or sets the destination.
+    /// </summary>
+    /// <value>
+    ///     The destination.
+    /// </value>
     public PacketDestination Destination => PacketDestination.Server;
 
+    /// <summary>
+    ///     Handles the packet.
+    /// </summary>
+    /// <param name="packet">The packet.</param>
     public void Invoke(Packet packet)
     {
-        ProtocolRuntime.LegacyHandler?.Invoke(nameof(CharacterSelectionJoinRequest), packet);
+        var characterName = packet.ReadString();
+
+        ProfileManager.SelectedCharacter = characterName;
+        PlayerConfig.Load(characterName);
+
+        EventManager.FireEvent("OnEnterGame");
     }
 }
+

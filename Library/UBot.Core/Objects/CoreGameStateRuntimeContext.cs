@@ -382,7 +382,7 @@ internal static class CoreGameStateRuntimeContextBootstrap
 
         ProtocolRuntime.GameState = GameStateRuntimeProvider.Instance;
         ProtocolRuntime.PacketDispatcher = new CorePacketDispatcher();
-        ProtocolRuntime.LegacyHandler = new CoreLegacyProtocolHandler();
+        ProtocolRuntime.LegacyRuntime = new CoreProtocolLegacyRuntime();
         ProtocolRuntime.EventBus = eventBus;
         ProtocolRuntime.Feedback = feedback;
         ProtocolRuntime.SpawnController = new CoreSpawnController(eventBus, feedback);

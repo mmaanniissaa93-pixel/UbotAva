@@ -249,6 +249,8 @@ public class PacketManager
         {
             _callbacks.RemoveAll(c => c == null || c.IsClosed);
         }
+
+        UBot.Protocol.Legacy.PacketManager.CallCallback(packet);
     }
 
     /// <summary>

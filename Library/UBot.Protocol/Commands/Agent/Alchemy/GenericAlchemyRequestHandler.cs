@@ -1,16 +1,50 @@
-﻿using UBot.Core.Network;
-using UBot.Protocol;
+using CoreGame = UBot.Protocol.Legacy.LegacyGame;
+using System.Collections.Generic;
+using UBot.Core.Network;
+using UBot.Core.Client.ReferenceObjects;
+using UBot.GameData.ReferenceObjects;
+using UBot.Core.Objects;
+using UBot.Protocol.Legacy;
 
 namespace UBot.Protocol.Commands.Agent.Alchemy;
 
-public class GenericAlchemyRequestHandler : IPacketHandler
+internal static class GenericAlchemyRequestHandler
 {
-    public ushort Opcode => 0;
-
-    public PacketDestination Destination => PacketDestination.Client;
-
-    public void Invoke(Packet packet)
+    public static void Invoke(Packet packet)
     {
-        ProtocolRuntime.LegacyHandler?.Invoke(nameof(GenericAlchemyRequestHandler), packet);
+        var action = (AlchemyAction)packet.ReadByte();
+
+        if (action != AlchemyAction.Fuse)
+            return;
+
+        var type = (AlchemyType)packet.ReadByte();
+        if (type == AlchemyType.SocketInsert)
+        {
+            var item = CoreGame.Player.Inventory.GetItemAt(packet.ReadByte()); //Target item
+            var socketItem = CoreGame.Player.Inventory.GetItemAt(packet.ReadByte()); //Target item
+
+            if (item != null && socketItem != null)
+                AlchemyManager.BeginFuseRequest(action, type, new List<InventoryItem> { item, socketItem });
+
+            return;
+        }
+
+        var slots = packet.ReadBytes(packet.ReadByte());
+        var items = new List<InventoryItem>(slots.Length);
+
+        foreach (var slot in slots)
+        {
+            var item = CoreGame.Player.Inventory.GetItemAt(slot);
+
+            if (item != null)
+                items.Add(item);
+        }
+
+        AlchemyManager.BeginFuseRequest(action, type, items);
     }
 }
+
+
+
+
+

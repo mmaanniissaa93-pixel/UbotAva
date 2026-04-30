@@ -1,16 +1,45 @@
-﻿using UBot.Core.Network;
-using UBot.Protocol;
+using UBot.Core.Network;
+using UBot.Core.Objects.Spawn;
+using UBot.Protocol.Legacy;
 
 namespace UBot.Protocol.Handlers.Agent.Entity;
 
-public class EntityRemoveOwnershipResponse : IPacketHandler
+public class EntityRemoveOwnershipResponse : IPacketHandler 
 {
-    public ushort Opcode => 0x304D;
-
-    public PacketDestination Destination => PacketDestination.Client;
-
+    /// <summary>
+    ///     Invokes the specified packet.
+    /// </summary>
+    /// <param name="packet">The packet.</param>
     public void Invoke(Packet packet)
     {
-        ProtocolRuntime.LegacyHandler?.Invoke(nameof(EntityRemoveOwnershipResponse), packet);
+        var itemUniqueId = packet.ReadUInt();
+        if (!SpawnManager.TryGetEntity<SpawnedItem>(itemUniqueId, out var entity))
+            return;
+
+        entity.HasOwner = false;
+        //entity.OwnerJID = 0;
+
+        EventManager.FireEvent("OnRemoveItemOwnership", itemUniqueId);
     }
+
+    #region Properites
+
+    /// <summary>
+    ///     Gets or sets the opcode.
+    /// </summary>
+    /// <value>
+    ///     The opcode.
+    /// </value>
+    public ushort Opcode => 0x304D;
+
+    /// <summary>
+    ///     Gets or sets the destination.
+    /// </summary>
+    /// <value>
+    ///     The destination.
+    /// </value>
+    public PacketDestination Destination => PacketDestination.Client;
+
+    #endregion Properites
 }
+

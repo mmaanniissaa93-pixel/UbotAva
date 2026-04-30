@@ -8,7 +8,7 @@ public static class ProtocolRuntime
 {
     public static IGameStateRuntimeContext GameState { get; set; }
     public static IPacketDispatcher PacketDispatcher { get; set; }
-    public static IProtocolLegacyHandler LegacyHandler { get; set; }
+    public static Legacy.IProtocolLegacyRuntime LegacyRuntime { get; set; }
     public static ISpawnController SpawnController { get; set; }
     public static IScriptEventBus EventBus { get; set; }
     public static IUIFeedbackService Feedback { get; set; }

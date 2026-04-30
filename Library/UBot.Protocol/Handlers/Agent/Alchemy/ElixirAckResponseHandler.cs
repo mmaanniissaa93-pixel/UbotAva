@@ -1,12 +1,24 @@
-﻿using UBot.Core.Network;
-using UBot.Protocol;
+using UBot.Core.Network;
+using UBot.Core.Client.ReferenceObjects;
+using UBot.GameData.ReferenceObjects;
+using UBot.Protocol.Legacy;
+
 namespace UBot.Protocol.Handlers.Agent.Alchemy;
+
 public class ElixirAckResponseHandler : IPacketHandler
 {
-    public ushort Opcode => 0xB150;
-    public PacketDestination Destination => PacketDestination.Client;
     public void Invoke(Packet packet)
     {
-        ProtocolRuntime.LegacyHandler?.Invoke(nameof(ElixirAckResponseHandler), packet);
+        GenericAlchemyAckResponse.Invoke(packet, AlchemyType.Elixir);
     }
+
+    #region Properties
+
+    public ushort Opcode => 0xB150;
+
+    public PacketDestination Destination => PacketDestination.Client;
+
+    #endregion Properties
 }
+
+

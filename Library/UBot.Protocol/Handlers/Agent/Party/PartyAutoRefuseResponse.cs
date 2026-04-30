@@ -1,16 +1,41 @@
-﻿using UBot.Core.Network;
-using UBot.Protocol;
+using CoreGame = UBot.Protocol.Legacy.LegacyGame;
+using UBot.Core.Network;
+using UBot.Protocol.Legacy;
 
 namespace UBot.Protocol.Handlers.Agent.Party;
 
-public class PartyAutoRefuseResponse : IPacketHandler
+public class PartyAutoRefuseResponse : IPacketHandler 
 {
+    /// <summary>
+    ///     Gets or sets the opcode.
+    /// </summary>
+    /// <value>
+    ///     The opcode.
+    /// </value>
     public ushort Opcode => 0xB067;
 
+    /// <summary>
+    ///     Gets or sets the destination.
+    /// </summary>
+    /// <value>
+    ///     The destination.
+    /// </value>
     public PacketDestination Destination => PacketDestination.Client;
 
+    /// <summary>
+    ///     Handles the packet.
+    /// </summary>
+    /// <param name="packet">The packet.</param>
     public void Invoke(Packet packet)
     {
-        ProtocolRuntime.LegacyHandler?.Invoke(nameof(PartyAutoRefuseResponse), packet);
+        if (CoreGame.Party.HasPendingRequest)
+            CoreGame.AcceptanceRequest = null;
+
+        EventManager.FireEvent("OnPartyRequestRefused");
     }
 }
+
+
+
+
+
