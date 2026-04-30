@@ -60,7 +60,9 @@ public class Proxy
     /// <value>
     ///     The session.
     /// </value>
-    public uint Token { get; internal set; }
+    public uint Token { get; private set; }
+
+    public void SetToken(uint token) => Token = token;
 
     /// <summary>
     ///     Starts the specified client port.
@@ -277,7 +279,7 @@ public class Proxy
     /// </summary>
     /// <param name="ip">The ip.</param>
     /// <param name="port">The port.</param>
-    internal void SetAgentserverAddress(string ip, ushort port)
+    public void SetAgentserverAddress(string ip, ushort port)
     {
         _agentIp = ip;
         _agentPort = port;

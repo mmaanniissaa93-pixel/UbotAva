@@ -37,7 +37,7 @@ public class GatewayLoginResponseHook : IPacketHook
         var result = packet.ReadByte();
         if (result == 0x01)
         {
-            CoreKernel.Proxy.Token = packet.ReadUInt();
+            CoreKernel.Proxy.SetToken(packet.ReadUInt());
             if (CoreGame.ClientType == GameClientType.RuSro)
             {
                 Dictionary<string, string> localPublicIP = new()
