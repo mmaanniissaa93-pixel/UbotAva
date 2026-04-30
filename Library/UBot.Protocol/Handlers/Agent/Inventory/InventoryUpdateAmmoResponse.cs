@@ -1,4 +1,4 @@
-﻿using UBot.Core.Network;
+using UBot.Core.Network;
 using UBot.Protocol;
 
 namespace UBot.Protocol.Handlers.Agent.Inventory;
@@ -12,10 +12,10 @@ public class InventoryUpdateAmmoResponse : IPacketHandler
     public void Invoke(Packet packet)
     {
         var ammunitionAmount = packet.ReadUShort();
-        dynamic player = ProtocolRuntime.GameState?.Player;
+        dynamic player = UBot.Protocol.ProtocolRuntime.GameState?.Player;
         player?.Inventory.UpdateItemAmount(7, ammunitionAmount);
 
-        ProtocolRuntime.GameState?.FireEvent("OnUpdateAmmunition");
+        UBot.Protocol.ProtocolRuntime.GameState?.FireEvent("OnUpdateAmmunition");
     }
 }
 

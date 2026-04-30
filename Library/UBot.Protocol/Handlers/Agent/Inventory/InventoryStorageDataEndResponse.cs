@@ -38,7 +38,7 @@ public class InventoryStorageDataEndResponse : IPacketHandler
         var storage = CoreGame.Player.Storage;
         storage.Deserialize(packet);
 
-        EventManager.FireEvent("OnStorageData");
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnStorageData");
 
         Log.Notify($"Found {storage.Count} item(s) in storage.");
 

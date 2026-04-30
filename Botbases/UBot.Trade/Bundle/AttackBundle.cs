@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Event;
@@ -44,7 +44,7 @@ internal class AttackBundle
     /// </summary>
     public void Tick()
     {
-        if (!TradeBotbase.IsActive || Game.Player.HasActiveVehicle || Bundles.RouteBundle.TownscriptRunning)
+        if (!TradeBotbase.IsActive || UBot.Core.RuntimeAccess.Session.Player.HasActiveVehicle || Bundles.RouteBundle.TownscriptRunning)
         {
             IsAttacking = false;
 
@@ -52,9 +52,9 @@ internal class AttackBundle
         }
 
         if (TradeConfig.CastBuffs)
-            EventManager.FireEvent("Bundle.Buff.Invoke");
+            UBot.Core.RuntimeAccess.Events.FireEvent("Bundle.Buff.Invoke");
 
-        var target = Game.SelectedEntity;
+        var target = UBot.Core.RuntimeAccess.Session.SelectedEntity;
         if (
             target is { IsMob: true, State.LifeState: LifeState.Alive }
             || (
@@ -65,7 +65,7 @@ internal class AttackBundle
         {
             IsAttacking = true;
 
-            EventManager.FireEvent("Bundle.Attack.Invoke");
+            UBot.Core.RuntimeAccess.Events.FireEvent("Bundle.Attack.Invoke");
 
             return;
         }
@@ -81,14 +81,14 @@ internal class AttackBundle
     private bool SelectNextTarget()
     {
         //Is selected entity dead or behind obstacle? -> Deselect it
-        if (Game.SelectedEntity is { State.LifeState: LifeState.Dead } or { IsBehindObstacle: true })
+        if (UBot.Core.RuntimeAccess.Session.SelectedEntity is { State.LifeState: LifeState.Dead } or { IsBehindObstacle: true })
         {
-            Game.SelectedEntity.TryDeselect();
+            UBot.Core.RuntimeAccess.Session.SelectedEntity.TryDeselect();
 
             return false;
         }
 
-        var target = Game.SelectedEntity;
+        var target = UBot.Core.RuntimeAccess.Session.SelectedEntity;
 
         if (
             target != null
@@ -104,7 +104,7 @@ internal class AttackBundle
             return true;
 
         //Priority 1: Protect transport?
-        if (TradeConfig.ProtectTransport && Game.Player.JobTransport is JobTransport jobTransport)
+        if (TradeConfig.ProtectTransport && UBot.Core.RuntimeAccess.Session.Player.JobTransport is JobTransport jobTransport)
             if (SpawnManager.TryGetEntity<SpawnedBionic>(jobTransport.UniqueId, out var bionic))
             {
                 var attacker = bionic

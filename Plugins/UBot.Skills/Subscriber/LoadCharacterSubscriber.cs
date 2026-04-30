@@ -16,32 +16,32 @@ internal static class LoadCharacterSubscriber
 
     public static void SubscribeEvents()
     {
-        EventManager.SubscribeEvent("OnLoadCharacter", LoadSkillSettings, Owner);
-        EventManager.SubscribeEvent("OnResurrectionRequest", OnResurrectionRequest, Owner);
-        EventManager.SubscribeEvent("OnLoadCharacterStats", TryLearnSelectedMastery, Owner);
-        EventManager.SubscribeEvent("OnLearnSkillMastery", new System.Action<MasteryInfo>(_ => TryLearnSelectedMastery()), Owner);
-        EventManager.SubscribeEvent("OnLevelUp", new System.Action<byte>(_ => TryLearnSelectedMastery()), Owner);
-        EventManager.SubscribeEvent("OnExpSpUpdate", new System.Action(TryLearnSelectedMastery), Owner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnLoadCharacter", LoadSkillSettings, Owner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnResurrectionRequest", OnResurrectionRequest, Owner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnLoadCharacterStats", TryLearnSelectedMastery, Owner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnLearnSkillMastery", new System.Action<MasteryInfo>(_ => TryLearnSelectedMastery()), Owner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnLevelUp", new System.Action<byte>(_ => TryLearnSelectedMastery()), Owner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnExpSpUpdate", new System.Action(TryLearnSelectedMastery), Owner);
     }
 
     public static void UnsubscribeAll()
     {
-        EventManager.UnsubscribeOwner(Owner);
+        UBot.Core.RuntimeAccess.Events.UnsubscribeOwner(Owner);
     }
 
     private static void LoadSkillSettings()
     {
-        if (Game.Player == null)
+        if (UBot.Core.RuntimeAccess.Session.Player == null)
             return;
 
-        Game.Player.TryGetAbilitySkills(out var abilitySkills);
+        UBot.Core.RuntimeAccess.Session.Player.TryGetAbilitySkills(out var abilitySkills);
         SkillManager.Buffs.Clear();
         foreach (var key in SkillManager.Skills.Keys.ToArray())
             SkillManager.Skills[key].Clear();
 
-        foreach (var buffId in PlayerConfig.GetArray<uint>("UBot.Skills.Buffs"))
+        foreach (var buffId in UBot.Core.RuntimeAccess.Player.GetArray<uint>("UBot.Skills.Buffs"))
         {
-            var skillInfo = Game.Player.Skills.GetSkillInfoById(buffId);
+            var skillInfo = UBot.Core.RuntimeAccess.Session.Player.Skills.GetSkillInfoById(buffId);
             if (skillInfo == null)
             {
                 skillInfo = abilitySkills.FirstOrDefault(p => p.Id == buffId);
@@ -52,37 +52,37 @@ internal static class LoadCharacterSubscriber
             SkillManager.Buffs.Add(skillInfo);
         }
 
-        var imbueSkillId = PlayerConfig.Get("UBot.Desktop.Skills.ImbueSkillId", 0U);
+        var imbueSkillId = UBot.Core.RuntimeAccess.Player.Get("UBot.Desktop.Skills.ImbueSkillId", 0U);
         SkillManager.ImbueSkill = imbueSkillId == 0
             ? null
             : (
-                Game.Player.Skills.GetSkillInfoById(imbueSkillId)
+                UBot.Core.RuntimeAccess.Session.Player.Skills.GetSkillInfoById(imbueSkillId)
                 ?? abilitySkills.FirstOrDefault(p => p.Id == imbueSkillId)
             );
 
-        var resurrectionSkillId = PlayerConfig.Get("UBot.Skills.ResurrectionSkill", 0U);
+        var resurrectionSkillId = UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.ResurrectionSkill", 0U);
         SkillManager.ResurrectionSkill = resurrectionSkillId == 0
             ? null
             : (
-                Game.Player.Skills.GetSkillInfoById(resurrectionSkillId)
+                UBot.Core.RuntimeAccess.Session.Player.Skills.GetSkillInfoById(resurrectionSkillId)
                 ?? abilitySkills.FirstOrDefault(p => p.Id == resurrectionSkillId)
             );
 
-        var teleportSkillId = PlayerConfig.Get("UBot.Skills.TeleportSkill", 0U);
+        var teleportSkillId = UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.TeleportSkill", 0U);
         SkillManager.TeleportSkill = teleportSkillId == 0
             ? null
             : (
-                Game.Player.Skills.GetSkillInfoById(teleportSkillId)
+                UBot.Core.RuntimeAccess.Session.Player.Skills.GetSkillInfoById(teleportSkillId)
                 ?? abilitySkills.FirstOrDefault(p => p.Id == teleportSkillId)
             );
 
         for (var i = 0; i < 9; i++)
         {
-            var skillIds = PlayerConfig.GetArray<uint>("UBot.Skills.Attacks_" + i);
+            var skillIds = UBot.Core.RuntimeAccess.Player.GetArray<uint>("UBot.Skills.Attacks_" + i);
 
             foreach (var skillId in skillIds)
             {
-                var skillInfo = Game.Player.Skills.GetSkillInfoById(skillId);
+                var skillInfo = UBot.Core.RuntimeAccess.Session.Player.Skills.GetSkillInfoById(skillId);
                 if (skillInfo == null)
                 {
                     skillInfo = abilitySkills.FirstOrDefault(p => p.Id == skillId);
@@ -128,28 +128,28 @@ internal static class LoadCharacterSubscriber
 
     private static void OnResurrectionRequest()
     {
-        if (!PlayerConfig.Get("UBot.Skills.checkAcceptResurrection", false))
+        if (!UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.checkAcceptResurrection", false))
             return;
 
-        Game.AcceptanceRequest?.Accept();
+        UBot.Core.RuntimeAccess.Session.AcceptanceRequest?.Accept();
     }
 
     private static void TryLearnSelectedMastery()
     {
-        if (!PlayerConfig.Get("UBot.Skills.checkLearnMastery", false))
+        if (!UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.checkLearnMastery", false))
             return;
 
-        if (!Kernel.Bot.Running && !PlayerConfig.Get("UBot.Skills.checkLearnMasteryBotStopped", false))
+        if (!UBot.Core.RuntimeAccess.Core.Bot.Running && !UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.checkLearnMasteryBotStopped", false))
             return;
 
-        if (Kernel.TickCount - _lastMasteryUpdateTick < 1000)
+        if (UBot.Core.RuntimeAccess.Core.TickCount - _lastMasteryUpdateTick < 1000)
             return;
 
-        var player = Game.Player;
+        var player = UBot.Core.RuntimeAccess.Session.Player;
         if (player?.Skills == null)
             return;
 
-        var selectedMasteryId = PlayerConfig.Get("UBot.Skills.selectedMastery", 0U);
+        var selectedMasteryId = UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.selectedMastery", 0U);
         if (selectedMasteryId == 0)
             return;
 
@@ -157,14 +157,14 @@ internal static class LoadCharacterSubscriber
         if (selectedMastery == null)
             return;
 
-        var gap = Math.Max(0, PlayerConfig.Get("UBot.Skills.numMasteryGap", 0));
+        var gap = Math.Max(0, UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.numMasteryGap", 0));
         if (selectedMastery.Level + gap >= player.Level)
             return;
 
         if (player.SkillPoints == 0)
             return;
 
-        _lastMasteryUpdateTick = Kernel.TickCount;
+        _lastMasteryUpdateTick = UBot.Core.RuntimeAccess.Core.TickCount;
         LearnMasteryHandler.LearnMastery(selectedMasteryId);
     }
 }

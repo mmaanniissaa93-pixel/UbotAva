@@ -1,5 +1,6 @@
 using System;
 using UBot.Core.Abstractions.Network;
+using PMgr = UBot.Core.Network.PacketManager;
 
 namespace UBot.Core.Network;
 
@@ -8,25 +9,25 @@ public sealed class PacketDispatcher : IPacketDispatcher, IDisposable
     public void RegisterHandler(object handler)
     {
         if (handler is IPacketHandler packetHandler)
-            PacketManager.RegisterHandler(packetHandler);
+            PMgr.RegisterHandler(packetHandler);
     }
 
     public void RemoveHandler(object handler)
     {
         if (handler is IPacketHandler packetHandler)
-            PacketManager.RemoveHandler(packetHandler);
+            PMgr.RemoveHandler(packetHandler);
     }
 
     public void RegisterHook(object hook)
     {
         if (hook is IPacketHook packetHook)
-            PacketManager.RegisterHook(packetHook);
+            PMgr.RegisterHook(packetHook);
     }
 
     public void RemoveHook(object hook)
     {
         if (hook is IPacketHook packetHook)
-            PacketManager.RemoveHook(packetHook);
+            PMgr.RemoveHook(packetHook);
     }
 
     public void SendPacket(object packet, PacketDestination destination, params object[] callbacks)
@@ -48,25 +49,25 @@ public sealed class PacketDispatcher : IPacketDispatcher, IDisposable
         }
 
         if (typedCallbacks.Length > 0)
-            PacketManager.SendPacket(networkPacket, destination, typedCallbacks);
+            PMgr.SendPacket(networkPacket, destination, typedCallbacks);
         else
-            PacketManager.SendPacket(networkPacket, destination);
+            PMgr.SendPacket(networkPacket, destination);
     }
 
     public void HandlePacket(object packet, PacketDestination destination)
     {
         if (packet is Packet networkPacket)
-            PacketManager.HandlePacket(networkPacket, destination);
+            PMgr.HandlePacket(networkPacket, destination);
     }
 
     public void Dispatch(object packet, PacketDestination destination) => SendPacket(packet, destination);
 
     public void Dispose()
     {
-        foreach (var handler in PacketManager.GetHandlers())
-            PacketManager.RemoveHandler(handler);
+        foreach (var handler in PMgr.GetHandlers())
+            PMgr.RemoveHandler(handler);
 
-        foreach (var hook in PacketManager.GetHooks())
-            PacketManager.RemoveHook(hook);
+        foreach (var hook in PMgr.GetHooks())
+            PMgr.RemoveHook(hook);
     }
 }

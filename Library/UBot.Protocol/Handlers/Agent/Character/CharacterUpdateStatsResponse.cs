@@ -1,4 +1,4 @@
-﻿using UBot.Core.Network;
+using UBot.Core.Network;
 using UBot.Protocol;
 
 namespace UBot.Protocol.Handlers.Agent.Character;
@@ -11,7 +11,7 @@ public class CharacterUpdateStatsResponse : IPacketHandler
 
     public void Invoke(Packet packet)
     {
-        dynamic player = ProtocolRuntime.GameState?.Player;
+        dynamic player = UBot.Protocol.ProtocolRuntime.GameState?.Player;
         if (player == null)
             return;
 
@@ -32,7 +32,7 @@ public class CharacterUpdateStatsResponse : IPacketHandler
         player.Strength = packet.ReadUShort();
         player.Intelligence = packet.ReadUShort();
 
-        ProtocolRuntime.GameState?.FireEvent("OnLoadCharacterStats");
+        UBot.Protocol.ProtocolRuntime.GameState?.FireEvent("OnLoadCharacterStats");
     }
 }
 

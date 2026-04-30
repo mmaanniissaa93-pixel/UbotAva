@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Event;
 using UBot.Core.Extensions;
 using UBot.Core.Network;
@@ -32,12 +32,12 @@ internal class PartyMatchingChangeResponse : IPacketHandler
         Container.PartyMatching.Id = packet.ReadUInt();
         packet.ReadUInt();
 
-        Game.Party.Settings = PartySettings.FromType(packet.ReadByte());
+        UBot.Core.RuntimeAccess.Session.Party.Settings = PartySettings.FromType(packet.ReadByte());
         Container.PartyMatching.Config.Purpose = (PartyPurpose)packet.ReadByte();
         Container.PartyMatching.Config.LevelFrom = packet.ReadByte();
         Container.PartyMatching.Config.LevelTo = packet.ReadByte();
         Container.PartyMatching.Config.Title = packet.ReadConditonalString();
 
-        EventManager.FireEvent("OnChangePartyEntry");
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnChangePartyEntry");
     }
 }

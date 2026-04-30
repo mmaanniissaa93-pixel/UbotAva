@@ -49,41 +49,41 @@ internal sealed class UbotTradeBotbaseService : UbotServiceBase
     {
         var routeLists = LoadTradeRouteListsFromPlayerConfig();
         var selectedRouteListIndex = Math.Clamp(
-            PlayerConfig.Get("UBot.Trade.SelectedRouteListIndex", 0),
+            UBot.Core.RuntimeAccess.Player.Get("UBot.Trade.SelectedRouteListIndex", 0),
             0,
             Math.Max(0, routeLists.Count - 1));
 
         return new Dictionary<string, object?>
         {
-            ["tradeTracePlayerName"] = PlayerConfig.Get("UBot.Trade.TracePlayerName", string.Empty),
-            ["tradeTracePlayer"] = PlayerConfig.Get("UBot.Trade.TracePlayer", false),
-            ["tradeUseRouteScripts"] = PlayerConfig.Get("UBot.Trade.UseRouteScripts", true),
+            ["tradeTracePlayerName"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Trade.TracePlayerName", string.Empty),
+            ["tradeTracePlayer"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Trade.TracePlayer", false),
+            ["tradeUseRouteScripts"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Trade.UseRouteScripts", true),
             ["tradeSelectedRouteListIndex"] = selectedRouteListIndex,
             ["tradeRouteLists"] = routeLists.Select(routeList => new Dictionary<string, object?>
             {
                 ["name"] = routeList.Name,
                 ["scripts"] = routeList.Scripts.Cast<object?>().ToList()
             }).Cast<object?>().ToList(),
-            ["tradeRunTownScript"] = PlayerConfig.Get("UBot.Trade.RunTownScript", false),
-            ["tradeWaitForHunter"] = PlayerConfig.Get("UBot.Trade.WaitForHunter", false),
-            ["tradeAttackThiefPlayers"] = PlayerConfig.Get("UBot.Trade.AttackThiefPlayers", false),
-            ["tradeAttackThiefNpcs"] = PlayerConfig.Get("UBot.Trade.AttackThiefNpcs", false),
-            ["tradeCounterAttack"] = PlayerConfig.Get("UBot.Trade.CounterAttack", false),
-            ["tradeProtectTransport"] = PlayerConfig.Get("UBot.Trade.ProtectTransport", false),
-            ["tradeCastBuffs"] = PlayerConfig.Get("UBot.Trade.CastBuffs", false),
-            ["tradeMountTransport"] = PlayerConfig.Get("UBot.Trade.MountTransport", false),
-            ["tradeMaxTransportDistance"] = Math.Clamp(PlayerConfig.Get("UBot.Trade.MaxTransportDistance", 15), 1, 300),
-            ["tradeSellGoods"] = PlayerConfig.Get("UBot.Trade.SellGoods", true),
-            ["tradeBuyGoods"] = PlayerConfig.Get("UBot.Trade.BuyGoods", true),
-            ["tradeBuyGoodsQuantity"] = Math.Max(0, PlayerConfig.Get("UBot.Trade.BuyGoodsQuantity", 0)),
-            ["tradeRecorderScriptPath"] = PlayerConfig.Get("UBot.Desktop.Trade.RecorderScriptPath", string.Empty)
+            ["tradeRunTownScript"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Trade.RunTownScript", false),
+            ["tradeWaitForHunter"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Trade.WaitForHunter", false),
+            ["tradeAttackThiefPlayers"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Trade.AttackThiefPlayers", false),
+            ["tradeAttackThiefNpcs"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Trade.AttackThiefNpcs", false),
+            ["tradeCounterAttack"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Trade.CounterAttack", false),
+            ["tradeProtectTransport"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Trade.ProtectTransport", false),
+            ["tradeCastBuffs"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Trade.CastBuffs", false),
+            ["tradeMountTransport"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Trade.MountTransport", false),
+            ["tradeMaxTransportDistance"] = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Trade.MaxTransportDistance", 15), 1, 300),
+            ["tradeSellGoods"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Trade.SellGoods", true),
+            ["tradeBuyGoods"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Trade.BuyGoods", true),
+            ["tradeBuyGoodsQuantity"] = Math.Max(0, UBot.Core.RuntimeAccess.Player.Get("UBot.Trade.BuyGoodsQuantity", 0)),
+            ["tradeRecorderScriptPath"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Desktop.Trade.RecorderScriptPath", string.Empty)
         };
     }
 
     private static bool ApplyTradeBotbasePatch(IBotbase botbase, Dictionary<string, object?> patch)
     {
         var changed = false;
-        var selectedRouteListIndex = PlayerConfig.Get("UBot.Trade.SelectedRouteListIndex", 0);
+        var selectedRouteListIndex = UBot.Core.RuntimeAccess.Player.Get("UBot.Trade.SelectedRouteListIndex", 0);
         var routeLists = LoadTradeRouteListsFromPlayerConfig();
         var routeListsChanged = false;
 
@@ -126,8 +126,8 @@ internal sealed class UbotTradeBotbaseService : UbotServiceBase
 
         if (tracePlayerToggle.HasValue || useRouteScriptsToggle.HasValue)
         {
-            var finalUseRouteScripts = PlayerConfig.Get("UBot.Trade.UseRouteScripts", true);
-            var finalTracePlayer = PlayerConfig.Get("UBot.Trade.TracePlayer", false);
+            var finalUseRouteScripts = UBot.Core.RuntimeAccess.Player.Get("UBot.Trade.UseRouteScripts", true);
+            var finalTracePlayer = UBot.Core.RuntimeAccess.Player.Get("UBot.Trade.TracePlayer", false);
 
             if (useRouteScriptsToggle.HasValue)
                 finalUseRouteScripts = useRouteScriptsToggle.Value;
@@ -141,8 +141,8 @@ internal sealed class UbotTradeBotbaseService : UbotServiceBase
             else if (useRouteScriptsToggle.HasValue && tracePlayerToggle.HasValue && finalUseRouteScripts == finalTracePlayer)
                 finalTracePlayer = !finalUseRouteScripts;
 
-            PlayerConfig.Set("UBot.Trade.UseRouteScripts", finalUseRouteScripts);
-            PlayerConfig.Set("UBot.Trade.TracePlayer", finalTracePlayer);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Trade.UseRouteScripts", finalUseRouteScripts);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Trade.TracePlayer", finalTracePlayer);
             changed = true;
         }
 
@@ -151,10 +151,10 @@ internal sealed class UbotTradeBotbaseService : UbotServiceBase
             SaveTradeRouteListsToPlayerConfig(routeLists);
 
         selectedRouteListIndex = Math.Clamp(selectedRouteListIndex, 0, Math.Max(0, routeLists.Count - 1));
-        PlayerConfig.Set("UBot.Trade.SelectedRouteListIndex", selectedRouteListIndex);
+        UBot.Core.RuntimeAccess.Player.Set("UBot.Trade.SelectedRouteListIndex", selectedRouteListIndex);
 
         if (changed)
-            EventManager.FireEvent("OnSavePlayerConfig");
+            UBot.Core.RuntimeAccess.Events.FireEvent("OnSavePlayerConfig");
 
         return changed;
     }
@@ -194,7 +194,7 @@ internal sealed class UbotTradeBotbaseService : UbotServiceBase
 
     private static List<TradeRouteListDefinition> LoadTradeRouteListsFromPlayerConfig()
     {
-        var names = PlayerConfig.GetArray<string>("UBot.Trade.RouteScriptList", ';')
+        var names = UBot.Core.RuntimeAccess.Player.GetArray<string>("UBot.Trade.RouteScriptList", ';')
             .Where(name => !string.IsNullOrWhiteSpace(name))
             .Select(name => name.Trim())
             .ToList();
@@ -225,7 +225,7 @@ internal sealed class UbotTradeBotbaseService : UbotServiceBase
     private static void SaveTradeRouteListsToPlayerConfig(IReadOnlyList<TradeRouteListDefinition> routeLists)
     {
         var normalizedLists = NormalizeTradeRouteLists(routeLists);
-        var previousNames = PlayerConfig.GetArray<string>("UBot.Trade.RouteScriptList", ';')
+        var previousNames = UBot.Core.RuntimeAccess.Player.GetArray<string>("UBot.Trade.RouteScriptList", ';')
             .Where(name => !string.IsNullOrWhiteSpace(name))
             .Select(name => name.Trim())
             .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -236,11 +236,11 @@ internal sealed class UbotTradeBotbaseService : UbotServiceBase
             .ToArray();
 
         foreach (var oldName in previousNames.Where(name => !currentNames.Contains(name, StringComparer.OrdinalIgnoreCase)))
-            PlayerConfig.SetArray($"UBot.Trade.RouteScriptList.{oldName}", Array.Empty<string>());
+            UBot.Core.RuntimeAccess.Player.SetArray($"UBot.Trade.RouteScriptList.{oldName}", Array.Empty<string>());
 
-        PlayerConfig.SetArray("UBot.Trade.RouteScriptList", currentNames, ";");
+        UBot.Core.RuntimeAccess.Player.SetArray("UBot.Trade.RouteScriptList", currentNames, ";");
         foreach (var routeList in normalizedLists)
-            PlayerConfig.SetArray($"UBot.Trade.RouteScriptList.{routeList.Name}", routeList.Scripts.Distinct(StringComparer.OrdinalIgnoreCase).ToArray());
+            UBot.Core.RuntimeAccess.Player.SetArray($"UBot.Trade.RouteScriptList.{routeList.Name}", routeList.Scripts.Distinct(StringComparer.OrdinalIgnoreCase).ToArray());
     }
 
     private static List<TradeRouteListDefinition> NormalizeTradeRouteLists(IEnumerable<TradeRouteListDefinition> routeLists)
@@ -307,10 +307,10 @@ internal sealed class UbotTradeBotbaseService : UbotServiceBase
 
     private static object BuildTradeState(IBotbase botbase)
     {
-        var player = Game.Player;
+        var player = UBot.Core.RuntimeAccess.Session.Player;
         var routeLists = LoadTradeRouteListsFromPlayerConfig();
         var selectedRouteListIndex = Math.Clamp(
-            PlayerConfig.Get("UBot.Trade.SelectedRouteListIndex", 0),
+            UBot.Core.RuntimeAccess.Player.Get("UBot.Trade.SelectedRouteListIndex", 0),
             0,
             Math.Max(0, routeLists.Count - 1));
 
@@ -328,9 +328,9 @@ internal sealed class UbotTradeBotbaseService : UbotServiceBase
 
         return new Dictionary<string, object?>
         {
-            ["selected"] = Kernel.Bot?.Botbase?.Name == botbase?.Name,
-            ["useRouteScripts"] = PlayerConfig.Get("UBot.Trade.UseRouteScripts", true),
-            ["tracePlayer"] = PlayerConfig.Get("UBot.Trade.TracePlayer", false),
+            ["selected"] = UBot.Core.RuntimeAccess.Core.Bot?.Botbase?.Name == botbase?.Name,
+            ["useRouteScripts"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Trade.UseRouteScripts", true),
+            ["tracePlayer"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Trade.TracePlayer", false),
             ["selectedRouteList"] = selectedRouteList.Name,
             ["selectedRouteListIndex"] = selectedRouteListIndex,
             ["routeRows"] = routeRows,

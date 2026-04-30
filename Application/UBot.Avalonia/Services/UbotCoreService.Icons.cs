@@ -65,17 +65,17 @@ internal sealed class UbotIconService : UbotServiceBase
             if (cleanPath.StartsWith("icon\\icon\\", StringComparison.OrdinalIgnoreCase))
                 cleanPath = cleanPath.Substring(5);
 
-            if (Game.MediaPk2 == null) return null;
+            if (UBot.Core.RuntimeAccess.Session.MediaPk2 == null) return null;
 
-            if (!Game.MediaPk2.TryGetFile(cleanPath, out var file))
+            if (!UBot.Core.RuntimeAccess.Session.MediaPk2.TryGetFile(cleanPath, out var file))
             {
                 // Try just the filename in icon folder as fallback
                 var fileName = Path.GetFileName(cleanPath);
                 var fallbackPath = Path.Combine("icon", fileName);
-                if (!Game.MediaPk2.TryGetFile(fallbackPath, out file))
+                if (!UBot.Core.RuntimeAccess.Session.MediaPk2.TryGetFile(fallbackPath, out file))
                 {
                     // Last resort: default icon
-                    if (!Game.MediaPk2.TryGetFile("icon\\icon_default.ddj", out file))
+                    if (!UBot.Core.RuntimeAccess.Session.MediaPk2.TryGetFile("icon\\icon_default.ddj", out file))
                         return null;
                 }
             }
@@ -105,11 +105,11 @@ internal sealed class UbotIconService : UbotServiceBase
 
         try
         {
-            if (Game.MediaPk2 == null) return Task.FromResult<byte[]>(null);
-            if (!Game.MediaPk2.TryGetFile(iconPath, out var file))
+            if (UBot.Core.RuntimeAccess.Session.MediaPk2 == null) return Task.FromResult<byte[]>(null);
+            if (!UBot.Core.RuntimeAccess.Session.MediaPk2.TryGetFile(iconPath, out var file))
             {
                 // Fallback: try as-is added by default
-                if (!Game.MediaPk2.TryGetFile(iconPath, out file))
+                if (!UBot.Core.RuntimeAccess.Session.MediaPk2.TryGetFile(iconPath, out file))
                     return Task.FromResult<byte[]>(null);
             }
 

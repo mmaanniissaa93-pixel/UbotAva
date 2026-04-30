@@ -11,7 +11,7 @@ internal static class HowlingShoutBundle
 {
     public static void Tick()
     {
-        if (Game.Player.Race != ObjectCountry.Europe)
+        if (UBot.Core.RuntimeAccess.Session.Player.Race != ObjectCountry.Europe)
             return;
 
         if (LureConfig.NoHowlingAtCenter && LureConfig.Area.Position.DistanceToPlayer() < 15)

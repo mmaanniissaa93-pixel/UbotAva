@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UBot.Core;
 using UBot.Core.Event;
 
@@ -18,8 +18,8 @@ internal static class Bundles
         AttackBundle.Stop();
         RouteBundle.Stop();
 
-        EventManager.FireEvent("Bundle.Buff.Stop");
-        EventManager.FireEvent("Bundle.Attack.Stop");
+        UBot.Core.RuntimeAccess.Events.FireEvent("Bundle.Buff.Stop");
+        UBot.Core.RuntimeAccess.Events.FireEvent("Bundle.Attack.Stop");
     }
 
     public static void Initialize()

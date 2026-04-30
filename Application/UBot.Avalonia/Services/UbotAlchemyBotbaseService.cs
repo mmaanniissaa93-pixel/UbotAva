@@ -48,8 +48,8 @@ internal sealed class UbotAlchemyBotbaseService : UbotServiceBase
 
         return new Dictionary<string, object?>
         {
-            ["selected"] = Kernel.Bot?.Botbase?.Name == botbase?.Name,
-            ["mode"] = NormalizeAlchemyMode(PlayerConfig.Get(AlchemyModeKey, "enhance")),
+            ["selected"] = UBot.Core.RuntimeAccess.Core.Bot?.Botbase?.Name == botbase?.Name,
+            ["mode"] = NormalizeAlchemyMode(UBot.Core.RuntimeAccess.Player.Get(AlchemyModeKey, "enhance")),
             ["hasItem"] = selectedItem != null,
             ["selectedItem"] = selectedItem == null
                 ? null
@@ -154,7 +154,7 @@ internal sealed class UbotAlchemyBotbaseService : UbotServiceBase
 
     private static IReadOnlyList<InventoryItem> GetAlchemySelectableItems()
     {
-        var inventory = Game.Player?.Inventory;
+        var inventory = UBot.Core.RuntimeAccess.Session.Player?.Inventory;
         if (inventory == null)
             return Array.Empty<InventoryItem>();
 
@@ -174,7 +174,7 @@ internal sealed class UbotAlchemyBotbaseService : UbotServiceBase
         if (source.Count == 0)
             return null;
 
-        var codeName = (PlayerConfig.Get(AlchemyItemCodeKey, string.Empty) ?? string.Empty).Trim();
+        var codeName = (UBot.Core.RuntimeAccess.Player.Get(AlchemyItemCodeKey, string.Empty) ?? string.Empty).Trim();
         if (!string.IsNullOrWhiteSpace(codeName))
         {
             var matched = source.FirstOrDefault(item =>
@@ -192,7 +192,7 @@ internal sealed class UbotAlchemyBotbaseService : UbotServiceBase
         if (targetItem?.Record == null || string.IsNullOrWhiteSpace(group))
             return Array.Empty<InventoryItem>();
 
-        var inventory = Game.Player?.Inventory;
+        var inventory = UBot.Core.RuntimeAccess.Session.Player?.Inventory;
         if (inventory == null)
             return Array.Empty<InventoryItem>();
 
@@ -206,7 +206,7 @@ internal sealed class UbotAlchemyBotbaseService : UbotServiceBase
 
     private static IReadOnlyList<InventoryItem> ResolveAlchemyElixirs(InventoryItem targetItem, string elixirType)
     {
-        var inventory = Game.Player?.Inventory;
+        var inventory = UBot.Core.RuntimeAccess.Session.Player?.Inventory;
         if (inventory == null || targetItem?.Record == null)
             return Array.Empty<InventoryItem>();
 
@@ -226,7 +226,7 @@ internal sealed class UbotAlchemyBotbaseService : UbotServiceBase
 
         var degree = targetItem.Record.Degree;
         Func<InventoryItem, bool> predicate;
-        if (Game.ClientType >= GameClientType.Chinese && degree >= 12)
+        if (UBot.Core.RuntimeAccess.Session.ClientType >= GameClientType.Chinese && degree >= 12)
             predicate = item => item.Record.Param1 == degree && item.Record.Param3 == paramValue;
         else
             predicate = item => item.Record.Param1 == paramValue;
@@ -239,7 +239,7 @@ internal sealed class UbotAlchemyBotbaseService : UbotServiceBase
         if (targetItem?.Record == null)
             return 0;
 
-        var inventory = Game.Player?.Inventory;
+        var inventory = UBot.Core.RuntimeAccess.Session.Player?.Inventory;
         if (inventory == null)
             return 0;
 
@@ -252,7 +252,7 @@ internal sealed class UbotAlchemyBotbaseService : UbotServiceBase
                 && item.Record.ItemClass == targetItem.Record.Degree)
             .Sum(item => item.Amount);
 
-        if (Game.ClientType >= GameClientType.Chinese && targetItem.Record.Degree >= 12)
+        if (UBot.Core.RuntimeAccess.Session.ClientType >= GameClientType.Chinese && targetItem.Record.Degree >= 12)
         {
             powders += inventory
                 .GetNormalPartItems(item =>
@@ -274,7 +274,7 @@ internal sealed class UbotAlchemyBotbaseService : UbotServiceBase
 
         var option = targetItem.MagicOptions?.FirstOrDefault(m =>
         {
-            var record = m?.Record ?? Game.ReferenceManager.GetMagicOption(m?.Id ?? 0);
+            var record = m?.Record ?? UBot.Core.RuntimeAccess.Session.ReferenceManager.GetMagicOption(m?.Id ?? 0);
             return record?.Group == group;
         });
 
@@ -288,14 +288,14 @@ internal sealed class UbotAlchemyBotbaseService : UbotServiceBase
 
         var current = targetItem.MagicOptions?.FirstOrDefault(m =>
         {
-            var record = m?.Record ?? Game.ReferenceManager.GetMagicOption(m?.Id ?? 0);
+            var record = m?.Record ?? UBot.Core.RuntimeAccess.Session.ReferenceManager.GetMagicOption(m?.Id ?? 0);
             return record?.Group == group;
         });
 
         if (current?.Record != null)
             return current.Record.GetMaxValue();
 
-        var byDegree = Game.ReferenceManager.GetMagicOption(group, (byte)targetItem.Record.Degree);
+        var byDegree = UBot.Core.RuntimeAccess.Session.ReferenceManager.GetMagicOption(group, (byte)targetItem.Record.Degree);
         return byDegree?.GetMaxValue() ?? 0;
     }
 
@@ -383,22 +383,22 @@ internal sealed class UbotAlchemyBotbaseService : UbotServiceBase
     private static Dictionary<string, object?> BuildAlchemyBotbaseConfig()
     {
         var selectedItem = ResolveAlchemySelectedItem();
-        var mode = NormalizeAlchemyMode(PlayerConfig.Get(AlchemyModeKey, "enhance"));
-        var elixirType = NormalizeAlchemyElixirType(PlayerConfig.Get(AlchemyElixirTypeKey, InferAlchemyElixirType(selectedItem)));
+        var mode = NormalizeAlchemyMode(UBot.Core.RuntimeAccess.Player.Get(AlchemyModeKey, "enhance"));
+        var elixirType = NormalizeAlchemyElixirType(UBot.Core.RuntimeAccess.Player.Get(AlchemyElixirTypeKey, InferAlchemyElixirType(selectedItem)));
 
         var config = new Dictionary<string, object?>(StringComparer.Ordinal)
         {
             ["alchemyMode"] = mode,
-            ["alchemyItemCode"] = PlayerConfig.Get(AlchemyItemCodeKey, selectedItem?.Record?.CodeName ?? string.Empty),
+            ["alchemyItemCode"] = UBot.Core.RuntimeAccess.Player.Get(AlchemyItemCodeKey, selectedItem?.Record?.CodeName ?? string.Empty),
             ["alchemyItemDegree"] = selectedItem?.Record?.Degree ?? 0,
             ["alchemyCurrentEnhancement"] = selectedItem?.OptLevel ?? 0,
-            ["alchemyMaxEnhancement"] = Math.Clamp(PlayerConfig.Get(AlchemyMaxEnhancementKey, 0), 0, 15),
+            ["alchemyMaxEnhancement"] = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get(AlchemyMaxEnhancementKey, 0), 0, 15),
             ["alchemyElixirType"] = elixirType,
-            ["stopAtNoPowder"] = PlayerConfig.Get(AlchemyStopAtNoPowderKey, true),
-            ["useLuckyStone"] = PlayerConfig.Get(AlchemyUseLuckyStoneKey, false),
-            ["useImmortalStone"] = PlayerConfig.Get(AlchemyUseImmortalStoneKey, false),
-            ["useAstralStone"] = PlayerConfig.Get(AlchemyUseAstralStoneKey, false),
-            ["useSteadyStone"] = PlayerConfig.Get(AlchemyUseSteadyStoneKey, false),
+            ["stopAtNoPowder"] = UBot.Core.RuntimeAccess.Player.Get(AlchemyStopAtNoPowderKey, true),
+            ["useLuckyStone"] = UBot.Core.RuntimeAccess.Player.Get(AlchemyUseLuckyStoneKey, false),
+            ["useImmortalStone"] = UBot.Core.RuntimeAccess.Player.Get(AlchemyUseImmortalStoneKey, false),
+            ["useAstralStone"] = UBot.Core.RuntimeAccess.Player.Get(AlchemyUseAstralStoneKey, false),
+            ["useSteadyStone"] = UBot.Core.RuntimeAccess.Player.Get(AlchemyUseSteadyStoneKey, false),
             ["luckyPowderCount"] = selectedItem != null ? GetAlchemyLuckyPowderCount(selectedItem) : 0,
             ["luckyStoneCount"] = selectedItem != null ? GetAlchemyStonesByGroup(selectedItem, RefMagicOpt.MaterialLuck).Sum(item => item.Amount) : 0,
             ["immortalStoneCount"] = selectedItem != null ? GetAlchemyStonesByGroup(selectedItem, RefMagicOpt.MaterialImmortal).Sum(item => item.Amount) : 0,
@@ -412,17 +412,17 @@ internal sealed class UbotAlchemyBotbaseService : UbotServiceBase
             var maxKey = GetAlchemyBlueMaxConfigKey(option.Key);
             var currentValue = selectedItem != null ? (int)GetAlchemyMagicOptionValue(selectedItem, option.Group) : 0;
             var maxValue = selectedItem != null ? (int)GetAlchemyMagicOptionMaxValue(selectedItem, option.Group) : 0;
-            var persistedMax = Math.Max(0, PlayerConfig.Get(maxKey, maxValue));
+            var persistedMax = Math.Max(0, UBot.Core.RuntimeAccess.Player.Get(maxKey, maxValue));
             var stoneCount = selectedItem != null ? GetAlchemyStonesByGroup(selectedItem, option.Group).Sum(item => item.Amount) : 0;
 
-            config[$"alchemyBlueEnabled_{option.Key}"] = PlayerConfig.Get(enabledKey, false);
+            config[$"alchemyBlueEnabled_{option.Key}"] = UBot.Core.RuntimeAccess.Player.Get(enabledKey, false);
             config[$"alchemyBlueCurrent_{option.Key}"] = currentValue;
             config[$"alchemyBlueMax_{option.Key}"] = persistedMax;
             config[$"alchemyBlueStoneCount_{option.Key}"] = stoneCount;
         }
 
-        var availableSlotsMax = Math.Max(0, PlayerConfig.Get(GetAlchemyBlueMaxConfigKey("availableSlots"), selectedItem?.MagicOptions?.Count ?? 0));
-        config["alchemyBlueEnabled_availableSlots"] = PlayerConfig.Get(GetAlchemyBlueEnabledConfigKey("availableSlots"), false);
+        var availableSlotsMax = Math.Max(0, UBot.Core.RuntimeAccess.Player.Get(GetAlchemyBlueMaxConfigKey("availableSlots"), selectedItem?.MagicOptions?.Count ?? 0));
+        config["alchemyBlueEnabled_availableSlots"] = UBot.Core.RuntimeAccess.Player.Get(GetAlchemyBlueEnabledConfigKey("availableSlots"), false);
         config["alchemyBlueCurrent_availableSlots"] = selectedItem?.MagicOptions?.Count ?? 0;
         config["alchemyBlueMax_availableSlots"] = availableSlotsMax;
         config["alchemyBlueStoneCount_availableSlots"] = 0;
@@ -432,9 +432,9 @@ internal sealed class UbotAlchemyBotbaseService : UbotServiceBase
             var enabledKey = GetAlchemyStatEnabledConfigKey(stat.Key);
             var targetKey = GetAlchemyStatTargetConfigKey(stat.Key);
             var currentValue = selectedItem != null ? GetAlchemyAttributePercentage(selectedItem, stat.Group) : 0;
-            var target = NormalizeAlchemyStatTarget(PlayerConfig.Get(targetKey, "off"));
+            var target = NormalizeAlchemyStatTarget(UBot.Core.RuntimeAccess.Player.Get(targetKey, "off"));
 
-            config[$"alchemyStatEnabled_{stat.Key}"] = PlayerConfig.Get(enabledKey, false);
+            config[$"alchemyStatEnabled_{stat.Key}"] = UBot.Core.RuntimeAccess.Player.Get(enabledKey, false);
             config[$"alchemyStatTarget_{stat.Key}"] = target;
             config[$"alchemyStatCurrent_{stat.Key}"] = currentValue;
         }
@@ -448,25 +448,25 @@ internal sealed class UbotAlchemyBotbaseService : UbotServiceBase
 
         if (TryGetStringValue(patch, "alchemyMode", out var mode))
         {
-            PlayerConfig.Set(AlchemyModeKey, NormalizeAlchemyMode(mode));
+            UBot.Core.RuntimeAccess.Player.Set(AlchemyModeKey, NormalizeAlchemyMode(mode));
             changed = true;
         }
 
         if (TryGetStringValue(patch, "alchemyItemCode", out var itemCode))
         {
-            PlayerConfig.Set(AlchemyItemCodeKey, itemCode.Trim());
+            UBot.Core.RuntimeAccess.Player.Set(AlchemyItemCodeKey, itemCode.Trim());
             changed = true;
         }
 
         if (TryGetIntValue(patch, "alchemyMaxEnhancement", out var maxEnhancement))
         {
-            PlayerConfig.Set(AlchemyMaxEnhancementKey, Math.Clamp(maxEnhancement, 0, 15));
+            UBot.Core.RuntimeAccess.Player.Set(AlchemyMaxEnhancementKey, Math.Clamp(maxEnhancement, 0, 15));
             changed = true;
         }
 
         if (TryGetStringValue(patch, "alchemyElixirType", out var elixirType))
         {
-            PlayerConfig.Set(AlchemyElixirTypeKey, NormalizeAlchemyElixirType(elixirType));
+            UBot.Core.RuntimeAccess.Player.Set(AlchemyElixirTypeKey, NormalizeAlchemyElixirType(elixirType));
             changed = true;
         }
 
@@ -488,7 +488,7 @@ internal sealed class UbotAlchemyBotbaseService : UbotServiceBase
                 if (TryConvertBool(entry.Value, out var enabled))
                 {
                     var key = entry.Key.Substring(blueEnabledPrefix.Length);
-                    PlayerConfig.Set(GetAlchemyBlueEnabledConfigKey(key), enabled);
+                    UBot.Core.RuntimeAccess.Player.Set(GetAlchemyBlueEnabledConfigKey(key), enabled);
                     changed = true;
                 }
                 continue;
@@ -499,7 +499,7 @@ internal sealed class UbotAlchemyBotbaseService : UbotServiceBase
                 if (TryConvertInt(entry.Value, out var maxValue))
                 {
                     var key = entry.Key.Substring(blueMaxPrefix.Length);
-                    PlayerConfig.Set(GetAlchemyBlueMaxConfigKey(key), Math.Max(0, maxValue));
+                    UBot.Core.RuntimeAccess.Player.Set(GetAlchemyBlueMaxConfigKey(key), Math.Max(0, maxValue));
                     changed = true;
                 }
                 continue;
@@ -510,7 +510,7 @@ internal sealed class UbotAlchemyBotbaseService : UbotServiceBase
                 if (TryConvertBool(entry.Value, out var enabled))
                 {
                     var key = entry.Key.Substring(statEnabledPrefix.Length);
-                    PlayerConfig.Set(GetAlchemyStatEnabledConfigKey(key), enabled);
+                    UBot.Core.RuntimeAccess.Player.Set(GetAlchemyStatEnabledConfigKey(key), enabled);
                     changed = true;
                 }
                 continue;
@@ -519,13 +519,13 @@ internal sealed class UbotAlchemyBotbaseService : UbotServiceBase
             if (entry.Key.StartsWith(statTargetPrefix, StringComparison.Ordinal))
             {
                 var key = entry.Key.Substring(statTargetPrefix.Length);
-                PlayerConfig.Set(GetAlchemyStatTargetConfigKey(key), NormalizeAlchemyStatTarget(entry.Value?.ToString() ?? string.Empty));
+                UBot.Core.RuntimeAccess.Player.Set(GetAlchemyStatTargetConfigKey(key), NormalizeAlchemyStatTarget(entry.Value?.ToString() ?? string.Empty));
                 changed = true;
             }
         }
 
         if (changed)
-            EventManager.FireEvent("OnSavePlayerConfig");
+            UBot.Core.RuntimeAccess.Events.FireEvent("OnSavePlayerConfig");
 
         ApplyAlchemyRuntimeConfig(botbase);
         return changed;
@@ -533,7 +533,7 @@ internal sealed class UbotAlchemyBotbaseService : UbotServiceBase
 
     private static bool ApplyAlchemyRuntimeConfig(IBotbase botbase = null)
     {
-        var activeBotbase = botbase ?? Kernel.Bot?.Botbase;
+        var activeBotbase = botbase ?? UBot.Core.RuntimeAccess.Core.Bot?.Botbase;
         if (!IsAlchemyBotbase(activeBotbase))
             return false;
 
@@ -544,7 +544,7 @@ internal sealed class UbotAlchemyBotbaseService : UbotServiceBase
             return false;
 
         var selectedItem = ResolveAlchemySelectedItem();
-        var mode = NormalizeAlchemyMode(PlayerConfig.Get(AlchemyModeKey, "enhance"));
+        var mode = NormalizeAlchemyMode(UBot.Core.RuntimeAccess.Player.Get(AlchemyModeKey, "enhance"));
 
         var magicTargets = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
         var magicStones = new Dictionary<InventoryItem, RefMagicOpt>();
@@ -552,14 +552,14 @@ internal sealed class UbotAlchemyBotbaseService : UbotServiceBase
         {
             foreach (var option in AlchemyBlueOptions)
             {
-                if (!PlayerConfig.Get(GetAlchemyBlueEnabledConfigKey(option.Key), false))
+                if (!UBot.Core.RuntimeAccess.Player.Get(GetAlchemyBlueEnabledConfigKey(option.Key), false))
                     continue;
 
-                var referenceOption = Game.ReferenceManager.GetMagicOption(option.Group, (byte)selectedItem.Record.Degree);
+                var referenceOption = UBot.Core.RuntimeAccess.Session.ReferenceManager.GetMagicOption(option.Group, (byte)selectedItem.Record.Degree);
                 if (referenceOption == null)
                     continue;
 
-                var targetValue = PlayerConfig.Get(GetAlchemyBlueMaxConfigKey(option.Key), 0);
+                var targetValue = UBot.Core.RuntimeAccess.Player.Get(GetAlchemyBlueMaxConfigKey(option.Key), 0);
                 if (targetValue <= 0)
                     targetValue = referenceOption.GetMaxValue();
 
@@ -584,10 +584,10 @@ internal sealed class UbotAlchemyBotbaseService : UbotServiceBase
 
             foreach (var option in AlchemyStatOptions)
             {
-                if (!PlayerConfig.Get(GetAlchemyStatEnabledConfigKey(option.Key), false))
+                if (!UBot.Core.RuntimeAccess.Player.Get(GetAlchemyStatEnabledConfigKey(option.Key), false))
                     continue;
 
-                var targetScale = NormalizeAlchemyStatTarget(PlayerConfig.Get(GetAlchemyStatTargetConfigKey(option.Key), "off"));
+                var targetScale = NormalizeAlchemyStatTarget(UBot.Core.RuntimeAccess.Player.Get(GetAlchemyStatTargetConfigKey(option.Key), "off"));
                 var targetValue = MapAlchemyStatTargetToPercent(targetScale);
                 if (targetValue <= 0 || !available.Contains(option.Group))
                     continue;
@@ -596,7 +596,7 @@ internal sealed class UbotAlchemyBotbaseService : UbotServiceBase
                 if (string.IsNullOrWhiteSpace(groupName))
                     continue;
 
-                var stone = Game.Player?.Inventory?
+                var stone = UBot.Core.RuntimeAccess.Session.Player?.Inventory?
                     .GetNormalPartItems(item =>
                         item?.Record != null
                         && item.Record.TypeID2 == 3
@@ -639,17 +639,17 @@ internal sealed class UbotAlchemyBotbaseService : UbotServiceBase
         if (engineName == "Enhance" && enhanceConfigType != null)
         {
             var config = Activator.CreateInstance(enhanceConfigType);
-            var maxOpt = Math.Clamp(PlayerConfig.Get(AlchemyMaxEnhancementKey, 0), 0, 15);
-            var elixirType = NormalizeAlchemyElixirType(PlayerConfig.Get(AlchemyElixirTypeKey, InferAlchemyElixirType(selectedItem)));
+            var maxOpt = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get(AlchemyMaxEnhancementKey, 0), 0, 15);
+            var elixirType = NormalizeAlchemyElixirType(UBot.Core.RuntimeAccess.Player.Get(AlchemyElixirTypeKey, InferAlchemyElixirType(selectedItem)));
             var elixirs = selectedItem != null ? ResolveAlchemyElixirs(selectedItem, elixirType).ToArray() : Array.Empty<InventoryItem>();
 
             enhanceConfigType.GetProperty("MaxOptLevel")?.SetValue(config, (byte)maxOpt);
             enhanceConfigType.GetProperty("Item")?.SetValue(config, selectedItem);
-            enhanceConfigType.GetProperty("StopIfLuckyPowderEmpty")?.SetValue(config, PlayerConfig.Get(AlchemyStopAtNoPowderKey, true));
-            enhanceConfigType.GetProperty("UseImmortalStones")?.SetValue(config, PlayerConfig.Get(AlchemyUseImmortalStoneKey, false));
-            enhanceConfigType.GetProperty("UseAstralStones")?.SetValue(config, PlayerConfig.Get(AlchemyUseAstralStoneKey, false));
-            enhanceConfigType.GetProperty("UseSteadyStones")?.SetValue(config, PlayerConfig.Get(AlchemyUseSteadyStoneKey, false));
-            enhanceConfigType.GetProperty("UseLuckyStones")?.SetValue(config, PlayerConfig.Get(AlchemyUseLuckyStoneKey, false));
+            enhanceConfigType.GetProperty("StopIfLuckyPowderEmpty")?.SetValue(config, UBot.Core.RuntimeAccess.Player.Get(AlchemyStopAtNoPowderKey, true));
+            enhanceConfigType.GetProperty("UseImmortalStones")?.SetValue(config, UBot.Core.RuntimeAccess.Player.Get(AlchemyUseImmortalStoneKey, false));
+            enhanceConfigType.GetProperty("UseAstralStones")?.SetValue(config, UBot.Core.RuntimeAccess.Player.Get(AlchemyUseAstralStoneKey, false));
+            enhanceConfigType.GetProperty("UseSteadyStones")?.SetValue(config, UBot.Core.RuntimeAccess.Player.Get(AlchemyUseSteadyStoneKey, false));
+            enhanceConfigType.GetProperty("UseLuckyStones")?.SetValue(config, UBot.Core.RuntimeAccess.Player.Get(AlchemyUseLuckyStoneKey, false));
             enhanceConfigType.GetProperty("Elixirs")?.SetValue(config, elixirs);
 
             enhanceConfig = config;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using UBot.Core.Components;
@@ -39,7 +39,7 @@ public class Bot
         Botbase = botBase;
         Botbase.Initialize();
 
-        EventManager.FireEvent("OnSetBotbase", botBase);
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnSetBotbase", botBase);
     }
 
     /// <summary>
@@ -57,12 +57,12 @@ public class Bot
             {
                 Running = true;
 
-                EventManager.FireEvent("OnStartBot");
+                UBot.Core.RuntimeAccess.Events.FireEvent("OnStartBot");
                 Botbase.Start();
 
                 while (!TokenSource.IsCancellationRequested)
                 {
-                    if (!Game.Ready)
+                    if (!UBot.Core.RuntimeAccess.Session.Ready)
                     {
                         await Task.Delay(100);
                         continue;
@@ -103,10 +103,10 @@ public class Bot
         if (!TokenSource.IsCancellationRequested)
             TokenSource.Cancel();
 
-        EventManager.FireEvent("OnStopBot");
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnStopBot");
         Log.Notify($"Stopping bot {Botbase.Title}");
 
-        Game.SelectedEntity = null;
+        UBot.Core.RuntimeAccess.Session.SelectedEntity = null;
         Botbase.Stop();
         Running = false;
 

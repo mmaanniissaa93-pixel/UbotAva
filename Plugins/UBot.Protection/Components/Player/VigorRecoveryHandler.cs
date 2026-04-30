@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Event;
 using UBot.Core.Objects;
 
@@ -19,7 +19,7 @@ internal class VigorRecoveryHandler
     /// </summary>
     private static void SubscribeEvents()
     {
-        EventManager.SubscribeEvent("OnUpdateHPMP", OnUpdateHPMP);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnUpdateHPMP", OnUpdateHPMP);
     }
 
     /// <summary>
@@ -28,27 +28,27 @@ internal class VigorRecoveryHandler
     /// <exception cref="System.NotImplementedException"></exception>
     private static void OnUpdateHPMP()
     {
-        if ((Game.Player.BadEffect & BadEffect.Zombie) == BadEffect.Zombie)
+        if ((UBot.Core.RuntimeAccess.Session.Player.BadEffect & BadEffect.Zombie) == BadEffect.Zombie)
             return;
 
-        var useManaPotion = PlayerConfig.Get<bool>("UBot.Protection.checkUseVigorMP");
+        var useManaPotion = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkUseVigorMP");
         if (useManaPotion)
         {
-            var minMana = PlayerConfig.Get("UBot.Protection.numPlayerMPVigorPotionMin", 50);
+            var minMana = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.numPlayerMPVigorPotionMin", 50);
 
-            var manaPercent = 100.0 * Game.Player.Mana / Game.Player.MaximumMana;
-            if (manaPercent <= minMana && Game.Player.UseVigorPotion())
+            var manaPercent = 100.0 * UBot.Core.RuntimeAccess.Session.Player.Mana / UBot.Core.RuntimeAccess.Session.Player.MaximumMana;
+            if (manaPercent <= minMana && UBot.Core.RuntimeAccess.Session.Player.UseVigorPotion())
                 return;
         }
 
-        var useHealthPotion = PlayerConfig.Get<bool>("UBot.Protection.checkUseVigorHP");
+        var useHealthPotion = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkUseVigorHP");
         if (!useHealthPotion)
             return;
 
-        var minHealth = PlayerConfig.Get("UBot.Protection.numPlayerHPVigorPotionMin", 50);
+        var minHealth = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.numPlayerHPVigorPotionMin", 50);
 
-        var healthPercent = 100.0 * Game.Player.Health / Game.Player.MaximumHealth;
+        var healthPercent = 100.0 * UBot.Core.RuntimeAccess.Session.Player.Health / UBot.Core.RuntimeAccess.Session.Player.MaximumHealth;
         if (healthPercent <= minHealth)
-            Game.Player.UseVigorPotion();
+            UBot.Core.RuntimeAccess.Session.Player.UseVigorPotion();
     }
 }

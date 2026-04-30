@@ -16,7 +16,7 @@ public static class PlayerConfig
     /// <summary>
     ///     The config directory
     /// </summary>
-    private static string _configDirectory => Path.Combine(Kernel.BasePath, "User", string.IsNullOrWhiteSpace(ProfileManager.SelectedCharacter) ? "Shared" : ProfileManager.SelectedCharacter);
+    private static string _configDirectory => Path.Combine(UBot.Core.RuntimeAccess.Core.BasePath, "User", string.IsNullOrWhiteSpace(ProfileManager.SelectedCharacter) ? "Shared" : ProfileManager.SelectedCharacter);
 
     /// <summary>
     ///     Load config from file
@@ -139,6 +139,6 @@ public static class PlayerConfig
             return;
 
         _config.Save();
-        EventManager.FireEvent("OnSavePlayerConfig");
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnSavePlayerConfig");
     }
 }

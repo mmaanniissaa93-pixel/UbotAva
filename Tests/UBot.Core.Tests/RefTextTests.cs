@@ -11,13 +11,13 @@ public class RefTextTests
     [Fact]
     public void Load_ShouldPreferTurkeyTextColumn_ForTurkeyClient()
     {
-        var previousClientType = Game.ClientType;
-        var previousReferenceManager = Game.ReferenceManager;
+        var previousClientType = UBot.Core.RuntimeAccess.Session.ClientType;
+        var previousReferenceManager = UBot.Core.RuntimeAccess.Session.ReferenceManager;
 
         try
         {
-            Game.ClientType = GameClientType.Turkey;
-            Game.ReferenceManager = new ReferenceManager { LanguageTab = 9 };
+            UBot.Core.RuntimeAccess.Session.ClientType = GameClientType.Turkey;
+            UBot.Core.RuntimeAccess.Session.ReferenceManager = new ReferenceManager { LanguageTab = 9 };
 
             var text = new RefText();
             var loaded = text.Load(new ReferenceParser("1\t1\tSN_TEST\tKorean\t0\t0\t0\t0\t0\t0\t0\t0\t0\tTurkey Text\t0\t0\t0"));
@@ -28,21 +28,21 @@ public class RefTextTests
         }
         finally
         {
-            Game.ClientType = previousClientType;
-            Game.ReferenceManager = previousReferenceManager;
+            UBot.Core.RuntimeAccess.Session.ClientType = previousClientType;
+            UBot.Core.RuntimeAccess.Session.ReferenceManager = previousReferenceManager;
         }
     }
 
     [Fact]
     public void Load_ShouldFallBackToNameStrId_WhenTurkeyTextColumnIsMissing()
     {
-        var previousClientType = Game.ClientType;
-        var previousReferenceManager = Game.ReferenceManager;
+        var previousClientType = UBot.Core.RuntimeAccess.Session.ClientType;
+        var previousReferenceManager = UBot.Core.RuntimeAccess.Session.ReferenceManager;
 
         try
         {
-            Game.ClientType = GameClientType.Turkey;
-            Game.ReferenceManager = new ReferenceManager();
+            UBot.Core.RuntimeAccess.Session.ClientType = GameClientType.Turkey;
+            UBot.Core.RuntimeAccess.Session.ReferenceManager = new ReferenceManager();
 
             var text = new RefText();
             var loaded = text.Load(new ReferenceParser("1\t1\tSN_EMPTY\tKorean Text\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0"));
@@ -52,8 +52,8 @@ public class RefTextTests
         }
         finally
         {
-            Game.ClientType = previousClientType;
-            Game.ReferenceManager = previousReferenceManager;
+            UBot.Core.RuntimeAccess.Session.ClientType = previousClientType;
+            UBot.Core.RuntimeAccess.Session.ReferenceManager = previousReferenceManager;
         }
     }
 }

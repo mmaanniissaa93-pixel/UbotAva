@@ -1,4 +1,4 @@
-﻿using UBot.Core.Network;
+using UBot.Core.Network;
 using UBot.Protocol;
 
 namespace UBot.Protocol.Handlers.Agent.Inventory;
@@ -13,7 +13,7 @@ public class InventoryUpdateDurabilityResponse : IPacketHandler
     {
         var slot = packet.ReadByte();
         var durability = packet.ReadUInt();
-        dynamic player = ProtocolRuntime.GameState?.Player;
+        dynamic player = UBot.Protocol.ProtocolRuntime.GameState?.Player;
         var item = player?.Inventory.GetItemAt(slot);
 
         if (item == null)
@@ -21,7 +21,7 @@ public class InventoryUpdateDurabilityResponse : IPacketHandler
 
         item.Durability = durability;
 
-        ProtocolRuntime.GameState?.FireEvent("OnUpdateItemDurability", slot, durability);
+        UBot.Protocol.ProtocolRuntime.GameState?.FireEvent("OnUpdateItemDurability", slot, durability);
     }
 }
 

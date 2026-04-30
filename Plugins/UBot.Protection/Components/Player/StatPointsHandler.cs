@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using UBot.Core;
@@ -24,24 +24,24 @@ public class StatPointsHandler
     /// </summary>
     private static void SubscribeEvents()
     {
-        EventManager.SubscribeEvent("OnLevelUp", new Action<byte>(OnPlayerLevelUp));
-        EventManager.SubscribeEvent("OnApplyStatPoints", OnApplyStatPoints);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnLevelUp", new Action<byte>(OnPlayerLevelUp));
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnApplyStatPoints", OnApplyStatPoints);
     }
 
     private static void OnApplyStatPoints()
     {
-        if (Game.Player == null)
+        if (UBot.Core.RuntimeAccess.Session.Player == null)
             return;
 
-        var incStr = PlayerConfig.Get<bool>("UBot.Protection.checkIncStr");
-        var incInt = PlayerConfig.Get<bool>("UBot.Protection.checkIncInt");
+        var incStr = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkIncStr");
+        var incInt = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkIncInt");
         GetNormalizedDistribution(out var numStr, out var numInt);
 
         var pointsPerStep = (incStr ? numStr : 0) + (incInt ? numInt : 0);
         if (pointsPerStep <= 0)
             return;
 
-        var available = (int)Game.Player.StatPoints;
+        var available = (int)UBot.Core.RuntimeAccess.Session.Player.StatPoints;
         if (available <= 0)
             return;
 
@@ -54,19 +54,19 @@ public class StatPointsHandler
     /// </summary>
     private static void OnPlayerLevelUp(byte oldLevel)
     {
-        var enabledIfBotIsStopped = PlayerConfig.Get<bool>("UBot.Protection.checkIncBotStopped", true);
-        if (!Kernel.Bot.Running && !enabledIfBotIsStopped)
+        var enabledIfBotIsStopped = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkIncBotStopped", true);
+        if (!UBot.Core.RuntimeAccess.Core.Bot.Running && !enabledIfBotIsStopped)
             return;
 
-        var levelUps = Game.Player.Level - oldLevel;
+        var levelUps = UBot.Core.RuntimeAccess.Session.Player.Level - oldLevel;
 
         Task.Run(() => IncreaseStatPoints(levelUps));
     }
 
     public static void IncreaseStatPoints(int stepCount)
     {
-        var incStr = PlayerConfig.Get<bool>("UBot.Protection.checkIncStr");
-        var incInt = PlayerConfig.Get<bool>("UBot.Protection.checkIncInt");
+        var incStr = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkIncStr");
+        var incInt = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkIncInt");
         GetNormalizedDistribution(out var numStr, out var numInt);
 
         for (var iLevelUp = 0; iLevelUp < stepCount; iLevelUp++)
@@ -79,7 +79,7 @@ public class StatPointsHandler
                     if (CancellationRequested)
                         return;
 
-                    Log.Notify($"Auto. increasing stat STR to {Game.Player.Strength + 1}");
+                    Log.Notify($"Auto. increasing stat STR to {UBot.Core.RuntimeAccess.Session.Player.Strength + 1}");
 
                     IncreaseStr();
 
@@ -93,7 +93,7 @@ public class StatPointsHandler
                     if (CancellationRequested)
                         return;
 
-                    Log.Notify($"Auto. increasing stat INT to {Game.Player.Intelligence + 1}");
+                    Log.Notify($"Auto. increasing stat INT to {UBot.Core.RuntimeAccess.Session.Player.Intelligence + 1}");
 
                     IncreaseInt();
 
@@ -107,7 +107,7 @@ public class StatPointsHandler
     /// </summary>
     private static void IncreaseStr()
     {
-        if (Game.Player.StatPoints == 0)
+        if (UBot.Core.RuntimeAccess.Session.Player.StatPoints == 0)
         {
             Log.Debug("Could not invest stat point: The player does not have enough points to invest.");
 
@@ -118,7 +118,7 @@ public class StatPointsHandler
 
         var packet = new Packet(0x7050);
 
-        PacketManager.SendPacket(packet, PacketDestination.Server, callback);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, callback);
         callback.AwaitResponse(1000);
     }
 
@@ -127,7 +127,7 @@ public class StatPointsHandler
     /// </summary>
     private static void IncreaseInt()
     {
-        if (Game.Player.StatPoints == 0)
+        if (UBot.Core.RuntimeAccess.Session.Player.StatPoints == 0)
         {
             Log.Debug("Could not invest stat point: The player does not have enough points to invest.");
 
@@ -138,14 +138,14 @@ public class StatPointsHandler
 
         var packet = new Packet(0x7051);
 
-        PacketManager.SendPacket(packet, PacketDestination.Server, callback);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, callback);
         callback.AwaitResponse(1000);
     }
 
     private static void GetNormalizedDistribution(out int numStr, out int numInt)
     {
-        numInt = Math.Clamp(PlayerConfig.Get("UBot.Protection.numIncInt", 0), 0, 3);
-        numStr = Math.Clamp(PlayerConfig.Get("UBot.Protection.numIncStr", 0), 0, 3);
+        numInt = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.numIncInt", 0), 0, 3);
+        numStr = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.numIncStr", 0), 0, 3);
 
         if (numInt + numStr > 3)
             numStr = Math.Max(0, 3 - numInt);

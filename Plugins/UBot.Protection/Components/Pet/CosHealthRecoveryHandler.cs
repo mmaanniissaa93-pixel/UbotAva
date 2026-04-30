@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Event;
 using UBot.Core.Objects;
 using UBot.Core.Objects.Cos;
@@ -14,10 +14,10 @@ public static class CosHealthRecoveryHandler
     /// </summary>
     public static void Initialize()
     {
-        EventManager.SubscribeEvent("OnGrowthHealthUpdate", OnGrowthHealthUpdate, Owner);
-        EventManager.SubscribeEvent("OnFellowHealthUpdate", OnFellowHealthUpdate, Owner);
-        EventManager.SubscribeEvent("OnUpdateTransportHealth", OnUpdateTransportHealth, Owner);
-        EventManager.SubscribeEvent("OnUpdateJobTransportHealth", OnUpdateJobTransportHealth, Owner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnGrowthHealthUpdate", OnGrowthHealthUpdate, Owner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnFellowHealthUpdate", OnFellowHealthUpdate, Owner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnUpdateTransportHealth", OnUpdateTransportHealth, Owner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnUpdateJobTransportHealth", OnUpdateJobTransportHealth, Owner);
     }
 
     /// <summary>
@@ -25,7 +25,7 @@ public static class CosHealthRecoveryHandler
     /// </summary>
     public static void UnsubscribeAll()
     {
-        EventManager.UnsubscribeOwner(Owner);
+        UBot.Core.RuntimeAccess.Events.UnsubscribeOwner(Owner);
     }
 
     /// <summary>
@@ -33,11 +33,11 @@ public static class CosHealthRecoveryHandler
     /// </summary>
     private static void OnCosHealthUpdate(Cos cos)
     {
-        var useHPPotions = PlayerConfig.Get<bool>("UBot.Protection.checkUsePetHP");
+        var useHPPotions = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkUsePetHP");
         if (!useHPPotions)
             return;
 
-        var minHp = PlayerConfig.Get("UBot.Protection.numPetMinHP", 80);
+        var minHp = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.numPetMinHP", 80);
 
         if (cos == null)
             return;
@@ -55,7 +55,7 @@ public static class CosHealthRecoveryHandler
     /// </summary>
     private static void OnGrowthHealthUpdate()
     {
-        OnCosHealthUpdate(Game.Player.Growth);
+        OnCosHealthUpdate(UBot.Core.RuntimeAccess.Session.Player.Growth);
     }
 
     /// <summary>
@@ -63,7 +63,7 @@ public static class CosHealthRecoveryHandler
     /// </summary>
     private static void OnFellowHealthUpdate()
     {
-        OnCosHealthUpdate(Game.Player.Fellow);
+        OnCosHealthUpdate(UBot.Core.RuntimeAccess.Session.Player.Fellow);
     }
 
     /// <summary>
@@ -71,7 +71,7 @@ public static class CosHealthRecoveryHandler
     /// </summary>
     private static void OnUpdateTransportHealth()
     {
-        OnCosHealthUpdate(Game.Player.Transport);
+        OnCosHealthUpdate(UBot.Core.RuntimeAccess.Session.Player.Transport);
     }
 
     /// <summary>
@@ -79,6 +79,6 @@ public static class CosHealthRecoveryHandler
     /// </summary>
     private static void OnUpdateJobTransportHealth()
     {
-        OnCosHealthUpdate(Game.Player.JobTransport);
+        OnCosHealthUpdate(UBot.Core.RuntimeAccess.Session.Player.JobTransport);
     }
 }

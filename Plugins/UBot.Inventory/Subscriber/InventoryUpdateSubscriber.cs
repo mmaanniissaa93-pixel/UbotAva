@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Event;
 
 namespace UBot.Inventory.Subscriber;
@@ -13,18 +13,18 @@ internal static class InventoryUpdateSubscriber
     public static void SubscribeEvents()
     {
         _lock = new object();
-        EventManager.SubscribeEvent("OnInventoryUpdate", OnInventoryUpdate);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnInventoryUpdate", OnInventoryUpdate);
     }
 
     private static void OnInventoryUpdate()
     {
-        var autoSort = PlayerConfig.Get("UBot.Inventory.AutoSort", false);
+        var autoSort = UBot.Core.RuntimeAccess.Player.Get("UBot.Inventory.AutoSort", false);
         if (!autoSort)
             return;
 
         lock (_lock)
         {
-            Game.Player.Inventory.Sort();
+            UBot.Core.RuntimeAccess.Session.Player.Inventory.Sort();
         }
     }
 }

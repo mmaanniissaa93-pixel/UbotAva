@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UBot.Core;
 using UBot.Core.Network;
 using UBot.General.Components;
@@ -42,13 +42,13 @@ internal class GatewayServerListResponse : IPacketHandler
         {
             var id = packet.ReadUShort();
             var serverName =
-                Game.ClientType == GameClientType.Turkey
-                || Game.ClientType == GameClientType.Global
-                || Game.ClientType == GameClientType.VTC_Game
-                || Game.ClientType == GameClientType.RuSro
-                || Game.ClientType == GameClientType.Korean
-                || Game.ClientType == GameClientType.Japanese
-                || Game.ClientType == GameClientType.Taiwan
+                UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Turkey
+                || UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Global
+                || UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.VTC_Game
+                || UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.RuSro
+                || UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Korean
+                || UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Japanese
+                || UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Taiwan
                     ? packet.ReadUnicode()
                     : packet.ReadString();
 
@@ -57,7 +57,7 @@ internal class GatewayServerListResponse : IPacketHandler
 
             byte status;
 
-            if (Game.ClientType < GameClientType.Global)
+            if (UBot.Core.RuntimeAccess.Session.ClientType < GameClientType.Global)
             {
                 currentCapacity = packet.ReadUShort();
                 maxCapacity = packet.ReadUShort();
@@ -70,15 +70,15 @@ internal class GatewayServerListResponse : IPacketHandler
             }
 
             // fix server names
-            if (Game.ClientType == GameClientType.Global)
+            if (UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Global)
                 serverName = serverName.Remove(0, 1);
 
-            if (Game.ClientType == GameClientType.VTC_Game)
+            if (UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.VTC_Game)
                 if (serverName.EndsWith("Thien_Kim"))
                     serverName = serverName.Remove(0, 3);
 
             var state =
-                Game.ClientType >= GameClientType.Chinese
+                UBot.Core.RuntimeAccess.Session.ClientType >= GameClientType.Chinese
                     ? $"{(ServerStatusModern)status}"
                     : $"{currentCapacity}/{maxCapacity}";
 
@@ -89,12 +89,12 @@ internal class GatewayServerListResponse : IPacketHandler
                     Name = serverName,
                     CurrentCapacity = currentCapacity,
                     MaxCapacity = maxCapacity,
-                    Status = Game.ClientType >= GameClientType.Chinese ? status != 4 : status == 1,
+                    Status = UBot.Core.RuntimeAccess.Session.ClientType >= GameClientType.Chinese ? status != 4 : status == 1,
                     State = state,
                 }
             );
 
-            if (Game.ClientType == GameClientType.Vietnam)
+            if (UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Vietnam)
                 packet.ReadByte(); // FarmId
 
             Log.Notify($"Found server: {serverName} ({state})");

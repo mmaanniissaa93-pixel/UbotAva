@@ -1,4 +1,4 @@
-﻿using UBot.CommandCenter.Components;
+using UBot.CommandCenter.Components;
 using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Extensions;
@@ -24,10 +24,10 @@ internal class ChatRequestHook : IPacketHook
 
         packet.ReadByte(); // chatIndex
 
-        if (Game.ClientType > GameClientType.Vietnam)
+        if (UBot.Core.RuntimeAccess.Session.ClientType > GameClientType.Vietnam)
             packet.ReadByte(); // has linking
 
-        if (Game.ClientType >= GameClientType.Chinese_Old)
+        if (UBot.Core.RuntimeAccess.Session.ClientType >= GameClientType.Chinese_Old)
             packet.ReadByte();
 
         var message = packet.ReadConditonalString();

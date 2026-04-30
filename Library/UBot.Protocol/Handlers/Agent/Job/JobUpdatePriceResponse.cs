@@ -41,7 +41,7 @@ public class JobUpdatePriceResponse : IPacketHandler
             CoreGame.Player.TradeInfo.Prices.Add(itemId, sellPrice);
         }
 
-        EventManager.FireEvent("OnUpdateJobPrices");
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnUpdateJobPrices");
     }
 }
 

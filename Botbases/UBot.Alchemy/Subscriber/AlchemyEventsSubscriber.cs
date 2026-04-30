@@ -13,9 +13,9 @@ internal class AlchemyEventsSubscriber
 {
     public static void Subscribe()
     {
-        EventManager.SubscribeEvent("OnAlchemyError", new Action<ushort, AlchemyType>(OnAlchemyError));
-        EventManager.SubscribeEvent("OnAlchemyDestroyed", new Action<InventoryItem, AlchemyType>(OnAlchemyDestroyed));
-        EventManager.SubscribeEvent("OnFuseRequest", new Action<AlchemyAction, AlchemyType>(OnFuseRequest));
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnAlchemyError", new Action<ushort, AlchemyType>(OnAlchemyError));
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnAlchemyDestroyed", new Action<InventoryItem, AlchemyType>(OnAlchemyDestroyed));
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnFuseRequest", new Action<AlchemyAction, AlchemyType>(OnFuseRequest));
     }
 
     private static void OnAlchemyDestroyed(InventoryItem oldItem, AlchemyType type)
@@ -29,11 +29,11 @@ internal class AlchemyEventsSubscriber
         Globals.View.SelectedItem = null;
         Globals.View.AddLog(
             oldItem.Record.GetRealName(),
-            Game.ReferenceManager.GetTranslation("UIIT_MSG_REINFORCERR_BREAKDOWN")
+            UBot.Core.RuntimeAccess.Session.ReferenceManager.GetTranslation("UIIT_MSG_REINFORCERR_BREAKDOWN")
         );
         Log.Warn("[Alchemy] The item has been destroyed, stopping now...");
 
-        Kernel.Bot?.Stop();
+        UBot.Core.RuntimeAccess.Core.Bot?.Stop();
     }
 
     private static void OnAlchemyError(ushort errorCode, AlchemyType type)
@@ -44,7 +44,7 @@ internal class AlchemyEventsSubscriber
         if (errorCode is 0x5423)
             return;
 
-        Kernel.Bot?.Stop();
+        UBot.Core.RuntimeAccess.Core.Bot?.Stop();
 
         Log.Error($"[Alchemy] Alchemy fusion error: {errorCode:X}");
     }

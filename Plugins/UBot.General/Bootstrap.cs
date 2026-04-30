@@ -48,9 +48,9 @@ public class Bootstrap : IPlugin
     /// <inheritdoc />
     public void Translate()
     {
-        LanguageManager.Translate(View, Kernel.Language);
-        LanguageManager.Translate(Views.View.PendingWindow, Kernel.Language);
-        LanguageManager.Translate(Views.View.AccountsWindow, Kernel.Language);
+        LanguageManager.Translate(View, UBot.Core.RuntimeAccess.Core.Language);
+        LanguageManager.Translate(Views.View.PendingWindow, UBot.Core.RuntimeAccess.Core.Language);
+        LanguageManager.Translate(Views.View.AccountsWindow, UBot.Core.RuntimeAccess.Core.Language);
     }
 
     /// <inheritdoc />

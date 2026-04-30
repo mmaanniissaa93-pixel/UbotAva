@@ -19,7 +19,7 @@ public class EntityRemoveOwnershipResponse : IPacketHandler
         entity.HasOwner = false;
         //entity.OwnerJID = 0;
 
-        EventManager.FireEvent("OnRemoveItemOwnership", itemUniqueId);
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnRemoveItemOwnership", itemUniqueId);
     }
 
     #region Properites

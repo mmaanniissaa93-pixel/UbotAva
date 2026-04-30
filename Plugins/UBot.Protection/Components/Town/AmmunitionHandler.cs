@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Event;
 
 namespace UBot.Protection.Components.Town;
@@ -18,7 +18,7 @@ public class AmmunitionHandler : AbstractTownHandler
     /// </summary>
     private static void SubscribeEvents()
     {
-        EventManager.SubscribeEvent("OnUpdateAmmunition", OnUpdateAmmunition);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnUpdateAmmunition", OnUpdateAmmunition);
     }
 
     /// <summary>
@@ -26,7 +26,7 @@ public class AmmunitionHandler : AbstractTownHandler
     /// </summary>
     private static void OnUpdateAmmunition()
     {
-        if (Kernel.Bot.Running)
+        if (UBot.Core.RuntimeAccess.Core.Bot.Running)
             CheckForAmmunition();
     }
 
@@ -37,10 +37,10 @@ public class AmmunitionHandler : AbstractTownHandler
 
     private static bool CheckForAmmunition()
     {
-        if (!PlayerConfig.Get<bool>("UBot.Protection.checkNoArrows"))
+        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkNoArrows"))
             return false;
 
-        var currentAmmunition = Game.Player.GetAmmunitionAmount(true);
+        var currentAmmunition = UBot.Core.RuntimeAccess.Session.Player.GetAmmunitionAmount(true);
         if (currentAmmunition == -1 || currentAmmunition > 10)
             return false;
 
@@ -48,6 +48,6 @@ public class AmmunitionHandler : AbstractTownHandler
             return false;
 
         Log.WarnLang("ReturnToTownNoAmmo");
-        return Game.Player.UseReturnScroll();
+        return UBot.Core.RuntimeAccess.Session.Player.UseReturnScroll();
     }
 }

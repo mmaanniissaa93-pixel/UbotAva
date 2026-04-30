@@ -30,9 +30,9 @@ public class CharacterSelectionJoinRequest : IPacketHandler
         var characterName = packet.ReadString();
 
         ProfileManager.SelectedCharacter = characterName;
-        PlayerConfig.Load(characterName);
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.LoadPlayerConfig(characterName);
 
-        EventManager.FireEvent("OnEnterGame");
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnEnterGame");
     }
 }
 

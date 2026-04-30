@@ -82,18 +82,18 @@ internal static class TargetAssistConfig
 
     public static void EnsureDefaults()
     {
-        PlayerConfig.Set(EnabledKey, PlayerConfig.Get(EnabledKey, false));
-        PlayerConfig.Set(MaxRangeKey, Math.Clamp(PlayerConfig.Get(MaxRangeKey, 40f), 5f, 400f));
-        PlayerConfig.Set(IncludeDeadTargetsKey, PlayerConfig.Get(IncludeDeadTargetsKey, false));
-        PlayerConfig.Set(IgnoreSnowShieldTargetsKey, PlayerConfig.Get(IgnoreSnowShieldTargetsKey, true));
-        PlayerConfig.Set(IgnoreBloodyStormTargetsKey, PlayerConfig.Get(IgnoreBloodyStormTargetsKey, false));
-        PlayerConfig.Set(OnlyCustomPlayersKey, PlayerConfig.Get(OnlyCustomPlayersKey, false));
+        UBot.Core.RuntimeAccess.Player.Set(EnabledKey, UBot.Core.RuntimeAccess.Player.Get(EnabledKey, false));
+        UBot.Core.RuntimeAccess.Player.Set(MaxRangeKey, Math.Clamp(UBot.Core.RuntimeAccess.Player.Get(MaxRangeKey, 40f), 5f, 400f));
+        UBot.Core.RuntimeAccess.Player.Set(IncludeDeadTargetsKey, UBot.Core.RuntimeAccess.Player.Get(IncludeDeadTargetsKey, false));
+        UBot.Core.RuntimeAccess.Player.Set(IgnoreSnowShieldTargetsKey, UBot.Core.RuntimeAccess.Player.Get(IgnoreSnowShieldTargetsKey, true));
+        UBot.Core.RuntimeAccess.Player.Set(IgnoreBloodyStormTargetsKey, UBot.Core.RuntimeAccess.Player.Get(IgnoreBloodyStormTargetsKey, false));
+        UBot.Core.RuntimeAccess.Player.Set(OnlyCustomPlayersKey, UBot.Core.RuntimeAccess.Player.Get(OnlyCustomPlayersKey, false));
 
-        var roleMode = PlayerConfig.GetEnum(RoleModeKey, TargetAssistRoleMode.Civil);
-        PlayerConfig.Set(RoleModeKey, roleMode);
+        var roleMode = UBot.Core.RuntimeAccess.Player.GetEnum(RoleModeKey, TargetAssistRoleMode.Civil);
+        UBot.Core.RuntimeAccess.Player.Set(RoleModeKey, roleMode);
 
-        var hotkey = NormalizeTargetCycleKey(PlayerConfig.Get(TargetCycleKeyKey, "Oem3"));
-        PlayerConfig.Set(TargetCycleKeyKey, hotkey.ToString());
+        var hotkey = NormalizeTargetCycleKey(UBot.Core.RuntimeAccess.Player.Get(TargetCycleKeyKey, "Oem3"));
+        UBot.Core.RuntimeAccess.Player.Set(TargetCycleKeyKey, hotkey.ToString());
 
         var guilds = PlayerConfig
             .GetArray<string>(IgnoredGuildsKey, '|')
@@ -101,7 +101,7 @@ internal static class TargetAssistConfig
             .Select(guild => guild.Trim())
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
-        PlayerConfig.SetArray(IgnoredGuildsKey, guilds, "|");
+        UBot.Core.RuntimeAccess.Player.SetArray(IgnoredGuildsKey, guilds, "|");
 
         var customPlayers = PlayerConfig
             .GetArray<string>(CustomPlayersKey, '|')
@@ -109,7 +109,7 @@ internal static class TargetAssistConfig
             .Select(name => name.Trim())
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
-        PlayerConfig.SetArray(CustomPlayersKey, customPlayers, "|");
+        UBot.Core.RuntimeAccess.Player.SetArray(CustomPlayersKey, customPlayers, "|");
     }
 
     public static TargetAssistSettings Load()
@@ -129,16 +129,16 @@ internal static class TargetAssistConfig
             .ToArray();
 
         return new TargetAssistSettings(
-            PlayerConfig.Get(EnabledKey, false),
-            Math.Clamp(PlayerConfig.Get(MaxRangeKey, 40f), 5f, 400f),
-            PlayerConfig.Get(IncludeDeadTargetsKey, false),
-            PlayerConfig.Get(IgnoreSnowShieldTargetsKey, true),
-            PlayerConfig.Get(IgnoreBloodyStormTargetsKey, false),
+            UBot.Core.RuntimeAccess.Player.Get(EnabledKey, false),
+            Math.Clamp(UBot.Core.RuntimeAccess.Player.Get(MaxRangeKey, 40f), 5f, 400f),
+            UBot.Core.RuntimeAccess.Player.Get(IncludeDeadTargetsKey, false),
+            UBot.Core.RuntimeAccess.Player.Get(IgnoreSnowShieldTargetsKey, true),
+            UBot.Core.RuntimeAccess.Player.Get(IgnoreBloodyStormTargetsKey, false),
             guilds,
             customPlayers,
-            PlayerConfig.Get(OnlyCustomPlayersKey, false),
-            PlayerConfig.GetEnum(RoleModeKey, TargetAssistRoleMode.Civil),
-            NormalizeTargetCycleKey(PlayerConfig.Get(TargetCycleKeyKey, "Oem3"))
+            UBot.Core.RuntimeAccess.Player.Get(OnlyCustomPlayersKey, false),
+            UBot.Core.RuntimeAccess.Player.GetEnum(RoleModeKey, TargetAssistRoleMode.Civil),
+            NormalizeTargetCycleKey(UBot.Core.RuntimeAccess.Player.Get(TargetCycleKeyKey, "Oem3"))
         );
     }
 

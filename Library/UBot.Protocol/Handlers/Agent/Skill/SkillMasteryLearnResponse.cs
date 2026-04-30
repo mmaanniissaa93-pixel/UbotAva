@@ -12,7 +12,7 @@ public class SkillMasteryLearnResponse : IPacketHandler
 
     public void Invoke(Packet packet)
     {
-        var player = ProtocolRuntime.GameState?.Player as Player;
+        var player = UBot.Protocol.ProtocolRuntime.GameState?.Player as Player;
         if (player == null || packet.ReadByte() != 1)
             return;
 
@@ -20,6 +20,6 @@ public class SkillMasteryLearnResponse : IPacketHandler
         var level = packet.ReadByte();
 
         player.Skills.UpdateMasteryLevel(masteryId, level);
-        ProtocolRuntime.EventBus?.Fire("OnLearnSkillMastery", player.Skills.GetMasteryInfoById(masteryId));
+        UBot.Protocol.ProtocolRuntime.EventBus?.Fire("OnLearnSkillMastery", player.Skills.GetMasteryInfoById(masteryId));
     }
 }

@@ -52,11 +52,11 @@ internal static class AutoLogin
         _busy = true;
         try
         {
-            if (!GlobalConfig.Get<bool>("UBot.General.EnableAutomatedLogin"))
+            if (!UBot.Core.RuntimeAccess.Global.Get<bool>("UBot.General.EnableAutomatedLogin"))
                 return;
 
             var selectedAccount = Accounts.SavedAccounts?.Find(p =>
-                p.Username == GlobalConfig.Get<string>("UBot.General.AutoLoginAccountUsername")
+                p.Username == UBot.Core.RuntimeAccess.Global.Get<string>("UBot.General.AutoLoginAccountUsername")
             );
             if (selectedAccount == null)
             {
@@ -94,9 +94,9 @@ internal static class AutoLogin
 
             //Wait for the configured delay before sending the login request
             //It is possible to cancel in case of manual login to the server
-            if (GlobalConfig.Get("UBot.General.EnableLoginDelay", false))
+            if (UBot.Core.RuntimeAccess.Global.Get("UBot.General.EnableLoginDelay", false))
             {
-                var delay = GlobalConfig.Get("UBot.General.LoginDelay", 10) * 1000;
+                var delay = UBot.Core.RuntimeAccess.Global.Get("UBot.General.LoginDelay", 10) * 1000;
                 Cts = new CancellationTokenSource();
 
                 try
@@ -129,19 +129,19 @@ internal static class AutoLogin
 
     internal static bool ShouldHashPasswordForCurrentClient()
     {
-        if (Game.ClientType == GameClientType.Rigid)
+        if (UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Rigid)
             return _rigidUseHashedPassword;
 
-        return Game.ClientType == GameClientType.Turkey
-            || Game.ClientType == GameClientType.VTC_Game
-            || Game.ClientType == GameClientType.Global
-            || Game.ClientType == GameClientType.Korean
-            || Game.ClientType == GameClientType.Taiwan;
+        return UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Turkey
+            || UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.VTC_Game
+            || UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Global
+            || UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Korean
+            || UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Taiwan;
     }
 
     internal static void MarkRigidAuthSuccess()
     {
-        if (Game.ClientType != GameClientType.Rigid)
+        if (UBot.Core.RuntimeAccess.Session.ClientType != GameClientType.Rigid)
             return;
 
         _rigidCredentialRetryUsed = false;
@@ -149,10 +149,10 @@ internal static class AutoLogin
 
     internal static bool TryScheduleRigidCredentialRetry(string stage)
     {
-        if (Game.ClientType != GameClientType.Rigid)
+        if (UBot.Core.RuntimeAccess.Session.ClientType != GameClientType.Rigid)
             return false;
 
-        if (!GlobalConfig.Get("UBot.General.EnableAutomatedLogin", false))
+        if (!UBot.Core.RuntimeAccess.Global.Get("UBot.General.EnableAutomatedLogin", false))
             return false;
 
         if (_rigidCredentialRetryUsed)
@@ -190,7 +190,7 @@ internal static class AutoLogin
         if (Accounts.Joined == null)
             return;
 
-        if (!GlobalConfig.Get<bool>("UBot.General.EnableAutomatedLogin"))
+        if (!UBot.Core.RuntimeAccess.Global.Get<bool>("UBot.General.EnableAutomatedLogin"))
             return;
 
         var secondaryPassword = Accounts.Joined.SecondaryPassword;
@@ -201,7 +201,7 @@ internal static class AutoLogin
         Blowfish blowfish = new();
         byte[] key = { 0x0F, 0x07, 0x3D, 0x20, 0x56, 0x62, 0xC9, 0xEB };
 
-        if (Game.ClientType == GameClientType.Rigid)
+        if (UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Rigid)
             key = key.Reverse().ToArray();
 
         blowfish.Initialize(key);
@@ -212,7 +212,7 @@ internal static class AutoLogin
         packet.WriteByte(4);
         packet.WriteUShort(secondaryPassword.Length);
         packet.WriteBytes(encodedBuffer);
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server);
     }
 
     /// <summary>
@@ -225,20 +225,20 @@ internal static class AutoLogin
         Log.NotifyLang("LoginCredentials", server.Name);
 
         ushort opcode = 0x6102;
-        if (Game.ClientType >= GameClientType.Chinese)
+        if (UBot.Core.RuntimeAccess.Session.ClientType >= GameClientType.Chinese)
             opcode = 0x610A;
 
         var loginPacket = new Packet(opcode, true);
-        loginPacket.WriteByte(Game.ReferenceManager.DivisionInfo.Locale);
-        if (Game.ClientType == GameClientType.RuSro)
+        loginPacket.WriteByte(UBot.Core.RuntimeAccess.Session.ReferenceManager.DivisionInfo.Locale);
+        if (UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.RuSro)
         {
-            loginPacket.WriteString(GlobalConfig.Get<string>("UBot.RuSro.login"));
-            loginPacket.WriteString(GlobalConfig.Get<string>("UBot.RuSro.password"));
+            loginPacket.WriteString(UBot.Core.RuntimeAccess.Global.Get<string>("UBot.RuSro.login"));
+            loginPacket.WriteString(UBot.Core.RuntimeAccess.Global.Get<string>("UBot.RuSro.password"));
         }
-        else if (Game.ClientType == GameClientType.Japanese)
+        else if (UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Japanese)
         {
             loginPacket.WriteString(string.Empty);
-            loginPacket.WriteString(GlobalConfig.Get<string>("UBot.JSRO.token"));
+            loginPacket.WriteString(UBot.Core.RuntimeAccess.Global.Get<string>("UBot.JSRO.token"));
         }
         else
         {
@@ -250,17 +250,17 @@ internal static class AutoLogin
             );
         }
 
-        Game.MacAddress = GenerateMacAddress();
+        UBot.Core.RuntimeAccess.Session.MacAddress = GenerateMacAddress();
 
         if (
-            Game.ClientType == GameClientType.Turkey
-            || Game.ClientType == GameClientType.VTC_Game
-            || Game.ClientType == GameClientType.RuSro
-            || Game.ClientType == GameClientType.Korean
-            || Game.ClientType == GameClientType.Japanese
-            || Game.ClientType == GameClientType.Taiwan
+            UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Turkey
+            || UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.VTC_Game
+            || UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.RuSro
+            || UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Korean
+            || UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Japanese
+            || UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Taiwan
         )
-            loginPacket.WriteBytes(Game.MacAddress);
+            loginPacket.WriteBytes(UBot.Core.RuntimeAccess.Session.MacAddress);
 
         loginPacket.WriteUShort(server.Id);
 
@@ -268,7 +268,7 @@ internal static class AutoLogin
             loginPacket.WriteByte(account.Channel);
 
         ArmAgentCredentialRewrite();
-        PacketManager.SendPacket(loginPacket, PacketDestination.Server);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(loginPacket, PacketDestination.Server);
 
         Accounts.Joined = account;
         Serverlist.Joining = server;
@@ -299,12 +299,12 @@ internal static class AutoLogin
     public static void SendStaticCaptcha()
     {
         if (
-            !GlobalConfig.Get<bool>("UBot.General.EnableStaticCaptcha")
-            || !GlobalConfig.Get<bool>("UBot.General.EnableAutomatedLogin")
+            !UBot.Core.RuntimeAccess.Global.Get<bool>("UBot.General.EnableStaticCaptcha")
+            || !UBot.Core.RuntimeAccess.Global.Get<bool>("UBot.General.EnableAutomatedLogin")
         )
             return;
 
-        var captcha = GlobalConfig.Get<string>("UBot.General.StaticCaptcha");
+        var captcha = UBot.Core.RuntimeAccess.Global.Get<string>("UBot.General.StaticCaptcha");
         captcha ??= string.Empty;
 
         Log.NotifyLang("EnteringCaptcha", captcha);
@@ -312,7 +312,7 @@ internal static class AutoLogin
         var packet = new Packet(0x6323);
         packet.WriteString(captcha);
 
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server);
     }
 
     /// <summary>
@@ -321,16 +321,16 @@ internal static class AutoLogin
     /// <param name="character">The character.</param>
     public static void EnterGame(string character)
     {
-        if (!GlobalConfig.Get<bool>("UBot.General.EnableAutomatedLogin"))
+        if (!UBot.Core.RuntimeAccess.Global.Get<bool>("UBot.General.EnableAutomatedLogin"))
             return;
 
         var packet = new Packet(0x7001);
         packet.WriteString(character);
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server);
 
         ProfileManager.SelectedCharacter = character;
-        PlayerConfig.Load(character);
+        UBot.Core.RuntimeAccess.Player.Load(character);
 
-        EventManager.FireEvent("OnEnterGame");
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnEnterGame");
     }
 }

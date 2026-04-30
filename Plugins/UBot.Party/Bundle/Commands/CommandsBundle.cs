@@ -64,9 +64,9 @@ internal class CommandsBundle
             ["inject"] = Inject,
         };
 
-        EventManager.SubscribeEvent("OnTick", OnTick);
-        EventManager.SubscribeEvent("OnAgentServerDisconnected", StopFollow);
-        EventManager.SubscribeEvent("OnLoadCharacter", StopFollow);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnTick", OnTick);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnAgentServerDisconnected", StopFollow);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnLoadCharacter", StopFollow);
     }
 
     public void Handle(string senderName, SpawnedPlayer sender, ChatType chatType, string message)
@@ -106,9 +106,9 @@ internal class CommandsBundle
     {
         Config = new CommandsConfig
         {
-            PlayerList = PlayerConfig.GetArray<string>("UBot.Party.Commands.PlayersList"),
-            ListenFromList = PlayerConfig.Get<bool>("UBot.Party.Commands.ListenOnlyList"),
-            ListenOnlyMaster = PlayerConfig.Get<bool>("UBot.Party.Commands.ListenFromMaster"),
+            PlayerList = UBot.Core.RuntimeAccess.Player.GetArray<string>("UBot.Party.Commands.PlayersList"),
+            ListenFromList = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Party.Commands.ListenOnlyList"),
+            ListenOnlyMaster = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Party.Commands.ListenFromMaster"),
         };
     }
 
@@ -124,20 +124,20 @@ internal class CommandsBundle
             );
 
         var masterAllowed = Config.ListenOnlyMaster
-            && Game.Party?.Leader != null
-            && Game.Party.Leader.Name.Equals(senderName, StringComparison.InvariantCultureIgnoreCase);
+            && UBot.Core.RuntimeAccess.Session.Party?.Leader != null
+            && UBot.Core.RuntimeAccess.Session.Party.Leader.Name.Equals(senderName, StringComparison.InvariantCultureIgnoreCase);
 
         return listAllowed || masterAllowed;
     }
 
     private static void StartBot(CommandContext context)
     {
-        Kernel.Bot.Start();
+        UBot.Core.RuntimeAccess.Core.Bot.Start();
     }
 
     private static void StopBot(CommandContext context)
     {
-        Kernel.Bot.Stop();
+        UBot.Core.RuntimeAccess.Core.Bot.Stop();
     }
 
     private static void Trace(CommandContext context)
@@ -158,7 +158,7 @@ internal class CommandsBundle
         packet.WriteByte((byte)ActionTarget.Entity);
         packet.WriteUInt(player.UniqueId);
 
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server);
     }
 
     private static void StopTrace(CommandContext context)
@@ -168,18 +168,18 @@ internal class CommandsBundle
 
     private static void ReturnTown(CommandContext context)
     {
-        if (Game.Player == null)
+        if (UBot.Core.RuntimeAccess.Session.Player == null)
             return;
 
-        if (Game.Player.State.LifeState == LifeState.Dead)
+        if (UBot.Core.RuntimeAccess.Session.Player.State.LifeState == LifeState.Dead)
         {
             var packet = new Packet(0x3053);
-            packet.WriteByte(Game.Player.Level < 10 ? 2 : 1);
-            PacketManager.SendPacket(packet, PacketDestination.Server);
+            packet.WriteByte(UBot.Core.RuntimeAccess.Session.Player.Level < 10 ? 2 : 1);
+            UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server);
             return;
         }
 
-        Game.Player.UseReturnScroll();
+        UBot.Core.RuntimeAccess.Session.Player.UseReturnScroll();
     }
 
     private static void SetRadius(CommandContext context)
@@ -195,18 +195,18 @@ internal class CommandsBundle
         }
 
         radius = Math.Clamp(radius, 5, 100);
-        PlayerConfig.Set("UBot.Area.Radius", radius);
-        EventManager.FireEvent("OnSetTrainingArea");
+        UBot.Core.RuntimeAccess.Player.Set("UBot.Area.Radius", radius);
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnSetTrainingArea");
     }
 
     private static void SetPosition(CommandContext context)
     {
-        if (Game.Player == null)
+        if (UBot.Core.RuntimeAccess.Session.Player == null)
             return;
 
         if (string.IsNullOrWhiteSpace(context.Arguments))
         {
-            SetTrainingArea(Game.Player.Position, PlayerConfig.Get("UBot.Area.Radius", 50));
+            SetTrainingArea(UBot.Core.RuntimeAccess.Session.Player.Position, UBot.Core.RuntimeAccess.Player.Get("UBot.Area.Radius", 50));
             return;
         }
 
@@ -217,11 +217,11 @@ internal class CommandsBundle
         if (!TryParseFloat(args[0], out var x) || !TryParseFloat(args[1], out var y))
             return;
 
-        var region = Game.Player.Position.Region;
+        var region = UBot.Core.RuntimeAccess.Session.Player.Position.Region;
         if (args.Length >= 3 && ushort.TryParse(args[2], out var parsedRegion))
             region = parsedRegion;
 
-        var z = Game.Player.Position.ZOffset;
+        var z = UBot.Core.RuntimeAccess.Session.Player.Position.ZOffset;
         if (args.Length >= 4 && TryParseFloat(args[3], out var parsedZ))
             z = parsedZ;
 
@@ -230,12 +230,12 @@ internal class CommandsBundle
             ZOffset = z,
         };
 
-        SetTrainingArea(position, PlayerConfig.Get("UBot.Area.Radius", 50));
+        SetTrainingArea(position, UBot.Core.RuntimeAccess.Player.Get("UBot.Area.Radius", 50));
     }
 
     private static void SetAreaByCoordinates(CommandContext context)
     {
-        if (string.IsNullOrWhiteSpace(context.Arguments) || Game.Player == null)
+        if (string.IsNullOrWhiteSpace(context.Arguments) || UBot.Core.RuntimeAccess.Session.Player == null)
             return;
 
         var args = context.Arguments.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
@@ -245,7 +245,7 @@ internal class CommandsBundle
         if (!TryParseFloat(args[0], out var x) || !TryParseFloat(args[1], out var y) || !TryParseFloat(args[2], out var radius))
             return;
 
-        var position = new Position(x, y, Game.Player.Position.Region);
+        var position = new Position(x, y, UBot.Core.RuntimeAccess.Session.Player.Position.Region);
         SetTrainingArea(position, Math.Clamp((int)Math.Abs(radius), 5, 100));
     }
 
@@ -254,7 +254,7 @@ internal class CommandsBundle
         if (string.IsNullOrWhiteSpace(context.Arguments))
             return;
 
-        var areas = PlayerConfig.GetArray<string>("UBot.Training.Areas");
+        var areas = UBot.Core.RuntimeAccess.Player.GetArray<string>("UBot.Training.Areas");
         foreach (var areaString in areas)
         {
             var split = areaString.Split("|", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
@@ -267,19 +267,19 @@ internal class CommandsBundle
             if (!area.Name.Equals(context.Arguments, StringComparison.InvariantCultureIgnoreCase))
                 continue;
 
-            PlayerConfig.Set("UBot.Area.Region", area.Position.Region);
-            PlayerConfig.Set("UBot.Area.X", area.Position.XOffset);
-            PlayerConfig.Set("UBot.Area.Y", area.Position.YOffset);
-            PlayerConfig.Set("UBot.Area.Z", area.Position.ZOffset);
-            PlayerConfig.Set("UBot.Area.Radius", area.Radius);
-            EventManager.FireEvent("OnSetTrainingArea");
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Area.Region", area.Position.Region);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Area.X", area.Position.XOffset);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Area.Y", area.Position.YOffset);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Area.Z", area.Position.ZOffset);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Area.Radius", area.Radius);
+            UBot.Core.RuntimeAccess.Events.FireEvent("OnSetTrainingArea");
             return;
         }
     }
 
     private static void MoveOn(CommandContext context)
     {
-        if (Game.Player == null)
+        if (UBot.Core.RuntimeAccess.Session.Player == null)
             return;
 
         var radius = 10f;
@@ -290,7 +290,7 @@ internal class CommandsBundle
                 radius = Math.Abs(parsed);
         }
 
-        var source = Game.Player.Position;
+        var source = UBot.Core.RuntimeAccess.Session.Player.Position;
         var x = source.X + ((float)_random.NextDouble() * 2f - 1f) * radius;
         var y = source.Y + ((float)_random.NextDouble() * 2f - 1f) * radius;
         var destination = new Position(x, y, source.Region)
@@ -298,12 +298,12 @@ internal class CommandsBundle
             ZOffset = source.ZOffset,
         };
 
-        Game.Player.MoveTo(destination, false);
+        UBot.Core.RuntimeAccess.Session.Player.MoveTo(destination, false);
     }
 
     private void Follow(CommandContext context)
     {
-        if (!Game.Party.IsInParty)
+        if (!UBot.Core.RuntimeAccess.Session.Party.IsInParty)
             return;
 
         var args = context.Arguments.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -331,30 +331,30 @@ internal class CommandsBundle
     {
         var packet = new Packet(0x704F);
         packet.WriteByte(4);
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server);
     }
 
     private static void Jump(CommandContext context)
     {
         var packet = new Packet(0x3091);
         packet.WriteByte(0x0C);
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server);
     }
 
     private static void Zerk(CommandContext context)
     {
-        Game.Player?.EnterBerzerkMode();
+        UBot.Core.RuntimeAccess.Session.Player?.EnterBerzerkMode();
     }
 
     private static void LeaveParty(CommandContext context)
     {
-        if (Game.Party?.IsInParty == true)
-            Game.Party.Leave();
+        if (UBot.Core.RuntimeAccess.Session.Party?.IsInParty == true)
+            UBot.Core.RuntimeAccess.Session.Party.Leave();
     }
 
     private static void Mount(CommandContext context)
     {
-        if (Game.Player == null)
+        if (UBot.Core.RuntimeAccess.Session.Player == null)
             return;
 
         var petType = GetFirstTokenOrDefault(context.Arguments, "horse");
@@ -362,24 +362,24 @@ internal class CommandsBundle
             && !petType.Equals("vehicle", StringComparison.InvariantCultureIgnoreCase))
             return;
 
-        if (Game.Player.HasActiveVehicle)
+        if (UBot.Core.RuntimeAccess.Session.Player.HasActiveVehicle)
         {
-            Game.Player.Vehicle.Mount();
+            UBot.Core.RuntimeAccess.Session.Player.Vehicle.Mount();
             return;
         }
 
-        Game.Player.SummonVehicle();
+        UBot.Core.RuntimeAccess.Session.Player.SummonVehicle();
     }
 
     private static void Dismount(CommandContext context)
     {
-        if (Game.Player?.HasActiveVehicle == true)
-            Game.Player.Vehicle.Dismount();
+        if (UBot.Core.RuntimeAccess.Session.Player?.HasActiveVehicle == true)
+            UBot.Core.RuntimeAccess.Session.Player.Vehicle.Dismount();
     }
 
     private static void Equip(CommandContext context)
     {
-        if (string.IsNullOrWhiteSpace(context.Arguments) || Game.Player == null)
+        if (string.IsNullOrWhiteSpace(context.Arguments) || UBot.Core.RuntimeAccess.Session.Player == null)
             return;
 
         var item = FindItemByName(context.Arguments, equippedOnly: false);
@@ -395,26 +395,26 @@ internal class CommandsBundle
 
     private static void Unequip(CommandContext context)
     {
-        if (string.IsNullOrWhiteSpace(context.Arguments) || Game.Player == null)
+        if (string.IsNullOrWhiteSpace(context.Arguments) || UBot.Core.RuntimeAccess.Session.Player == null)
             return;
 
-        var item = Game.Player.Inventory.GetItems(i =>
+        var item = UBot.Core.RuntimeAccess.Session.Player.Inventory.GetItems(i =>
             i.Slot < CharacterInventory.NORMAL_PART_MIN_SLOT && IsMatchingItem(i, context.Arguments)
         ).FirstOrDefault();
 
         if (item == null)
             return;
 
-        var freeSlot = Game.Player.Inventory.GetFreeSlot();
+        var freeSlot = UBot.Core.RuntimeAccess.Session.Player.Inventory.GetFreeSlot();
         if (freeSlot < CharacterInventory.NORMAL_PART_MIN_SLOT)
             return;
 
-        Game.Player.Inventory.MoveItem(item.Slot, freeSlot);
+        UBot.Core.RuntimeAccess.Session.Player.Inventory.MoveItem(item.Slot, freeSlot);
     }
 
     private static void UseItem(CommandContext context)
     {
-        if (string.IsNullOrWhiteSpace(context.Arguments) || Game.Player == null)
+        if (string.IsNullOrWhiteSpace(context.Arguments) || UBot.Core.RuntimeAccess.Session.Player == null)
             return;
 
         var item = FindItemByName(context.Arguments, equippedOnly: false);
@@ -437,7 +437,7 @@ internal class CommandsBundle
 
         var packet = new Packet(0x7516);
         packet.WriteByte(mode);
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server);
     }
 
     private static void Profile(CommandContext context)
@@ -451,7 +451,7 @@ internal class CommandsBundle
             return;
 
         if (ProfileManager.SetSelectedProfile(profile))
-            EventManager.FireEvent("OnProfileChanged");
+            UBot.Core.RuntimeAccess.Events.FireEvent("OnProfileChanged");
     }
 
     private static void Chat(CommandContext context)
@@ -496,10 +496,10 @@ internal class CommandsBundle
 
     private static void GetPosition(CommandContext context)
     {
-        if (string.IsNullOrWhiteSpace(context.SenderName) || Game.Player == null)
+        if (string.IsNullOrWhiteSpace(context.SenderName) || UBot.Core.RuntimeAccess.Session.Player == null)
             return;
 
-        var pos = Game.Player.Position;
+        var pos = UBot.Core.RuntimeAccess.Session.Player.Position;
         var message =
             $"My position is (X:{pos.X:0.0},Y:{pos.Y:0.0},Z:{pos.ZOffset:0.0},Region:{pos.Region})";
 
@@ -508,7 +508,7 @@ internal class CommandsBundle
 
     private static void Disconnect(CommandContext context)
     {
-        Kernel.Proxy?.Server?.Disconnect();
+        UBot.Core.RuntimeAccess.Core.Proxy?.Server?.Disconnect();
     }
 
     private static void Teleport(CommandContext context)
@@ -543,7 +543,7 @@ internal class CommandsBundle
         packet.WriteUInt(sourceNpc.UniqueId);
         packet.WriteByte(0x02);
         packet.WriteUInt(link.Target.ID);
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server);
     }
 
     private static void Recall(CommandContext context)
@@ -556,7 +556,7 @@ internal class CommandsBundle
 
         var packet = new Packet(0x7059);
         packet.WriteUInt(npc.UniqueId);
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server);
     }
 
     private static void Inject(CommandContext context)
@@ -586,23 +586,23 @@ internal class CommandsBundle
             packet.WriteByte(value);
         }
 
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server);
     }
 
     private void OnTick()
     {
-        if (!_followActivated || Game.Player == null || !Game.Ready)
+        if (!_followActivated || UBot.Core.RuntimeAccess.Session.Player == null || !UBot.Core.RuntimeAccess.Session.Ready)
             return;
 
-        if (Kernel.TickCount - _lastFollowTick < 800)
+        if (UBot.Core.RuntimeAccess.Core.TickCount - _lastFollowTick < 800)
             return;
 
-        _lastFollowTick = Kernel.TickCount;
+        _lastFollowTick = UBot.Core.RuntimeAccess.Core.TickCount;
 
         if (!TryGetPartyMemberPosition(_followTargetName, out var destination))
             return;
 
-        var source = Game.Player.Position;
+        var source = UBot.Core.RuntimeAccess.Session.Player.Position;
         if (source.Region != destination.Region)
             return;
 
@@ -638,7 +638,7 @@ internal class CommandsBundle
     private static bool TryGetPartyMemberPosition(string name, out Position position)
     {
         position = default;
-        if (string.IsNullOrWhiteSpace(name) || Game.Player == null)
+        if (string.IsNullOrWhiteSpace(name) || UBot.Core.RuntimeAccess.Session.Player == null)
             return false;
 
         if (TryFindSpawnedPlayer(name, out var player))
@@ -647,7 +647,7 @@ internal class CommandsBundle
             return true;
         }
 
-        var member = Game.Party?.Members?.FirstOrDefault(m =>
+        var member = UBot.Core.RuntimeAccess.Session.Party?.Members?.FirstOrDefault(m =>
             m.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase)
         );
         if (member == null)
@@ -659,21 +659,21 @@ internal class CommandsBundle
 
     private static bool IsInParty(string name)
     {
-        if (!Game.Party.IsInParty || string.IsNullOrWhiteSpace(name))
+        if (!UBot.Core.RuntimeAccess.Session.Party.IsInParty || string.IsNullOrWhiteSpace(name))
             return false;
 
-        if (Game.Player.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
+        if (UBot.Core.RuntimeAccess.Session.Player.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
             return true;
 
-        return Game.Party.Members.Any(m => m.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
+        return UBot.Core.RuntimeAccess.Session.Party.Members.Any(m => m.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
     }
 
     private static InventoryItem FindItemByName(string name, bool equippedOnly)
     {
-        if (Game.Player == null || string.IsNullOrWhiteSpace(name))
+        if (UBot.Core.RuntimeAccess.Session.Player == null || string.IsNullOrWhiteSpace(name))
             return null;
 
-        return Game.Player.Inventory
+        return UBot.Core.RuntimeAccess.Session.Player.Inventory
             .GetItems(i =>
                 (equippedOnly
                     ? i.Slot < CharacterInventory.NORMAL_PART_MIN_SLOT
@@ -722,7 +722,7 @@ internal class CommandsBundle
             {
                 1 => 9,
                 2 => 10,
-                3 => Game.Player.Inventory.GetItemAt(11) == null ? (byte)11 : (byte)12,
+                3 => UBot.Core.RuntimeAccess.Session.Player.Inventory.GetItemAt(11) == null ? (byte)11 : (byte)12,
                 _ => null,
             };
         }
@@ -761,7 +761,7 @@ internal class CommandsBundle
     {
         npc = null;
 
-        foreach (var teleport in Game.ReferenceManager.TeleportData.Where(t => IsMatchingTeleport(t, query)))
+        foreach (var teleport in UBot.Core.RuntimeAccess.Session.ReferenceManager.TeleportData.Where(t => IsMatchingTeleport(t, query)))
         {
             if (teleport.Character == null)
                 continue;
@@ -779,7 +779,7 @@ internal class CommandsBundle
         }
 
         if (!requireNearbyNpc)
-            return Game.ReferenceManager.TeleportData.FirstOrDefault(t => IsMatchingTeleport(t, query));
+            return UBot.Core.RuntimeAccess.Session.ReferenceManager.TeleportData.FirstOrDefault(t => IsMatchingTeleport(t, query));
 
         return null;
     }
@@ -799,12 +799,12 @@ internal class CommandsBundle
 
     private static void SetTrainingArea(Position position, int radius)
     {
-        PlayerConfig.Set("UBot.Area.Region", position.Region);
-        PlayerConfig.Set("UBot.Area.X", position.XOffset);
-        PlayerConfig.Set("UBot.Area.Y", position.YOffset);
-        PlayerConfig.Set("UBot.Area.Z", position.ZOffset);
-        PlayerConfig.Set("UBot.Area.Radius", Math.Clamp(radius, 5, 100));
-        EventManager.FireEvent("OnSetTrainingArea");
+        UBot.Core.RuntimeAccess.Player.Set("UBot.Area.Region", position.Region);
+        UBot.Core.RuntimeAccess.Player.Set("UBot.Area.X", position.XOffset);
+        UBot.Core.RuntimeAccess.Player.Set("UBot.Area.Y", position.YOffset);
+        UBot.Core.RuntimeAccess.Player.Set("UBot.Area.Z", position.ZOffset);
+        UBot.Core.RuntimeAccess.Player.Set("UBot.Area.Radius", Math.Clamp(radius, 5, 100));
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnSetTrainingArea");
     }
 
     private static string GetFirstTokenOrDefault(string text, string fallback)
@@ -843,10 +843,10 @@ internal class CommandsBundle
         chatPacket.WriteByte(type);
         chatPacket.WriteByte(1);
 
-        if (Game.ClientType > GameClientType.Vietnam)
+        if (UBot.Core.RuntimeAccess.Session.ClientType > GameClientType.Vietnam)
             chatPacket.WriteByte(0);
 
-        if (Game.ClientType >= GameClientType.Chinese_Old)
+        if (UBot.Core.RuntimeAccess.Session.ClientType >= GameClientType.Chinese_Old)
             chatPacket.WriteByte(0);
 
         if (type == ChatType.Private)
@@ -858,22 +858,22 @@ internal class CommandsBundle
         }
 
         chatPacket.WriteConditonalString(message);
-        PacketManager.SendPacket(chatPacket, PacketDestination.Server);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(chatPacket, PacketDestination.Server);
     }
 
     private static void SendGlobalChatPacket(string message)
     {
-        if (string.IsNullOrWhiteSpace(message) || Game.Player == null)
+        if (string.IsNullOrWhiteSpace(message) || UBot.Core.RuntimeAccess.Session.Player == null)
             return;
 
-        var globalItem = Game.Player.Inventory.GetItem(new TypeIdFilter(3, 3, 3, 5));
+        var globalItem = UBot.Core.RuntimeAccess.Session.Player.Inventory.GetItem(new TypeIdFilter(3, 3, 3, 5));
         if (globalItem == null)
             return;
 
         var packet = new Packet(0x704C);
         packet.WriteByte(globalItem.Slot);
 
-        if (Game.ClientType > GameClientType.Vietnam)
+        if (UBot.Core.RuntimeAccess.Session.ClientType > GameClientType.Vietnam)
         {
             packet.WriteInt(globalItem.Record.Tid);
             packet.WriteByte(0);
@@ -884,18 +884,18 @@ internal class CommandsBundle
         }
 
         packet.WriteConditonalString(message);
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server);
     }
 
     private static void MoveToWithoutAwait(Position destination)
     {
-        if (Game.Player == null)
+        if (UBot.Core.RuntimeAccess.Session.Player == null)
             return;
 
         var packet = new Packet(0x7021);
         packet.WriteByte(1);
 
-        if (!Game.Player.IsInDungeon)
+        if (!UBot.Core.RuntimeAccess.Session.Player.IsInDungeon)
         {
             packet.WriteUShort(destination.Region);
             packet.WriteShort(destination.XOffset);
@@ -904,13 +904,13 @@ internal class CommandsBundle
         }
         else
         {
-            packet.WriteUShort(Game.Player.Position.Region);
+            packet.WriteUShort(UBot.Core.RuntimeAccess.Session.Player.Position.Region);
             packet.WriteInt(destination.XOffset);
             packet.WriteInt(destination.ZOffset);
             packet.WriteInt(destination.YOffset);
         }
 
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server);
     }
 
     private readonly struct CommandContext

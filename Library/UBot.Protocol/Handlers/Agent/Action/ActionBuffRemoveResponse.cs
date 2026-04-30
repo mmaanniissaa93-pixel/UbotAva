@@ -14,7 +14,7 @@ public class ActionBuffRemoveResponse : IPacketHandler
 
     public void Invoke(Packet packet)
     {
-        var player = ProtocolRuntime.GameState?.Player as Player;
+        var player = UBot.Protocol.ProtocolRuntime.GameState?.Player as Player;
         if (player == null)
             return;
 
@@ -28,15 +28,15 @@ public class ActionBuffRemoveResponse : IPacketHandler
 
             if (player.State.TryRemoveActiveBuff(token, out SkillInfo buff))
             {
-                ProtocolRuntime.Feedback?.Notify($"The buff [{buff.Record?.GetRealName()}] expired");
-                ProtocolRuntime.EventBus?.Fire("OnRemoveBuff", buff);
+                UBot.Protocol.ProtocolRuntime.Feedback?.Notify($"The buff [{buff.Record?.GetRealName()}] expired");
+                UBot.Protocol.ProtocolRuntime.EventBus?.Fire("OnRemoveBuff", buff);
 
                 var playerSkill = player.Skills.GetSkillInfoById(buff.Id);
                 playerSkill?.Reset();
                 continue;
             }
 
-            if (ProtocolRuntime.SpawnController?.FindEntity(entity =>
+            if (UBot.Protocol.ProtocolRuntime.SpawnController?.FindEntity(entity =>
                     entity is SpawnedBionic bionic && bionic.State.TryGetActiveBuff(token, out _)
                 ) is SpawnedBionic target)
             {
@@ -44,7 +44,7 @@ public class ActionBuffRemoveResponse : IPacketHandler
             }
             else
             {
-                ProtocolRuntime.Feedback?.Warn($"{token} not found while trying remove buff with token!");
+                UBot.Protocol.ProtocolRuntime.Feedback?.Warn($"{token} not found while trying remove buff with token!");
             }
         }
     }

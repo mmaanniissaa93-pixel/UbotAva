@@ -1,4 +1,4 @@
-﻿using UBot.Core.Network;
+using UBot.Core.Network;
 using UBot.Protocol;
 
 namespace UBot.Protocol.Handlers.Agent.Inventory;
@@ -13,7 +13,7 @@ public class InventoryUpdateSizeResponse : IPacketHandler
     {
         var type = packet.ReadByte();
         var size = packet.ReadByte();
-        dynamic player = ProtocolRuntime.GameState?.Player;
+        dynamic player = UBot.Protocol.ProtocolRuntime.GameState?.Player;
         if (player == null)
             return;
 
@@ -21,19 +21,19 @@ public class InventoryUpdateSizeResponse : IPacketHandler
         {
             case 1:
                 player.Inventory.Capacity = size;
-                ProtocolRuntime.GameState?.LogDebug($"Inventory size has been updated to [{size}] slots");
-                ProtocolRuntime.GameState?.FireEvent("OnUpdateInventorySize");
+                UBot.Protocol.ProtocolRuntime.GameState?.LogDebug($"Inventory size has been updated to [{size}] slots");
+                UBot.Protocol.ProtocolRuntime.GameState?.FireEvent("OnUpdateInventorySize");
                 break;
 
             case 2:
                 if (player.Storage != null)
                     player.Storage.Capacity = size;
-                ProtocolRuntime.GameState?.LogDebug($"Storage size has been updated to [{size}] slots");
-                ProtocolRuntime.GameState?.FireEvent("OnUpdateStorageSize");
+                UBot.Protocol.ProtocolRuntime.GameState?.LogDebug($"Storage size has been updated to [{size}] slots");
+                UBot.Protocol.ProtocolRuntime.GameState?.FireEvent("OnUpdateStorageSize");
                 break;
 
             default:
-                ProtocolRuntime.GameState?.LogDebug($"InventorySizeUpdateResponse: Unknown update type [{type}] ({size})");
+                UBot.Protocol.ProtocolRuntime.GameState?.LogDebug($"InventorySizeUpdateResponse: Unknown update type [{type}] ({size})");
                 break;
         }
     }

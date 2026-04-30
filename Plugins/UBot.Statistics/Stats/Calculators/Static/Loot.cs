@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UBot.Core.Components;
 using UBot.Core.Event;
 using UBot.Core.Objects;
@@ -40,8 +40,8 @@ internal class Loot : IStatisticCalculator
     /// <inheritdoc />
     public void Initialize()
     {
-        EventManager.SubscribeEvent("OnPickupItem", new Action<InventoryItem>(OnPickupItem));
-        EventManager.SubscribeEvent("OnPartyPickItem", new Action<InventoryItem>(OnPickupItem));
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnPickupItem", new Action<InventoryItem>(OnPickupItem));
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnPartyPickItem", new Action<InventoryItem>(OnPickupItem));
     }
 
     /// <summary>

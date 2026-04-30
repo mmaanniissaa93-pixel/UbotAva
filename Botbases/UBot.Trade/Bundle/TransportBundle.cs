@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using UBot.Core;
 using UBot.Core.Components;
@@ -49,7 +49,7 @@ internal class TransportBundle
     /// </summary>
     private void SubscribeEvents()
     {
-        EventManager.SubscribeEvent("OnJobCosStuck", new Action<byte>(OnJobCosStuck));
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnJobCosStuck", new Action<byte>(OnJobCosStuck));
     }
 
     /// <summary>
@@ -63,7 +63,7 @@ internal class TransportBundle
 
         //ToDO: Better unstack mechanic for trade transports.
         Log.Warn("[Trade] Your transport is stuck! Go back to your transport and try to unstuck it.");
-        Game.ShowNotification("[UBot] Your transport is stuck! Go back to your transport and try to unstuck it.");
+        UBot.Core.RuntimeAccess.Session.ShowNotification("[UBot] Your transport is stuck! Go back to your transport and try to unstuck it.");
 
         //TransportStuck = true;
     }
@@ -71,9 +71,9 @@ internal class TransportBundle
     public void Tick()
     {
         // Summon new transport?
-        if (!Bundles.RouteBundle.ScriptManaggerIsRunning && Game.Player.JobTransport == null)
+        if (!Bundles.RouteBundle.ScriptManaggerIsRunning && UBot.Core.RuntimeAccess.Session.Player.JobTransport == null)
         {
-            if (Game.Player.State.BattleState == BattleState.InBattle || Game.Player.InAction)
+            if (UBot.Core.RuntimeAccess.Session.Player.State.BattleState == BattleState.InBattle || UBot.Core.RuntimeAccess.Session.Player.InAction)
                 return;
 
             var jobTransportItem = Game
@@ -90,7 +90,7 @@ internal class TransportBundle
 
             Log.Warn("[Trade] Can not summon transport: No transport scroll in player inventory.");
 
-            Kernel.Bot.Stop();
+            UBot.Core.RuntimeAccess.Core.Bot.Stop();
 
             return;
         }
@@ -101,25 +101,25 @@ internal class TransportBundle
 
         if (
             TradeConfig.MountTransport
-            && !Game.Player.HasActiveVehicle
-            && Game.Player.State.BattleState == BattleState.InPeace
-            && !Game.Player.InAction
+            && !UBot.Core.RuntimeAccess.Session.Player.HasActiveVehicle
+            && UBot.Core.RuntimeAccess.Session.Player.State.BattleState == BattleState.InPeace
+            && !UBot.Core.RuntimeAccess.Session.Player.InAction
         )
         {
             Log.Notify("[Trade] Mounting transport");
 
             WaitingForTransport = true;
 
-            Game.Player.MoveTo(Game.Player.JobTransport.Position);
-            Game.Player.JobTransport?.Mount();
+            UBot.Core.RuntimeAccess.Session.Player.MoveTo(UBot.Core.RuntimeAccess.Session.Player.JobTransport.Position);
+            UBot.Core.RuntimeAccess.Session.Player.JobTransport?.Mount();
         }
         else if (
             !TradeConfig.MountTransport
-            && Game.Player.HasActiveVehicle
-            && Game.Player.Vehicle.UniqueId == Game.Player.JobTransport.UniqueId
+            && UBot.Core.RuntimeAccess.Session.Player.HasActiveVehicle
+            && UBot.Core.RuntimeAccess.Session.Player.Vehicle.UniqueId == UBot.Core.RuntimeAccess.Session.Player.JobTransport.UniqueId
         )
         {
-            Game.Player.JobTransport?.Dismount();
+            UBot.Core.RuntimeAccess.Session.Player.JobTransport?.Dismount();
         }
     }
 
@@ -129,7 +129,7 @@ internal class TransportBundle
     /// s
     private bool CheckDistanceToTransport()
     {
-        if (Game.Player.JobTransport == null)
+        if (UBot.Core.RuntimeAccess.Session.Player.JobTransport == null)
         {
             WaitingForTransport = true;
 
@@ -139,7 +139,7 @@ internal class TransportBundle
         }
 
         //Player is mounted
-        if (Game.Player.HasActiveVehicle && Game.Player.Vehicle.UniqueId == Game.Player.JobTransport.UniqueId)
+        if (UBot.Core.RuntimeAccess.Session.Player.HasActiveVehicle && UBot.Core.RuntimeAccess.Session.Player.Vehicle.UniqueId == UBot.Core.RuntimeAccess.Session.Player.JobTransport.UniqueId)
         {
             WaitingForTransport = false;
             TransportStuck = false;
@@ -147,7 +147,7 @@ internal class TransportBundle
             return true;
         }
 
-        var currentDistance = Game.Player.JobTransport.Position.DistanceToPlayer();
+        var currentDistance = UBot.Core.RuntimeAccess.Session.Player.JobTransport.Position.DistanceToPlayer();
         if (currentDistance > TradeConfig.MaxTransportDistance)
         {
             WaitingForTransport = true;
@@ -156,10 +156,10 @@ internal class TransportBundle
             // That makes the bot thinking that the cos is actually very far away. To re-run the distance calculation
             // we can move the player to the location were it thinks the COS is located. That way the distance is then re-calculated
             // and the script can continue.
-            if (!Game.Player.JobTransport.Movement.HasDestination)
+            if (!UBot.Core.RuntimeAccess.Session.Player.JobTransport.Movement.HasDestination)
             {
                 Log.Debug("[Trade] Lost track of the transport! Now trying to move to last known location.");
-                Game.Player.MoveTo(Game.Player.JobTransport.Position);
+                UBot.Core.RuntimeAccess.Session.Player.MoveTo(UBot.Core.RuntimeAccess.Session.Player.JobTransport.Position);
 
                 return false;
             }
@@ -184,10 +184,10 @@ internal class TransportBundle
         if (!TradeConfig.ProtectTransport)
             return true;
 
-        if (Game.Player.JobTransport == null)
+        if (UBot.Core.RuntimeAccess.Session.Player.JobTransport == null)
             return true;
 
-        if (Game.Player.JobTransport is not JobTransport jobTransport)
+        if (UBot.Core.RuntimeAccess.Session.Player.JobTransport is not JobTransport jobTransport)
             return true;
 
         if (!SpawnManager.TryGetEntity<SpawnedBionic>(jobTransport.UniqueId, out var bionic))

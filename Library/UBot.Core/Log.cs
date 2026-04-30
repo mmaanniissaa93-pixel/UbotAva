@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using UBot.Core.Components;
 using UBot.Core.Event;
@@ -16,7 +16,7 @@ public class Log
     /// <param name="args">The args</param>
     public static void AppendFormat(LogLevel logLevel, string format, params object[] args)
     {
-        EventManager.FireEvent("OnAddLog", string.Format(format, args), logLevel);
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnAddLog", string.Format(format, args), logLevel);
     }
 
     /// <summary>
@@ -26,7 +26,7 @@ public class Log
     /// <param name="message"></param>
     public static void Append(LogLevel logLevel, string message)
     {
-        EventManager.FireEvent("OnAddLog", message, logLevel);
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnAddLog", message, logLevel);
     }
 
     /// <summary>
@@ -36,7 +36,7 @@ public class Log
     /// <param name="level">The level.</param>
     public static void Notify(object obj)
     {
-        EventManager.FireEvent("OnAddLog", obj.ToString(), LogLevel.Notify);
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnAddLog", obj.ToString(), LogLevel.Notify);
     }
 
     /// <summary>
@@ -46,7 +46,7 @@ public class Log
     /// <param name="level">The level.</param>
     public static void NotifyLang(string key, params object[] args)
     {
-        EventManager.FireEvent("OnAddLog", LanguageManager.GetLang(key, args), LogLevel.Notify);
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnAddLog", LanguageManager.GetLang(key, args), LogLevel.Notify);
     }
 
     /// <summary>
@@ -55,7 +55,7 @@ public class Log
     /// <param name="obj">The message</param>
     public static void Debug(object obj)
     {
-        EventManager.FireEvent("OnAddLog", obj.ToString(), LogLevel.Debug);
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnAddLog", obj.ToString(), LogLevel.Debug);
     }
 
     /// <summary>
@@ -64,7 +64,7 @@ public class Log
     /// <param name="obj">The message</param>
     public static void Warn(object obj)
     {
-        EventManager.FireEvent("OnAddLog", obj.ToString(), LogLevel.Warning);
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnAddLog", obj.ToString(), LogLevel.Warning);
     }
 
     /// <summary>
@@ -74,7 +74,7 @@ public class Log
     /// <param name="level">The level.</param>
     public static void WarnLang(string key, params object[] args)
     {
-        EventManager.FireEvent("OnAddLog", LanguageManager.GetLang(key, args), LogLevel.Warning);
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnAddLog", LanguageManager.GetLang(key, args), LogLevel.Warning);
     }
 
     /// <summary>
@@ -83,7 +83,7 @@ public class Log
     /// <param name="obj">The message</param>
     public static void Error(object obj)
     {
-        EventManager.FireEvent("OnAddLog", obj.ToString(), LogLevel.Error);
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnAddLog", obj.ToString(), LogLevel.Error);
     }
 
     /// <summary>
@@ -92,7 +92,7 @@ public class Log
     /// <param name="obj">The message</param>
     public static void Status(object obj)
     {
-        EventManager.FireEvent("OnChangeStatusText", obj.ToString());
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnChangeStatusText", obj.ToString());
     }
 
     /// <summary>
@@ -102,7 +102,7 @@ public class Log
     /// <param name="level">The level.</param>
     public static void StatusLang(string key, params object[] args)
     {
-        EventManager.FireEvent("OnChangeStatusText", LanguageManager.GetLang(key, args));
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnChangeStatusText", LanguageManager.GetLang(key, args));
     }
 
     /// <summary>
@@ -113,7 +113,7 @@ public class Log
     {
         Warn(obj.Message);
 
-        var filePath = Path.Combine(Kernel.BasePath, "Data", "Logs", "Exceptions", $"{DateTime.Now:dd-MM-yyyy}.txt");
+        var filePath = Path.Combine(UBot.Core.RuntimeAccess.Core.BasePath, "Data", "Logs", "Exceptions", $"{DateTime.Now:dd-MM-yyyy}.txt");
         var directory = Path.GetDirectoryName(filePath);
         if (!string.IsNullOrWhiteSpace(directory) && !Directory.Exists(directory))
             Directory.CreateDirectory(directory);

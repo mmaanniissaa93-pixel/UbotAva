@@ -208,8 +208,8 @@ public partial class GeneralFeatureView : UserControl
         if (configKey == null)
             return;
 
-        GlobalConfig.Set(configKey, value);
-        GlobalConfig.Save();
+        UBot.Core.RuntimeAccess.Global.Set(configKey, value);
+        UBot.Core.RuntimeAccess.Global.Save();
     }
 
     private static void PersistCriticalGeneralInt(string key, int value)
@@ -224,8 +224,8 @@ public partial class GeneralFeatureView : UserControl
         if (configKey == null)
             return;
 
-        GlobalConfig.Set(configKey, Math.Clamp(value, 0, 3600));
-        GlobalConfig.Save();
+        UBot.Core.RuntimeAccess.Global.Set(configKey, Math.Clamp(value, 0, 3600));
+        UBot.Core.RuntimeAccess.Global.Save();
     }
 
     private async System.Threading.Tasks.Task OpenAccountSetupDialogAsync()

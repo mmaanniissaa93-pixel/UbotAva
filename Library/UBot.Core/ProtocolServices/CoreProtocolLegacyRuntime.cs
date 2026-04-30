@@ -14,17 +14,17 @@ namespace UBot.Core.ProtocolServices;
 
 internal sealed class CoreProtocolLegacyRuntime : UBot.Protocol.Legacy.IProtocolLegacyRuntime
 {
-    public GameClientType ClientType => Game.ClientType;
-    public bool Clientless => Game.Clientless;
-    public bool Ready { get => Game.Ready; set => Game.Ready = value; }
-    public Packet ChunkedPacket { get => Game.ChunkedPacket; set => Game.ChunkedPacket = value; }
-    public object Player { get => Game.Player; set => Game.Player = (Objects.Player)value; }
-    public object Party { get => Game.Party; set => Game.Party = (Objects.Party.Party)value; }
-    public object AcceptanceRequest { get => Game.AcceptanceRequest; set => Game.AcceptanceRequest = (AcceptanceRequest)value; }
-    public object SelectedEntity { get => Game.SelectedEntity; set => Game.SelectedEntity = (Objects.Spawn.SpawnedBionic)value; }
-    public object ReferenceManager => Game.ReferenceManager;
-    public object Proxy => Kernel.Proxy;
-    public object Bot => Kernel.Bot;
+    public GameClientType ClientType => UBot.Core.RuntimeAccess.Session.ClientType;
+    public bool Clientless => UBot.Core.RuntimeAccess.Session.Clientless;
+    public bool Ready { get => UBot.Core.RuntimeAccess.Session.Ready; set => UBot.Core.RuntimeAccess.Session.Ready = value; }
+    public Packet ChunkedPacket { get => UBot.Core.RuntimeAccess.Session.ChunkedPacket; set => UBot.Core.RuntimeAccess.Session.ChunkedPacket = value; }
+    public object Player { get => UBot.Core.RuntimeAccess.Session.Player; set => UBot.Core.RuntimeAccess.Session.Player = (Objects.Player)value; }
+    public object Party { get => UBot.Core.RuntimeAccess.Session.Party; set => UBot.Core.RuntimeAccess.Session.Party = (Objects.Party.Party)value; }
+    public object AcceptanceRequest { get => UBot.Core.RuntimeAccess.Session.AcceptanceRequest; set => UBot.Core.RuntimeAccess.Session.AcceptanceRequest = (AcceptanceRequest)value; }
+    public object SelectedEntity { get => UBot.Core.RuntimeAccess.Session.SelectedEntity; set => UBot.Core.RuntimeAccess.Session.SelectedEntity = (Objects.Spawn.SpawnedBionic)value; }
+    public object ReferenceManager => UBot.Core.RuntimeAccess.Session.ReferenceManager;
+    public object Proxy => UBot.Core.RuntimeAccess.Core.Proxy;
+    public object Bot => UBot.Core.RuntimeAccess.Core.Bot;
     public bool ShoppingRunning => ShoppingManager.Running;
     public object ShoppingBuybackList { get => ShoppingManager.BuybackList; set => ShoppingManager.BuybackList = (Dictionary<byte, InventoryItem>)value; }
     public bool ScriptRunning => ScriptManager.Running;
@@ -35,10 +35,10 @@ internal sealed class CoreProtocolLegacyRuntime : UBot.Protocol.Legacy.IProtocol
     }
     public object ActiveAlchemyItems => AlchemyManager.ActiveAlchemyItems;
     public List<SkillInfo> SkillBuffs => SkillManager.Buffs;
-    public int TickCount => Kernel.TickCount;
-    public bool EnableCollisionDetection => Kernel.EnableCollisionDetection;
+    public int TickCount => UBot.Core.RuntimeAccess.Core.TickCount;
+    public bool EnableCollisionDetection => UBot.Core.RuntimeAccess.Core.EnableCollisionDetection;
 
-    public void FireEvent(string eventName, params object[] args) => EventManager.FireEvent(eventName, args);
+    public void FireEvent(string eventName, params object[] args) => UBot.Core.RuntimeAccess.Events.FireEvent(eventName, args);
     public void LogDebug(string message) => Log.Debug(message);
     public void LogNotify(string message) => Log.Notify(message);
     public void LogWarn(string message) => Log.Warn(message);
@@ -48,7 +48,7 @@ internal sealed class CoreProtocolLegacyRuntime : UBot.Protocol.Legacy.IProtocol
     public string GetLangBySpecificKey(string parent, string key, string defaultValue = "")
         => LanguageManager.GetLangBySpecificKey(parent, key, defaultValue);
     public void SetClientTitle(string title) => ClientManager.SetTitle(title);
-    public void LoadPlayerConfig(string characterName) => PlayerConfig.Load(characterName);
+    public void LoadPlayerConfig(string characterName) => UBot.Core.RuntimeAccess.Player.Load(characterName);
     public object CreateNotificationSounds() => new Objects.NotificationSounds();
     public void LoadNotificationSounds(object notificationSounds)
         => ((Objects.NotificationSounds)notificationSounds).LoadPlayerSettings();

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -246,7 +246,7 @@ public class PacketManager
             }
             catch (Exception e)
             {
-                Log.Error($"PacketManager.CallCallback: opcode=0x{opcode:X4}, callback={callback.GetType().Name} threw: {e.Message}");
+                Log.Error($"UBot.Core.RuntimeAccess.Packets.CallCallback: opcode=0x{opcode:X4}, callback={callback.GetType().Name} threw: {e.Message}");
             }
         }
 
@@ -255,7 +255,7 @@ public class PacketManager
             _callbacks.RemoveAll(c => c == null || c.IsClosed);
         }
 
-        UBot.Protocol.Legacy.PacketManager.CallCallback(packet);
+        UBot.Protocol.ProtocolRuntime.CallCallback(packet);
     }
 
     /// <summary>
@@ -265,7 +265,7 @@ public class PacketManager
     /// <param name="destination">The destination.</param>
     public static void SendPacket(Packet packet, PacketDestination destination)
     {
-        if (Kernel.Proxy == null)
+        if (UBot.Core.RuntimeAccess.Core.Proxy == null)
             return;
 
         if (!packet.Locked)
@@ -276,12 +276,12 @@ public class PacketManager
             switch (destination)
             {
                 case PacketDestination.Client:
-                    if (!Game.Clientless)
-                        Kernel.Proxy.Client?.Send(packet);
+                    if (!UBot.Core.RuntimeAccess.Session.Clientless)
+                        UBot.Core.RuntimeAccess.Core.Proxy.Client?.Send(packet);
                     break;
 
                 case PacketDestination.Server:
-                    Kernel.Proxy.Server?.Send(packet);
+                    UBot.Core.RuntimeAccess.Core.Proxy.Server?.Send(packet);
                     break;
             }
         }
@@ -299,7 +299,7 @@ public class PacketManager
     /// <param name="callback">The callback.</param>
     public static void SendPacket(Packet packet, PacketDestination destination, params AwaitCallback[] callbacks)
     {
-        if (Kernel.Proxy == null)
+        if (UBot.Core.RuntimeAccess.Core.Proxy == null)
             return;
 
         if (callbacks != null && callbacks.Length > 0)

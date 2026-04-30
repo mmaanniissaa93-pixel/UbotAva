@@ -1,11 +1,11 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UBot.Core;
 
 namespace UBot.CommandCenter.Components;
 
 internal class PluginConfig
 {
-    public static bool Enabled => PlayerConfig.Get("UBot.CommandCenter.Enabled", true);
+    public static bool Enabled => UBot.Core.RuntimeAccess.Player.Get("UBot.CommandCenter.Enabled", true);
 
     public static Dictionary<string, string> GetEmoteToCommandMapping()
     {
@@ -13,7 +13,7 @@ internal class PluginConfig
 
         foreach (var emoticon in Emoticons.Items)
         {
-            var actionName = PlayerConfig.Get(
+            var actionName = UBot.Core.RuntimeAccess.Player.Get(
                 $"UBot.CommandCenter.MappedEmotes.{emoticon.Name}",
                 Emoticons.GetEmoticonDefaultCommand(emoticon.Name)
             );

@@ -36,12 +36,12 @@ internal class AgentLoginResponse : IPacketHandler
         {
             AutoLogin.MarkRigidAuthSuccess();
 
-            if (!Game.Clientless)
+            if (!UBot.Core.RuntimeAccess.Session.Clientless)
                 return;
 
             var response = new Packet(0x7007);
             response.WriteByte(0x02); //List
-            PacketManager.SendPacket(response, PacketDestination.Server);
+            UBot.Core.RuntimeAccess.Packets.SendPacket(response, PacketDestination.Server);
 
             return;
         }

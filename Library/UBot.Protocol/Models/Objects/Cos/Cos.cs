@@ -144,7 +144,7 @@ public class Cos : SpawnedEntity
         var packet = new Packet(0x70CB);
         packet.WriteByte(1);
         packet.WriteInt(UniqueId);
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Protocol.ProtocolRuntime.SendPacket(packet, PacketDestination.Server);
 
         return true;
     }
@@ -165,7 +165,7 @@ public class Cos : SpawnedEntity
             0xB0CB
         );
 
-        PacketManager.SendPacket(packet, PacketDestination.Server, awaitCallback);
+        UBot.Protocol.ProtocolRuntime.SendPacket(packet, PacketDestination.Server, awaitCallback);
         awaitCallback.AwaitResponse();
 
         return true;
@@ -184,7 +184,7 @@ public class Cos : SpawnedEntity
             0xB0C6
         );
 
-        PacketManager.SendPacket(packet, PacketDestination.Server, awaitCallback);
+        UBot.Protocol.ProtocolRuntime.SendPacket(packet, PacketDestination.Server, awaitCallback);
         awaitCallback.AwaitResponse();
 
         return awaitCallback.IsCompleted;
@@ -245,7 +245,7 @@ public class Cos : SpawnedEntity
         var callbackItemGrabbed = new AwaitCallback(predicate, 0xB034);
         var callbackItemStolen = new AwaitCallback(predicate, 0xB0C5);
 
-        PacketManager.SendPacket(packet, PacketDestination.Server, callbackItemGrabbed, callbackItemStolen);
+        UBot.Protocol.ProtocolRuntime.SendPacket(packet, PacketDestination.Server, callbackItemGrabbed, callbackItemStolen);
 
         using var cts = new CancellationTokenSource();
 
@@ -290,7 +290,7 @@ public class Cos : SpawnedEntity
             0xB021
         );
 
-        PacketManager.SendPacket(packet, PacketDestination.Server, awaitCallback);
+        UBot.Protocol.ProtocolRuntime.SendPacket(packet, PacketDestination.Server, awaitCallback);
         awaitCallback.AwaitResponse();
         var distance = LegacyGame.Player.Movement.Source.DistanceTo(destination);
         //Wait to finish the step
@@ -321,7 +321,7 @@ public class Cos : SpawnedEntity
         packet.WriteUInt(LegacyGame.ReferenceManager.GetRefSkill(codeName).ID);
         packet.WriteUInt(LegacyGame.Player.UniqueId);
 
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Protocol.ProtocolRuntime.SendPacket(packet, PacketDestination.Server);
     }
 
     /// <summary>
@@ -351,7 +351,7 @@ public class Cos : SpawnedEntity
             packet => packet.ReadByte() == 1 ? AwaitCallbackResult.Success : AwaitCallbackResult.Fail,
             0xB034
         );
-        PacketManager.SendPacket(packet, PacketDestination.Server, awaitResult);
+        UBot.Protocol.ProtocolRuntime.SendPacket(packet, PacketDestination.Server, awaitResult);
 
         awaitResult.AwaitResponse();
 
@@ -386,7 +386,7 @@ public class Cos : SpawnedEntity
             },
             0xB034
         );
-        PacketManager.SendPacket(packet, PacketDestination.Server, awaitResult);
+        UBot.Protocol.ProtocolRuntime.SendPacket(packet, PacketDestination.Server, awaitResult);
         awaitResult.AwaitResponse();
 
         Log.Debug("Sold item (pet): " + item.Record.GetRealName());

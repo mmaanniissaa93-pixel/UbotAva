@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Event;
 using UBot.Core.Objects;
 
@@ -21,7 +21,7 @@ public class HealthManaRecoveryHandler
     /// </summary>
     public static void UnsubscribeAll()
     {
-        EventManager.UnsubscribeOwner(EventOwner);
+        UBot.Core.RuntimeAccess.Events.UnsubscribeOwner(EventOwner);
     }
 
     /// <summary>
@@ -29,7 +29,7 @@ public class HealthManaRecoveryHandler
     /// </summary>
     private static void SubscribeEvents()
     {
-        EventManager.SubscribeEvent("OnTick", OnTick, EventOwner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnTick", OnTick, EventOwner);
     }
 
     /// <summary>
@@ -38,18 +38,18 @@ public class HealthManaRecoveryHandler
     /// <exception cref="System.NotImplementedException"></exception>
     private static void OnUpdateHP()
     {
-        var autoHealth = PlayerConfig.Get<bool>("UBot.Protection.checkUseHPPotionsPlayer", true);
+        var autoHealth = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkUseHPPotionsPlayer", true);
         if (!autoHealth)
             return;
 
-        if ((Game.Player.BadEffect & BadEffect.Zombie) == BadEffect.Zombie)
+        if ((UBot.Core.RuntimeAccess.Session.Player.BadEffect & BadEffect.Zombie) == BadEffect.Zombie)
             return;
 
-        var minHealth = PlayerConfig.Get("UBot.Protection.numPlayerHPPotionMin", 75);
+        var minHealth = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.numPlayerHPPotionMin", 75);
 
-        var healthPercent = 100.0 * Game.Player.Health / Game.Player.MaximumHealth;
+        var healthPercent = 100.0 * UBot.Core.RuntimeAccess.Session.Player.Health / UBot.Core.RuntimeAccess.Session.Player.MaximumHealth;
         if (healthPercent <= minHealth)
-            Game.Player.UseHealthPotion();
+            UBot.Core.RuntimeAccess.Session.Player.UseHealthPotion();
     }
 
     /// <summary>
@@ -58,15 +58,15 @@ public class HealthManaRecoveryHandler
     /// <exception cref="System.NotImplementedException"></exception>
     private static void OnUpdateMP()
     {
-        var autoMana = PlayerConfig.Get<bool>("UBot.Protection.checkUseMPPotionsPlayer", true);
+        var autoMana = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkUseMPPotionsPlayer", true);
         if (!autoMana)
             return;
 
-        var minMana = PlayerConfig.Get("UBot.Protection.numPlayerMPPotionMin", 75);
+        var minMana = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.numPlayerMPPotionMin", 75);
 
-        var manaPercent = 100.0 * Game.Player.Mana / Game.Player.MaximumMana;
+        var manaPercent = 100.0 * UBot.Core.RuntimeAccess.Session.Player.Mana / UBot.Core.RuntimeAccess.Session.Player.MaximumMana;
         if (manaPercent <= minMana)
-            Game.Player.UseManaPotion();
+            UBot.Core.RuntimeAccess.Session.Player.UseManaPotion();
     }
 
     /// <summary>

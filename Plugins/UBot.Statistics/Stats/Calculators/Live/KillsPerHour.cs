@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Event;
@@ -45,7 +45,7 @@ internal class KillsPerHour : IStatisticCalculator
     /// <inheritdoc />
     public object GetValue()
     {
-        if (!Game.Ready)
+        if (!UBot.Core.RuntimeAccess.Session.Ready)
             return 0;
 
         if (++_currentTickIndex >= _values.Length)
@@ -73,7 +73,7 @@ internal class KillsPerHour : IStatisticCalculator
     {
         _values = new int[60];
 
-        EventManager.SubscribeEvent("OnKillEnemy", OnKillEnemy);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnKillEnemy", OnKillEnemy);
     }
 
     private void OnKillEnemy()

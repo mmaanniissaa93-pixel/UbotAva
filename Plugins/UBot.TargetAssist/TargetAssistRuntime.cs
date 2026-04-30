@@ -32,13 +32,13 @@ internal static class TargetAssistRuntime
         if (_initialized)
             return;
 
-        EventManager.SubscribeEvent("OnTick", OnTick, EventOwner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnTick", OnTick, EventOwner);
         _initialized = true;
     }
 
     public static void UnsubscribeAll()
     {
-        EventManager.UnsubscribeOwner(EventOwner);
+        UBot.Core.RuntimeAccess.Events.UnsubscribeOwner(EventOwner);
     }
 
     public static void SetActive(bool active)
@@ -57,10 +57,10 @@ internal static class TargetAssistRuntime
         if (!_active)
             return;
 
-        if (!Game.Ready || Game.Player == null)
+        if (!UBot.Core.RuntimeAccess.Session.Ready || UBot.Core.RuntimeAccess.Session.Player == null)
             return;
 
-        if (Game.Player.State.LifeState != LifeState.Alive)
+        if (UBot.Core.RuntimeAccess.Session.Player.State.LifeState != LifeState.Alive)
             return;
 
         var settings = TargetAssistConfig.Load();
@@ -102,7 +102,7 @@ internal static class TargetAssistRuntime
 
     private static bool CanRetargetNow()
     {
-        return Kernel.TickCount - _lastRetargetTick >= RetargetCooldownMs;
+        return UBot.Core.RuntimeAccess.Core.TickCount - _lastRetargetTick >= RetargetCooldownMs;
     }
 
     private static List<SpawnedPlayer> GetCandidatesOrderedByDistance(TargetAssistSettings settings)
@@ -121,7 +121,7 @@ internal static class TargetAssistRuntime
         if (orderedCandidates == null || orderedCandidates.Count == 0)
             return null;
 
-        var currentSelectedId = Game.SelectedEntity?.UniqueId ?? 0;
+        var currentSelectedId = UBot.Core.RuntimeAccess.Session.SelectedEntity?.UniqueId ?? 0;
         if (currentSelectedId == 0)
             return orderedCandidates[0];
 
@@ -138,7 +138,7 @@ internal static class TargetAssistRuntime
         if (target == null)
             return false;
 
-        if (Game.SelectedEntity?.UniqueId == target.UniqueId)
+        if (UBot.Core.RuntimeAccess.Session.SelectedEntity?.UniqueId == target.UniqueId)
             return true;
 
         var selected = target.TrySelect();
@@ -147,23 +147,23 @@ internal static class TargetAssistRuntime
             // Fallback: some runtimes may miss/timeout the select callback.
             var packet = new Packet(0x7045);
             packet.WriteUInt(target.UniqueId);
-            PacketManager.SendPacket(packet, PacketDestination.Server);
-            Game.SelectedEntity = target;
+            UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server);
+            UBot.Core.RuntimeAccess.Session.SelectedEntity = target;
             selected = true;
         }
 
         if (selected)
-            _lastRetargetTick = Kernel.TickCount;
+            _lastRetargetTick = UBot.Core.RuntimeAccess.Core.TickCount;
 
         return selected;
     }
 
     private static bool IsValidTarget(SpawnedPlayer player, TargetAssistSettings settings)
     {
-        if (player == null || Game.Player == null)
+        if (player == null || UBot.Core.RuntimeAccess.Session.Player == null)
             return false;
 
-        if (player.UniqueId == Game.Player.UniqueId)
+        if (player.UniqueId == UBot.Core.RuntimeAccess.Session.Player.UniqueId)
             return false;
 
         if (string.IsNullOrWhiteSpace(player.Name))

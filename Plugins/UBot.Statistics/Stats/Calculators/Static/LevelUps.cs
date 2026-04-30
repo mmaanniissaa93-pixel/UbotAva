@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Components;
 
 namespace UBot.Statistics.Stats.Calculators.Static;
@@ -28,19 +28,19 @@ internal class LevelUps : IStatisticCalculator
     /// <inheritdoc />
     public object GetValue()
     {
-        if (!Game.Ready)
+        if (!UBot.Core.RuntimeAccess.Session.Ready)
             return 0;
 
-        return Game.Player.Level - (double)_initialValue;
+        return UBot.Core.RuntimeAccess.Session.Player.Level - (double)_initialValue;
     }
 
     /// <inheritdoc />
     public void Reset()
     {
-        if (!Game.Ready)
+        if (!UBot.Core.RuntimeAccess.Session.Ready)
             return;
 
-        _initialValue = Game.Player.Level;
+        _initialValue = UBot.Core.RuntimeAccess.Session.Player.Level;
     }
 
     /// <inheritdoc />

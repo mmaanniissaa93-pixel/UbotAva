@@ -210,21 +210,21 @@ public class CharacterDataEndResponse : IPacketHandler
         character.IsGameMaster = packet.ReadBool();
 
         // Load Notification sound settings
-        character.NotificationSounds = ProtocolRuntime.LegacyRuntime.CreateNotificationSounds();
-        ProtocolRuntime.LegacyRuntime.LoadNotificationSounds(character.NotificationSounds);
+        character.NotificationSounds = UBot.Protocol.ProtocolRuntime.LegacyRuntime.CreateNotificationSounds();
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.LoadNotificationSounds(character.NotificationSounds);
 
         //Set instance..
         CoreGame.Player = character;
         CoreGame.ChunkedPacket = null;
 
-        EventManager.FireEvent("OnLoadCharacter");
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnLoadCharacter");
 
         ClientManager.SetTitle($"{character.Name} - UBot");
 
         if (!CoreGame.Clientless)
             return;
 
-        ProtocolRuntime.Dispatch(new Packet(0x3012), PacketDestination.Server);
+        UBot.Protocol.ProtocolRuntime.Dispatch(new Packet(0x3012), PacketDestination.Server);
         CoreGame.Ready = true;
     }
 }

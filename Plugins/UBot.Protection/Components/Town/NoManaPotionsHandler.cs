@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UBot.Core;
 using UBot.Core.Event;
 using UBot.Core.Objects;
@@ -20,7 +20,7 @@ public class NoManaPotionsHandler : AbstractTownHandler
     /// </summary>
     private static void SubscribeEvents()
     {
-        EventManager.SubscribeEvent("OnUseItem", new Action<byte>(OnUseItem));
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnUseItem", new Action<byte>(OnUseItem));
     }
 
     /// <summary>
@@ -28,7 +28,7 @@ public class NoManaPotionsHandler : AbstractTownHandler
     /// </summary>
     private static void OnUseItem(byte slot)
     {
-        if (Kernel.Bot.Running)
+        if (UBot.Core.RuntimeAccess.Core.Bot.Running)
             CheckForMpPotions();
     }
 
@@ -39,23 +39,23 @@ public class NoManaPotionsHandler : AbstractTownHandler
 
     private static bool CheckForMpPotions()
     {
-        if (!PlayerConfig.Get<bool>("UBot.Protection.checkNoMPPotions"))
+        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkNoMPPotions"))
             return false;
 
         if (PlayerInTownScriptRegion())
             return false;
 
-        if (Game.Player.State.LifeState == LifeState.Dead)
+        if (UBot.Core.RuntimeAccess.Session.Player.State.LifeState == LifeState.Dead)
             return false;
 
         var typeIdFilter = new TypeIdFilter(3, 3, 1, 2);
         if (
-            Game.Player.Inventory.GetSumAmount(typeIdFilter)
-            > PlayerConfig.Get<int>("UBot.Protection.numMPPotionsLeft")
+            UBot.Core.RuntimeAccess.Session.Player.Inventory.GetSumAmount(typeIdFilter)
+            > UBot.Core.RuntimeAccess.Player.Get<int>("UBot.Protection.numMPPotionsLeft")
         )
             return false;
 
-        var used = Game.Player.UseReturnScroll();
+        var used = UBot.Core.RuntimeAccess.Session.Player.UseReturnScroll();
 
         Log.WarnLang("ReturnToTownNoMana");
         return used;

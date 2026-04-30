@@ -56,7 +56,7 @@ public class UpdateMountStateResponse : IPacketHandler
         owner.OnTransport = isMounted;
         owner.TransportUniqueId = cosUniqueId;
 
-        EventManager.FireEvent("OnEntityMountTransport", owner, cos, isMounted);
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnEntityMountTransport", owner, cos, isMounted);
     }
 
     #endregion Methods

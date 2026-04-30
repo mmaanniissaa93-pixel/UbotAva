@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UBot.Core.Client.ReferenceObjects.RegionInfo;
@@ -13,10 +13,10 @@ public class RegionInfoManager
 
     public static void Load()
     {
-        if (Game.DataPk2 == null)
+        if (UBot.Core.RuntimeAccess.Session.DataPk2 == null)
             return;
 
-        if (!Game.DataPk2.TryGetFile("regioninfo.txt", out var file))
+        if (!UBot.Core.RuntimeAccess.Session.DataPk2.TryGetFile("regioninfo.txt", out var file))
         {
             Log.Error("Could not load regioninfo.txt!");
             return;
@@ -26,7 +26,7 @@ public class RegionInfoManager
         using var reader = new StreamReader(stream);
 
         //Older sro -> Uses groups
-        if (Game.ClientType < GameClientType.Chinese_Old)
+        if (UBot.Core.RuntimeAccess.Session.ClientType < GameClientType.Chinese_Old)
         {
             while (!reader.EndOfStream)
             {

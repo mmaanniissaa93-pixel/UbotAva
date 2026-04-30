@@ -42,7 +42,7 @@ public class InventoryOperationRequest : IPacketHandler
                 var quantity = packet.ReadUShort();
                 var npcUniqueId = packet.ReadUInt();
 
-                EventManager.FireEvent("OnBuyItemRequest", tab, slot, quantity, npcUniqueId);
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnBuyItemRequest", tab, slot, quantity, npcUniqueId);
 
                 break;
 
@@ -52,7 +52,7 @@ public class InventoryOperationRequest : IPacketHandler
                 quantity = packet.ReadUShort();
                 npcUniqueId = packet.ReadUInt();
 
-                EventManager.FireEvent("OnSellItemRequest", slot, quantity, npcUniqueId);
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnSellItemRequest", slot, quantity, npcUniqueId);
 
                 break;
 
@@ -67,7 +67,7 @@ public class InventoryOperationRequest : IPacketHandler
                 quantity = packet.ReadUShort();
                 npcUniqueId = packet.ReadUInt();
 
-                EventManager.FireEvent("OnBuyItemToCosRequest", tab, slot, quantity, npcUniqueId);
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnBuyItemToCosRequest", tab, slot, quantity, npcUniqueId);
 
                 break;
 
@@ -81,7 +81,7 @@ public class InventoryOperationRequest : IPacketHandler
                 quantity = packet.ReadUShort();
                 npcUniqueId = packet.ReadUInt();
 
-                EventManager.FireEvent("OnSellItemFromCosRequest", slot, quantity, npcUniqueId);
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnSellItemFromCosRequest", slot, quantity, npcUniqueId);
 
                 break;
         }

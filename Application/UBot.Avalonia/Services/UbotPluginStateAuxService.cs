@@ -46,8 +46,8 @@ internal sealed class UbotPluginStateAuxService : UbotServiceBase
     }
     private static object BuildQuestState()
     {
-        var quests = Game.Player?.QuestLog?.ActiveQuests?.Values;
-        var completed = Game.Player?.QuestLog?.CompletedQuests?.Length ?? 0;
+        var quests = UBot.Core.RuntimeAccess.Session.Player?.QuestLog?.ActiveQuests?.Values;
+        var completed = UBot.Core.RuntimeAccess.Session.Player?.QuestLog?.CompletedQuests?.Length ?? 0;
         var activeRows = new List<Dictionary<string, object?>>();
         if (quests != null)
         {
@@ -80,15 +80,15 @@ internal sealed class UbotPluginStateAuxService : UbotServiceBase
     {
         SpawnManager.TryGetEntities<SpawnedMonster>(out var monsters);
         var monsterCount = monsters?.Count() ?? 0;
-        var inventoryCount = Game.Player?.Inventory?.GetNormalPartItems().Count ?? 0;
+        var inventoryCount = UBot.Core.RuntimeAccess.Session.Player?.Inventory?.GetNormalPartItems().Count ?? 0;
 
         return new Dictionary<string, object?>
         {
             ["status"] = _connectionService.CreateStatusSnapshot().StatusText,
             ["monsterCount"] = monsterCount,
             ["inventoryCount"] = inventoryCount,
-            ["botRunning"] = Kernel.Bot != null && Kernel.Bot.Running,
-            ["clientless"] = Game.Clientless
+            ["botRunning"] = UBot.Core.RuntimeAccess.Core.Bot != null && UBot.Core.RuntimeAccess.Core.Bot.Running,
+            ["clientless"] = UBot.Core.RuntimeAccess.Session.Clientless
         };
     }
 

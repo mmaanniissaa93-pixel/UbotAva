@@ -1,4 +1,4 @@
-﻿using System.Windows.Forms;
+using System.Windows.Forms;
 using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Plugins;
@@ -36,7 +36,7 @@ public class AutoDungeonPlugin : IPlugin
 
     public void Translate()
     {
-        LanguageManager.Translate(View, Kernel.Language);
+        LanguageManager.Translate(View, UBot.Core.RuntimeAccess.Core.Language);
     }
 
     public void OnLoadCharacter()

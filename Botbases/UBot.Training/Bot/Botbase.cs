@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using UBot.Core;
 using UBot.Core.Components;
@@ -15,7 +15,7 @@ internal class Botbase
     /// </summary>
     public Botbase()
     {
-        EventManager.SubscribeEvent("OnSetTrainingArea", Reload);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnSetTrainingArea", Reload);
     }
 
     /// <summary>
@@ -34,12 +34,12 @@ internal class Botbase
         Area = new Area
         {
             Position = new Position(
-                PlayerConfig.Get<ushort>("UBot.Area.Region"),
-                PlayerConfig.Get<float>("UBot.Area.X"),
-                PlayerConfig.Get<float>("UBot.Area.Y"),
-                PlayerConfig.Get<float>("UBot.Area.Z")
+                UBot.Core.RuntimeAccess.Player.Get<ushort>("UBot.Area.Region"),
+                UBot.Core.RuntimeAccess.Player.Get<float>("UBot.Area.X"),
+                UBot.Core.RuntimeAccess.Player.Get<float>("UBot.Area.Y"),
+                UBot.Core.RuntimeAccess.Player.Get<float>("UBot.Area.Z")
             ),
-            Radius = Math.Clamp(PlayerConfig.Get("UBot.Area.Radius", 50), 5, 100),
+            Radius = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Area.Radius", 50), 5, 100),
         };
     }
 
@@ -48,12 +48,12 @@ internal class Botbase
     /// </summary>
     public void Tick()
     {
-        if (!Kernel.Bot.Running)
+        if (!UBot.Core.RuntimeAccess.Core.Bot.Running)
             return;
 
-        if (Game.Player.HasActiveVehicle)
+        if (UBot.Core.RuntimeAccess.Session.Player.HasActiveVehicle)
         {
-            Game.Player.Vehicle.Dismount();
+            UBot.Core.RuntimeAccess.Session.Player.Vehicle.Dismount();
             Thread.Sleep(1000);
         }
 
@@ -63,17 +63,17 @@ internal class Botbase
 
         if (
             Bundles.Loop.Config.UseSpeedDrug
-            && Game.Player.State.ActiveBuffs.FindIndex(p => p.Record.Params.Contains(1752396901)) < 0
+            && UBot.Core.RuntimeAccess.Session.Player.State.ActiveBuffs.FindIndex(p => p.Record.Params.Contains(1752396901)) < 0
         )
         {
-            var item = Game.Player.Inventory.GetItem(
+            var item = UBot.Core.RuntimeAccess.Session.Player.Inventory.GetItem(
                 new TypeIdFilter(3, 3, 13, 1),
                 p => p.Record.Desc1.Contains("_SPEED_")
             );
             item?.Use();
         }
 
-        var noAttack = PlayerConfig.Get("UBot.Skills.checkBoxNoAttack", false);
+        var noAttack = UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.checkBoxNoAttack", false);
 
         //Check for protection
         Bundles.Protection.Invoke();

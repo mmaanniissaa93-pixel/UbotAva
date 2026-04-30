@@ -24,7 +24,7 @@ public class ExchangeStartResponse : IPacketHandler
 
         Log.Notify($"Started exchanging with the player {CoreGame.Player.Exchange.ExchangePlayer.Name}");
 
-        EventManager.FireEvent("OnStartExchange");
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnStartExchange");
     }
 }
 

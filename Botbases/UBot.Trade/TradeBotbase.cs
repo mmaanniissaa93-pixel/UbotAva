@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Objects;
 using UBot.Core.Plugins;
@@ -14,7 +14,7 @@ public class TradeBotbase : IBotbase
     /// <summary>
     /// Gets a value indicating whether the trade botbase is currently active and running.
     /// </summary>
-    public static bool IsActive => Kernel.Bot?.Botbase.Name == "UBot.Trade" && Kernel.Bot.Running;
+    public static bool IsActive => UBot.Core.RuntimeAccess.Core.Bot?.Botbase.Name == "UBot.Trade" && UBot.Core.RuntimeAccess.Core.Bot.Running;
 
     /// <inheritdoc />
     public string Author => "UBot Team";
@@ -40,7 +40,7 @@ public class TradeBotbase : IBotbase
     /// <inheritdoc />
     public void Tick()
     {
-        if (!Game.Ready || Game.Player == null)
+        if (!UBot.Core.RuntimeAccess.Session.Ready || UBot.Core.RuntimeAccess.Session.Player == null)
             return;
 
         Bundles.Tick();
@@ -61,7 +61,7 @@ public class TradeBotbase : IBotbase
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error
             );
-            Kernel.Bot.Stop();
+            UBot.Core.RuntimeAccess.Core.Bot.Stop();
 
             return;
         }
@@ -78,7 +78,7 @@ public class TradeBotbase : IBotbase
     /// <inheritdoc />
     public void Translate()
     {
-        LanguageManager.Translate(View, Kernel.Language);
+        LanguageManager.Translate(View, UBot.Core.RuntimeAccess.Core.Language);
     }
 
     /// <summary>
@@ -89,16 +89,16 @@ public class TradeBotbase : IBotbase
     /// <returns>true if the player meets all criteria to be recognized as a trader; otherwise, false.</returns>
     private bool AssertPlayerIsTrader()
     {
-        if (Game.Player == null)
+        if (UBot.Core.RuntimeAccess.Session.Player == null)
             return false;
 
-        var gameIsJob2 = Game.ClientType > GameClientType.Vietnam;
-        if (!gameIsJob2 && Game.Player.JobInformation is not { Type: JobType.Trade })
+        var gameIsJob2 = UBot.Core.RuntimeAccess.Session.ClientType > GameClientType.Vietnam;
+        if (!gameIsJob2 && UBot.Core.RuntimeAccess.Session.Player.JobInformation is not { Type: JobType.Trade })
             return false;
-        else if (gameIsJob2 && Game.Player.JobInformation is { Type: JobType.None })
+        else if (gameIsJob2 && UBot.Core.RuntimeAccess.Session.Player.JobInformation is { Type: JobType.None })
             return false;
 
-        if (Game.Player.Inventory.GetEquippedPartItems().FirstOrDefault(i => i.Record.IsJobOutfit) == null)
+        if (UBot.Core.RuntimeAccess.Session.Player.Inventory.GetEquippedPartItems().FirstOrDefault(i => i.Record.IsJobOutfit) == null)
             return false;
 
         return true;

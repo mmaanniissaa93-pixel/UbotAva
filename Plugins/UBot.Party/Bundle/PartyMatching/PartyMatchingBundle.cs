@@ -1,4 +1,4 @@
-﻿using System.Threading;
+using System.Threading;
 using System.Threading.Tasks;
 using UBot.Core;
 using UBot.Core.Extensions;
@@ -37,10 +37,10 @@ internal class PartyMatchingBundle
         if (!HasMatchingEntry)
             return false;
 
-        if (Game.Party.HasPendingRequest)
-            Game.AcceptanceRequest?.Refuse();
+        if (UBot.Core.RuntimeAccess.Session.Party.HasPendingRequest)
+            UBot.Core.RuntimeAccess.Session.AcceptanceRequest?.Refuse();
 
-        var flag = Game.Party.Settings.GetPartyType();
+        var flag = UBot.Core.RuntimeAccess.Session.Party.Settings.GetPartyType();
 
         var packet = new Packet(0x706A);
         packet.WriteUInt(Id);
@@ -57,7 +57,7 @@ internal class PartyMatchingBundle
             0xB06A
         );
 
-        PacketManager.SendPacket(packet, PacketDestination.Server, callback);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, callback);
         callback.AwaitResponse(2000);
 
         return callback.IsCompleted;
@@ -72,10 +72,10 @@ internal class PartyMatchingBundle
         if (HasMatchingEntry)
             return false;
 
-        if (Game.Party.HasPendingRequest)
-            Game.AcceptanceRequest?.Refuse();
+        if (UBot.Core.RuntimeAccess.Session.Party.HasPendingRequest)
+            UBot.Core.RuntimeAccess.Session.AcceptanceRequest?.Refuse();
 
-        var flag = Game.Party.Settings.GetPartyType();
+        var flag = UBot.Core.RuntimeAccess.Session.Party.Settings.GetPartyType();
 
         var packet = new Packet(0x7069);
         packet.WriteUInt(0); //Party Id
@@ -92,7 +92,7 @@ internal class PartyMatchingBundle
             0xB069
         );
 
-        PacketManager.SendPacket(packet, PacketDestination.Server, callback);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, callback);
         callback.AwaitResponse(2000);
 
         return callback.IsCompleted;
@@ -124,12 +124,12 @@ internal class PartyMatchingBundle
         if (!HasMatchingEntry)
             return;
 
-        if (Game.Party.HasPendingRequest)
-            Game.AcceptanceRequest?.Refuse();
+        if (UBot.Core.RuntimeAccess.Session.Party.HasPendingRequest)
+            UBot.Core.RuntimeAccess.Session.AcceptanceRequest?.Refuse();
 
         var packet = new Packet(0x706B);
         packet.WriteUInt(Id);
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server);
     }
 
     /// <summary>
@@ -160,7 +160,7 @@ internal class PartyMatchingBundle
             0xB06D
         );
 
-        PacketManager.SendPacket(packet, PacketDestination.Server, callback);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, callback);
         callback.AwaitResponse(10000);
 
         return callback.IsCompleted && joiningResult == 1;
@@ -187,7 +187,7 @@ internal class PartyMatchingBundle
             0xB06C
         );
 
-        PacketManager.SendPacket(packet, PacketDestination.Server, callback);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, callback);
         callback.AwaitResponse();
 
         return partyList;

@@ -45,7 +45,7 @@ internal class AlchemyItemHelper
             .Player.Inventory.GetItems(new TypeIdFilter(3, 3, 10, 2))
             .Where(i => i.Record.ItemClass == targetItem.Record.Degree);
 
-        if (Game.ClientType >= GameClientType.Chinese && targetItem.Record.Degree >= 12)
+        if (UBot.Core.RuntimeAccess.Session.ClientType >= GameClientType.Chinese && targetItem.Record.Degree >= 12)
         {
             var proofs = Game
                 .Player.Inventory.GetItems(new TypeIdFilter(3, 3, 10, 8))
@@ -104,7 +104,7 @@ internal class AlchemyItemHelper
     /// <returns></returns>
     public static IEnumerable<InventoryItem> GetStonesByGroup(InventoryItem targetItem, string name)
     {
-        return Game.Player.Inventory.Where(i =>
+        return UBot.Core.RuntimeAccess.Session.Player.Inventory.Where(i =>
             i.Record.Desc1 == name && i.Record.ItemClass == targetItem.Record.Degree
         );
     }
@@ -117,7 +117,7 @@ internal class AlchemyItemHelper
     /// <returns></returns>
     public static IEnumerable<InventoryItem> GetStonesByGroup(byte level, string name)
     {
-        return Game.Player.Inventory.Where(i => i.Record.Desc1 == name && i.Record.ItemClass == level);
+        return UBot.Core.RuntimeAccess.Session.Player.Inventory.Where(i => i.Record.Desc1 == name && i.Record.ItemClass == level);
     }
 
     /// <summary>
@@ -135,7 +135,7 @@ internal class AlchemyItemHelper
 
         foreach (var i in inventoryItem.MagicOptions)
         {
-            var option = Game.ReferenceManager.GetMagicOption(i.Id);
+            var option = UBot.Core.RuntimeAccess.Session.ReferenceManager.GetMagicOption(i.Id);
 
             if (option != null && option.Group == materialGroup)
                 return true;
@@ -156,26 +156,26 @@ internal class AlchemyItemHelper
             >= 12 => paramValue => item => item.Record.Param1 == degree && item.Record.Param3 == paramValue,
             _ => paramValue => item => item.Record.Param1 == paramValue,
         };
-        var predicate = Game.ClientType switch
+        var predicate = UBot.Core.RuntimeAccess.Session.ClientType switch
         {
             >= GameClientType.Chinese => elixirsAndEnhancers,
             _ => paramValue => item => item.Record.Param1 == paramValue,
         };
 
         if (elixirType == ElixirType.Protector)
-            return Game.Player.Inventory.Where(predicate(ParamProtectorElixir));
+            return UBot.Core.RuntimeAccess.Session.Player.Inventory.Where(predicate(ParamProtectorElixir));
 
         if (elixirType == ElixirType.Weapon)
-            return Game.Player.Inventory.Where(predicate(ParamWeaponElixir));
+            return UBot.Core.RuntimeAccess.Session.Player.Inventory.Where(predicate(ParamWeaponElixir));
 
         if (elixirType == ElixirType.Accessory)
-            return Game.Player.Inventory.Where(predicate(ParamAccessoryElixir));
+            return UBot.Core.RuntimeAccess.Session.Player.Inventory.Where(predicate(ParamAccessoryElixir));
 
         if (elixirType == ElixirType.Shield)
-            return Game.Player.Inventory.Where(predicate(ParamShieldElixir));
+            return UBot.Core.RuntimeAccess.Session.Player.Inventory.Where(predicate(ParamShieldElixir));
 
         if (elixirType == ElixirType.Unspecified)
-            return Game.Player.Inventory.GetItems(new TypeIdFilter(3, 3, 10, 1));
+            return UBot.Core.RuntimeAccess.Session.Player.Inventory.GetItems(new TypeIdFilter(3, 3, 10, 1));
 
         return default;
     }

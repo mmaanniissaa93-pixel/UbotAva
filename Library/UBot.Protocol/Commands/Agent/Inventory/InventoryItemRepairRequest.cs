@@ -29,7 +29,7 @@ public class InventoryItemRepairRequest : IPacketHandler
             Log.Notify("Repairing all items...");
         }
 
-        EventManager.FireEvent("OnNpcRepairRequest", entityId, repairType, slot);
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnNpcRepairRequest", entityId, repairType, slot);
     }
 
     #endregion Methods

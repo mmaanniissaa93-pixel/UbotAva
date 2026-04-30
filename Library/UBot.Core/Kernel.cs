@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -64,8 +64,8 @@ public static class Kernel
     /// </summary>
     public static bool EnableCollisionDetection
     {
-        get => GlobalConfig.Get("UBot.EnableCollisionDetection", false);
-        set => GlobalConfig.Set("UBot.EnableCollisionDetection", value);
+        get => UBot.Core.RuntimeAccess.Global.Get("UBot.EnableCollisionDetection", false);
+        set => UBot.Core.RuntimeAccess.Global.Set("UBot.EnableCollisionDetection", value);
     }
 
     /// <summary>
@@ -78,10 +78,10 @@ public static class Kernel
 #if DEBUG
             return true;
 #else
-            return GlobalConfig.Get("UBot.DebugEnvironment", false);
+            return UBot.Core.RuntimeAccess.Global.Get("UBot.DebugEnvironment", false);
 #endif
         }
-        set => GlobalConfig.Set("UBot.DebugEnvironment", value);
+        set => UBot.Core.RuntimeAccess.Global.Set("UBot.DebugEnvironment", value);
     }
 
     /// <summary>
@@ -177,10 +177,10 @@ public static class Kernel
                 if (cachedTickCount - lastClockTick >= 1000)
                 {
                     lastClockTick = cachedTickCount;
-                    EventManager.FireEvent("OnClock");
+                    UBot.Core.RuntimeAccess.Events.FireEvent("OnClock");
                 }
 
-                if (!Game.Ready)
+                if (!UBot.Core.RuntimeAccess.Session.Ready)
                 {
                     lastTick = cachedTickCount;
                     playerMissingWhileReadyNotified = false;
@@ -192,7 +192,7 @@ public static class Kernel
                     tickStopwatch.Restart();
 
                     var elapsed = cachedTickCount - lastTick;
-                    var player = Game.Player;
+                    var player = UBot.Core.RuntimeAccess.Session.Player;
 
                     if (player == null)
                     {
@@ -216,7 +216,7 @@ public static class Kernel
 
                     SpawnManager.Update(elapsed);
 
-                    EventManager.FireEvent("OnTick");
+                    UBot.Core.RuntimeAccess.Events.FireEvent("OnTick");
 
                     tickStopwatch.Stop();
                     var tickDuration = tickStopwatch.ElapsedMilliseconds;
@@ -230,7 +230,7 @@ public static class Kernel
                     if (cachedTickCount - lastPerfLogTick >= 30000)
                     {
                         var avgTickDuration = tickCount > 0 ? totalTickDurationMs / tickCount : 0;
-                        var onTickListenerCount = EventManager.GetListenerCount("OnTick");
+                        var onTickListenerCount = UBot.Core.RuntimeAccess.Events.GetListenerCount("OnTick");
                         Log.Debug(
                             $"[PerfTick] Ticks=[{tickCount}], AvgDuration=[{avgTickDuration}ms], MaxDuration=[{maxTickDurationMs}ms], " +
                             $"OnTickListeners=[{onTickListenerCount}], ElapsedSinceLastLog=[{(cachedTickCount - lastPerfLogTick) / 1000}s]");

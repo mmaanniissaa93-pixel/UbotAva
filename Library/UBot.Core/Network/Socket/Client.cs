@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net;
 using System.Net.Sockets;
 using UBot.Core.Network.Protocol;
@@ -164,7 +164,7 @@ public class Client() : NetBase(isClient: true)
         {
             Log.Error("[Fatal]: Could not handshake the client, restarting client process now...");
 
-            Kernel.Proxy?.Shutdown();
+            UBot.Core.RuntimeAccess.Core.Proxy?.Shutdown();
         }
         finally
         {

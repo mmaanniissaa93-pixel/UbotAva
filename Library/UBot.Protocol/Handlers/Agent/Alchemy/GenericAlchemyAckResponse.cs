@@ -13,7 +13,7 @@ internal static class GenericAlchemyAckResponse
 {
     public static void Invoke(Packet packet, AlchemyType type)
     {
-        EventManager.FireEvent("OnAlchemy", type);
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnAlchemy", type);
 
         var result = packet.ReadByte();
 
@@ -21,7 +21,7 @@ internal static class GenericAlchemyAckResponse
         if (result == 2)
         {
             var errorCode = packet.ReadUShort();
-            EventManager.FireEvent("OnAlchemyError", errorCode, type);
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnAlchemyError", errorCode, type);
             AlchemyManager.MarkError(errorCode, type);
 
             return;
@@ -30,7 +30,7 @@ internal static class GenericAlchemyAckResponse
         var action = (AlchemyAction)packet.ReadByte();
         if (action == AlchemyAction.Cancel)
         {
-            EventManager.FireEvent("OnAlchemyCanceled", type);
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnAlchemyCanceled", type);
             AlchemyManager.MarkCanceled(type);
 
             return;
@@ -51,7 +51,7 @@ internal static class GenericAlchemyAckResponse
 
             if (isDestroyed)
             {
-                EventManager.FireEvent("OnAlchemyDestroyed", oldItem, type);
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnAlchemyDestroyed", oldItem, type);
                 CoreGame.Player.Inventory.RemoveAt(slot);
                 AlchemyManager.MarkDestroyed(oldItem, type);
 
@@ -64,8 +64,8 @@ internal static class GenericAlchemyAckResponse
         CoreGame.Player.Inventory.RemoveAt(slot);
         CoreGame.Player.Inventory.Add(newItem);
 
-        EventManager.FireEvent(isSuccess ? "OnAlchemySuccess" : "OnAlchemyFailed", oldItem, newItem, type);
-        EventManager.FireEvent("OnInventoryUpdate");
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent(isSuccess ? "OnAlchemySuccess" : "OnAlchemyFailed", oldItem, newItem, type);
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnInventoryUpdate");
         AlchemyManager.MarkResult(isSuccess, oldItem, newItem, type);
     }
 }

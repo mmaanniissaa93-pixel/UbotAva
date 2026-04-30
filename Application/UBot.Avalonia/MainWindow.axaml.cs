@@ -753,7 +753,7 @@ public partial class MainWindow : Window
 
     private void LoadDesktopPreferences()
     {
-        var savedTheme = GlobalConfig.Get(DesktopThemeConfigKey, "dark");
+        var savedTheme = UBot.Core.RuntimeAccess.Global.Get(DesktopThemeConfigKey, "dark");
         _isDark = !string.Equals(savedTheme, "light", StringComparison.OrdinalIgnoreCase);
 
         var target = _isDark ? ThemeVariant.Dark : ThemeVariant.Light;
@@ -761,7 +761,7 @@ public partial class MainWindow : Window
         if (Application.Current is { } app)
             app.RequestedThemeVariant = target;
 
-        var savedLanguage = GlobalConfig.Get(DesktopLanguageConfigKey, "English");
+        var savedLanguage = UBot.Core.RuntimeAccess.Global.Get(DesktopLanguageConfigKey, "English");
         _lang = string.Equals(savedLanguage, "Turkish", StringComparison.OrdinalIgnoreCase)
             ? "Turkish"
             : "English";
@@ -769,8 +769,8 @@ public partial class MainWindow : Window
 
     private void PersistDesktopPreferences()
     {
-        GlobalConfig.Set(DesktopThemeConfigKey, _isDark ? "dark" : "light");
-        GlobalConfig.Set(DesktopLanguageConfigKey, _lang);
+        UBot.Core.RuntimeAccess.Global.Set(DesktopThemeConfigKey, _isDark ? "dark" : "light");
+        UBot.Core.RuntimeAccess.Global.Set(DesktopLanguageConfigKey, _lang);
     }
 
     private void UpdateThemeIcon()
@@ -795,8 +795,8 @@ public partial class MainWindow : Window
     {
         bool tr = _lang == "Turkish";
         DesktopLanguageService.SetLanguage(_lang);
-        GlobalConfig.Set("UBot.Language", tr ? "tr_TR" : "en_US");
-        Kernel.Language = tr ? "tr_TR" : "en_US";
+        UBot.Core.RuntimeAccess.Global.Set("UBot.Language", tr ? "tr_TR" : "en_US");
+        UBot.Core.RuntimeAccess.Core.Language = tr ? "tr_TR" : "en_US";
         LblToggle.Text       = _state!.BotRunning
             ? DesktopLanguageService.Translate("STOP")
             : DesktopLanguageService.Translate("START");

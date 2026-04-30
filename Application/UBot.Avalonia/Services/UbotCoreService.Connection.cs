@@ -68,7 +68,7 @@ internal sealed class UbotConnectionService : UbotServiceBase
             DivisionIndex = normalized.divisionIndex,
             GatewayIndex = normalized.gatewayIndex,
             Divisions = BuildDivisionOptions(),
-            ClientType = GlobalConfig.GetEnum("UBot.Game.ClientType", Game.ClientType).ToString(),
+            ClientType = UBot.Core.RuntimeAccess.Global.GetEnum("UBot.Game.ClientType", UBot.Core.RuntimeAccess.Session.ClientType).ToString(),
             ClientTypes = BuildClientTypeOptions(),
             ReferenceLoading = _lifecycle.ReferenceLoading,
             ReferenceLoaded = _lifecycle.ReferenceLoaded
@@ -86,7 +86,7 @@ internal sealed class UbotConnectionService : UbotServiceBase
             if (!string.Equals(options.mode, normalizedMode, StringComparison.OrdinalIgnoreCase))
             {
                 options.mode = normalizedMode;
-                GlobalConfig.Set(ConnectionModeKey, normalizedMode);
+                UBot.Core.RuntimeAccess.Global.Set(ConnectionModeKey, normalizedMode);
                 changed = true;
             }
         }
@@ -112,22 +112,22 @@ internal sealed class UbotConnectionService : UbotServiceBase
         if (!string.IsNullOrWhiteSpace(clientType)
             && Enum.TryParse<GameClientType>(clientType, true, out var requestedClientType))
         {
-            var currentClientType = GlobalConfig.GetEnum("UBot.Game.ClientType", Game.ClientType);
-            if (requestedClientType != currentClientType && !Game.Ready && !_lifecycle.ReferenceLoading)
+            var currentClientType = UBot.Core.RuntimeAccess.Global.GetEnum("UBot.Game.ClientType", UBot.Core.RuntimeAccess.Session.ClientType);
+            if (requestedClientType != currentClientType && !UBot.Core.RuntimeAccess.Session.Ready && !_lifecycle.ReferenceLoading)
             {
-                GlobalConfig.Set("UBot.Game.ClientType", requestedClientType);
-                Game.ClientType = requestedClientType;
+                UBot.Core.RuntimeAccess.Global.Set("UBot.Game.ClientType", requestedClientType);
+                UBot.Core.RuntimeAccess.Session.ClientType = requestedClientType;
                 _lifecycle.MarkReferenceDataDirty();
                 changed = true;
             }
         }
 
         var normalized = NormalizeConnectionIndices(options.mode, options.divisionIndex, options.gatewayIndex);
-        GlobalConfig.Set(ConnectionModeKey, normalized.mode);
-        GlobalConfig.Set("UBot.DivisionIndex", normalized.divisionIndex);
-        GlobalConfig.Set("UBot.GatewayIndex", normalized.gatewayIndex);
+        UBot.Core.RuntimeAccess.Global.Set(ConnectionModeKey, normalized.mode);
+        UBot.Core.RuntimeAccess.Global.Set("UBot.DivisionIndex", normalized.divisionIndex);
+        UBot.Core.RuntimeAccess.Global.Set("UBot.GatewayIndex", normalized.gatewayIndex);
         if (changed)
-            GlobalConfig.Save();
+            UBot.Core.RuntimeAccess.Global.Save();
 
         return await GetConnectionOptionsAsync();
     }
@@ -135,37 +135,37 @@ internal sealed class UbotConnectionService : UbotServiceBase
 
     public Task<RuntimeStatus> StartBotAsync()
     {
-        if (Kernel.Bot?.Botbase == null)
+        if (UBot.Core.RuntimeAccess.Core.Bot?.Botbase == null)
             return Task.FromResult(BuildStatusSnapshot());
 
-        if (Kernel.Proxy == null || !Kernel.Proxy.IsConnectedToAgentserver)
+        if (UBot.Core.RuntimeAccess.Core.Proxy == null || !UBot.Core.RuntimeAccess.Core.Proxy.IsConnectedToAgentserver)
             return Task.FromResult(BuildStatusSnapshot());
 
-        if (Game.Player == null)
+        if (UBot.Core.RuntimeAccess.Session.Player == null)
             return Task.FromResult(BuildStatusSnapshot());
 
-        if (!Kernel.Bot.Running)
-            Kernel.Bot.Start();
+        if (!UBot.Core.RuntimeAccess.Core.Bot.Running)
+            UBot.Core.RuntimeAccess.Core.Bot.Start();
 
         return Task.FromResult(BuildStatusSnapshot());
     }
 
     public Task<RuntimeStatus> StopBotAsync()
     {
-        if (Kernel.Bot != null && Kernel.Bot.Running)
-            Kernel.Bot.Stop();
+        if (UBot.Core.RuntimeAccess.Core.Bot != null && UBot.Core.RuntimeAccess.Core.Bot.Running)
+            UBot.Core.RuntimeAccess.Core.Bot.Stop();
 
         return Task.FromResult(BuildStatusSnapshot());
     }
 
     public Task<RuntimeStatus> DisconnectAsync()
     {
-        if (Kernel.Bot != null && Kernel.Bot.Running)
-            Kernel.Bot.Stop();
+        if (UBot.Core.RuntimeAccess.Core.Bot != null && UBot.Core.RuntimeAccess.Core.Bot.Running)
+            UBot.Core.RuntimeAccess.Core.Bot.Stop();
 
         try
         {
-            Kernel.Proxy?.Shutdown();
+            UBot.Core.RuntimeAccess.Core.Proxy?.Shutdown();
         }
         catch
         {
@@ -182,14 +182,14 @@ internal sealed class UbotConnectionService : UbotServiceBase
             // ignored
         }
 
-        Game.Started = false;
+        UBot.Core.RuntimeAccess.Session.Started = false;
         return Task.FromResult(BuildStatusSnapshot());
     }
 
     public Task SaveConfigAsync()
     {
-        GlobalConfig.Save();
-        PlayerConfig.Save();
+        UBot.Core.RuntimeAccess.Global.Save();
+        UBot.Core.RuntimeAccess.Player.Save();
         return Task.CompletedTask;
     }
 
@@ -200,14 +200,14 @@ internal sealed class UbotConnectionService : UbotServiceBase
 
     public Task<bool> GoClientlessAsync()
     {
-        if (Game.Clientless)
+        if (UBot.Core.RuntimeAccess.Session.Clientless)
             return Task.FromResult(true);
 
-        if (!Game.Started || Kernel.Proxy == null || !Kernel.Proxy.IsConnectedToAgentserver)
+        if (!UBot.Core.RuntimeAccess.Session.Started || UBot.Core.RuntimeAccess.Core.Proxy == null || !UBot.Core.RuntimeAccess.Core.Proxy.IsConnectedToAgentserver)
             return Task.FromResult(false);
 
-        GlobalConfig.Set("UBot.General.StayConnected", true);
-        GlobalConfig.Save();
+        UBot.Core.RuntimeAccess.Global.Set("UBot.General.StayConnected", true);
+        UBot.Core.RuntimeAccess.Global.Save();
 
         ClientlessManager.GoClientless();
         try
@@ -220,8 +220,8 @@ internal sealed class UbotConnectionService : UbotServiceBase
         }
 
         _clientVisible = false;
-        GlobalConfig.Set(ConnectionModeKey, "clientless");
-        GlobalConfig.Save();
+        UBot.Core.RuntimeAccess.Global.Set(ConnectionModeKey, "clientless");
+        UBot.Core.RuntimeAccess.Global.Save();
         return Task.FromResult(true);
     }
 
@@ -246,9 +246,9 @@ internal sealed class UbotConnectionService : UbotServiceBase
         if (string.IsNullOrWhiteSpace(directory) || string.IsNullOrWhiteSpace(executable))
             return Task.FromResult(false);
 
-        GlobalConfig.Set("UBot.SilkroadDirectory", directory);
-        GlobalConfig.Set("UBot.SilkroadExecutable", executable);
-        GlobalConfig.Save();
+        UBot.Core.RuntimeAccess.Global.Set("UBot.SilkroadDirectory", directory);
+        UBot.Core.RuntimeAccess.Global.Set("UBot.SilkroadExecutable", executable);
+        UBot.Core.RuntimeAccess.Global.Save();
 
         _lifecycle.MarkReferenceDataDirty();
         _lifecycle.EnsureClientInfoLoaded();
@@ -258,8 +258,8 @@ internal sealed class UbotConnectionService : UbotServiceBase
 
     public Task<string> GetSroExecutablePathAsync()
     {
-        var directory = GlobalConfig.Get("UBot.SilkroadDirectory", string.Empty) ?? string.Empty;
-        var executable = GlobalConfig.Get("UBot.SilkroadExecutable", string.Empty) ?? string.Empty;
+        var directory = UBot.Core.RuntimeAccess.Global.Get("UBot.SilkroadDirectory", string.Empty) ?? string.Empty;
+        var executable = UBot.Core.RuntimeAccess.Global.Get("UBot.SilkroadExecutable", string.Empty) ?? string.Empty;
 
         if (string.IsNullOrWhiteSpace(directory) || string.IsNullOrWhiteSpace(executable))
             return Task.FromResult(string.Empty);
@@ -271,35 +271,35 @@ internal sealed class UbotConnectionService : UbotServiceBase
     private async Task<bool> ConnectCoreAsync(string mode)
     {
         var requestedMode = NormalizeConnectionMode(mode);
-        GlobalConfig.Set(ConnectionModeKey, requestedMode);
+        UBot.Core.RuntimeAccess.Global.Set(ConnectionModeKey, requestedMode);
 
         var options = ResolveConnectionOptions();
         var normalized = NormalizeConnectionIndices(requestedMode, options.divisionIndex, options.gatewayIndex);
 
-        GlobalConfig.Set("UBot.DivisionIndex", normalized.divisionIndex);
-        GlobalConfig.Set("UBot.GatewayIndex", normalized.gatewayIndex);
-        GlobalConfig.Save();
+        UBot.Core.RuntimeAccess.Global.Set("UBot.DivisionIndex", normalized.divisionIndex);
+        UBot.Core.RuntimeAccess.Global.Set("UBot.GatewayIndex", normalized.gatewayIndex);
+        UBot.Core.RuntimeAccess.Global.Save();
 
-        if (Kernel.Bot != null && Kernel.Bot.Running)
-            Kernel.Bot.Stop();
+        if (UBot.Core.RuntimeAccess.Core.Bot != null && UBot.Core.RuntimeAccess.Core.Bot.Running)
+            UBot.Core.RuntimeAccess.Core.Bot.Stop();
 
-        Kernel.Proxy?.Shutdown();
-        Game.Clientless = requestedMode == "clientless";
+        UBot.Core.RuntimeAccess.Core.Proxy?.Shutdown();
+        UBot.Core.RuntimeAccess.Session.Clientless = requestedMode == "clientless";
 
         if (!await EnsureReferenceDataReadyAsync().ConfigureAwait(false))
             return false;
 
-        if (Game.ReferenceManager?.DivisionInfo?.Divisions == null
-            || Game.ReferenceManager.DivisionInfo.Divisions.Count == 0
-            || Game.ReferenceManager.GatewayInfo == null)
+        if (UBot.Core.RuntimeAccess.Session.ReferenceManager?.DivisionInfo?.Divisions == null
+            || UBot.Core.RuntimeAccess.Session.ReferenceManager.DivisionInfo.Divisions.Count == 0
+            || UBot.Core.RuntimeAccess.Session.ReferenceManager.GatewayInfo == null)
         {
             return false;
         }
 
         try
         {
-            Game.Start();
-            if (!Game.Clientless)
+            UBot.Core.RuntimeAccess.Session.Start();
+            if (!UBot.Core.RuntimeAccess.Session.Clientless)
             {
                 return await ClientManager.Start();
             }
@@ -349,25 +349,25 @@ internal sealed class UbotConnectionService : UbotServiceBase
     private RuntimeStatus BuildStatusSnapshot()
     {
         var normalized = NormalizeConnectionIndices(
-            NormalizeConnectionMode(GlobalConfig.Get(ConnectionModeKey, "clientless")),
-            GlobalConfig.Get("UBot.DivisionIndex", 0),
-            GlobalConfig.Get("UBot.GatewayIndex", 0));
+            NormalizeConnectionMode(UBot.Core.RuntimeAccess.Global.Get(ConnectionModeKey, "clientless")),
+            UBot.Core.RuntimeAccess.Global.Get("UBot.DivisionIndex", 0),
+            UBot.Core.RuntimeAccess.Global.Get("UBot.GatewayIndex", 0));
 
         return new RuntimeStatus
         {
-            BotRunning = Kernel.Bot != null && Kernel.Bot.Running,
+            BotRunning = UBot.Core.RuntimeAccess.Core.Bot != null && UBot.Core.RuntimeAccess.Core.Bot.Running,
             Profile = ProfileManager.SelectedProfile,
             Server = ResolveServerName(normalized.divisionIndex, normalized.gatewayIndex),
             Character = ResolveCharacterName(),
             StatusText = _lifecycle.StatusText,
-            ClientReady = Game.Ready,
-            ClientStarted = Game.Started,
-            ClientConnected = Kernel.Proxy != null && Kernel.Proxy.ClientConnected,
-            GatewayConnected = Kernel.Proxy != null && Kernel.Proxy.IsConnectedToGatewayserver,
-            AgentConnected = Kernel.Proxy != null && Kernel.Proxy.IsConnectedToAgentserver,
+            ClientReady = UBot.Core.RuntimeAccess.Session.Ready,
+            ClientStarted = UBot.Core.RuntimeAccess.Session.Started,
+            ClientConnected = UBot.Core.RuntimeAccess.Core.Proxy != null && UBot.Core.RuntimeAccess.Core.Proxy.ClientConnected,
+            GatewayConnected = UBot.Core.RuntimeAccess.Core.Proxy != null && UBot.Core.RuntimeAccess.Core.Proxy.IsConnectedToGatewayserver,
+            AgentConnected = UBot.Core.RuntimeAccess.Core.Proxy != null && UBot.Core.RuntimeAccess.Core.Proxy.IsConnectedToAgentserver,
             ReferenceLoading = _lifecycle.ReferenceLoading,
             ReferenceLoaded = _lifecycle.ReferenceLoaded,
-            SelectedBotbase = Kernel.Bot?.Botbase?.Name,
+            SelectedBotbase = UBot.Core.RuntimeAccess.Core.Bot?.Botbase?.Name,
             ConnectionMode = normalized.mode,
             DivisionIndex = normalized.divisionIndex,
             GatewayIndex = normalized.gatewayIndex,
@@ -377,7 +377,7 @@ internal sealed class UbotConnectionService : UbotServiceBase
 
     private static PlayerStats BuildPlayerSummary()
     {
-        var player = Game.Player;
+        var player = UBot.Core.RuntimeAccess.Session.Player;
         if (player == null)
             return new PlayerStats();
 
@@ -387,7 +387,7 @@ internal sealed class UbotConnectionService : UbotServiceBase
         var manaPercent = maxMana > 0 ? Math.Clamp(player.Mana * 100.0 / maxMana, 0, 100) : 0;
 
         var expPercent = 0d;
-        var refLevel = Game.ReferenceManager?.GetRefLevel(player.Level);
+        var refLevel = UBot.Core.RuntimeAccess.Session.ReferenceManager?.GetRefLevel(player.Level);
         if (refLevel != null && refLevel.Exp_C > 0)
             expPercent = Math.Clamp(player.Experience * 100.0 / refLevel.Exp_C, 0, 100);
 
@@ -413,7 +413,7 @@ internal sealed class UbotConnectionService : UbotServiceBase
 
     private static List<ConnectionDivisionDto> BuildDivisionOptions()
     {
-        var divisionInfo = Game.ReferenceManager?.DivisionInfo;
+        var divisionInfo = UBot.Core.RuntimeAccess.Session.ReferenceManager?.DivisionInfo;
         if (divisionInfo?.Divisions == null)
             return new List<ConnectionDivisionDto>();
 
@@ -451,16 +451,16 @@ internal sealed class UbotConnectionService : UbotServiceBase
 
     private static (string mode, int divisionIndex, int gatewayIndex) ResolveConnectionOptions()
     {
-        var mode = NormalizeConnectionMode(GlobalConfig.Get(ConnectionModeKey, "clientless"));
-        var divisionIndex = GlobalConfig.Get("UBot.DivisionIndex", 0);
-        var gatewayIndex = GlobalConfig.Get("UBot.GatewayIndex", 0);
+        var mode = NormalizeConnectionMode(UBot.Core.RuntimeAccess.Global.Get(ConnectionModeKey, "clientless"));
+        var divisionIndex = UBot.Core.RuntimeAccess.Global.Get("UBot.DivisionIndex", 0);
+        var gatewayIndex = UBot.Core.RuntimeAccess.Global.Get("UBot.GatewayIndex", 0);
         return (mode, divisionIndex, gatewayIndex);
     }
 
     private static (string mode, int divisionIndex, int gatewayIndex) NormalizeConnectionIndices(string mode, int divisionIndex, int gatewayIndex)
     {
         var normalizedMode = NormalizeConnectionMode(mode);
-        var divisions = Game.ReferenceManager?.DivisionInfo?.Divisions;
+        var divisions = UBot.Core.RuntimeAccess.Session.ReferenceManager?.DivisionInfo?.Divisions;
         if (divisions == null || divisions.Count == 0)
             return (normalizedMode, Math.Max(divisionIndex, 0), Math.Max(gatewayIndex, 0));
 
@@ -490,8 +490,8 @@ internal sealed class UbotConnectionService : UbotServiceBase
 
     private static string ResolveCharacterName()
     {
-        if (Game.Player != null && !string.IsNullOrWhiteSpace(Game.Player.Name))
-            return Game.Player.Name;
+        if (UBot.Core.RuntimeAccess.Session.Player != null && !string.IsNullOrWhiteSpace(UBot.Core.RuntimeAccess.Session.Player.Name))
+            return UBot.Core.RuntimeAccess.Session.Player.Name;
         if (!string.IsNullOrWhiteSpace(ProfileManager.SelectedCharacter))
             return ProfileManager.SelectedCharacter;
         return "-";
@@ -499,7 +499,7 @@ internal sealed class UbotConnectionService : UbotServiceBase
 
     private static string ResolveServerName(int divisionIndex, int gatewayIndex)
     {
-        var divisions = Game.ReferenceManager?.DivisionInfo?.Divisions;
+        var divisions = UBot.Core.RuntimeAccess.Session.ReferenceManager?.DivisionInfo?.Divisions;
         if (divisions == null || divisions.Count == 0 || divisionIndex < 0 || divisionIndex >= divisions.Count)
             return "Unknown";
 

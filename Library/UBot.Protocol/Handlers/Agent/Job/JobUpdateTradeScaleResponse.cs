@@ -36,7 +36,7 @@ public class JobUpdateTradeScaleResponse : IPacketHandler
 
         Log.Notify($"[Job] Difficulty set to level {CoreGame.Player.TradeInfo.Scale}");
 
-        EventManager.FireEvent("OnJobScaleUpdate");
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnJobScaleUpdate");
     }
 }
 

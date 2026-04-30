@@ -13,12 +13,12 @@ public class SkillLearnResponse : IPacketHandler
 
     public void Invoke(Packet packet)
     {
-        var player = ProtocolRuntime.GameState?.Player as Player;
+        var player = UBot.Protocol.ProtocolRuntime.GameState?.Player as Player;
         if (player == null || packet.ReadByte() != 1)
             return;
 
         var skillId = packet.ReadUInt();
-        dynamic skill = ProtocolRuntime.GameState?.GetReference("RefSkill", skillId);
+        dynamic skill = UBot.Protocol.ProtocolRuntime.GameState?.GetReference("RefSkill", skillId);
         if (skill == null)
             return;
 
@@ -27,13 +27,13 @@ public class SkillLearnResponse : IPacketHandler
         {
             var skillInfo = new SkillInfo(skillId, true);
             player.Skills.KnownSkills.Add(skillInfo);
-            ProtocolRuntime.EventBus?.Fire("OnSkillLearned", skillInfo);
+            UBot.Protocol.ProtocolRuntime.EventBus?.Fire("OnSkillLearned", skillInfo);
         }
         else
         {
             var oldSkill = new SkillInfo(existingSkill.Id, false);
             existingSkill.Id = skillId;
-            ProtocolRuntime.EventBus?.Fire("OnSkillUpgraded", oldSkill, existingSkill);
+            UBot.Protocol.ProtocolRuntime.EventBus?.Fire("OnSkillUpgraded", oldSkill, existingSkill);
         }
     }
 }

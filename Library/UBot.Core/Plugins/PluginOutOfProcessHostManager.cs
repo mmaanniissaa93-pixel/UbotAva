@@ -134,7 +134,7 @@ internal sealed class PluginOutOfProcessHostManager : IDisposable
             if (entry.Process != null && !entry.Process.HasExited)
                 return ignoreAlreadyRunning;
 
-            var executablePath = Path.Combine(Kernel.BasePath, "UBot.exe");
+            var executablePath = Path.Combine(UBot.Core.RuntimeAccess.Core.BasePath, "UBot.exe");
             if (!File.Exists(executablePath))
             {
                 Log.Error($"Out-of-proc plugin host executable not found: {executablePath}");
@@ -156,7 +156,7 @@ internal sealed class PluginOutOfProcessHostManager : IDisposable
                         $"--plugin-host --plugin-name \"{entry.PluginName}\" --plugin-path \"{entry.PluginPath}\"",
                     UseShellExecute = false,
                     CreateNoWindow = true,
-                    WorkingDirectory = Kernel.BasePath
+                    WorkingDirectory = UBot.Core.RuntimeAccess.Core.BasePath
                 };
 
                 var process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };

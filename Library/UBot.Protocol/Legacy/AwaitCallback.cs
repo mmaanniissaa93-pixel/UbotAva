@@ -74,7 +74,7 @@ public sealed class AwaitCallback
         if (!_completionSource.Task.Wait(Math.Max(1, milliseconds)))
         {
             _timeout = true;
-            PacketManager.RemoveCallback(this);
+            UBot.Protocol.ProtocolRuntime.RemoveCallback(this);
             Log.Debug($"Callback timeout, ResponseOpcode: 0x{ResponseOpcode:X}");
         }
     }
@@ -95,7 +95,7 @@ public sealed class AwaitCallback
             if (!cancellationToken.IsCancellationRequested)
             {
                 _timeout = true;
-                PacketManager.RemoveCallback(this);
+                UBot.Protocol.ProtocolRuntime.RemoveCallback(this);
                 Log.Debug($"Callback timeout, ResponseOpcode: 0x{ResponseOpcode:X}");
             }
         }
@@ -106,59 +106,6 @@ public sealed class AwaitCallback
         _succeeded = succeeded;
         _invoked = true;
         _completionSource.TrySetResult(succeeded);
-        PacketManager.RemoveCallback(this);
-    }
-}
-
-public static class PacketManager
-{
-    private static readonly object Lock = new();
-    private static readonly List<AwaitCallback> Callbacks = new();
-
-    public static void SendPacket(Packet packet, PacketDestination destination, params AwaitCallback[] callbacks)
-    {
-        if (callbacks != null && callbacks.Length > 0)
-        {
-            lock (Lock)
-            {
-                Callbacks.RemoveAll(callback => callback == null || callback.IsClosed);
-                foreach (var callback in callbacks.Where(callback => callback != null && !callback.IsClosed && !Callbacks.Contains(callback)))
-                    Callbacks.Add(callback);
-            }
-        }
-
-        ProtocolRuntime.Dispatch(packet, destination);
-    }
-
-    public static void CallCallback(Packet packet)
-    {
-        if (packet == null)
-            return;
-
-        AwaitCallback[] callbacks;
-        lock (Lock)
-        {
-            Callbacks.RemoveAll(callback => callback == null || callback.IsClosed);
-            callbacks = Callbacks.Where(callback => callback.ResponseOpcode == packet.Opcode).ToArray();
-        }
-
-        foreach (var callback in callbacks)
-        {
-            packet.SeekRead(0, System.IO.SeekOrigin.Begin);
-            callback.Invoke(packet);
-        }
-
-        lock (Lock)
-        {
-            Callbacks.RemoveAll(callback => callback == null || callback.IsClosed);
-        }
-    }
-
-    internal static void RemoveCallback(AwaitCallback callback)
-    {
-        lock (Lock)
-        {
-            Callbacks.Remove(callback);
-        }
+        UBot.Protocol.ProtocolRuntime.RemoveCallback(this);
     }
 }

@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Objects.Spawn;
 using UBot.Lure.Components;
@@ -15,13 +15,13 @@ internal class TargetBundle
         SpawnManager.TryGetEntity<SpawnedMonster>(
             f =>
                 f.AttackingPlayer == false
-                && Game.SelectedEntity?.UniqueId != f.UniqueId
+                && UBot.Core.RuntimeAccess.Session.SelectedEntity?.UniqueId != f.UniqueId
                 && f.Position.DistanceTo(LureConfig.Area.Position) > 15
                 && f.Position.DistanceTo(LureConfig.Area.Position) <= LureConfig.Area.Radius,
             out var mob
         );
 
-        if (Game.Player.InAction)
+        if (UBot.Core.RuntimeAccess.Session.Player.InAction)
             SkillManager.CancelAction();
 
         mob?.TrySelect();

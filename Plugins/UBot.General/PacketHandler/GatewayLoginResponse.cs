@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -41,26 +41,26 @@ internal class GatewayLoginResponse : IPacketHandler
             View.PendingWindow?.Hide();
             View.PendingWindow?.StopClientlessQueueTask();
 
-            if (Game.ClientType == GameClientType.Japanese)
+            if (UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Japanese)
             {
                 packet.ReadUInt(); //Token
                 packet.ReadString(); //IP
                 packet.ReadUShort(); //Port
-                GlobalConfig.Set("UBot.JSRO.login", packet.ReadString()); //Login
+                UBot.Core.RuntimeAccess.Global.Set("UBot.JSRO.login", packet.ReadString()); //Login
                 packet.ReadByte(); //Channel
             }
 
             var selectedAccount = Accounts.SavedAccounts?.Find(p =>
-                p.Username == GlobalConfig.Get<string>("UBot.General.AutoLoginAccountUsername")
+                p.Username == UBot.Core.RuntimeAccess.Global.Get<string>("UBot.General.AutoLoginAccountUsername")
             );
 
-            if (Game.ClientType == GameClientType.Global && selectedAccount?.Channel == 0x02)
+            if (UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Global && selectedAccount?.Channel == 0x02)
             {
                 packet.ReadUInt(); //Token
                 packet.ReadString(); //IP
                 packet.ReadUShort(); //Port
                 packet.ReadByte(); //Channel
-                GlobalConfig.Set("UBot.JCPlanet.login", packet.ReadString()); //Login
+                UBot.Core.RuntimeAccess.Global.Set("UBot.JCPlanet.login", packet.ReadString()); //Login
             }
 
             return;
@@ -117,7 +117,7 @@ internal class GatewayLoginResponse : IPacketHandler
                     main?.BeginInvoke(() =>
                     {
                         View.PendingWindow.Start(count, timestamp);
-                        if (!GlobalConfig.Get<bool>("UBot.General.AutoHidePendingWindow"))
+                        if (!UBot.Core.RuntimeAccess.Global.Get<bool>("UBot.General.AutoHidePendingWindow"))
                             View.PendingWindow.ShowAtTop(View.Instance);
                     });
                 });

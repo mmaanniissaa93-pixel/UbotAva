@@ -41,13 +41,13 @@ public class PartyUpdateResponse : IPacketHandler
         {
             case PartyUpdateType.Dismissed:
                 CoreGame.Party.Clear();
-                EventManager.FireEvent("OnPartyDismiss");
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnPartyDismiss");
                 break;
 
             case PartyUpdateType.Joined:
                 var memberJoined = packet.ReadPartyMember();
                 CoreGame.Party.Members?.Add(memberJoined);
-                EventManager.FireEvent("OnPartyMemberJoin", memberJoined);
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnPartyMemberJoin", memberJoined);
                 break;
 
             case PartyUpdateType.Leave:
@@ -58,16 +58,16 @@ public class PartyUpdateResponse : IPacketHandler
                  */
                 if (packet.ReadByte() == 0x04)
                 {
-                    EventManager.FireEvent("OnPartyMemberBanned", memberLeft);
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnPartyMemberBanned", memberLeft);
                 }
                 else if (memberLeft.Name == CoreGame.Player.Name)
                 {
-                    EventManager.FireEvent("OnPartyDismiss");
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnPartyDismiss");
                     CoreGame.Party.Clear();
                 }
                 else
                 {
-                    EventManager.FireEvent("OnPartyMemberLeave", memberLeft);
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnPartyMemberLeave", memberLeft);
                 }
 
                 break;
@@ -108,17 +108,17 @@ public class PartyUpdateResponse : IPacketHandler
                         break;
                 }
 
-                EventManager.FireEvent("OnPartyMemberUpdate", member);
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnPartyMemberUpdate", member);
                 break;
 
             case PartyUpdateType.Leader:
                 CoreGame.Party.Leader = CoreGame.Party.GetMemberById(packet.ReadUInt());
-                EventManager.FireEvent("OnPartyLeaderChange");
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnPartyLeaderChange");
                 break;
 
             case PartyUpdateType.LeaderChange:
                 CoreGame.Party.Leader = CoreGame.Party.GetMemberById(packet.ReadUInt());
-                EventManager.FireEvent("OnPartyLeaderChange");
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnPartyLeaderChange");
                 break;
 
             default:

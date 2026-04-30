@@ -1,4 +1,4 @@
-﻿using UBot.Core.Network;
+using UBot.Core.Network;
 using UBot.Protocol;
 
 namespace UBot.Protocol.Handlers.Agent.Entity;
@@ -11,7 +11,7 @@ public class EntityGroupSpawnEndResponse : IPacketHandler
 
     public void Invoke(Packet packet)
     {
-        ProtocolRuntime.SpawnController?.EndGroup();
+        UBot.Protocol.ProtocolRuntime.SpawnController?.EndGroup();
     }
 }
 

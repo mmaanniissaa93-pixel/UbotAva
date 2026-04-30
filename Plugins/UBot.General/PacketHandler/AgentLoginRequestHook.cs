@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Cryptography;
 using UBot.Core.Network;
 using UBot.General.Components;
@@ -33,19 +33,19 @@ internal class AgentLoginRequestHook : IPacketHook
         if (!AutoLogin.ConsumeAgentCredentialRewrite())
             return packet;
 
-        var username = GlobalConfig.Get<string>("UBot.General.AutoLoginAccountUsername");
+        var username = UBot.Core.RuntimeAccess.Global.Get<string>("UBot.General.AutoLoginAccountUsername");
 
         var selectedAccount = Accounts.SavedAccounts.Find(p => p.Username == username);
         if (selectedAccount == null)
             return packet;
 
-        if (Game.Clientless)
+        if (UBot.Core.RuntimeAccess.Session.Clientless)
             return packet;
 
         // Preserve optional anti-cheat payload bytes (e.g. MaxiGuard variants)
         // from the original client packet when present.
-        var locale = Game.ReferenceManager.DivisionInfo.Locale;
-        var macAddress = Game.MacAddress;
+        var locale = UBot.Core.RuntimeAccess.Session.ReferenceManager.DivisionInfo.Locale;
+        var macAddress = UBot.Core.RuntimeAccess.Session.MacAddress;
         byte[] tailBytes = System.Array.Empty<byte>();
 
         try
@@ -78,27 +78,27 @@ internal class AgentLoginRequestHook : IPacketHook
         }
 
         if (macAddress == null || macAddress.Length != 6)
-            macAddress = Game.MacAddress;
+            macAddress = UBot.Core.RuntimeAccess.Session.MacAddress;
         if (macAddress == null || macAddress.Length != 6)
             macAddress = new byte[6];
 
         packet = new Packet(packet.Opcode, packet.Encrypted);
-        packet.WriteUInt(Kernel.Proxy.Token);
+        packet.WriteUInt(UBot.Core.RuntimeAccess.Core.Proxy.Token);
 
-        if (Game.ClientType == GameClientType.RuSro)
+        if (UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.RuSro)
         {
-            packet.WriteString(GlobalConfig.Get<string>("UBot.RuSro.login"));
-            packet.WriteString(Sha256.ComputeHash(GlobalConfig.Get<string>("UBot.RuSro.password")));
+            packet.WriteString(UBot.Core.RuntimeAccess.Global.Get<string>("UBot.RuSro.login"));
+            packet.WriteString(Sha256.ComputeHash(UBot.Core.RuntimeAccess.Global.Get<string>("UBot.RuSro.password")));
         }
-        else if (Game.ClientType == GameClientType.Japanese)
+        else if (UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Japanese)
         {
-            packet.WriteString(GlobalConfig.Get<string>("UBot.JSRO.login"));
-            packet.WriteString(Sha256.ComputeHash(GlobalConfig.Get<string>("UBot.JSRO.token")));
+            packet.WriteString(UBot.Core.RuntimeAccess.Global.Get<string>("UBot.JSRO.login"));
+            packet.WriteString(Sha256.ComputeHash(UBot.Core.RuntimeAccess.Global.Get<string>("UBot.JSRO.token")));
         }
         else
         {
-            if (Game.ClientType == GameClientType.Global && selectedAccount.Channel == 0x02)
-                packet.WriteString(GlobalConfig.Get<string>("UBot.JCPlanet.login"));
+            if (UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Global && selectedAccount.Channel == 0x02)
+                packet.WriteString(UBot.Core.RuntimeAccess.Global.Get<string>("UBot.JCPlanet.login"));
             else
                 packet.WriteString(selectedAccount.Username);
 

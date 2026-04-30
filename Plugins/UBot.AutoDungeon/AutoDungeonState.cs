@@ -134,7 +134,7 @@ internal static class AutoDungeonState
 
     public static List<MonsterCountEntry> GetMonsterCounterSnapshot(Position centerPosition, double? radius = null)
     {
-        if (!Game.Ready || Game.Player == null)
+        if (!UBot.Core.RuntimeAccess.Session.Ready || UBot.Core.RuntimeAccess.Session.Player == null)
             return [];
 
         if (!SpawnManager.TryGetEntities<SpawnedMonster>(out var monsters))
@@ -203,10 +203,10 @@ internal static class AutoDungeonState
 
     public static void WaitForPotentialDrops(Position centerPosition, int radius, int maxSeconds)
     {
-        if (Game.Player == null)
+        if (UBot.Core.RuntimeAccess.Session.Player == null)
             return;
 
-        var playerJid = Game.Player.JID;
+        var playerJid = UBot.Core.RuntimeAccess.Session.Player.JID;
 
         for (var waited = 0; waited < maxSeconds; waited++)
         {
@@ -230,7 +230,7 @@ internal static class AutoDungeonState
 
     public static bool StartGoDimensionalFlow(string preferredItemName)
     {
-        if (!Game.Ready || Game.Player?.Inventory == null)
+        if (!UBot.Core.RuntimeAccess.Session.Ready || UBot.Core.RuntimeAccess.Session.Player?.Inventory == null)
             return false;
 
         if (TryEnterAlreadyOpenDimensional(preferredItemName))
@@ -346,13 +346,13 @@ internal static class AutoDungeonState
 
     private static InventoryItem FindDimensionalItem(string preferredItemName)
     {
-        if (Game.Player?.Inventory == null)
+        if (UBot.Core.RuntimeAccess.Session.Player?.Inventory == null)
             return null;
 
         if (!string.IsNullOrWhiteSpace(preferredItemName))
         {
             var preferredName = preferredItemName.Trim();
-            var exactMatch = Game.Player.Inventory.GetItem(item =>
+            var exactMatch = UBot.Core.RuntimeAccess.Session.Player.Inventory.GetItem(item =>
                 item.Record.GetRealName().Equals(preferredName, StringComparison.OrdinalIgnoreCase)
                 || item.Record.CodeName.Equals(preferredName, StringComparison.OrdinalIgnoreCase)
             );
@@ -361,7 +361,7 @@ internal static class AutoDungeonState
                 return exactMatch;
         }
 
-        return Game.Player.Inventory.GetItem(item => IsDimensionalItem(item.Record));
+        return UBot.Core.RuntimeAccess.Session.Player.Inventory.GetItem(item => IsDimensionalItem(item.Record));
     }
 
     private static bool IsDimensionalItem(UBot.GameData.ReferenceObjects.RefObjItem record)
@@ -379,7 +379,7 @@ internal static class AutoDungeonState
 
     private static bool EnterDimensionalPortal(string itemName)
     {
-        if (!Game.Ready || Game.Player == null)
+        if (!UBot.Core.RuntimeAccess.Session.Ready || UBot.Core.RuntimeAccess.Session.Player == null)
             return false;
 
         if (!TryFindDimensionalPortal(out var portal))
@@ -397,7 +397,7 @@ internal static class AutoDungeonState
         packet.WriteByte((byte)TeleportType.RUNTIME_PORTAL);
         packet.WriteByte(0);
 
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server);
 
         Log.Notify("[AutoDungeon] Entered dimensional portal.");
         return true;
@@ -410,7 +410,7 @@ internal static class AutoDungeonState
         if (!SpawnManager.TryGetEntities<SpawnedPortal>(out var portals) || !portals.Any())
             return false;
 
-        var player = Game.Player;
+        var player = UBot.Core.RuntimeAccess.Session.Player;
         var candidates = portals.Where(p => p != null).ToList();
 
         var ownedPortal = candidates
@@ -472,12 +472,12 @@ internal static class AutoDungeonState
 
     public static void SetTrainingArea(Position center, int radius)
     {
-        PlayerConfig.Set("UBot.Area.Region", center.Region);
-        PlayerConfig.Set("UBot.Area.X", center.XOffset);
-        PlayerConfig.Set("UBot.Area.Y", center.YOffset);
-        PlayerConfig.Set("UBot.Area.Z", center.ZOffset);
-        PlayerConfig.Set("UBot.Area.Radius", radius);
+        UBot.Core.RuntimeAccess.Player.Set("UBot.Area.Region", center.Region);
+        UBot.Core.RuntimeAccess.Player.Set("UBot.Area.X", center.XOffset);
+        UBot.Core.RuntimeAccess.Player.Set("UBot.Area.Y", center.YOffset);
+        UBot.Core.RuntimeAccess.Player.Set("UBot.Area.Z", center.ZOffset);
+        UBot.Core.RuntimeAccess.Player.Set("UBot.Area.Radius", radius);
 
-        EventManager.FireEvent("OnSetTrainingArea");
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnSetTrainingArea");
     }
 }

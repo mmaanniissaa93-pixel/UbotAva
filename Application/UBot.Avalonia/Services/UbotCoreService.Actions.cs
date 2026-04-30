@@ -108,19 +108,19 @@ internal sealed class UbotGeneralActionHandler : UbotServiceBase
 
         if (normalized is "general.open-sound-settings")
         {
-            EventManager.FireEvent("OnOpenSoundSettings");
+            UBot.Core.RuntimeAccess.Events.FireEvent("OnOpenSoundSettings");
             return true;
         }
 
         if (normalized is "protection.apply-stat-points")
         {
-            EventManager.FireEvent("OnApplyStatPoints");
+            UBot.Core.RuntimeAccess.Events.FireEvent("OnApplyStatPoints");
             return true;
         }
 
         if (normalized is "statistics.reset")
         {
-            EventManager.FireEvent("OnResetStatistics");
+            UBot.Core.RuntimeAccess.Events.FireEvent("OnResetStatistics");
             return true;
         }
 
@@ -135,8 +135,8 @@ internal sealed class UbotGeneralActionHandler : UbotServiceBase
 
         if (normalized is "map.reset-to-player" or "map.center-on-player" or "map.navmesh.reset-to-player")
         {
-            PlayerConfig.Set("UBot.Desktop.Map.ResetToPlayerAt", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
-            PlayerConfig.Save();
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Desktop.Map.ResetToPlayerAt", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+            UBot.Core.RuntimeAccess.Player.Save();
             return true;
         }
 
@@ -148,22 +148,22 @@ internal sealed class UbotGeneralActionHandler : UbotServiceBase
 
     private bool HandleSetTrainingAreaToCurrentPosition()
     {
-        if (Game.Player == null)
+        if (UBot.Core.RuntimeAccess.Session.Player == null)
             return false;
 
-        var p = Game.Player.Position;
-        PlayerConfig.Set("UBot.Area.Region", (ushort)p.Region);
-        PlayerConfig.Set("UBot.Area.X", p.XOffset);
-        PlayerConfig.Set("UBot.Area.Y", p.YOffset);
-        PlayerConfig.Set("UBot.Area.Z", p.ZOffset);
-        EventManager.FireEvent("OnSetTrainingArea");
-        PlayerConfig.Save();
+        var p = UBot.Core.RuntimeAccess.Session.Player.Position;
+        UBot.Core.RuntimeAccess.Player.Set("UBot.Area.Region", (ushort)p.Region);
+        UBot.Core.RuntimeAccess.Player.Set("UBot.Area.X", p.XOffset);
+        UBot.Core.RuntimeAccess.Player.Set("UBot.Area.Y", p.YOffset);
+        UBot.Core.RuntimeAccess.Player.Set("UBot.Area.Z", p.ZOffset);
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnSetTrainingArea");
+        UBot.Core.RuntimeAccess.Player.Save();
         return true;
     }
 
     private bool HandleMapWalkToAction(Dictionary<string, object?> payload)
     {
-        if (Game.Player == null)
+        if (UBot.Core.RuntimeAccess.Session.Player == null)
             return false;
 
         if (!TryGetDoubleValue(payload, "mapX", out var mapX))
@@ -171,7 +171,7 @@ internal sealed class UbotGeneralActionHandler : UbotServiceBase
         if (!TryGetDoubleValue(payload, "mapY", out var mapY))
             return false;
 
-        var source = Game.Player.Position;
+        var source = UBot.Core.RuntimeAccess.Session.Player.Position;
         if (!_mapService.TryResolveWalkDestination(source, mapX, mapY, out var destination))
             return false;
 
@@ -193,13 +193,13 @@ internal sealed class UbotGeneralActionHandler : UbotServiceBase
 
     private static bool TrySendPlayerMovePacket(Position destination)
     {
-        if (Game.Player == null)
+        if (UBot.Core.RuntimeAccess.Session.Player == null)
             return false;
 
         var packet = new Packet(0x7021);
         packet.WriteByte(1);
 
-        if (!Game.Player.IsInDungeon)
+        if (!UBot.Core.RuntimeAccess.Session.Player.IsInDungeon)
         {
             packet.WriteUShort(destination.Region);
             packet.WriteShort((short)Math.Clamp(Math.Round(destination.XOffset), short.MinValue, short.MaxValue));
@@ -208,13 +208,13 @@ internal sealed class UbotGeneralActionHandler : UbotServiceBase
         }
         else
         {
-            packet.WriteUShort(Game.Player.Position.Region);
+            packet.WriteUShort(UBot.Core.RuntimeAccess.Session.Player.Position.Region);
             packet.WriteInt((int)Math.Round(destination.XOffset));
             packet.WriteInt((int)Math.Round(destination.ZOffset));
             packet.WriteInt((int)Math.Round(destination.YOffset));
         }
 
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server);
         return true;
     }
 
@@ -264,27 +264,27 @@ internal sealed class UbotGeneralActionHandler : UbotServiceBase
         packet.WriteByte(type);
         packet.WriteByte(1);
 
-        if (Game.ClientType > GameClientType.Vietnam)
+        if (UBot.Core.RuntimeAccess.Session.ClientType > GameClientType.Vietnam)
             packet.WriteByte(0);
-        if (Game.ClientType >= GameClientType.Chinese_Old)
+        if (UBot.Core.RuntimeAccess.Session.ClientType >= GameClientType.Chinese_Old)
             packet.WriteByte(0);
 
         if (type == ChatType.Private)
             packet.WriteString(receiver ?? string.Empty);
 
         packet.WriteConditonalString(message);
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server);
     }
 
     private static void SendGlobalChatPacket(string message)
     {
-        var item = Game.Player?.Inventory?.GetItem(new TypeIdFilter(3, 3, 3, 5));
+        var item = UBot.Core.RuntimeAccess.Session.Player?.Inventory?.GetItem(new TypeIdFilter(3, 3, 3, 5));
         if (item == null)
             return;
 
         var packet = new Packet(0x704C);
         packet.WriteByte(item.Slot);
-        if (Game.ClientType > GameClientType.Vietnam)
+        if (UBot.Core.RuntimeAccess.Session.ClientType > GameClientType.Vietnam)
         {
             packet.WriteInt(item.Record.Tid);
             packet.WriteByte(0);
@@ -295,7 +295,7 @@ internal sealed class UbotGeneralActionHandler : UbotServiceBase
         }
 
         packet.WriteConditonalString(message);
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server);
     }
 
     private static bool TogglePendingWindow()
@@ -369,8 +369,8 @@ internal sealed class UbotInventoryActionHandler : UbotServiceBase
         {
             if (TryGetStringValue(payload, "type", out var type))
             {
-                PlayerConfig.Set("UBot.Desktop.Inventory.SelectedTab", type);
-                PlayerConfig.Save();
+                UBot.Core.RuntimeAccess.Player.Set("UBot.Desktop.Inventory.SelectedTab", type);
+                UBot.Core.RuntimeAccess.Player.Save();
                 return true;
             }
         }
@@ -430,8 +430,8 @@ internal sealed class UbotInventoryActionHandler : UbotServiceBase
         {
             if (TryGetBoolValue(payload, "value", out var val))
             {
-                PlayerConfig.Set("UBot.Inventory.AutoSort", val);
-                PlayerConfig.Save();
+                UBot.Core.RuntimeAccess.Player.Set("UBot.Inventory.AutoSort", val);
+                UBot.Core.RuntimeAccess.Player.Save();
                 return true;
             }
         }
@@ -441,7 +441,7 @@ internal sealed class UbotInventoryActionHandler : UbotServiceBase
 
     private static InventoryItem? ResolveInventoryItem(string source, byte slot)
     {
-        var player = Game.Player;
+        var player = UBot.Core.RuntimeAccess.Session.Player;
         if (player == null) return null;
 
         return source.ToLower() switch
@@ -471,14 +471,14 @@ internal sealed class UbotInventoryActionHandler : UbotServiceBase
 
     private static bool ToggleConfigArrayItem(string key, string value)
     {
-        var list = PlayerConfig.GetArray<string>(key).ToList();
+        var list = UBot.Core.RuntimeAccess.Player.GetArray<string>(key).ToList();
         if (list.Contains(value, StringComparer.OrdinalIgnoreCase))
             list.RemoveAll(x => x.Equals(value, StringComparison.OrdinalIgnoreCase));
         else
             list.Add(value);
 
-        PlayerConfig.Set(key, list.ToArray());
-        PlayerConfig.Save();
+        UBot.Core.RuntimeAccess.Player.Set(key, list.ToArray());
+        UBot.Core.RuntimeAccess.Player.Save();
         return true;
     }
 }
@@ -491,9 +491,9 @@ internal sealed class UbotPartyActionHandler : UbotServiceBase
         {
             case "party.leave":
             case "party.leave-party":
-                if (Game.Party?.IsInParty == true)
+                if (UBot.Core.RuntimeAccess.Session.Party?.IsInParty == true)
                 {
-                    Game.Party.Leave();
+                    UBot.Core.RuntimeAccess.Session.Party.Leave();
                     return true;
                 }
                 return false;
@@ -501,10 +501,10 @@ internal sealed class UbotPartyActionHandler : UbotServiceBase
             case "party.banish-member":
                 if (!TryGetUIntValue(payload, "memberId", out var memberId))
                     return false;
-                if (Game.Party?.Members == null)
+                if (UBot.Core.RuntimeAccess.Session.Party?.Members == null)
                     return false;
 
-                var member = Game.Party.Members.FirstOrDefault(item => item.MemberId == memberId);
+                var member = UBot.Core.RuntimeAccess.Session.Party.Members.FirstOrDefault(item => item.MemberId == memberId);
                 if (member == null)
                     return false;
 
@@ -639,7 +639,7 @@ internal sealed class UbotPartyActionHandler : UbotServiceBase
             0xB06C
         );
 
-        PacketManager.SendPacket(packet, PacketDestination.Server, callback);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, callback);
         callback.AwaitResponse(5000);
         pageCount = parsedPageCount;
         entries = parsedEntries;
@@ -651,7 +651,7 @@ internal sealed class UbotPartyActionHandler : UbotServiceBase
         var id = packet.ReadUInt();
         _ = packet.ReadUInt();
 
-        if (Game.ClientType >= GameClientType.Chinese && Game.ClientType != GameClientType.Rigid)
+        if (UBot.Core.RuntimeAccess.Session.ClientType >= GameClientType.Chinese && UBot.Core.RuntimeAccess.Session.ClientType != GameClientType.Rigid)
             _ = packet.ReadUInt();
 
         var leader = packet.ReadString();
@@ -703,7 +703,7 @@ internal sealed class UbotPartyActionHandler : UbotServiceBase
 
         var packet = new Packet(0x706D);
         packet.WriteUInt(matchingId);
-        PacketManager.SendPacket(packet, PacketDestination.Server, callback);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, callback);
         callback.AwaitResponse(10000);
         return callback.IsCompleted && accepted == 1;
     }
@@ -712,55 +712,55 @@ internal sealed class UbotPartyActionHandler : UbotServiceBase
     {
         var expAutoShare = TryGetBoolValue(payload, "expAutoShare", out var parsedExpAutoShare)
             ? parsedExpAutoShare
-            : PlayerConfig.Get("UBot.Party.EXPAutoShare", true);
+            : UBot.Core.RuntimeAccess.Player.Get("UBot.Party.EXPAutoShare", true);
 
         var itemAutoShare = TryGetBoolValue(payload, "itemAutoShare", out var parsedItemAutoShare)
             ? parsedItemAutoShare
-            : PlayerConfig.Get("UBot.Party.ItemAutoShare", true);
+            : UBot.Core.RuntimeAccess.Player.Get("UBot.Party.ItemAutoShare", true);
 
         var allowInvitations = TryGetBoolValue(payload, "allowInvitations", out var parsedAllowInvitations)
             ? parsedAllowInvitations
-            : PlayerConfig.Get("UBot.Party.AllowInvitations", true);
+            : UBot.Core.RuntimeAccess.Player.Get("UBot.Party.AllowInvitations", true);
 
         var purposeValue = TryGetIntValue(payload, "purpose", out var parsedPurpose)
             ? Math.Clamp(parsedPurpose, 0, 3)
-            : (int)PlayerConfig.Get<byte>("UBot.Party.Matching.Purpose", 0);
+            : (int)UBot.Core.RuntimeAccess.Player.Get<byte>("UBot.Party.Matching.Purpose", 0);
 
         var levelFrom = TryGetIntValue(payload, "levelFrom", out var parsedLevelFrom)
             ? Math.Clamp(parsedLevelFrom, 1, 140)
-            : (int)PlayerConfig.Get<byte>("UBot.Party.Matching.LevelFrom", 1);
+            : (int)UBot.Core.RuntimeAccess.Player.Get<byte>("UBot.Party.Matching.LevelFrom", 1);
 
         var levelTo = TryGetIntValue(payload, "levelTo", out var parsedLevelTo)
             ? Math.Clamp(parsedLevelTo, 1, 140)
-            : (int)PlayerConfig.Get<byte>("UBot.Party.Matching.LevelTo", 140);
+            : (int)UBot.Core.RuntimeAccess.Player.Get<byte>("UBot.Party.Matching.LevelTo", 140);
 
         if (levelFrom > levelTo)
             (levelFrom, levelTo) = (levelTo, levelFrom);
 
         var title = TryGetStringValue(payload, "title", out var parsedTitle)
             ? parsedTitle.Trim()
-            : PlayerConfig.Get("UBot.Party.Matching.Title", "For opening hunting on the silkroad!");
+            : UBot.Core.RuntimeAccess.Player.Get("UBot.Party.Matching.Title", "For opening hunting on the silkroad!");
 
         if (string.IsNullOrWhiteSpace(title))
             title = "For opening hunting on the silkroad!";
 
         var autoReform = TryGetBoolValue(payload, "autoReform", out var parsedAutoReform)
             ? parsedAutoReform
-            : PlayerConfig.Get("UBot.Party.Matching.AutoReform", false);
+            : UBot.Core.RuntimeAccess.Player.Get("UBot.Party.Matching.AutoReform", false);
 
         var autoAccept = TryGetBoolValue(payload, "autoAccept", out var parsedAutoAccept)
             ? parsedAutoAccept
-            : PlayerConfig.Get("UBot.Party.Matching.AutoAccept", true);
+            : UBot.Core.RuntimeAccess.Player.Get("UBot.Party.Matching.AutoAccept", true);
 
-        PlayerConfig.Set("UBot.Party.EXPAutoShare", expAutoShare);
-        PlayerConfig.Set("UBot.Party.ItemAutoShare", itemAutoShare);
-        PlayerConfig.Set("UBot.Party.AllowInvitations", allowInvitations);
-        PlayerConfig.Set("UBot.Party.Matching.Purpose", (byte)purposeValue);
-        PlayerConfig.Set("UBot.Party.Matching.LevelFrom", (byte)levelFrom);
-        PlayerConfig.Set("UBot.Party.Matching.LevelTo", (byte)levelTo);
-        PlayerConfig.Set("UBot.Party.Matching.Title", title);
-        PlayerConfig.Set("UBot.Party.Matching.AutoReform", autoReform);
-        PlayerConfig.Set("UBot.Party.Matching.AutoAccept", autoAccept);
+        UBot.Core.RuntimeAccess.Player.Set("UBot.Party.EXPAutoShare", expAutoShare);
+        UBot.Core.RuntimeAccess.Player.Set("UBot.Party.ItemAutoShare", itemAutoShare);
+        UBot.Core.RuntimeAccess.Player.Set("UBot.Party.AllowInvitations", allowInvitations);
+        UBot.Core.RuntimeAccess.Player.Set("UBot.Party.Matching.Purpose", (byte)purposeValue);
+        UBot.Core.RuntimeAccess.Player.Set("UBot.Party.Matching.LevelFrom", (byte)levelFrom);
+        UBot.Core.RuntimeAccess.Player.Set("UBot.Party.Matching.LevelTo", (byte)levelTo);
+        UBot.Core.RuntimeAccess.Player.Set("UBot.Party.Matching.Title", title);
+        UBot.Core.RuntimeAccess.Player.Set("UBot.Party.Matching.AutoReform", autoReform);
+        UBot.Core.RuntimeAccess.Player.Set("UBot.Party.Matching.AutoAccept", autoAccept);
         UbotPluginConfigService.ApplyLivePartySettingsFromConfig();
         UbotPluginConfigService.RefreshPartyPluginRuntime();
 
@@ -784,7 +784,7 @@ internal sealed class UbotPartyActionHandler : UbotServiceBase
         packet.WriteByte((byte)levelFrom);
         packet.WriteByte((byte)levelTo);
         packet.WriteConditonalString(title);
-        PacketManager.SendPacket(packet, PacketDestination.Server, callback);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, callback);
         callback.AwaitResponse(5000);
         if (!callback.IsCompleted)
             return false;
@@ -800,7 +800,7 @@ internal sealed class UbotPartyActionHandler : UbotServiceBase
 
         var packet = new Packet(0x706B);
         packet.WriteUInt(matchingId);
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server);
 
         var pluginConfig = LoadPluginJsonConfig(PartyPluginName);
         if (pluginConfig.TryGetValue("matchingResults", out var rawResults) && rawResults is IList resultList)

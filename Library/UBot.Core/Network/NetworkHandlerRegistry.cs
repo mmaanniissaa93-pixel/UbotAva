@@ -27,7 +27,7 @@ public static class NetworkHandlerRegistry
         {
             var instance = (IPacketHandler)Activator.CreateInstance(handler);
 
-            PacketManager.RegisterHandler(instance);
+            UBot.Core.RuntimeAccess.Packets.RegisterHandler(instance);
         }
     }
 
@@ -44,7 +44,7 @@ public static class NetworkHandlerRegistry
         {
             var instance = (IPacketHook)Activator.CreateInstance(hook);
 
-            PacketManager.RegisterHook(instance);
+            UBot.Core.RuntimeAccess.Packets.RegisterHook(instance);
         }
     }
 

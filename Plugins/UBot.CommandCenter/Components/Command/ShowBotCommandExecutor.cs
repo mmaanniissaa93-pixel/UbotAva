@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Components.Command;
 using UBot.Core.Event;
 
@@ -13,9 +13,9 @@ internal class ShowBotCommandExecutor : ICommandExecutor
     public bool Execute(bool silent)
     {
         if (!silent)
-            Game.ShowNotification("[UBot] Showing bot window");
+            UBot.Core.RuntimeAccess.Session.ShowNotification("[UBot] Showing bot window");
 
-        EventManager.FireEvent("OnShowBotWindow");
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnShowBotWindow");
 
         return true;
     }

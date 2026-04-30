@@ -16,8 +16,8 @@ public class ProxyTests
         Action connected = eventCounts.OnConnected;
         Action legacyConnected = eventCounts.OnLegacyConnected;
 
-        EventManager.SubscribeEvent("OnGatewayServerConnected", connected);
-        EventManager.SubscribeEvent("OnGatewayServerConntected", legacyConnected);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnGatewayServerConnected", connected);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnGatewayServerConntected", legacyConnected);
 
         try
         {
@@ -31,8 +31,8 @@ public class ProxyTests
         }
         finally
         {
-            EventManager.UnsubscribeEvent("OnGatewayServerConnected", connected);
-            EventManager.UnsubscribeEvent("OnGatewayServerConntected", legacyConnected);
+            UBot.Core.RuntimeAccess.Events.UnsubscribeEvent("OnGatewayServerConnected", connected);
+            UBot.Core.RuntimeAccess.Events.UnsubscribeEvent("OnGatewayServerConntected", legacyConnected);
         }
     }
 
@@ -44,8 +44,8 @@ public class ProxyTests
         Action connected = eventCounts.OnConnected;
         Action legacyConnected = eventCounts.OnLegacyConnected;
 
-        EventManager.SubscribeEvent("OnGatewayServerConnected", connected);
-        EventManager.SubscribeEvent("OnGatewayServerConntected", legacyConnected);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnGatewayServerConnected", connected);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnGatewayServerConntected", legacyConnected);
 
         try
         {
@@ -59,8 +59,8 @@ public class ProxyTests
         }
         finally
         {
-            EventManager.UnsubscribeEvent("OnGatewayServerConnected", connected);
-            EventManager.UnsubscribeEvent("OnGatewayServerConntected", legacyConnected);
+            UBot.Core.RuntimeAccess.Events.UnsubscribeEvent("OnGatewayServerConnected", connected);
+            UBot.Core.RuntimeAccess.Events.UnsubscribeEvent("OnGatewayServerConntected", legacyConnected);
         }
     }
 

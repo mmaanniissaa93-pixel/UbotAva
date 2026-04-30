@@ -53,7 +53,7 @@ public class TeleportRequest : IPacketHandler
             Destination = teleportData.FirstOrDefault(t => t.ID == destination),
         };
 
-        EventManager.FireEvent("OnRequestTeleport", destination, portal.Record.CodeName);
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnRequestTeleport", destination, portal.Record.CodeName);
     }
 }
 

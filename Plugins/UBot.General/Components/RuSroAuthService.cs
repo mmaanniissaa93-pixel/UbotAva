@@ -28,7 +28,7 @@ internal static class RuSroAuthService
     public static async Task<bool> Auth()
     {
         var selectedAccount = Accounts.SavedAccounts?.Find(p =>
-            p.Username == GlobalConfig.Get<string>("UBot.General.AutoLoginAccountUsername")
+            p.Username == UBot.Core.RuntimeAccess.Global.Get<string>("UBot.General.AutoLoginAccountUsername")
         );
 
         if (selectedAccount == null)
@@ -62,7 +62,7 @@ internal static class RuSroAuthService
 
     private static async Task<SESSION_STATE> Activate(string confirmationCode)
     {
-        var sessionId = GlobalConfig.Get<string>("UBot.RuSro.sessionId", "").Trim();
+        var sessionId = UBot.Core.RuntimeAccess.Global.Get<string>("UBot.RuSro.sessionId", "").Trim();
         Log.Debug($"Sessions ID: {sessionId}");
         Log.Debug($"PIN: {confirmationCode}");
 
@@ -116,8 +116,8 @@ internal static class RuSroAuthService
     public static async Task<string> TokenResponse(string username, string password)
     {
         var parameters = new List<KeyValuePair<string, string>>();
-        string refreshToken = GlobalConfig.Get<string>("UBot.RuSro.refreshToken");
-        string accessToken = GlobalConfig.Get<string>("UBot.RuSro.accessToken");
+        string refreshToken = UBot.Core.RuntimeAccess.Global.Get<string>("UBot.RuSro.refreshToken");
+        string accessToken = UBot.Core.RuntimeAccess.Global.Get<string>("UBot.RuSro.accessToken");
         if (
             !string.IsNullOrEmpty(refreshToken)
             && !string.IsNullOrEmpty(accessToken)
@@ -136,12 +136,12 @@ internal static class RuSroAuthService
         }
         var tokenRequestContent = new FormUrlEncodedContent(parameters);
 
-        var hwid = GlobalConfig.Get<string>("UBot.RuSro.hwid", randomHwid);
-        var launcherId = GlobalConfig.Get<string>("UBot.RuSro.launcherid", randomLauncherId);
+        var hwid = UBot.Core.RuntimeAccess.Global.Get<string>("UBot.RuSro.hwid", randomHwid);
+        var launcherId = UBot.Core.RuntimeAccess.Global.Get<string>("UBot.RuSro.launcherid", randomLauncherId);
 
-        GlobalConfig.Set("UBot.RuSro.hwid", hwid);
-        GlobalConfig.Set("UBot.RuSro.launcherid", launcherId);
-        GlobalConfig.Save();
+        UBot.Core.RuntimeAccess.Global.Set("UBot.RuSro.hwid", hwid);
+        UBot.Core.RuntimeAccess.Global.Set("UBot.RuSro.launcherid", launcherId);
+        UBot.Core.RuntimeAccess.Global.Save();
 
         Log.Debug($"HWID: {hwid}");
         Log.Debug($"Launcher ID: {launcherId}");
@@ -163,7 +163,7 @@ internal static class RuSroAuthService
 
         if (tokenResponseContent.Contains("guard.emailcoderequired"))
         {
-            GlobalConfig.Set("UBot.RuSro.sessionId", ExtractSessionId(tokenResponseContent));
+            UBot.Core.RuntimeAccess.Global.Set("UBot.RuSro.sessionId", ExtractSessionId(tokenResponseContent));
 
             string dialogFormTitle = LanguageManager.GetLangBySpecificKey(
                 "UBot.General",
@@ -181,7 +181,7 @@ internal static class RuSroAuthService
                 "Enter it and press OK"
             );
 
-            string confirmationCode = GlobalConfig.Get<string>("UBot.RuSro.confirmationCode", "").Trim();
+            string confirmationCode = UBot.Core.RuntimeAccess.Global.Get<string>("UBot.RuSro.confirmationCode", "").Trim();
             if (string.IsNullOrEmpty(confirmationCode))
             {
                 MessageBox.Show(
@@ -204,9 +204,9 @@ internal static class RuSroAuthService
 
         string accessToken = ExtractAccessToken(tokenResponseContent);
         string refreshToken = ExtractRefreshToken(tokenResponseContent);
-        GlobalConfig.Set("UBot.RuSro.accessToken", accessToken);
-        GlobalConfig.Set("UBot.RuSro.refreshToken", refreshToken);
-        GlobalConfig.Save();
+        UBot.Core.RuntimeAccess.Global.Set("UBot.RuSro.accessToken", accessToken);
+        UBot.Core.RuntimeAccess.Global.Set("UBot.RuSro.refreshToken", refreshToken);
+        UBot.Core.RuntimeAccess.Global.Save();
 
         if (tokenResponseContent.Contains("unauthorized"))
         {
@@ -332,9 +332,9 @@ internal static class RuSroAuthService
 
     private static async Task ConnectToWSAndSend()
     {
-        string launcherId = GlobalConfig.Get<string>("UBot.RuSro.launcherid");
-        string hwid = GlobalConfig.Get<string>("UBot.RuSro.hwid");
-        string accessToken = GlobalConfig.Get<string>("UBot.RuSro.accessToken");
+        string launcherId = UBot.Core.RuntimeAccess.Global.Get<string>("UBot.RuSro.launcherid");
+        string hwid = UBot.Core.RuntimeAccess.Global.Get<string>("UBot.RuSro.hwid");
+        string accessToken = UBot.Core.RuntimeAccess.Global.Get<string>("UBot.RuSro.accessToken");
         string sub = ExtractSubFromToken(accessToken);
 
         Log.Debug("Sub: " + sub);
@@ -614,7 +614,7 @@ internal static class RuSroAuthService
         Log.Debug($"Extracted login: {login}");
         Log.Debug($"Extracted password: {password}");
 
-        GlobalConfig.Set("UBot.RuSro.login", login);
-        GlobalConfig.Set("UBot.RuSro.password", password);
+        UBot.Core.RuntimeAccess.Global.Set("UBot.RuSro.login", login);
+        UBot.Core.RuntimeAccess.Global.Set("UBot.RuSro.password", password);
     }
 }

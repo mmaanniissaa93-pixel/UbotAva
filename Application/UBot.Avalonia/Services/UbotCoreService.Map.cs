@@ -45,13 +45,13 @@ internal sealed class UbotMapService : UbotServiceBase
 
     internal Dictionary<string, object?> BuildMapPluginStateSnapshot()
     {
-        Game.ReferenceManager?.EnsureMapInfoLoaded();
+        UBot.Core.RuntimeAccess.Session.ReferenceManager?.EnsureMapInfoLoaded();
         return BuildMapPluginState();
     }
 
     internal bool TryResolveWalkDestination(Position source, double mapX, double mapY, out Position destination)
     {
-        Game.ReferenceManager?.EnsureMapInfoLoaded();
+        UBot.Core.RuntimeAccess.Session.ReferenceManager?.EnsureMapInfoLoaded();
         if (TryBuildMapRenderContext(source, out var renderContext)
             && TryProjectMapToPosition((float)mapX, (float)mapY, renderContext, source, out var projected))
         {
@@ -110,17 +110,17 @@ internal sealed class UbotMapService : UbotServiceBase
     private static Dictionary<string, object?> BuildMapPluginState()
     {
         var showFilter = NormalizeMapShowFilter(
-            PlayerConfig.Get("UBot.Desktop.Map.ShowFilter",
-                PlayerConfig.Get("UBot.Desktop.Map.EntityFilter", "All")));
+            UBot.Core.RuntimeAccess.Player.Get("UBot.Desktop.Map.ShowFilter",
+                UBot.Core.RuntimeAccess.Player.Get("UBot.Desktop.Map.EntityFilter", "All")));
 
         SpawnManager.TryGetEntities<SpawnedEntity>(out var spawnedEntities);
         var all = spawnedEntities?.Where(entity => entity != null).ToArray() ?? Array.Empty<SpawnedEntity>();
-        var player = Game.Player;
+        var player = UBot.Core.RuntimeAccess.Session.Player;
         var playerPosition = player?.Position ?? default;
         var playerRegion = playerPosition.Region;
 
         var partyMemberNames = new HashSet<string>(
-            (Game.Party?.Members ?? new List<PartyMember>())
+            (UBot.Core.RuntimeAccess.Session.Party?.Members ?? new List<PartyMember>())
                 .Select(member => member?.Name ?? string.Empty)
                 .Where(name => !string.IsNullOrWhiteSpace(name)),
             StringComparer.OrdinalIgnoreCase);
@@ -150,7 +150,7 @@ internal sealed class UbotMapService : UbotServiceBase
             lock (MapRenderSync)
             {
                 var contextChanged = !string.Equals(_mapLastRenderContextKey, renderContext.CacheKey, StringComparison.Ordinal);
-                var elapsed = _mapLastImagePushTick < 0 ? int.MaxValue : Kernel.TickCount - _mapLastImagePushTick;
+                var elapsed = _mapLastImagePushTick < 0 ? int.MaxValue : UBot.Core.RuntimeAccess.Core.TickCount - _mapLastImagePushTick;
                 if (elapsed < 0)
                     elapsed = int.MaxValue;
 
@@ -158,7 +158,7 @@ internal sealed class UbotMapService : UbotServiceBase
                 if (contextChanged)
                     _mapLastRenderContextKey = renderContext.CacheKey;
                 if (includeImages && hasRenderableImage)
-                    _mapLastImagePushTick = Kernel.TickCount;
+                    _mapLastImagePushTick = UBot.Core.RuntimeAccess.Core.TickCount;
             }
 
             if (includeImages)
@@ -267,9 +267,9 @@ internal sealed class UbotMapService : UbotServiceBase
             ["items"] = items,
             ["portals"] = portals,
             ["uniques"] = uniques,
-            ["collisionDetection"] = Kernel.EnableCollisionDetection,
-            ["autoSelectUniques"] = PlayerConfig.Get("UBot.Map.AutoSelectUnique", false),
-            ["resetToPlayerAt"] = PlayerConfig.Get("UBot.Desktop.Map.ResetToPlayerAt", 0L),
+            ["collisionDetection"] = UBot.Core.RuntimeAccess.Core.EnableCollisionDetection,
+            ["autoSelectUniques"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Map.AutoSelectUnique", false),
+            ["resetToPlayerAt"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Desktop.Map.ResetToPlayerAt", 0L),
             ["mapRegion"] = (int)playerRegion.Id,
             ["mapWidth"] = mapWidth,
             ["mapHeight"] = mapHeight,
@@ -427,18 +427,18 @@ internal sealed class UbotMapService : UbotServiceBase
 
     private static void TryAutoSelectUniqueMonster(Player? player, IReadOnlyCollection<SpawnedEntity> entities)
     {
-        if (player == null || Kernel.Bot?.Running == true)
+        if (player == null || UBot.Core.RuntimeAccess.Core.Bot?.Running == true)
             return;
 
-        if (!PlayerConfig.Get("UBot.Map.AutoSelectUnique", false))
+        if (!UBot.Core.RuntimeAccess.Player.Get("UBot.Map.AutoSelectUnique", false))
             return;
 
-        if (Kernel.TickCount - _mapAutoSelectUniqueLastTick < 1250)
+        if (UBot.Core.RuntimeAccess.Core.TickCount - _mapAutoSelectUniqueLastTick < 1250)
             return;
 
-        _mapAutoSelectUniqueLastTick = Kernel.TickCount;
+        _mapAutoSelectUniqueLastTick = UBot.Core.RuntimeAccess.Core.TickCount;
 
-        if (Game.SelectedEntity is SpawnedMonster selectedMonster && IsUniqueMonster(selectedMonster))
+        if (UBot.Core.RuntimeAccess.Session.SelectedEntity is SpawnedMonster selectedMonster && IsUniqueMonster(selectedMonster))
             return;
 
         var nearestUnique = entities
@@ -531,7 +531,7 @@ internal sealed class UbotMapService : UbotServiceBase
 
     private static string BuildMinimapImage(MapRenderContext context, out string source)
     {
-        if (Game.MediaPk2 == null)
+        if (UBot.Core.RuntimeAccess.Session.MediaPk2 == null)
         {
             source = "none";
             return string.Empty;
@@ -556,7 +556,7 @@ internal sealed class UbotMapService : UbotServiceBase
                     continue;
 
                 var sectorPath = GetMinimapFileName(new CoreRegion((byte)sectorX, (byte)sectorY), context.DungeonName, context.FloorName);
-                if (!TryLoadImage(Game.MediaPk2, sectorPath, out var sectorImage))
+                if (!TryLoadImage(UBot.Core.RuntimeAccess.Session.MediaPk2, sectorPath, out var sectorImage))
                     continue;
 
                 using (sectorImage)
@@ -1017,9 +1017,9 @@ internal sealed class UbotMapService : UbotServiceBase
 
     public Task<IReadOnlyList<MapLocationDto>> GetMapLocationsAsync()
     {
-        Game.ReferenceManager?.EnsureMapInfoLoaded();
+        UBot.Core.RuntimeAccess.Session.ReferenceManager?.EnsureMapInfoLoaded();
         var list = new List<MapLocationDto>();
-        var teleports = Game.ReferenceManager?.OptionalTeleports;
+        var teleports = UBot.Core.RuntimeAccess.Session.ReferenceManager?.OptionalTeleports;
         if (teleports != null)
         {
             foreach (var entry in teleports.Values)
@@ -1027,7 +1027,7 @@ internal sealed class UbotMapService : UbotServiceBase
                 if (entry == null || entry.Service == 0 || entry.ID <= 0) continue;
                 
                 var regionText = entry.Region.ToString();
-                var name = Game.ReferenceManager?.GetTranslation(regionText) ?? regionText;
+                var name = UBot.Core.RuntimeAccess.Session.ReferenceManager?.GetTranslation(regionText) ?? regionText;
 
                 list.Add(new MapLocationDto
                 {

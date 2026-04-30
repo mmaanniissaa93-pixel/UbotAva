@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using UBot.Core;
 using UBot.Core.Components;
@@ -47,7 +47,7 @@ internal class LootPerHour : IStatisticCalculator
     /// <inheritdoc />
     public object GetValue()
     {
-        if (!Game.Ready)
+        if (!UBot.Core.RuntimeAccess.Session.Ready)
             return 0;
 
         if (++_currentTickIndex >= _values.Length)
@@ -75,8 +75,8 @@ internal class LootPerHour : IStatisticCalculator
     {
         _values = new int[60];
 
-        EventManager.SubscribeEvent("OnPickupItem", new Action<InventoryItem>(OnPickupItem));
-        EventManager.SubscribeEvent("OnPartyPickItem", new Action<InventoryItem>(OnPickupItem));
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnPickupItem", new Action<InventoryItem>(OnPickupItem));
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnPartyPickItem", new Action<InventoryItem>(OnPickupItem));
     }
 
     private void OnPickupItem(InventoryItem item)

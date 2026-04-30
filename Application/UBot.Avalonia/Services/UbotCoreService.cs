@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -130,7 +130,7 @@ public sealed class UbotCoreService : UbotServiceBase, IUbotCoreService
 
         var allBotbases = ExtensionManager.Bots.ToList();
         var trainingBotbase = allBotbases.FirstOrDefault(IsTrainingBotbase)
-            ?? Kernel.Bot?.Botbase
+            ?? UBot.Core.RuntimeAccess.Core.Bot?.Botbase
             ?? allBotbases.FirstOrDefault();
 
         var insertionIndex = Math.Min(1, modules.Count);

@@ -18,12 +18,12 @@ public class ExtensionManager
     /// <summary>
     ///     Gets the extension directory for plugins.
     /// </summary>
-    private static readonly string _directoryForPlugins = Path.Combine(Kernel.BasePath, "Data", "Plugins");
+    private static readonly string _directoryForPlugins = Path.Combine(UBot.Core.RuntimeAccess.Core.BasePath, "Data", "Plugins");
 
     /// <summary>
     ///     Gets the extension directory for botbases.
     /// </summary>
-    private static readonly string _directoryForBotbases = Path.Combine(Kernel.BasePath, "Data", "Bots");
+    private static readonly string _directoryForBotbases = Path.Combine(UBot.Core.RuntimeAccess.Core.BasePath, "Data", "Bots");
 
     /// <summary>
     ///     Gets the extensions.
@@ -105,7 +105,7 @@ public class ExtensionManager
             }
         }
 
-        EventManager.FireEvent("OnLoadCharacter");
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnLoadCharacter");
     }
 
     /// <summary>
@@ -147,17 +147,17 @@ public class ExtensionManager
                         $"Out-of-proc plugin host startup failed for: {failedList}."
                     );
                 }
-                EventManager.FireEvent("OnLoadPlugins");
+                UBot.Core.RuntimeAccess.Events.FireEvent("OnLoadPlugins");
             }
             else
-                EventManager.FireEvent("OnLoadBotbases");
+                UBot.Core.RuntimeAccess.Events.FireEvent("OnLoadBotbases");
 
             return true;
         }
         catch (Exception ex)
         {
             LastLoadError = ex.Message;
-            File.WriteAllText(Kernel.BasePath + "\\boot-error.log",
+            File.WriteAllText(UBot.Core.RuntimeAccess.Core.BasePath + "\\boot-error.log",
                 $"The plugin manager encountered a problem: \n{ex.Message} at {ex.StackTrace}");
             return false;
         }
@@ -280,7 +280,7 @@ public class ExtensionManager
                         continue;
 
                     if (shouldRegisterNetworkHandlers)
-                        PacketManager.RegisterHandler(instance);
+                        UBot.Core.RuntimeAccess.Packets.RegisterHandler(instance);
 
                     handlers.Add(instance);
                 }
@@ -302,7 +302,7 @@ public class ExtensionManager
                         continue;
 
                     if (shouldRegisterNetworkHandlers)
-                        PacketManager.RegisterHook(instance);
+                        UBot.Core.RuntimeAccess.Packets.RegisterHook(instance);
 
                     hooks.Add(instance);
                 }
@@ -608,7 +608,7 @@ public class ExtensionManager
 
                 plugin.Enabled = true;
                 SaveDisabledPlugins();
-                EventManager.FireEvent("OnPluginEnabled", plugin);
+                UBot.Core.RuntimeAccess.Events.FireEvent("OnPluginEnabled", plugin);
                 Log.Notify($"Plugin [{plugin.Title}] enabled in out-of-proc mode.");
                 return true;
             }
@@ -630,7 +630,7 @@ public class ExtensionManager
             RegisterPluginPacketRegistrations(internalName);
 
             SaveDisabledPlugins(); // Save state
-            EventManager.FireEvent("OnPluginEnabled", plugin);
+            UBot.Core.RuntimeAccess.Events.FireEvent("OnPluginEnabled", plugin);
             Log.Notify($"Plugin [{plugin.Title}] enabled!");
 
             return true;
@@ -669,7 +669,7 @@ public class ExtensionManager
                 _outOfProcHostManager.Disable(outOfProcCandidate.Name);
                 plugin.Enabled = false;
                 SaveDisabledPlugins();
-                EventManager.FireEvent("OnPluginDisabled", plugin);
+                UBot.Core.RuntimeAccess.Events.FireEvent("OnPluginDisabled", plugin);
                 Log.Notify($"Plugin [{plugin.Title}] disabled in out-of-proc mode.");
                 return true;
             }
@@ -690,7 +690,7 @@ public class ExtensionManager
             RemovePluginPacketRegistrations(internalName);
 
             SaveDisabledPlugins(); // Save state
-            EventManager.FireEvent("OnPluginDisabled", plugin);
+            UBot.Core.RuntimeAccess.Events.FireEvent("OnPluginDisabled", plugin);
             Log.Notify($"Plugin [{plugin.Title}] disabled!");
 
             return true;
@@ -795,7 +795,7 @@ public class ExtensionManager
 
                 Log.Notify($"Plugin '{plugin.Title}' loaded successfully!");
                 if (plugin.Enabled)
-                    EventManager.FireEvent("OnPluginLoaded", plugin);
+                    UBot.Core.RuntimeAccess.Events.FireEvent("OnPluginLoaded", plugin);
             }
 
             return true;
@@ -847,7 +847,7 @@ public class ExtensionManager
             _pluginAssemblyPaths.Remove(internalName);
             _outOfProcHostManager.Unregister(internalName);
 
-            EventManager.FireEvent("OnPluginUnloaded", plugin);
+            UBot.Core.RuntimeAccess.Events.FireEvent("OnPluginUnloaded", plugin);
             Log.Notify($"Plugin '{plugin.Title}' unloaded successfully!");
 
             return true;
@@ -1016,7 +1016,7 @@ public class ExtensionManager
     /// </summary>
     private static string[] LoadDisabledPlugins()
     {
-        var list = GlobalConfig.Get("UBot.DisabledPlugins", "");
+        var list = UBot.Core.RuntimeAccess.Global.Get("UBot.DisabledPlugins", "");
 
         return list.Split(",", StringSplitOptions.RemoveEmptyEntries);
     }
@@ -1031,8 +1031,8 @@ public class ExtensionManager
             .Select(p => p.Name)
             .ToArray();
 
-        GlobalConfig.Set("UBot.DisabledPlugins", string.Join(",", disabledPlugins));
-        GlobalConfig.Save();
+        UBot.Core.RuntimeAccess.Global.Set("UBot.DisabledPlugins", string.Join(",", disabledPlugins));
+        UBot.Core.RuntimeAccess.Global.Save();
     }
 
     private static bool TryCleanupPluginPacketRegistrations(string internalName, IExtension extension)
@@ -1060,13 +1060,13 @@ public class ExtensionManager
         if (PluginHandlers.TryGetValue(internalName, out var handlers))
         {
             foreach (var handler in handlers)
-                PacketManager.RegisterHandler(handler);
+                UBot.Core.RuntimeAccess.Packets.RegisterHandler(handler);
         }
 
         if (PluginHooks.TryGetValue(internalName, out var hooks))
         {
             foreach (var hook in hooks)
-                PacketManager.RegisterHook(hook);
+                UBot.Core.RuntimeAccess.Packets.RegisterHook(hook);
         }
     }
 
@@ -1077,7 +1077,7 @@ public class ExtensionManager
             foreach (var handler in handlers)
             {
                 if (!HasEnabledPeerUsingHandler(internalName, handler))
-                    PacketManager.RemoveHandler(handler);
+                    UBot.Core.RuntimeAccess.Packets.RemoveHandler(handler);
             }
         }
 
@@ -1086,7 +1086,7 @@ public class ExtensionManager
             foreach (var hook in hooks)
             {
                 if (!HasEnabledPeerUsingHook(internalName, hook))
-                    PacketManager.RemoveHook(hook);
+                    UBot.Core.RuntimeAccess.Packets.RemoveHook(hook);
             }
         }
     }

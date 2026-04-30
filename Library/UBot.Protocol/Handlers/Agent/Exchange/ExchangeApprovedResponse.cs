@@ -20,7 +20,7 @@ public class ExchangeApprovedResponse : IPacketHandler
 
         Log.Notify("Exchange completed.");
 
-        EventManager.FireEvent("OnApproveExchange");
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnApproveExchange");
     }
 }
 

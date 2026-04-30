@@ -56,7 +56,7 @@ public class ActionSkillCastResponse : IPacketHandler
                     break;
 
                 case 0x10: // obstacle
-                    EventManager.FireEvent("OnTargetBehindObstacle");
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnTargetBehindObstacle");
                     break;
 
                 default:
@@ -125,7 +125,7 @@ public class ActionSkillCastResponse : IPacketHandler
             if (skillInfo != null && !IsBuffLike(skillInfo))
                 skillInfo.Update();
 
-            EventManager.FireEvent("OnCastSkill", action.SkillId);
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnCastSkill", action.SkillId);
 
             return;
         }
@@ -139,7 +139,7 @@ public class ActionSkillCastResponse : IPacketHandler
         if (!action.PlayerIsTarget)
             return;
 
-        EventManager.FireEvent("OnEnemySkillOnPlayer");
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnEnemySkillOnPlayer");
 
         executor.StartAttackingTimer();
     }

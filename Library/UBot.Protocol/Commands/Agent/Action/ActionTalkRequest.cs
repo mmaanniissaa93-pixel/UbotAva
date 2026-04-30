@@ -20,7 +20,7 @@ public class ActionTalkRequest : IPacketHandler
 
         CoreGame.Player.State.DialogState = new DialogState { RequestedNpcId = entityId, TalkOption = option };
 
-        EventManager.FireEvent("OnTalkRequest", entityId, option);
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnTalkRequest", entityId, option);
     }
 
     #endregion Methods

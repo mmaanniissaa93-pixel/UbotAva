@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UBot.Core;
@@ -34,7 +34,7 @@ internal class AutoPartyBundle
     /// </summary>
     public AutoPartyBundle()
     {
-        EventManager.SubscribeEvent("OnTick", OnTick, EventOwner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnTick", OnTick, EventOwner);
     }
 
     /// <summary>
@@ -42,7 +42,7 @@ internal class AutoPartyBundle
     /// </summary>
     public void UnsubscribeAll()
     {
-        EventManager.UnsubscribeOwner(EventOwner);
+        UBot.Core.RuntimeAccess.Events.UnsubscribeOwner(EventOwner);
     }
 
     /// <summary>
@@ -60,28 +60,28 @@ internal class AutoPartyBundle
     {
         Config = new AutoPartyConfig
         {
-            PlayerList = PlayerConfig.GetArray<string>("UBot.Party.AutoPartyList"),
-            InviteAll = PlayerConfig.Get<bool>("UBot.Party.InviteAll"),
-            AcceptAll = PlayerConfig.Get<bool>("UBot.Party.AcceptAll"),
-            AcceptFromList = PlayerConfig.Get<bool>("UBot.Party.AcceptList"),
-            InviteFromList = PlayerConfig.Get<bool>("UBot.Party.InviteList"),
-            OnlyAtTrainingPlace = PlayerConfig.Get<bool>("UBot.Party.AtTrainingPlace"),
-            ExperienceAutoShare = PlayerConfig.Get<bool>("UBot.Party.EXPAutoShare", true),
-            ItemAutoShare = PlayerConfig.Get<bool>("UBot.Party.ItemAutoShare", true),
-            AllowInvitations = PlayerConfig.Get<bool>("UBot.Party.AllowInvitations", true),
-            AcceptIfBotIsStopped = PlayerConfig.Get<bool>("UBot.Party.AcceptIfBotStopped"),
-            LeaveIfMasterNot = PlayerConfig.Get<bool>("UBot.Party.LeaveIfMasterNot"),
-            LeaveIfMasterNotName = PlayerConfig.Get<string>("UBot.Party.LeaveIfMasterNotName"),
-            CenterPosition = Kernel.Bot.Botbase.Area.Position,
-            AutoJoinByName = PlayerConfig.Get("UBot.Party.AutoJoin.ByName", false),
-            AutoJoinByTitle = PlayerConfig.Get("UBot.Party.AutoJoin.ByTitle", false),
-            AutoJoinByNameContent = PlayerConfig.Get("UBot.Party.AutoJoin.Name", string.Empty),
-            AutoJoinByTitleContent = PlayerConfig.Get("UBot.Party.AutoJoin.Title", string.Empty),
-            AlwaysFollowThePartyMaster = PlayerConfig.Get("UBot.Party.AlwaysFollowPartyMaster", false),
+            PlayerList = UBot.Core.RuntimeAccess.Player.GetArray<string>("UBot.Party.AutoPartyList"),
+            InviteAll = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Party.InviteAll"),
+            AcceptAll = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Party.AcceptAll"),
+            AcceptFromList = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Party.AcceptList"),
+            InviteFromList = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Party.InviteList"),
+            OnlyAtTrainingPlace = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Party.AtTrainingPlace"),
+            ExperienceAutoShare = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Party.EXPAutoShare", true),
+            ItemAutoShare = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Party.ItemAutoShare", true),
+            AllowInvitations = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Party.AllowInvitations", true),
+            AcceptIfBotIsStopped = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Party.AcceptIfBotStopped"),
+            LeaveIfMasterNot = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Party.LeaveIfMasterNot"),
+            LeaveIfMasterNotName = UBot.Core.RuntimeAccess.Player.Get<string>("UBot.Party.LeaveIfMasterNotName"),
+            CenterPosition = UBot.Core.RuntimeAccess.Core.Bot.Botbase.Area.Position,
+            AutoJoinByName = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.AutoJoin.ByName", false),
+            AutoJoinByTitle = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.AutoJoin.ByTitle", false),
+            AutoJoinByNameContent = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.AutoJoin.Name", string.Empty),
+            AutoJoinByTitleContent = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.AutoJoin.Title", string.Empty),
+            AlwaysFollowThePartyMaster = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.AlwaysFollowPartyMaster", false),
         };
 
-        if (!Game.Party.IsInParty)
-            Game.Party.Settings = new PartySettings(
+        if (!UBot.Core.RuntimeAccess.Session.Party.IsInParty)
+            UBot.Core.RuntimeAccess.Session.Party.Settings = new PartySettings(
                 Config.ExperienceAutoShare,
                 Config.ItemAutoShare,
                 Config.AllowInvitations
@@ -90,16 +90,16 @@ internal class AutoPartyBundle
 
     public void OnTick()
     {
-        if (!Game.Ready)
+        if (!UBot.Core.RuntimeAccess.Session.Ready)
             return;
 
-        var elapsed = Kernel.TickCount - _lastTick;
+        var elapsed = UBot.Core.RuntimeAccess.Core.TickCount - _lastTick;
         if (elapsed > 5000)
         {
             CheckForAutoPartyJoin();
             CheckForPlayers();
 
-            _lastTick = Kernel.TickCount;
+            _lastTick = UBot.Core.RuntimeAccess.Core.TickCount;
         }
     }
 
@@ -108,13 +108,13 @@ internal class AutoPartyBundle
     /// </summary>
     private void CheckForAutoPartyJoin()
     {
-        if (Game.Party.IsInParty || Config == null)
+        if (UBot.Core.RuntimeAccess.Session.Party.IsInParty || Config == null)
             return;
 
         if (!Config.AutoJoinByName && !Config.AutoJoinByTitle)
             return;
 
-        var elapsed = Kernel.TickCount - _lastPartyListingCacheTick;
+        var elapsed = UBot.Core.RuntimeAccess.Core.TickCount - _lastPartyListingCacheTick;
 
         // every one minute
         if (elapsed >= 60000)
@@ -134,7 +134,7 @@ internal class AutoPartyBundle
                 page++;
             }
 
-            _lastPartyListingCacheTick = Kernel.TickCount;
+            _lastPartyListingCacheTick = UBot.Core.RuntimeAccess.Core.TickCount;
         }
 
         if (Config.AutoJoinByName)
@@ -165,16 +165,16 @@ internal class AutoPartyBundle
     public void CheckForPlayers()
     {
         if (
-            Game.Party.IsInParty
-            && !Game.Party.IsLeader
+            UBot.Core.RuntimeAccess.Session.Party.IsInParty
+            && !UBot.Core.RuntimeAccess.Session.Party.IsLeader
             && Config.LeaveIfMasterNot
             && !string.IsNullOrWhiteSpace(Config.LeaveIfMasterNotName)
         )
-            if (Config.LeaveIfMasterNotName != Game.Party.Leader.Name)
-                Game.Party.Leave();
+            if (Config.LeaveIfMasterNotName != UBot.Core.RuntimeAccess.Session.Party.Leader.Name)
+                UBot.Core.RuntimeAccess.Session.Party.Leave();
 
         // Don't try to invite if we can't invite
-        if (!Game.Party.CanInvite)
+        if (!UBot.Core.RuntimeAccess.Session.Party.CanInvite)
             return;
 
         // Don't invite if both InviteAll and InviteFromList are disabled
@@ -182,14 +182,14 @@ internal class AutoPartyBundle
             return;
 
         var limit = 8;
-        if (!Game.Party.Settings.ExperienceAutoShare && !Game.Party.Settings.ItemAutoShare)
+        if (!UBot.Core.RuntimeAccess.Session.Party.Settings.ExperienceAutoShare && !UBot.Core.RuntimeAccess.Session.Party.Settings.ItemAutoShare)
             limit = 4;
 
         // Only check party member count if already in a party
-        if (Game.Party.IsInParty && Game.Party.Members?.Count >= limit)
+        if (UBot.Core.RuntimeAccess.Session.Party.IsInParty && UBot.Core.RuntimeAccess.Session.Party.Members?.Count >= limit)
             return;
 
-        if (Config.OnlyAtTrainingPlace && Game.Player.Movement.Source.DistanceTo(Config.CenterPosition) > 50)
+        if (Config.OnlyAtTrainingPlace && UBot.Core.RuntimeAccess.Session.Player.Movement.Source.DistanceTo(Config.CenterPosition) > 50)
             return;
 
         if (!SpawnManager.TryGetEntities<SpawnedPlayer>(out var players))
@@ -198,21 +198,21 @@ internal class AutoPartyBundle
         foreach (var player in players)
         {
             // Skip if player is already in our party
-            if (Game.Party.IsInParty && Game.Party.GetMemberByName(player.Name) != null)
+            if (UBot.Core.RuntimeAccess.Session.Party.IsInParty && UBot.Core.RuntimeAccess.Session.Party.GetMemberByName(player.Name) != null)
                 continue;
 
             // Skip ourselves
-            if (player.Name == Game.Player.Name)
+            if (player.Name == UBot.Core.RuntimeAccess.Session.Player.Name)
                 continue;
 
             if (Config.InviteAll)
             {
-                Game.Party.Invite(player.UniqueId);
+                UBot.Core.RuntimeAccess.Session.Party.Invite(player.UniqueId);
                 continue;
             }
 
             if (Config.InviteFromList && Config.PlayerList.Contains(player.Name))
-                Game.Party.Invite(player.UniqueId);
+                UBot.Core.RuntimeAccess.Session.Party.Invite(player.UniqueId);
         }
     }
 }

@@ -40,13 +40,13 @@ public class PartyInviteResponse : IPacketHandler
                 CoreGame.AcceptanceRequest.Settings = PartySettings.FromType(packet.ReadByte());
 
                 if (CoreGame.Party.HasPendingRequest)
-                    EventManager.FireEvent("OnPartyRequest");
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnPartyRequest");
 
                 break;
 
             case InviteRequestType.Resurrection1:
             case InviteRequestType.Resurrection2:
-                EventManager.FireEvent("OnResurrectionRequest");
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnResurrectionRequest");
                 break;
         }
     }

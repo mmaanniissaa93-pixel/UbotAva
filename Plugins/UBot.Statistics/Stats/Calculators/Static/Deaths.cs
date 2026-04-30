@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Event;
 
@@ -30,12 +30,12 @@ internal class Deaths : IStatisticCalculator
 
     private void SubscribeEvents()
     {
-        EventManager.SubscribeEvent("OnPlayerDied", OnPlayerDead);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnPlayerDied", OnPlayerDead);
     }
 
     private void OnPlayerDead()
     {
-        if (Kernel.Bot.Running)
+        if (UBot.Core.RuntimeAccess.Core.Bot.Running)
             _deathsCounter++;
     }
 }

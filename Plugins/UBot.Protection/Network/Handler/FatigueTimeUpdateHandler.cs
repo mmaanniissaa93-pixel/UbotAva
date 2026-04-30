@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Event;
 using UBot.Core.Network;
 using UBot.Protection.Components.Town;
@@ -13,7 +13,7 @@ namespace UBot.Protection.Network.Handler
 
         public void Invoke(Packet packet)
         {
-            if (Game.ClientType == GameClientType.VTC_Game)
+            if (UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.VTC_Game)
             {
                 uint serviceFatigueSecondsSpent = packet.ReadUInt();
                 packet.ReadByte(); //serviceFatigue type or color of bar (0x80 - 100%, 0x00 - 50%)
@@ -68,7 +68,7 @@ namespace UBot.Protection.Network.Handler
                 );
             }
 
-            EventManager.FireEvent("OnFatigueTimeUpdate");
+            UBot.Core.RuntimeAccess.Events.FireEvent("OnFatigueTimeUpdate");
         }
 
         private static int GetFullExpSeconds(uint secondsSpent, byte fullExpHours)

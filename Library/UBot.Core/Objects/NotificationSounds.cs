@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Media;
 using System.Text.RegularExpressions;
 
@@ -307,12 +307,12 @@ namespace UBot.Core.Objects
 
             if (value is string stingValue)
             {
-                PlayerConfig.Set(key, stingValue);
+                UBot.Core.RuntimeAccess.Player.Set(key, stingValue);
                 UpdateSoundPlayerString(key, stingValue);
             }
             else if (value is bool boolValue)
             {
-                PlayerConfig.Set(key, boolValue);
+                UBot.Core.RuntimeAccess.Player.Set(key, boolValue);
                 UpdateSoundPlayerBool(key, boolValue);
             }
         }
@@ -532,8 +532,8 @@ namespace UBot.Core.Objects
         public void LoadPlayerSettings()
         {
             // Unique in range
-            PlayAlarmUniqueInRange = PlayerConfig.Get("UBot.Sounds.PlayAlarmUniqueInRange", false);
-            PathAlarmUniqueInRange = PlayerConfig.Get("UBot.Sounds.PathAlarmUniqueInRange", string.Empty);
+            PlayAlarmUniqueInRange = UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PlayAlarmUniqueInRange", false);
+            PathAlarmUniqueInRange = UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PathAlarmUniqueInRange", string.Empty);
             if (false == string.IsNullOrWhiteSpace(PathAlarmUniqueInRange))
             {
                 if (File.Exists(PathAlarmUniqueInRange))
@@ -544,8 +544,8 @@ namespace UBot.Core.Objects
             }
 
             // Tiger Girl
-            PlayUniqueAlarmTigerGirl = PlayerConfig.Get("UBot.Sounds.PlayUniqueAlarmTigerGirl", false);
-            PathUniqueAlarmTigerGirl = PlayerConfig.Get("UBot.Sounds.PathUniqueAlarmTigerGirl", string.Empty);
+            PlayUniqueAlarmTigerGirl = UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PlayUniqueAlarmTigerGirl", false);
+            PathUniqueAlarmTigerGirl = UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PathUniqueAlarmTigerGirl", string.Empty);
             if (false == string.IsNullOrWhiteSpace(PathUniqueAlarmTigerGirl))
             {
                 if (File.Exists(PathUniqueAlarmTigerGirl))
@@ -556,8 +556,8 @@ namespace UBot.Core.Objects
             }
 
             // Cerberus
-            PlayUniqueAlarmCerberus = PlayerConfig.Get("UBot.Sounds.PlayUniqueAlarmCerberus", false);
-            PathUniqueAlarmCerberus = PlayerConfig.Get("UBot.Sounds.PathUniqueAlarmCerberus", string.Empty);
+            PlayUniqueAlarmCerberus = UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PlayUniqueAlarmCerberus", false);
+            PathUniqueAlarmCerberus = UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PathUniqueAlarmCerberus", string.Empty);
             if (false == string.IsNullOrWhiteSpace(PathUniqueAlarmCerberus))
             {
                 if (File.Exists(PathUniqueAlarmCerberus))
@@ -568,8 +568,8 @@ namespace UBot.Core.Objects
             }
 
             // Captain Ivy
-            PlayUniqueAlarmCaptainIvy = PlayerConfig.Get("UBot.Sounds.PlayUniqueAlarmCaptainIvy", false);
-            PathUniqueAlarmCaptainIvy = PlayerConfig.Get("UBot.Sounds.PathUniqueAlarmCaptainIvy", string.Empty);
+            PlayUniqueAlarmCaptainIvy = UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PlayUniqueAlarmCaptainIvy", false);
+            PathUniqueAlarmCaptainIvy = UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PathUniqueAlarmCaptainIvy", string.Empty);
             if (false == string.IsNullOrWhiteSpace(PathUniqueAlarmCaptainIvy))
             {
                 if (File.Exists(PathUniqueAlarmCaptainIvy))
@@ -580,8 +580,8 @@ namespace UBot.Core.Objects
             }
 
             // Uruchi
-            PlayUniqueAlarmUruchi = PlayerConfig.Get("UBot.Sounds.PlayUniqueAlarmUruchi", false);
-            PathUniqueAlarmUruchi = PlayerConfig.Get("UBot.Sounds.PathUniqueAlarmUruchi", string.Empty);
+            PlayUniqueAlarmUruchi = UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PlayUniqueAlarmUruchi", false);
+            PathUniqueAlarmUruchi = UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PathUniqueAlarmUruchi", string.Empty);
             if (false == string.IsNullOrWhiteSpace(PathUniqueAlarmUruchi))
             {
                 if (File.Exists(PathUniqueAlarmUruchi))
@@ -592,8 +592,8 @@ namespace UBot.Core.Objects
             }
 
             // Isyutaru
-            PlayUniqueAlarmIsyutaru = PlayerConfig.Get("UBot.Sounds.PlayUniqueAlarmIsyutaru", false);
-            PathUniqueAlarmIsyutaru = PlayerConfig.Get("UBot.Sounds.PathUniqueAlarmIsyutaru", string.Empty);
+            PlayUniqueAlarmIsyutaru = UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PlayUniqueAlarmIsyutaru", false);
+            PathUniqueAlarmIsyutaru = UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PathUniqueAlarmIsyutaru", string.Empty);
             if (false == string.IsNullOrWhiteSpace(PathUniqueAlarmIsyutaru))
             {
                 if (File.Exists(PathUniqueAlarmIsyutaru))
@@ -604,8 +604,8 @@ namespace UBot.Core.Objects
             }
 
             // Lord Yarkan
-            PlayUniqueAlarmLordYarkan = PlayerConfig.Get("UBot.Sounds.PlayUniqueAlarmLordYarkan", false);
-            PathUniqueAlarmLordYarkan = PlayerConfig.Get("UBot.Sounds.PathUniqueAlarmLordYarkan", string.Empty);
+            PlayUniqueAlarmLordYarkan = UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PlayUniqueAlarmLordYarkan", false);
+            PathUniqueAlarmLordYarkan = UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PathUniqueAlarmLordYarkan", string.Empty);
             if (false == string.IsNullOrWhiteSpace(PathUniqueAlarmLordYarkan))
             {
                 if (File.Exists(PathUniqueAlarmLordYarkan))
@@ -616,8 +616,8 @@ namespace UBot.Core.Objects
             }
 
             // Demon Shaitan
-            PlayUniqueAlarmDemonShaitan = PlayerConfig.Get("UBot.Sounds.PlayUniqueAlarmDemonShaitan", false);
-            PathUniqueAlarmDemonShaitan = PlayerConfig.Get("UBot.Sounds.PathUniqueAlarmDemonShaitan", string.Empty);
+            PlayUniqueAlarmDemonShaitan = UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PlayUniqueAlarmDemonShaitan", false);
+            PathUniqueAlarmDemonShaitan = UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PathUniqueAlarmDemonShaitan", string.Empty);
             if (false == string.IsNullOrWhiteSpace(PathUniqueAlarmDemonShaitan))
             {
                 if (File.Exists(PathUniqueAlarmDemonShaitan))
@@ -628,8 +628,8 @@ namespace UBot.Core.Objects
             }
 
             // General unique alarm
-            PlayUniqueAlarmGeneral = PlayerConfig.Get("UBot.Sounds.PlayUniqueAlarmGeneral", false);
-            PathUniqueAlarmGeneral = PlayerConfig.Get("UBot.Sounds.PathUniqueAlarmGeneral", string.Empty);
+            PlayUniqueAlarmGeneral = UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PlayUniqueAlarmGeneral", false);
+            PathUniqueAlarmGeneral = UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PathUniqueAlarmGeneral", string.Empty);
             if (false == string.IsNullOrWhiteSpace(PathUniqueAlarmGeneral))
             {
                 if (File.Exists(PathUniqueAlarmGeneral))
@@ -639,7 +639,7 @@ namespace UBot.Core.Objects
                 }
             }
 
-            string regTmp = PlayerConfig.Get("UBot.Sounds.RegexUniqueAlarmGeneral", string.Empty);
+            string regTmp = UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.RegexUniqueAlarmGeneral", string.Empty);
             try
             {
                 if (false == string.IsNullOrWhiteSpace(regTmp))

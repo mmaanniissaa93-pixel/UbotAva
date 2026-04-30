@@ -31,7 +31,7 @@ public class PartyAutoRefuseResponse : IPacketHandler
         if (CoreGame.Party.HasPendingRequest)
             CoreGame.AcceptanceRequest = null;
 
-        EventManager.FireEvent("OnPartyRequestRefused");
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnPartyRequestRefused");
     }
 }
 

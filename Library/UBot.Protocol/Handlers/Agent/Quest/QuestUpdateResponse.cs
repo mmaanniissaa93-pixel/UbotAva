@@ -13,23 +13,23 @@ public class QuestUpdateResponse : IPacketHandler
 
     public void Invoke(Packet packet)
     {
-        var player = ProtocolRuntime.GameState?.Player as Player;
+        var player = UBot.Protocol.ProtocolRuntime.GameState?.Player as Player;
         if (player == null)
             return;
 
         var type = (QuestUpdateType)packet.ReadByte();
         var questId = packet.ReadUInt();
-        dynamic quest = ProtocolRuntime.GameState?.GetReference("RefQuest", questId);
+        dynamic quest = UBot.Protocol.ProtocolRuntime.GameState?.GetReference("RefQuest", questId);
 
         if (quest == null)
         {
-            ProtocolRuntime.Feedback?.Warn($"QuestLog with id {questId} not found!");
+            UBot.Protocol.ProtocolRuntime.Feedback?.Warn($"QuestLog with id {questId} not found!");
             return;
         }
 
         if (type == QuestUpdateType.Abandon)
         {
-            ProtocolRuntime.Feedback?.Notify($"Abandon quest [{quest.GetTranslatedName()}]");
+            UBot.Protocol.ProtocolRuntime.Feedback?.Notify($"Abandon quest [{quest.GetTranslatedName()}]");
 
             if (player.QuestLog.ActiveQuests.TryGetValue(questId, out var playerQuest))
                 playerQuest.Status = QuestStatus.Cancelled;
@@ -37,7 +37,7 @@ public class QuestUpdateResponse : IPacketHandler
 
         if (type == QuestUpdateType.Remove)
         {
-            ProtocolRuntime.Feedback?.Notify($"Remove quest [{quest.GetTranslatedName()}");
+            UBot.Protocol.ProtocolRuntime.Feedback?.Notify($"Remove quest [{quest.GetTranslatedName()}");
             player.QuestLog.ActiveQuests.Remove(questId);
         }
 
@@ -45,16 +45,16 @@ public class QuestUpdateResponse : IPacketHandler
         {
             var activeQuest = packet.ReadActiveQuest(questId);
             player.QuestLog.ActiveQuests.TryAdd(questId, activeQuest);
-            ProtocolRuntime.Feedback?.Notify($"Added quest [{activeQuest.Quest.GetTranslatedName()}");
+            UBot.Protocol.ProtocolRuntime.Feedback?.Notify($"Added quest [{activeQuest.Quest.GetTranslatedName()}");
         }
 
         if (type == QuestUpdateType.Update)
         {
             var activeQuest = packet.ReadActiveQuest(questId);
             player.QuestLog.ActiveQuests[questId] = activeQuest;
-            ProtocolRuntime.Feedback?.Debug($"Updated quest [{activeQuest.Quest.GetTranslatedName()}");
+            UBot.Protocol.ProtocolRuntime.Feedback?.Debug($"Updated quest [{activeQuest.Quest.GetTranslatedName()}");
         }
 
-        ProtocolRuntime.EventBus?.Fire("OnUpdateQuests");
+        UBot.Protocol.ProtocolRuntime.EventBus?.Fire("OnUpdateQuests");
     }
 }

@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Event;
@@ -19,9 +19,9 @@ internal class BuffBundle : IBundle
         if (_invoked)
             return;
 
-        if ((Game.Player.Untouchable || Game.Player.InAction) && !_buffBetweenAttacks)
+        if ((UBot.Core.RuntimeAccess.Session.Player.Untouchable || UBot.Core.RuntimeAccess.Session.Player.InAction) && !_buffBetweenAttacks)
             return;
-        if ((Game.Player.Untouchable || Game.Player.Berzerking) && _buffBetweenAttacks)
+        if ((UBot.Core.RuntimeAccess.Session.Player.Untouchable || UBot.Core.RuntimeAccess.Session.Player.Berzerking) && _buffBetweenAttacks)
             return;
 
         try
@@ -45,21 +45,21 @@ internal class BuffBundle : IBundle
                 if (buff == null)
                     continue;
 
-                var isActive = Game.Player.State.HasActiveBuff(buff, out var info);
+                var isActive = UBot.Core.RuntimeAccess.Session.Player.State.HasActiveBuff(buff, out var info);
                 if (isActive && buff.IsBugged && info.IsBugged)
                 {
                     //#377 bug detected!
                     Log.Notify($"[#377] The buff [{buff.Token}-{buff.Record?.GetRealName()}] expired");
 
-                    EventManager.FireEvent("OnRemoveBuff", buff);
+                    UBot.Core.RuntimeAccess.Events.FireEvent("OnRemoveBuff", buff);
 
-                    var playerSkill = Game.Player.Skills.GetSkillInfoById(buff.Id);
+                    var playerSkill = UBot.Core.RuntimeAccess.Session.Player.Skills.GetSkillInfoById(buff.Id);
                     playerSkill?.Reset();
-                    Game.Player.State.TryRemoveActiveBuff(info.Token, out _);
+                    UBot.Core.RuntimeAccess.Session.Player.State.TryRemoveActiveBuff(info.Token, out _);
                 }
             }
 
-            var buffs = SkillManager.Buffs.FindAll(p => !Game.Player.State.HasActiveBuff(p, out _) && p.CanBeCasted);
+            var buffs = SkillManager.Buffs.FindAll(p => !UBot.Core.RuntimeAccess.Session.Player.State.HasActiveBuff(p, out _) && p.CanBeCasted);
             if (buffs == null || buffs.Count == 0)
                 return;
 
@@ -67,10 +67,10 @@ internal class BuffBundle : IBundle
 
             foreach (var buff in buffs)
             {
-                if (Game.Player.State.LifeState != LifeState.Alive || Game.Player.HasActiveVehicle)
+                if (UBot.Core.RuntimeAccess.Session.Player.State.LifeState != LifeState.Alive || UBot.Core.RuntimeAccess.Session.Player.HasActiveVehicle)
                     break;
 
-                if (Game.Player.State.HasActiveBuff(buff, out _) && !buff.HasCooldown)
+                if (UBot.Core.RuntimeAccess.Session.Player.State.HasActiveBuff(buff, out _) && !buff.HasCooldown)
                     break;
 
                 Log.Debug($"Trying to cast buff: {buff} {buff.Record.Basic_Code}");
@@ -89,7 +89,7 @@ internal class BuffBundle : IBundle
     /// </summary>
     public void Refresh()
     {
-        _buffBetweenAttacks = PlayerConfig.Get<bool>("UBot.Skills.checkCastBuffsBetweenAttacks", false);
+        _buffBetweenAttacks = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Skills.checkCastBuffsBetweenAttacks", false);
         _invoked = false;
     }
 

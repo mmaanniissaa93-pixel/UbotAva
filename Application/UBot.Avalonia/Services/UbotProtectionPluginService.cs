@@ -43,40 +43,40 @@ internal sealed class UbotProtectionPluginService : UbotServiceBase
     {
         return new Dictionary<string, object?>
         {
-            ["hpPotionEnabled"] = PlayerConfig.Get("UBot.Protection.checkUseHPPotionsPlayer", true),
-            ["hpPotionThreshold"] = Math.Clamp(PlayerConfig.Get("UBot.Protection.numPlayerHPPotionMin", 75), 0, 100),
-            ["mpPotionEnabled"] = PlayerConfig.Get("UBot.Protection.checkUseMPPotionsPlayer", true),
-            ["mpPotionThreshold"] = Math.Clamp(PlayerConfig.Get("UBot.Protection.numPlayerMPPotionMin", 75), 0, 100),
-            ["vigorHpEnabled"] = PlayerConfig.Get("UBot.Protection.checkUseVigorHP", false),
-            ["vigorHpThreshold"] = Math.Clamp(PlayerConfig.Get("UBot.Protection.numPlayerHPVigorPotionMin", 50), 0, 100),
-            ["vigorMpEnabled"] = PlayerConfig.Get("UBot.Protection.checkUseVigorMP", false),
-            ["vigorMpThreshold"] = Math.Clamp(PlayerConfig.Get("UBot.Protection.numPlayerMPVigorPotionMin", 50), 0, 100),
-            ["skillHpEnabled"] = PlayerConfig.Get("UBot.Protection.checkUseSkillHP", false),
-            ["skillHpThreshold"] = Math.Clamp(PlayerConfig.Get("UBot.Protection.numPlayerSkillHPMin", 50), 0, 100),
-            ["mpSkillEnabled"] = PlayerConfig.Get("UBot.Protection.checkUseSkillMP", false),
-            ["mpSkillThreshold"] = Math.Clamp(PlayerConfig.Get("UBot.Protection.numPlayerSkillMPMin", 50), 0, 100),
-            ["deadDelayEnabled"] = PlayerConfig.Get("UBot.Protection.checkDead", false),
-            ["stopInTown"] = PlayerConfig.Get("UBot.Protection.checkStopBotOnReturnToTown", false),
-            ["noArrows"] = PlayerConfig.Get("UBot.Protection.checkNoArrows", false),
-            ["fullInventory"] = PlayerConfig.Get("UBot.Protection.checkInventory", false),
-            ["fullPetInventory"] = PlayerConfig.Get("UBot.Protection.checkFullPetInventory", false),
-            ["hpPotionsLow"] = PlayerConfig.Get("UBot.Protection.checkNoHPPotions", false),
-            ["mpPotionsLow"] = PlayerConfig.Get("UBot.Protection.checkNoMPPotions", false),
-            ["lowDurability"] = PlayerConfig.Get("UBot.Protection.checkDurability", false),
-            ["levelUp"] = PlayerConfig.Get("UBot.Protection.checkLevelUp", false),
-            ["shardFatigue"] = PlayerConfig.Get("UBot.Protection.checkShardFatigue", false),
-            ["useUniversalPills"] = PlayerConfig.Get("UBot.Protection.checkUseUniversalPills", true),
-            ["useBadStatusSkill"] = PlayerConfig.Get("UBot.Protection.checkUseBadStatusSkill", false),
-            ["increaseInt"] = Math.Clamp(PlayerConfig.Get("UBot.Protection.numIncInt", 0), 0, 3),
-            ["increaseStr"] = Math.Clamp(PlayerConfig.Get("UBot.Protection.numIncStr", 0), 0, 3),
-            ["petHpPotionEnabled"] = PlayerConfig.Get("UBot.Protection.checkUsePetHP", false),
-            ["petHgpPotionEnabled"] = PlayerConfig.Get("UBot.Protection.checkUseHGP", false),
-            ["petAbnormalRecoveryEnabled"] = PlayerConfig.Get("UBot.Protection.checkUseAbnormalStatePotion", true),
-            ["reviveGrowthFellow"] = PlayerConfig.Get("UBot.Protection.checkReviveAttackPet", false),
-            ["autoSummonGrowthFellow"] = PlayerConfig.Get("UBot.Protection.checkAutoSummonAttackPet", false),
-            ["hpSkillId"] = PlayerConfig.Get("UBot.Protection.HpSkill", 0U).ToString(),
-            ["mpSkillId"] = PlayerConfig.Get("UBot.Protection.MpSkill", 0U).ToString(),
-            ["badStatusSkillId"] = PlayerConfig.Get("UBot.Protection.BadStatusSkill", 0U).ToString()
+            ["hpPotionEnabled"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.checkUseHPPotionsPlayer", true),
+            ["hpPotionThreshold"] = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.numPlayerHPPotionMin", 75), 0, 100),
+            ["mpPotionEnabled"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.checkUseMPPotionsPlayer", true),
+            ["mpPotionThreshold"] = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.numPlayerMPPotionMin", 75), 0, 100),
+            ["vigorHpEnabled"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.checkUseVigorHP", false),
+            ["vigorHpThreshold"] = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.numPlayerHPVigorPotionMin", 50), 0, 100),
+            ["vigorMpEnabled"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.checkUseVigorMP", false),
+            ["vigorMpThreshold"] = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.numPlayerMPVigorPotionMin", 50), 0, 100),
+            ["skillHpEnabled"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.checkUseSkillHP", false),
+            ["skillHpThreshold"] = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.numPlayerSkillHPMin", 50), 0, 100),
+            ["mpSkillEnabled"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.checkUseSkillMP", false),
+            ["mpSkillThreshold"] = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.numPlayerSkillMPMin", 50), 0, 100),
+            ["deadDelayEnabled"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.checkDead", false),
+            ["stopInTown"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.checkStopBotOnReturnToTown", false),
+            ["noArrows"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.checkNoArrows", false),
+            ["fullInventory"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.checkInventory", false),
+            ["fullPetInventory"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.checkFullPetInventory", false),
+            ["hpPotionsLow"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.checkNoHPPotions", false),
+            ["mpPotionsLow"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.checkNoMPPotions", false),
+            ["lowDurability"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.checkDurability", false),
+            ["levelUp"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.checkLevelUp", false),
+            ["shardFatigue"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.checkShardFatigue", false),
+            ["useUniversalPills"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.checkUseUniversalPills", true),
+            ["useBadStatusSkill"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.checkUseBadStatusSkill", false),
+            ["increaseInt"] = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.numIncInt", 0), 0, 3),
+            ["increaseStr"] = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.numIncStr", 0), 0, 3),
+            ["petHpPotionEnabled"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.checkUsePetHP", false),
+            ["petHgpPotionEnabled"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.checkUseHGP", false),
+            ["petAbnormalRecoveryEnabled"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.checkUseAbnormalStatePotion", true),
+            ["reviveGrowthFellow"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.checkReviveAttackPet", false),
+            ["autoSummonGrowthFellow"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.checkAutoSummonAttackPet", false),
+            ["hpSkillId"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.HpSkill", 0U).ToString(),
+            ["mpSkillId"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.MpSkill", 0U).ToString(),
+            ["badStatusSkillId"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.BadStatusSkill", 0U).ToString()
         };
     }
 
@@ -118,17 +118,17 @@ internal sealed class UbotProtectionPluginService : UbotServiceBase
 
         if (TryGetUIntValue(patch, "hpSkillId", out var hpSkill))
         {
-            PlayerConfig.Set("UBot.Protection.HpSkill", hpSkill);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Protection.HpSkill", hpSkill);
             changed = true;
         }
         if (TryGetUIntValue(patch, "mpSkillId", out var mpSkill))
         {
-            PlayerConfig.Set("UBot.Protection.MpSkill", mpSkill);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Protection.MpSkill", mpSkill);
             changed = true;
         }
         if (TryGetUIntValue(patch, "badStatusSkillId", out var badStatusSkill))
         {
-            PlayerConfig.Set("UBot.Protection.BadStatusSkill", badStatusSkill);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Protection.BadStatusSkill", badStatusSkill);
             changed = true;
         }
 

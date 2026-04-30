@@ -36,7 +36,7 @@ public class CosUpdateResponse : IPacketHandler
             switch (type)
             {
                 case 1:
-                    EventManager.FireEvent("OnTerminateCos", CoreGame.Player.Growth);
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnTerminateCos", CoreGame.Player.Growth);
                     CoreGame.Player.Growth = null;
                     break;
 
@@ -62,23 +62,23 @@ public class CosUpdateResponse : IPacketHandler
                     if (CoreGame.Player.Growth.Level < iLevel)
                     {
                         CoreGame.Player.Growth.Level = iLevel;
-                        EventManager.FireEvent("OnGrowthLevelUp");
+                        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnGrowthLevelUp");
                         Log.Notify(
                             $"Congratulations, your pet [{CoreGame.Player.Growth.Name}] level has increased to [{CoreGame.Player.Growth.Level}]"
                         );
                     }
 
-                    EventManager.FireEvent("OnGrowthExperienceUpdate");
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnGrowthExperienceUpdate");
                     break;
 
                 case 4:
                     CoreGame.Player.Growth.CurrentHungerPoints = packet.ReadUShort();
-                    EventManager.FireEvent("OnGrowthHungerUpdate");
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnGrowthHungerUpdate");
                     break;
 
                 case 5:
                     CoreGame.Player.Growth.Name = packet.ReadString();
-                    EventManager.FireEvent("OnGrowthNameChange");
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnGrowthNameChange");
                     break;
 
                 case 7:
@@ -101,9 +101,9 @@ public class CosUpdateResponse : IPacketHandler
             switch (type)
             {
                 case 1:
-                    EventManager.FireEvent("OnTerminateCos", CoreGame.Player.Fellow);
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnTerminateCos", CoreGame.Player.Fellow);
                     CoreGame.Player.Fellow = null;
-                    EventManager.FireEvent("OnTerminateFellow");
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnTerminateFellow");
                     break;
 
                 case 2: // update inventory
@@ -129,23 +129,23 @@ public class CosUpdateResponse : IPacketHandler
                     {
                         CoreGame.Player.Fellow.Level = iLevel;
                         CoreGame.Player.Fellow.MaxHealth = CoreGame.Player.Fellow.Health;
-                        EventManager.FireEvent("OnFellowLevelUp");
+                        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnFellowLevelUp");
                         Log.Notify(
                             $"Congratulations, your fellow pet [{CoreGame.Player.Fellow.Name}] level has increased to [{CoreGame.Player.Fellow.Level}]"
                         );
                     }
 
-                    EventManager.FireEvent("OnFellowExperienceUpdate");
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnFellowExperienceUpdate");
                     break;
 
                 case 4:
                     CoreGame.Player.Fellow.Satiety = packet.ReadUShort();
-                    EventManager.FireEvent("OnFellowSatietyUpdate");
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnFellowSatietyUpdate");
                     break;
 
                 case 5:
                     CoreGame.Player.Fellow.Name = packet.ReadString();
-                    EventManager.FireEvent("OnFellowNameChange");
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnFellowNameChange");
                     break;
 
                 case 7:
@@ -175,43 +175,43 @@ public class CosUpdateResponse : IPacketHandler
             switch (type)
             {
                 case 1:
-                    EventManager.FireEvent("OnTerminateCos", CoreGame.Player.AbilityPet);
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnTerminateCos", CoreGame.Player.AbilityPet);
                     CoreGame.Player.AbilityPet = null;
-                    EventManager.FireEvent("OnTerminateAbilityPet");
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnTerminateAbilityPet");
                     break;
 
                 case 2:
                     CoreGame.Player.AbilityPet.Inventory.Deserialize(packet);
 
-                    EventManager.FireEvent("OnUpdateAbilityPetInventorySize");
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnUpdateAbilityPetInventorySize");
                     break;
 
                 case 5:
                     CoreGame.Player.AbilityPet.Name = packet.ReadString();
-                    EventManager.FireEvent("OnAbilityPetNameChange");
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnAbilityPetNameChange");
                     break;
             }
         }
         else if (CoreGame.Player.Transport?.UniqueId == uniqueId)
         {
-            EventManager.FireEvent("OnTerminateCos", CoreGame.Player.Transport);
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnTerminateCos", CoreGame.Player.Transport);
             CoreGame.Player.Transport = null;
-            EventManager.FireEvent("OnTerminateVehicle");
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnTerminateVehicle");
         }
         else if (CoreGame.Player.JobTransport?.UniqueId == uniqueId)
         {
             switch (type)
             {
                 case 1:
-                    EventManager.FireEvent("OnTerminateCos", CoreGame.Player.JobTransport);
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnTerminateCos", CoreGame.Player.JobTransport);
                     CoreGame.Player.JobTransport = null;
-                    EventManager.FireEvent("OnTerminateJobTransport");
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnTerminateJobTransport");
                     break;
 
                 case 2:
                     CoreGame.Player.JobTransport.Inventory.Deserialize(packet);
 
-                    EventManager.FireEvent("OnUpdateJobTransportInventory");
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnUpdateJobTransportInventory");
                     break;
             }
         }

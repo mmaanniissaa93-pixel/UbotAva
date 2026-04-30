@@ -12,7 +12,7 @@ public class SkillMasteryWithdrawResponse : IPacketHandler
 
     public void Invoke(Packet packet)
     {
-        var player = ProtocolRuntime.GameState?.Player as Player;
+        var player = UBot.Protocol.ProtocolRuntime.GameState?.Player as Player;
         if (player == null || packet.ReadByte() != 0x01)
             return;
 
@@ -20,9 +20,9 @@ public class SkillMasteryWithdrawResponse : IPacketHandler
         var level = packet.ReadByte();
 
         player.Skills.UpdateMasteryLevel(masteryId, level);
-        ProtocolRuntime.Feedback?.Notify(
+        UBot.Protocol.ProtocolRuntime.Feedback?.Notify(
             $"The mastery [{player.Skills.GetMasteryInfoById(masteryId).Record.Name}] was withdrawn to [lv.{level}]"
         );
-        ProtocolRuntime.EventBus?.Fire("OnWithdrawMastery", masteryId, level);
+        UBot.Protocol.ProtocolRuntime.EventBus?.Fire("OnWithdrawMastery", masteryId, level);
     }
 }

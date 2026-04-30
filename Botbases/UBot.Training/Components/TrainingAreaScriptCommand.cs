@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UBot.Core;
 using UBot.Core.Components.Scripting;
 using UBot.Core.Event;
@@ -59,13 +59,13 @@ internal class TrainingAreaScriptCommand : IScriptCommand
             )
                 return false;
 
-            PlayerConfig.Set("UBot.Area.Region", region);
-            PlayerConfig.Set("UBot.Area.X", xPos);
-            PlayerConfig.Set("UBot.Area.Y", yPos);
-            PlayerConfig.Set("UBot.Area.Z", zPos);
-            PlayerConfig.Set("UBot.Area.Radius", radius);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Area.Region", region);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Area.X", xPos);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Area.Y", yPos);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Area.Z", zPos);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Area.Radius", radius);
 
-            EventManager.FireEvent("OnSetTrainingArea");
+            UBot.Core.RuntimeAccess.Events.FireEvent("OnSetTrainingArea");
 
             return true;
         }

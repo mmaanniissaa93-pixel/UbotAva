@@ -6,15 +6,15 @@ namespace UBot.Core.ProtocolServices;
 
 internal sealed class CoreSpawnRuntime : ISpawnRuntime
 {
-    public object Player => Game.Player;
+    public object Player => UBot.Core.RuntimeAccess.Session.Player;
 
     public object SelectedEntity
     {
-        get => Game.SelectedEntity;
-        set => Game.SelectedEntity = value as SpawnedBionic;
+        get => UBot.Core.RuntimeAccess.Session.SelectedEntity;
+        set => UBot.Core.RuntimeAccess.Session.SelectedEntity = value as SpawnedBionic;
     }
 
-    public object GetRefObjCommon(uint id) => Game.ReferenceManager.GetRefObjCommon(id);
+    public object GetRefObjCommon(uint id) => UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefObjCommon(id);
 
     public SpawnParseResult ParseSpawn(object packet, bool isGroup)
     {
@@ -33,7 +33,7 @@ internal sealed class CoreSpawnRuntime : ISpawnRuntime
             return null;
         }
 
-        var obj = Game.ReferenceManager.GetRefObjCommon(refObjId);
+        var obj = UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefObjCommon(refObjId);
         if (obj == null)
         {
             Log.Debug($"SpawnManager::Parse error while getting RefObjCommon by id {refObjId}");
@@ -120,7 +120,7 @@ internal sealed class CoreSpawnRuntime : ISpawnRuntime
 
     public void FireEvent(string eventName, params object[] args)
     {
-        Event.EventManager.FireEvent(eventName, args);
+        UBot.Core.RuntimeAccess.Events.FireEvent(eventName, args);
     }
 
     public void LogDebug(string message)

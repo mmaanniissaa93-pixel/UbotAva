@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UBot.Core;
@@ -27,7 +27,7 @@ internal class PartyBuffingBundle : IBundle
     /// </summary>
     public PartyBuffingBundle()
     {
-        EventManager.SubscribeEvent("OnPartyBuffSettingsChanged", OnPartyBuffSettingsChanged);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnPartyBuffSettingsChanged", OnPartyBuffSettingsChanged);
     }
 
     /// <summary>
@@ -38,10 +38,10 @@ internal class PartyBuffingBundle : IBundle
         if (_refreshing)
             return;
 
-        if (Game.Player.HasActiveVehicle)
+        if (UBot.Core.RuntimeAccess.Session.Player.HasActiveVehicle)
             return;
 
-        var selectedGroup = PlayerConfig.Get("UBot.Party.Buffing.SelectedGroup", "Default");
+        var selectedGroup = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.Buffing.SelectedGroup", "Default");
 
         SpawnManager.TryGetEntities<SpawnedPlayer>(p =>
             BuffingPartyMembers.Any(s => s.Group == selectedGroup && s.Name == p.Name),
@@ -67,7 +67,7 @@ internal class PartyBuffingBundle : IBundle
 
             foreach (var buff in buffingMember.Buffs)
             {
-                var skill = Game.Player.Skills.GetSkillInfoById(buff);
+                var skill = UBot.Core.RuntimeAccess.Session.Player.Skills.GetSkillInfoById(buff);
 
                 if (skill == null || skill.HasCooldown)
                     continue;
@@ -77,7 +77,7 @@ internal class PartyBuffingBundle : IBundle
                 // - If skill targets party only (TargetGroup_Party), player must be in our party
                 if (skill.Record.TargetGroup_Party && !skill.Record.TargetGroup_Ally)
                 {
-                    if (!(Game.Party?.Members?.Any(p => p.Name == member.Name) ?? false))
+                    if (!(UBot.Core.RuntimeAccess.Session.Party?.Members?.Any(p => p.Name == member.Name) ?? false))
                     {
                         continue;
                     }
@@ -111,7 +111,7 @@ internal class PartyBuffingBundle : IBundle
         // Don't need to use clear, because gc will handle the unnecessary objects
         BuffingPartyMembers = new List<BuffingPartyMember>();
 
-        var settings = PlayerConfig.Get("UBot.Party.Buffing", string.Empty);
+        var settings = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.Buffing", string.Empty);
         var collection = settings.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
 
         foreach (var item in collection)

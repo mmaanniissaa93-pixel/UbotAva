@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using UBot.Core;
 using UBot.Core.Components;
@@ -40,14 +40,14 @@ internal class GoldPerHour : IStatisticCalculator
     /// <inheritdoc />
     public object GetValue()
     {
-        if (!Game.Ready)
+        if (!UBot.Core.RuntimeAccess.Session.Ready)
             return 0;
 
         if (++_currentTickIndex >= _values.Length)
             _currentTickIndex = 0;
 
-        _values[_currentTickIndex] = Convert.ToInt64(Game.Player.Gold) - _lastTickValue;
-        _lastTickValue = Convert.ToInt64(Game.Player.Gold);
+        _values[_currentTickIndex] = Convert.ToInt64(UBot.Core.RuntimeAccess.Session.Player.Gold) - _lastTickValue;
+        _lastTickValue = Convert.ToInt64(UBot.Core.RuntimeAccess.Session.Player.Gold);
 
         return _values.Sum(val => val) / _values.Length * 3600;
     }
@@ -55,10 +55,10 @@ internal class GoldPerHour : IStatisticCalculator
     /// <inheritdoc />
     public void Reset()
     {
-        if (!Game.Ready)
+        if (!UBot.Core.RuntimeAccess.Session.Ready)
             return;
 
-        _lastTickValue = Convert.ToInt64(Game.Player.Gold);
+        _lastTickValue = Convert.ToInt64(UBot.Core.RuntimeAccess.Session.Player.Gold);
         _values = new long[60];
     }
 

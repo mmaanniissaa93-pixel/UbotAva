@@ -14,7 +14,7 @@ public class MagicOptionGrantResponse : IPacketHandler
         var slot = packet.ReadByte();
         var attribute = packet.ReadString();
 
-        EventManager.FireEvent("OnMagicOptionGranted", slot, attribute);
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnMagicOptionGranted", slot, attribute);
     }
 }
 

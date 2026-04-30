@@ -54,18 +54,18 @@ public class EntityUpdateStateResponse : IPacketHandler
                     player.GetAttackers().Any(e => e.UniqueId == uniqueId)
                     && entity.State.LifeState == LifeState.Dead
                 )
-                    EventManager.FireEvent("OnKillEnemy");
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnKillEnemy");
 
                 if (uniqueId == CoreGame.SelectedEntity?.UniqueId && entity.State.LifeState == LifeState.Dead)
                 {
-                    EventManager.FireEvent("OnKillSelectedEnemy");
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnKillSelectedEnemy");
                     CoreGame.SelectedEntity = null;
                 }
 
-                EventManager.FireEvent("OnUpdateEntityLifeState", uniqueId);
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnUpdateEntityLifeState", uniqueId);
 
                 if (uniqueId == player.UniqueId && entity.State.LifeState == LifeState.Dead)
-                    EventManager.FireEvent("OnPlayerDied");
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnPlayerDied");
 
                 break;
 
@@ -88,7 +88,7 @@ public class EntityUpdateStateResponse : IPacketHandler
                         break;
                 }
 
-                EventManager.FireEvent("OnUpdateEntityMotionState", uniqueId);
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnUpdateEntityMotionState", uniqueId);
 
                 break;
 
@@ -96,13 +96,13 @@ public class EntityUpdateStateResponse : IPacketHandler
 
                 entity.State.BodyState = (BodyState)state;
 
-                EventManager.FireEvent("OnUpdateEntityBodyState", uniqueId);
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnUpdateEntityBodyState", uniqueId);
                 break;
 
             case 7:
 
                 entity.State.PvpState = (PvpState)state;
-                EventManager.FireEvent("OnUpdateEntityPvpState", uniqueId);
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnUpdateEntityPvpState", uniqueId);
 
                 break;
 
@@ -110,7 +110,7 @@ public class EntityUpdateStateResponse : IPacketHandler
 
                 entity.State.BattleState = (BattleState)state;
 
-                EventManager.FireEvent("OnUpdateEntityBattleState", uniqueId);
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnUpdateEntityBattleState", uniqueId);
 
                 break;
 
@@ -124,7 +124,7 @@ public class EntityUpdateStateResponse : IPacketHandler
                 //    if (scrollState == ScrollState.Cancel && CoreKernel.Bot.Running)
                 //        CoreKernel.Bot.Stop();
 
-                EventManager.FireEvent("OnUpdateEntityScrollState", uniqueId);
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnUpdateEntityScrollState", uniqueId);
 
                 break;
 

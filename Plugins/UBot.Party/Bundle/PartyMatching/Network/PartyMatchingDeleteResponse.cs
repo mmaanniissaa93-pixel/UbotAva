@@ -55,6 +55,6 @@ public class PartyMatchingDeleteResponse : IPacketHandler
             }
         }
 
-        EventManager.FireEvent("OnDeletePartyEntry");
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnDeletePartyEntry");
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
@@ -36,7 +36,7 @@ internal static class JSROAuthService
         client.DefaultRequestHeaders.TryAddWithoutValidation("Connection", "keep-alive");
 
         var selectedAccount = Accounts.SavedAccounts?.Find(p =>
-            p.Username == GlobalConfig.Get<string>("UBot.General.AutoLoginAccountUsername")
+            p.Username == UBot.Core.RuntimeAccess.Global.Get<string>("UBot.General.AutoLoginAccountUsername")
         );
 
         if (selectedAccount == null)
@@ -72,8 +72,8 @@ internal static class JSROAuthService
             Match match = Regex.Match(responseBody, pattern);
             if (match.Success)
             {
-                GlobalConfig.Set("UBot.JSRO.token", match.Value);
-                GlobalConfig.Save();
+                UBot.Core.RuntimeAccess.Global.Set("UBot.JSRO.token", match.Value);
+                UBot.Core.RuntimeAccess.Global.Save();
                 return true;
             }
             else

@@ -37,7 +37,7 @@ public class StorageBoxTakeItemResponse : IPacketHandler
             CoreGame.Player.Inventory.Add(item);
         }
 
-        EventManager.FireEvent("OnInventoryUpdate");
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnInventoryUpdate");
     }
 }
 

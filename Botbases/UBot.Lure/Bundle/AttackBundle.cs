@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Components;
 using UBot.Lure.Components;
 
@@ -11,16 +11,16 @@ internal static class AttackBundle
     public static void Tick()
     {
         if (
-            Game.SelectedEntity == null
-            || Game.Player.InAction
-            || !Game.Player.CanAttack
-            || Game.SelectedEntity.IsBehindObstacle
+            UBot.Core.RuntimeAccess.Session.SelectedEntity == null
+            || UBot.Core.RuntimeAccess.Session.Player.InAction
+            || !UBot.Core.RuntimeAccess.Session.Player.CanAttack
+            || UBot.Core.RuntimeAccess.Session.SelectedEntity.IsBehindObstacle
         )
             return;
 
-        if (_lastTargetId == Game.SelectedEntity.UniqueId)
+        if (_lastTargetId == UBot.Core.RuntimeAccess.Session.SelectedEntity.UniqueId)
         {
-            if (Game.Player.InAction)
+            if (UBot.Core.RuntimeAccess.Session.Player.InAction)
                 SkillManager.CancelAction();
 
             return;
@@ -36,7 +36,7 @@ internal static class AttackBundle
             Log.Status("Attacking");
             SkillManager.CancelAction();
 
-            var uniqueId = Game.SelectedEntity?.UniqueId;
+            var uniqueId = UBot.Core.RuntimeAccess.Session.SelectedEntity?.UniqueId;
             if (uniqueId == null)
                 return;
 
@@ -44,7 +44,7 @@ internal static class AttackBundle
             _lastTargetId = uniqueId.Value;
         }
 
-        if (LureConfig.UseNormalAttack && !Game.Player.InAction)
+        if (LureConfig.UseNormalAttack && !UBot.Core.RuntimeAccess.Session.Player.InAction)
             SkillManager.CastAutoAttack();
     }
 }

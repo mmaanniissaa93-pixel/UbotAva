@@ -1,4 +1,4 @@
-﻿using System.Windows.Forms;
+using System.Windows.Forms;
 using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Event;
@@ -42,7 +42,7 @@ public class QuestPlugin : IPlugin
     /// <inheritdoc />
     public void Translate()
     {
-        LanguageManager.Translate(View, Kernel.Language);
+        LanguageManager.Translate(View, UBot.Core.RuntimeAccess.Core.Language);
     }
 
     /// <inheritdoc />
@@ -50,7 +50,7 @@ public class QuestPlugin : IPlugin
     {
         Views.View.SidebarElement = new QuestSidebarElement();
 
-        EventManager.FireEvent("OnAddSidebarElement", Views.View.SidebarElement);
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnAddSidebarElement", Views.View.SidebarElement);
     }
 
     /// <inheritdoc />

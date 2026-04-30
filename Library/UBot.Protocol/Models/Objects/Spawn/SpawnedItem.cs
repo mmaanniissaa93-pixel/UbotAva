@@ -127,7 +127,7 @@ public class SpawnedItem : SpawnedEntity
         );
 
         Log.Status("Picking up...");
-        PacketManager.SendPacket(packet, PacketDestination.Server, asyncResult);
+        UBot.Protocol.ProtocolRuntime.SendPacket(packet, PacketDestination.Server, asyncResult);
         asyncResult.AwaitResponse(500);
         Log.StatusLang("Ready");
 

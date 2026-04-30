@@ -87,21 +87,21 @@ internal sealed class UbotCoreLifecycleService : UbotServiceBase
                 return;
 
             EnsureProfileLoaded();
-            GlobalConfig.Load();
+            UBot.Core.RuntimeAccess.Global.Load();
 
             var selectedCharacter = ProfileManager.SelectedCharacter?.Trim() ?? string.Empty;
             if (string.IsNullOrWhiteSpace(selectedCharacter))
-                selectedCharacter = GlobalConfig.Get("UBot.General.AutoLoginCharacter", string.Empty)?.Trim() ?? string.Empty;
+                selectedCharacter = UBot.Core.RuntimeAccess.Global.Get("UBot.General.AutoLoginCharacter", string.Empty)?.Trim() ?? string.Empty;
 
             if (!string.IsNullOrWhiteSpace(selectedCharacter))
             {
                 ProfileManager.SelectedCharacter = selectedCharacter;
-                PlayerConfig.Load(selectedCharacter);
+                UBot.Core.RuntimeAccess.Player.Load(selectedCharacter);
             }
 
-            Kernel.Language = GlobalConfig.Get("UBot.Language", "en_US");
-            Kernel.Initialize();
-            Game.Initialize();
+            UBot.Core.RuntimeAccess.Core.Language = UBot.Core.RuntimeAccess.Global.Get("UBot.Language", "en_US");
+            UBot.Core.RuntimeAccess.Core.Initialize();
+            UBot.Core.RuntimeAccess.Session.Initialize();
 
             ExtensionManager.LoadAssemblies<IPlugin>();
             ExtensionManager.LoadAssemblies<IBotbase>();
@@ -113,10 +113,10 @@ internal sealed class UbotCoreLifecycleService : UbotServiceBase
             if (!_eventsSubscribed)
             {
                 _eventsSubscribed = true;
-                EventManager.SubscribeEvent("OnAddLog", new Action<string, LogLevel>(OnLog));
-                EventManager.SubscribeEvent("OnChangeStatusText", new Action<string>(status => _statusText = status ?? string.Empty));
-                EventManager.SubscribeEvent("OnChatMessage", new Action<string, string, ChatType>(OnChatMessage));
-                EventManager.SubscribeEvent("OnUniqueMessage", new Action<string>(OnUniqueMessage));
+                UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnAddLog", new Action<string, LogLevel>(OnLog));
+                UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnChangeStatusText", new Action<string>(status => _statusText = status ?? string.Empty));
+                UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnChatMessage", new Action<string, string, ChatType>(OnChatMessage));
+                UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnUniqueMessage", new Action<string>(OnUniqueMessage));
             }
 
             // Keep idle footprint low: load lightweight connection metadata only.
@@ -151,7 +151,7 @@ internal sealed class UbotCoreLifecycleService : UbotServiceBase
 
     private static void SelectConfiguredBotbase()
     {
-        var configuredName = GlobalConfig.Get("UBot.BotName", "UBot.Training");
+        var configuredName = UBot.Core.RuntimeAccess.Global.Get("UBot.BotName", "UBot.Training");
         if (TrySetBotbase(configuredName))
             return;
 
@@ -163,11 +163,11 @@ internal sealed class UbotCoreLifecycleService : UbotServiceBase
     private static bool TrySetBotbase(string botbaseName)
     {
         var botbase = ExtensionManager.Bots.FirstOrDefault(bot => PluginIdEquals(bot.Name, botbaseName));
-        if (botbase == null || Kernel.Bot == null)
+        if (botbase == null || UBot.Core.RuntimeAccess.Core.Bot == null)
             return false;
 
-        Kernel.Bot.SetBotbase(botbase);
-        GlobalConfig.Set("UBot.BotName", botbase.Name);
+        UBot.Core.RuntimeAccess.Core.Bot.SetBotbase(botbase);
+        UBot.Core.RuntimeAccess.Global.Set("UBot.BotName", botbase.Name);
         return true;
     }
 
@@ -176,26 +176,26 @@ internal sealed class UbotCoreLifecycleService : UbotServiceBase
         lock (InitLock)
         {
             if (_clientInfoLoaded
-                && Game.ReferenceManager?.DivisionInfo != null
-                && Game.ReferenceManager.GatewayInfo != null
-                && Game.ReferenceManager.VersionInfo != null)
+                && UBot.Core.RuntimeAccess.Session.ReferenceManager?.DivisionInfo != null
+                && UBot.Core.RuntimeAccess.Session.ReferenceManager.GatewayInfo != null
+                && UBot.Core.RuntimeAccess.Session.ReferenceManager.VersionInfo != null)
             {
                 return true;
             }
 
-            var sroDir = GlobalConfig.Get("UBot.SilkroadDirectory", string.Empty);
+            var sroDir = UBot.Core.RuntimeAccess.Global.Get("UBot.SilkroadDirectory", string.Empty);
             if (string.IsNullOrWhiteSpace(sroDir) || !File.Exists(Path.Combine(sroDir, "media.pk2")))
                 return false;
 
-            if (!Game.InitializeArchiveFiles())
+            if (!UBot.Core.RuntimeAccess.Session.InitializeArchiveFiles())
                 return false;
 
             try
             {
-                Game.ReferenceManager.LoadClientInfo();
-                _clientInfoLoaded = Game.ReferenceManager?.DivisionInfo != null
-                                    && Game.ReferenceManager.GatewayInfo != null
-                                    && Game.ReferenceManager.VersionInfo != null;
+                UBot.Core.RuntimeAccess.Session.ReferenceManager.LoadClientInfo();
+                _clientInfoLoaded = UBot.Core.RuntimeAccess.Session.ReferenceManager?.DivisionInfo != null
+                                    && UBot.Core.RuntimeAccess.Session.ReferenceManager.GatewayInfo != null
+                                    && UBot.Core.RuntimeAccess.Session.ReferenceManager.VersionInfo != null;
                 return _clientInfoLoaded;
             }
             catch (Exception ex)
@@ -221,7 +221,7 @@ internal sealed class UbotCoreLifecycleService : UbotServiceBase
             try
             {
                 var worker = new BackgroundWorker { WorkerReportsProgress = true };
-                Game.ReferenceManager.Load(GlobalConfig.Get("UBot.TranslationIndex", 9), worker);
+                UBot.Core.RuntimeAccess.Session.ReferenceManager.Load(UBot.Core.RuntimeAccess.Global.Get("UBot.TranslationIndex", 9), worker);
                 _referenceLoaded = true;
             }
             catch (Exception ex)

@@ -1,4 +1,4 @@
-﻿using UBot.Core.Network;
+using UBot.Core.Network;
 
 namespace UBot.Skills.Components;
 
@@ -11,7 +11,7 @@ internal class LearnMasteryHandler
         packet.WriteByte(0x01); //level
 
         var callback = new AwaitCallback(null, 0xB0A2);
-        PacketManager.SendPacket(packet, PacketDestination.Server, callback);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, callback);
         callback.AwaitResponse(1000);
     }
 }

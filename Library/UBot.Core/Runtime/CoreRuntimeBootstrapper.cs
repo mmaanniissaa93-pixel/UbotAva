@@ -32,34 +32,34 @@ public static class CoreRuntimeBootstrapper
         ProtocolRuntime.Shopping = new CoreShoppingController();
         ProtocolRuntime.Cos = new CoreCosController();
 
-        ServiceRuntime.GameState = gameState;
-        ServiceRuntime.PacketDispatcher = packetDispatcher;
-        ServiceRuntime.Environment = Get<IServiceRuntimeEnvironment>(provider) ?? new CoreServiceRuntimeEnvironment();
-        ServiceRuntime.Log = Get<IServiceLog>(provider) ?? new CoreServiceLog();
-        ServiceRuntime.PickupRuntime = Get<IPickupRuntime>(provider) ?? new CorePickupRuntime();
-        ServiceRuntime.PickupSettings = Get<IPickupSettings>(provider) ?? new CorePickupSettings();
-        ServiceRuntime.InventoryRuntime = Get<IInventoryRuntime>(provider) ?? new CoreInventoryRuntime();
-        ServiceRuntime.ShoppingRuntime = Get<IShoppingRuntime>(provider) ?? new CoreShoppingRuntime();
-        ServiceRuntime.AlchemyRuntime = Get<IAlchemyRuntime>(provider) ?? new CoreAlchemyRuntime();
-        ServiceRuntime.AlchemyProgress = new CoreAlchemyProgress(feedback);
-        ServiceRuntime.ScriptRuntime = Get<IScriptRuntime>(provider) ?? new CoreScriptRuntime();
-        ServiceRuntime.ScriptProgress = new CoreScriptProgress(feedback);
-        ServiceRuntime.SpawnRuntime = Get<ISpawnRuntime>(provider) ?? new CoreSpawnRuntime();
-        ServiceRuntime.SkillRuntime = Get<ISkillRuntime>(provider) ?? new SkillRuntimeAdapter();
-        ServiceRuntime.SkillConfig = Get<ISkillConfig>(provider) ?? new CoreSkillConfig();
-        ServiceRuntime.ClientConnectionRuntime = Get<IClientConnectionRuntime>(provider) ?? new ClientConnectionRuntimeAdapter();
-        ServiceRuntime.Clientless = Get<IClientlessService>(provider) ?? new ClientlessService();
-        ServiceRuntime.ClientNativeRuntime = Get<IClientNativeRuntime>(provider) ?? new ClientNativeRuntimeAdapter();
-        ServiceRuntime.ClientLaunchConfigProvider = Get<IClientLaunchConfigProvider>(provider) ?? new CoreClientLaunchConfigProvider();
-        ServiceRuntime.ClientLaunchPolicy = Get<IClientLaunchPolicy>(provider) ?? new ClientLaunchPolicyService();
-        ServiceRuntime.ProfileStorage = Get<IProfileStorage>(provider) ?? new ProfileFileStorage(new CoreAppPaths());
-        ServiceRuntime.Profile = Get<IProfileService>(provider) ?? new ProfileService();
+        UBot.Core.RuntimeAccess.Services.GameState = gameState;
+        UBot.Core.RuntimeAccess.Services.PacketDispatcher = packetDispatcher;
+        UBot.Core.RuntimeAccess.Services.Environment = Get<IServiceRuntimeEnvironment>(provider) ?? new CoreServiceRuntimeEnvironment();
+        UBot.Core.RuntimeAccess.Services.Log = Get<IServiceLog>(provider) ?? new CoreServiceLog();
+        UBot.Core.RuntimeAccess.Services.PickupRuntime = Get<IPickupRuntime>(provider) ?? new CorePickupRuntime();
+        UBot.Core.RuntimeAccess.Services.PickupSettings = Get<IPickupSettings>(provider) ?? new CorePickupSettings();
+        UBot.Core.RuntimeAccess.Services.InventoryRuntime = Get<IInventoryRuntime>(provider) ?? new CoreInventoryRuntime();
+        UBot.Core.RuntimeAccess.Services.ShoppingRuntime = Get<IShoppingRuntime>(provider) ?? new CoreShoppingRuntime();
+        UBot.Core.RuntimeAccess.Services.AlchemyRuntime = Get<IAlchemyRuntime>(provider) ?? new CoreAlchemyRuntime();
+        UBot.Core.RuntimeAccess.Services.AlchemyProgress = new CoreAlchemyProgress(feedback);
+        UBot.Core.RuntimeAccess.Services.ScriptRuntime = Get<IScriptRuntime>(provider) ?? new CoreScriptRuntime();
+        UBot.Core.RuntimeAccess.Services.ScriptProgress = new CoreScriptProgress(feedback);
+        UBot.Core.RuntimeAccess.Services.SpawnRuntime = Get<ISpawnRuntime>(provider) ?? new CoreSpawnRuntime();
+        UBot.Core.RuntimeAccess.Services.SkillRuntime = Get<ISkillRuntime>(provider) ?? new SkillRuntimeAdapter();
+        UBot.Core.RuntimeAccess.Services.SkillConfig = Get<ISkillConfig>(provider) ?? new CoreSkillConfig();
+        UBot.Core.RuntimeAccess.Services.ClientConnectionRuntime = Get<IClientConnectionRuntime>(provider) ?? new ClientConnectionRuntimeAdapter();
+        UBot.Core.RuntimeAccess.Services.Clientless = Get<IClientlessService>(provider) ?? new ClientlessService();
+        UBot.Core.RuntimeAccess.Services.ClientNativeRuntime = Get<IClientNativeRuntime>(provider) ?? new ClientNativeRuntimeAdapter();
+        UBot.Core.RuntimeAccess.Services.ClientLaunchConfigProvider = Get<IClientLaunchConfigProvider>(provider) ?? new CoreClientLaunchConfigProvider();
+        UBot.Core.RuntimeAccess.Services.ClientLaunchPolicy = Get<IClientLaunchPolicy>(provider) ?? new ClientLaunchPolicyService();
+        UBot.Core.RuntimeAccess.Services.ProfileStorage = Get<IProfileStorage>(provider) ?? new ProfileFileStorage(new CoreAppPaths());
+        UBot.Core.RuntimeAccess.Services.Profile = Get<IProfileService>(provider) ?? new ProfileService();
 
         PickupManager.Initialize(Get<IPickupService>(provider) ?? new PickupService());
         ShoppingManager.Initialize(Get<IShoppingService>(provider) ?? new ShoppingService());
         AlchemyManager.Initialize(Get<IAlchemyService>(provider) ?? new AlchemyService());
         LanguageManager.Initialize(Get<ILanguageService>(provider) ?? new LanguageService());
-        ClientManager.Initialize(ServiceRuntime.ClientLaunchPolicy);
+        ClientManager.Initialize(UBot.Core.RuntimeAccess.Services.ClientLaunchPolicy);
     }
 
     public static IGameStateRuntimeContext CreateGameStateRuntimeContext(IServiceProvider provider = null)

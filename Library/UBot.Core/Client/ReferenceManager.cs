@@ -36,7 +36,7 @@ public class ReferenceManager : IReferenceManager
     private bool _isMapInfoLoaded;
 
     public int LanguageTab { get; set; }
-    public GameClientType ClientType => Game.ClientType;
+    public GameClientType ClientType => UBot.Core.RuntimeAccess.Session.ClientType;
     public bool IsLowMemoryModeEnabled { get; private set; } = true;
 
     public Dictionary<string, RefText> TextData { get; } = new(70000);
@@ -82,7 +82,7 @@ public class ReferenceManager : IReferenceManager
     public void Load(int languageTab, BackgroundWorker worker)
     {
         LanguageTab = languageTab;
-        IsLowMemoryModeEnabled = GlobalConfig.Get(LowMemoryModeConfigKey, false);
+        IsLowMemoryModeEnabled = UBot.Core.RuntimeAccess.Global.Get(LowMemoryModeConfigKey, false);
 
         var sw = Stopwatch.StartNew();
 
@@ -127,12 +127,12 @@ public class ReferenceManager : IReferenceManager
         Log.Notify($"Loaded all game data in {sw.ElapsedMilliseconds}ms!");
 
         worker.ReportProgress(100, "Done");
-        EventManager.FireEvent("OnLoadGameData");
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnLoadGameData");
     }
 
     public void EnsureShopDataLoaded()
     {
-        if (_isShopDataLoaded || Game.MediaPk2 == null)
+        if (_isShopDataLoaded || UBot.Core.RuntimeAccess.Session.MediaPk2 == null)
             return;
 
         LoadShopData();
@@ -140,7 +140,7 @@ public class ReferenceManager : IReferenceManager
 
     public void EnsureQuestDataLoaded()
     {
-        if ((_isQuestDataLoaded && _isEventRewardDataLoaded) || Game.MediaPk2 == null)
+        if ((_isQuestDataLoaded && _isEventRewardDataLoaded) || UBot.Core.RuntimeAccess.Session.MediaPk2 == null)
             return;
 
         LoadQuestData();
@@ -149,7 +149,7 @@ public class ReferenceManager : IReferenceManager
 
     public void EnsureAlchemyDataLoaded()
     {
-        if (_isAlchemyDataLoaded || Game.MediaPk2 == null)
+        if (_isAlchemyDataLoaded || UBot.Core.RuntimeAccess.Session.MediaPk2 == null)
             return;
 
         LoadAlchemyData();
@@ -157,7 +157,7 @@ public class ReferenceManager : IReferenceManager
 
     public void EnsureOptLevelDataLoaded()
     {
-        if (_isOptLevelDataLoaded || Game.MediaPk2 == null)
+        if (_isOptLevelDataLoaded || UBot.Core.RuntimeAccess.Session.MediaPk2 == null)
             return;
 
         LoadOptLevelData();
@@ -165,7 +165,7 @@ public class ReferenceManager : IReferenceManager
 
     public void EnsureTextDataLoaded()
     {
-        if (_isTextDataLoaded || Game.MediaPk2 == null)
+        if (_isTextDataLoaded || UBot.Core.RuntimeAccess.Session.MediaPk2 == null)
             return;
 
         LoadTextData();
@@ -173,7 +173,7 @@ public class ReferenceManager : IReferenceManager
 
     public void EnsureCharacterDataLoaded()
     {
-        if (_isCharacterDataLoaded || Game.MediaPk2 == null)
+        if (_isCharacterDataLoaded || UBot.Core.RuntimeAccess.Session.MediaPk2 == null)
             return;
 
         LoadCharacterData();
@@ -181,7 +181,7 @@ public class ReferenceManager : IReferenceManager
 
     public void EnsureItemDataLoaded()
     {
-        if (_isItemDataLoaded || Game.MediaPk2 == null)
+        if (_isItemDataLoaded || UBot.Core.RuntimeAccess.Session.MediaPk2 == null)
             return;
 
         LoadItemData();
@@ -189,7 +189,7 @@ public class ReferenceManager : IReferenceManager
 
     public void EnsureSkillDataLoaded()
     {
-        if (_isSkillDataLoaded || Game.MediaPk2 == null)
+        if (_isSkillDataLoaded || UBot.Core.RuntimeAccess.Session.MediaPk2 == null)
             return;
 
         LoadSkillData();
@@ -197,7 +197,7 @@ public class ReferenceManager : IReferenceManager
 
     public void EnsureLevelDataLoaded()
     {
-        if (_isLevelDataLoaded || Game.MediaPk2 == null)
+        if (_isLevelDataLoaded || UBot.Core.RuntimeAccess.Session.MediaPk2 == null)
             return;
 
         LoadLevelData();
@@ -205,7 +205,7 @@ public class ReferenceManager : IReferenceManager
 
     public void EnsureTeleportDataLoaded()
     {
-        if (_isTeleportDataLoaded || Game.MediaPk2 == null)
+        if (_isTeleportDataLoaded || UBot.Core.RuntimeAccess.Session.MediaPk2 == null)
             return;
 
         LoadTeleportData();
@@ -213,7 +213,7 @@ public class ReferenceManager : IReferenceManager
 
     public void EnsureMapInfoLoaded()
     {
-        if (_isMapInfoLoaded || Game.DataPk2 == null)
+        if (_isMapInfoLoaded || UBot.Core.RuntimeAccess.Session.DataPk2 == null)
             return;
 
         LoadMapInfo();
@@ -234,7 +234,7 @@ public class ReferenceManager : IReferenceManager
                 return;
 
             RegionInfoManager.Load();
-            NavMeshManager.Configure(Game.DataPk2);
+            NavMeshManager.Configure(UBot.Core.RuntimeAccess.Session.DataPk2);
             _isMapInfoLoaded = true;
         }
     }
@@ -264,12 +264,12 @@ public class ReferenceManager : IReferenceManager
             LoadReferenceFile($"{ServerDep}\\RefMappingShopGroup.txt", ShopGroupMapping);
             LoadReferenceFile($"{ServerDep}\\RefMappingShopWithTab.txt", ShopTabMapping);
 
-            if (Game.ClientType >= GameClientType.Chinese)
+            if (UBot.Core.RuntimeAccess.Session.ClientType >= GameClientType.Chinese)
                 LoadReferenceListFile($"{ServerDep}\\RefScrapOfPackageItem.txt", PackageItemScrap);
             else
                 LoadReferenceFile($"{ServerDep}\\RefScrapOfPackageItem.txt", PackageItemScrap);
 
-            if (Game.ClientType >= GameClientType.Chinese)
+            if (UBot.Core.RuntimeAccess.Session.ClientType >= GameClientType.Chinese)
                 LoadReferenceListFile($"{ServerDep}\\RefShopGoods.txt", ShopGoods);
             else
                 LoadReferenceFile($"{ServerDep}\\RefShopGoods.txt", ShopGoods);
@@ -285,7 +285,7 @@ public class ReferenceManager : IReferenceManager
             if (_isAlchemyDataLoaded)
                 return;
 
-            if (Game.ClientType >= GameClientType.Chinese)
+            if (UBot.Core.RuntimeAccess.Session.ClientType >= GameClientType.Chinese)
                 LoadReferenceListFile($"{ServerDep}\\magicoption.txt", MagicOptions);
             else
             {
@@ -323,7 +323,7 @@ public class ReferenceManager : IReferenceManager
             if (_isItemDataLoaded)
                 return;
 
-            if (Game.ClientType < GameClientType.Thailand)
+            if (UBot.Core.RuntimeAccess.Session.ClientType < GameClientType.Thailand)
                 LoadReferenceFile($"{ServerDep}\\ItemData.txt", ItemData);
             else
                 LoadReferenceListFile($"{ServerDep}\\ItemData.txt", ItemData);
@@ -339,13 +339,13 @@ public class ReferenceManager : IReferenceManager
             if (_isOptLevelDataLoaded)
                 return;
 
-            if (Game.ClientType > GameClientType.Japanese_Old)
+            if (UBot.Core.RuntimeAccess.Session.ClientType > GameClientType.Japanese_Old)
             {
                 LoadReferenceFile($"{ServerDep}\\refabilitybyitemoptleveldata.txt", AbilityItemByOptLevel);
                 LoadReferenceFile($"{ServerDep}\\refskillbyitemoptleveldata.txt", SkillByItemOptLevels);
             }
 
-            if (Game.ClientType >= GameClientType.Chinese_Old)
+            if (UBot.Core.RuntimeAccess.Session.ClientType >= GameClientType.Chinese_Old)
                 LoadReferenceFile($"{ServerDep}\\refextraabilitybyequipitemoptlevel.txt", ExtraAbilityByEquipItemOptLevel);
 
             _isOptLevelDataLoaded = true;
@@ -362,7 +362,7 @@ public class ReferenceManager : IReferenceManager
             LoadReferenceFile($"{ServerDep}\\refquestrewarditems.txt", QuestRewardItems);
             LoadReferenceFile($"{ServerDep}\\refqusetreward.txt", QuestRewards);
 
-            if (Game.ClientType >= GameClientType.Chinese)
+            if (UBot.Core.RuntimeAccess.Session.ClientType >= GameClientType.Chinese)
                 LoadConditionalData($"{ServerDep}\\QuestData.txt", QuestData);
             else
                 LoadReferenceFile($"{ServerDep}\\questdata.txt", QuestData);
@@ -390,16 +390,16 @@ public class ReferenceManager : IReferenceManager
             if (_isTextDataLoaded)
                 return;
 
-            if (Game.ClientType >= GameClientType.Chinese)
+            if (UBot.Core.RuntimeAccess.Session.ClientType >= GameClientType.Chinese)
                 LoadReferenceListFile($"{ServerDep}\\TextUISystem.txt", TextData);
             else
                 LoadReferenceFile($"{ServerDep}\\TextUISystem.txt", TextData);
 
-            if (Game.ClientType >= GameClientType.Chinese)
+            if (UBot.Core.RuntimeAccess.Session.ClientType >= GameClientType.Chinese)
                 LoadReferenceListFile($"{ServerDep}\\TextZoneName.txt", TextData);
             else
                 LoadReferenceFile($"{ServerDep}\\TextZoneName.txt", TextData);
-            if (Game.ClientType >= GameClientType.Chinese)
+            if (UBot.Core.RuntimeAccess.Session.ClientType >= GameClientType.Chinese)
             {
                 LoadReferenceListFile($"{ServerDep}\\TextQuest_OtherString.txt", TextData);
                 LoadReferenceListFile($"{ServerDep}\\TextData_Object.txt", TextData);
@@ -409,7 +409,7 @@ public class ReferenceManager : IReferenceManager
             }
             else
             {
-                if (Game.ClientType >= GameClientType.Thailand)
+                if (UBot.Core.RuntimeAccess.Session.ClientType >= GameClientType.Thailand)
                 {
                     LoadReferenceListFile($"{ServerDep}\\TextDataName.txt", TextData);
                     LoadReferenceListFile($"{ServerDep}\\TextQuest.txt", TextData);
@@ -432,7 +432,7 @@ public class ReferenceManager : IReferenceManager
             if (_isCharacterDataLoaded)
                 return;
 
-            if (Game.ClientType < GameClientType.Thailand)
+            if (UBot.Core.RuntimeAccess.Session.ClientType < GameClientType.Thailand)
                 LoadReferenceFile($"{ServerDep}\\CharacterData.txt", CharacterData);
             else
                 LoadReferenceListFile($"{ServerDep}\\CharacterData.txt", CharacterData);
@@ -444,7 +444,7 @@ public class ReferenceManager : IReferenceManager
     private void LoadConditionalData<TKey, TReference>(string file, IDictionary<TKey, TReference> collection)
         where TReference : IReference<TKey>, new()
     {
-        if (Game.ClientType < GameClientType.Thailand)
+        if (UBot.Core.RuntimeAccess.Session.ClientType < GameClientType.Thailand)
             LoadReferenceFile(file, collection);
         else
             LoadReferenceListFile(file, collection);
@@ -457,9 +457,9 @@ public class ReferenceManager : IReferenceManager
             if (_isSkillDataLoaded)
                 return;
 
-            if (Game.ClientType == GameClientType.Vietnam || Game.ClientType == GameClientType.Vietnam274)
+            if (UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Vietnam || UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Vietnam274)
                 LoadReferenceListFileEnc($"{ServerDep}\\SkillDataEnc.txt", SkillData);
-            else if (Game.ClientType < GameClientType.Thailand)
+            else if (UBot.Core.RuntimeAccess.Session.ClientType < GameClientType.Thailand)
                 LoadReferenceFile($"{ServerDep}\\SkillData.txt", SkillData);
             else
                 LoadReferenceListFile($"{ServerDep}\\SkillData.txt", SkillData);
@@ -472,7 +472,7 @@ public class ReferenceManager : IReferenceManager
     private void LoadReferenceListFileEnc<TKey, TReference>(string fileName, IDictionary<TKey, TReference> destination)
         where TReference : IReference<TKey>, new()
     {
-        if (Game.MediaPk2.TryGetFile(fileName, out var file))
+        if (UBot.Core.RuntimeAccess.Session.MediaPk2.TryGetFile(fileName, out var file))
             LoadReferenceListFileEnc(file.OpenRead().GetStream(), destination);
     }
 
@@ -494,7 +494,7 @@ public class ReferenceManager : IReferenceManager
             }
         }
 
-        var files = Game.MediaPk2.GetFileList(ServerDep, filesToLoad.ToArray());
+        var files = UBot.Core.RuntimeAccess.Session.MediaPk2.GetFileList(ServerDep, filesToLoad.ToArray());
         foreach (var file in files)
             LoadReferenceFileEnc(file.OpenRead().GetStream(), destination);
     }
@@ -513,28 +513,28 @@ public class ReferenceManager : IReferenceManager
     private void LoadReferenceListFile<TReference>(string fileName, IList<TReference> destination)
         where TReference : IReference, new()
     {
-        if (Game.MediaPk2.TryGetFile(fileName, out var file))
+        if (UBot.Core.RuntimeAccess.Session.MediaPk2.TryGetFile(fileName, out var file))
             LoadReferenceListFile(file.OpenRead().GetStream(), destination);
     }
 
     private void LoadReferenceListFile<TKey, TReference>(string fileName, IDictionary<TKey, TReference> destination)
         where TReference : IReference<TKey>, new()
     {
-        if (Game.MediaPk2.TryGetFile(fileName, out var file))
+        if (UBot.Core.RuntimeAccess.Session.MediaPk2.TryGetFile(fileName, out var file))
             LoadReferenceListFile(file.OpenRead().GetStream(), destination);
     }
 
     private void LoadReferenceFile<TReference>(string fileName, IList<TReference> destination)
         where TReference : IReference, new()
     {
-        if (Game.MediaPk2.TryGetFile(fileName, out var file))
+        if (UBot.Core.RuntimeAccess.Session.MediaPk2.TryGetFile(fileName, out var file))
             LoadReferenceFile(file.OpenRead().GetStream(), destination);
     }
 
     private void LoadReferenceFile<TKey, TReference>(string fileName, IDictionary<TKey, TReference> destination)
         where TReference : IReference<TKey>, new()
     {
-        if (Game.MediaPk2.TryGetFile(fileName, out var file))
+        if (UBot.Core.RuntimeAccess.Session.MediaPk2.TryGetFile(fileName, out var file))
             LoadReferenceFile(file.OpenRead().GetStream(), destination);
     }
 
@@ -557,7 +557,7 @@ public class ReferenceManager : IReferenceManager
             filesToLoad.Add(line);
         }
 
-        var files = Game.MediaPk2.GetFileList(ServerDep, filesToLoad.ToArray());
+        var files = UBot.Core.RuntimeAccess.Session.MediaPk2.GetFileList(ServerDep, filesToLoad.ToArray());
         foreach (var file in files)
             LoadReferenceFile(file.OpenRead().GetStream(), destination);
     }
@@ -583,7 +583,7 @@ public class ReferenceManager : IReferenceManager
         }
 
         //Actual loading
-        var files = Game.MediaPk2.GetFileList(ServerDep, filesToLoad.ToArray());
+        var files = UBot.Core.RuntimeAccess.Session.MediaPk2.GetFileList(ServerDep, filesToLoad.ToArray());
         foreach (var file in files)
             LoadReferenceFile(file.OpenRead().GetStream(), destination);
     }
@@ -733,7 +733,7 @@ public class ReferenceManager : IReferenceManager
     {
         EnsureSkillDataLoaded();
         if (
-            (Game.ClientType == GameClientType.Chinese_Old || Game.ClientType == GameClientType.Chinese)
+            (UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Chinese_Old || UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Chinese)
             && id >= 273
             && id <= 275
         )

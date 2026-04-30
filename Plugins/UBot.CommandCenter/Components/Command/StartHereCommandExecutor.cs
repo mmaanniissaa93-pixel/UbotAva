@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Components.Command;
 
@@ -13,7 +13,7 @@ internal class StartHereCommandExecutor : ICommandExecutor
     public bool Execute(bool silent)
     {
         if (!silent)
-            Game.ShowNotification("[UBot] Starting bot at the current location");
+            UBot.Core.RuntimeAccess.Session.ShowNotification("[UBot] Starting bot at the current location");
 
         return CommandManager.Execute("area", true) && CommandManager.Execute("start", true);
     }

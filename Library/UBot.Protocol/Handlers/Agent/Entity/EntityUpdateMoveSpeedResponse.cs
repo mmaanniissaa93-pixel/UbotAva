@@ -41,7 +41,7 @@ public class EntityUpdateMoveSpeedResponse : IPacketHandler
         {
             player.SetSpeed(walkSpeed, runSpeed);
 
-            EventManager.FireEvent("OnUpdatePlayerSpeed");
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnUpdatePlayerSpeed");
         }
         else
         {
@@ -50,7 +50,7 @@ public class EntityUpdateMoveSpeedResponse : IPacketHandler
 
             bionic.SetSpeed(walkSpeed, runSpeed);
 
-            EventManager.FireEvent("OnUpdateEntitySpeed", uniqueId);
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnUpdateEntitySpeed", uniqueId);
         }
     }
 }

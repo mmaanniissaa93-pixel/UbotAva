@@ -38,7 +38,7 @@ public class InventoryGuildStorageDataEndResponse : IPacketHandler
         var storage = CoreGame.Player.GuildStorage;
         storage.Deserialize(packet);
 
-        EventManager.FireEvent("OnGuildStorageData");
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnGuildStorageData");
 
         Log.Notify($"Found {storage.Count} item(s) in guild storage.");
 

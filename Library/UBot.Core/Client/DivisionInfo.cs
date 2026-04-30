@@ -42,13 +42,13 @@ public class DivisionInfo
     {
         var result = new DivisionInfo { Divisions = new List<Division>(), Locale = 0 };
 
-        if (Game.MediaPk2 == null)
+        if (UBot.Core.RuntimeAccess.Session.MediaPk2 == null)
         {
             Log.Notify("Could not load the DIVISION.TXT file, because there is no active Archive.");
             return result;
         }
 
-        if (!Game.MediaPk2.TryGetFile(FileName, out var file))
+        if (!UBot.Core.RuntimeAccess.Session.MediaPk2.TryGetFile(FileName, out var file))
         {
             Log.Error($"{FileName} could not be found!");
 
@@ -78,7 +78,7 @@ public class DivisionInfo
             }
         }
 
-        EventManager.FireEvent("OnLoadDivisionInfo", result);
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnLoadDivisionInfo", result);
 
         return result;
     }

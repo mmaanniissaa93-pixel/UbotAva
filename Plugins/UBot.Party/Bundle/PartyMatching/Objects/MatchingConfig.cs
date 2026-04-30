@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Objects.Party;
 
 namespace UBot.Party.Bundle.PartyMatching.Objects;
@@ -13,8 +13,8 @@ internal struct MatchingConfig
     /// </value>
     public bool ExperienceAutoShare
     {
-        get => PlayerConfig.Get<bool>("UBot.Party.EXPAutoShare");
-        set => PlayerConfig.Set("UBot.Party.EXPAutoShare", value);
+        get => UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Party.EXPAutoShare");
+        set => UBot.Core.RuntimeAccess.Player.Set("UBot.Party.EXPAutoShare", value);
     }
 
     /// <summary>
@@ -25,8 +25,8 @@ internal struct MatchingConfig
     /// </value>
     public bool ItemAutoShare
     {
-        get => PlayerConfig.Get<bool>("UBot.Party.ItemAutoShare");
-        set => PlayerConfig.Set("UBot.Party.ItemAutoShare", value);
+        get => UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Party.ItemAutoShare");
+        set => UBot.Core.RuntimeAccess.Player.Set("UBot.Party.ItemAutoShare", value);
     }
 
     /// <summary>
@@ -37,8 +37,8 @@ internal struct MatchingConfig
     /// </value>
     public bool AllowInvitations
     {
-        get => PlayerConfig.Get<bool>("UBot.Party.AllowInvitations");
-        set => PlayerConfig.Set("UBot.Party.AllowInvitations", value);
+        get => UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Party.AllowInvitations");
+        set => UBot.Core.RuntimeAccess.Player.Set("UBot.Party.AllowInvitations", value);
     }
 
     /// <summary>
@@ -47,8 +47,8 @@ internal struct MatchingConfig
     /// <value>The purpose.</value>
     public PartyPurpose Purpose
     {
-        get => (PartyPurpose)PlayerConfig.Get<byte>("UBot.Party.Matching.Purpose");
-        set => PlayerConfig.Set("UBot.Party.Matching.Purpose", (byte)value);
+        get => (PartyPurpose)UBot.Core.RuntimeAccess.Player.Get<byte>("UBot.Party.Matching.Purpose");
+        set => UBot.Core.RuntimeAccess.Player.Set("UBot.Party.Matching.Purpose", (byte)value);
     }
 
     /// <summary>
@@ -57,8 +57,8 @@ internal struct MatchingConfig
     /// <value>The title.</value>
     public string Title
     {
-        get => PlayerConfig.Get("UBot.Party.Matching.Title", "For opening hunting on the silkroad!");
-        set => PlayerConfig.Set("UBot.Party.Matching.Title", value);
+        get => UBot.Core.RuntimeAccess.Player.Get("UBot.Party.Matching.Title", "For opening hunting on the silkroad!");
+        set => UBot.Core.RuntimeAccess.Player.Set("UBot.Party.Matching.Title", value);
     }
 
     /// <summary>
@@ -67,8 +67,8 @@ internal struct MatchingConfig
     /// <value><c>true</c> if [automatic reform]; otherwise, <c>false</c>.</value>
     public bool AutoReform
     {
-        get => PlayerConfig.Get("UBot.Party.Matching.AutoReform", false);
-        set => PlayerConfig.Set("UBot.Party.Matching.AutoReform", value);
+        get => UBot.Core.RuntimeAccess.Player.Get("UBot.Party.Matching.AutoReform", false);
+        set => UBot.Core.RuntimeAccess.Player.Set("UBot.Party.Matching.AutoReform", value);
     }
 
     /// <summary>
@@ -77,8 +77,8 @@ internal struct MatchingConfig
     /// <value><c>true</c> if [automatic accept  from matching invite]; otherwise, <c>false</c>.</value>
     public bool AutoAccept
     {
-        get => PlayerConfig.Get("UBot.Party.Matching.AutoAccept", true);
-        set => PlayerConfig.Set("UBot.Party.Matching.AutoAccept", value);
+        get => UBot.Core.RuntimeAccess.Player.Get("UBot.Party.Matching.AutoAccept", true);
+        set => UBot.Core.RuntimeAccess.Player.Set("UBot.Party.Matching.AutoAccept", value);
     }
 
     /// <summary>
@@ -87,8 +87,8 @@ internal struct MatchingConfig
     /// <value>The level from.</value>
     public byte LevelFrom
     {
-        get => PlayerConfig.Get<byte>("UBot.Party.Matching.LevelFrom", 1);
-        set => PlayerConfig.Set("UBot.Party.Matching.LevelFrom", value);
+        get => UBot.Core.RuntimeAccess.Player.Get<byte>("UBot.Party.Matching.LevelFrom", 1);
+        set => UBot.Core.RuntimeAccess.Player.Set("UBot.Party.Matching.LevelFrom", value);
     }
 
     /// <summary>
@@ -97,7 +97,7 @@ internal struct MatchingConfig
     /// <value>The level to.</value>
     public byte LevelTo
     {
-        get => PlayerConfig.Get<byte>("UBot.Party.Matching.LevelTo", 140);
-        set => PlayerConfig.Set("UBot.Party.Matching.LevelTo", value);
+        get => UBot.Core.RuntimeAccess.Player.Get<byte>("UBot.Party.Matching.LevelTo", 140);
+        set => UBot.Core.RuntimeAccess.Player.Set("UBot.Party.Matching.LevelTo", value);
     }
 }

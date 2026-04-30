@@ -125,7 +125,7 @@ public class Action
                         //packet.ReadUShort();
                         //packet.ReadByte();
 
-                        EventManager.FireEvent("OnEntityHit", Id, ExecutorId, uniqueId, damage, critStatus == 0x02);
+                        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnEntityHit", Id, ExecutorId, uniqueId, damage, critStatus == 0x02);
                     }
 
                     // dont worry it will return true for knockdown states

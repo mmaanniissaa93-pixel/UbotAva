@@ -14,7 +14,7 @@ internal class ForgottenWorldInvitationHandler : IPacketHandler
         if (!AutoDungeonState.TryBuildForgottenWorldAcceptPacket(packet, out var response))
             return;
 
-        PacketManager.SendPacket(response, PacketDestination.Server);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(response, PacketDestination.Server);
         Log.Notify("[AutoDungeon] Forgotten World invitation accepted automatically.");
     }
 }

@@ -1,4 +1,4 @@
-﻿using UBot.Core.Event;
+using UBot.Core.Event;
 using UBot.Training.Bundle;
 
 namespace UBot.Training.Subscriber;
@@ -10,8 +10,8 @@ internal class ConfigSubscriber
     /// </summary>
     public static void SubscribeEvents()
     {
-        EventManager.SubscribeEvent("OnEnterGame", ReloadSettings);
-        EventManager.SubscribeEvent("OnSavePlayerConfig", ReloadSettings);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnEnterGame", ReloadSettings);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnSavePlayerConfig", ReloadSettings);
     }
 
     /// <summary>

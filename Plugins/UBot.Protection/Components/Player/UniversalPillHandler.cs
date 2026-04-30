@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Event;
 using UBot.Core.Objects;
 
@@ -21,7 +21,7 @@ public class UniversalPillHandler
     /// </summary>
     public static void UnsubscribeAll()
     {
-        EventManager.UnsubscribeOwner(EventOwner);
+        UBot.Core.RuntimeAccess.Events.UnsubscribeOwner(EventOwner);
     }
 
     /// <summary>
@@ -29,7 +29,7 @@ public class UniversalPillHandler
     /// </summary>
     private static void SubscribeEvents()
     {
-        EventManager.SubscribeEvent("OnTick", OnPlayerBadEffect, EventOwner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnTick", OnPlayerBadEffect, EventOwner);
     }
 
     /// <summary>
@@ -37,14 +37,14 @@ public class UniversalPillHandler
     /// </summary>
     private static void OnPlayerBadEffect()
     {
-        var useUniversalPill = PlayerConfig.Get<bool>("UBot.Protection.checkUseUniversalPills", true);
+        var useUniversalPill = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkUseUniversalPills", true);
         if (!useUniversalPill)
             return;
 
-        if ((Game.Player.BadEffect & BadEffectAll.UniversallPillEffects) != 0)
-            Game.Player.UseUniversalPill();
+        if ((UBot.Core.RuntimeAccess.Session.Player.BadEffect & BadEffectAll.UniversallPillEffects) != 0)
+            UBot.Core.RuntimeAccess.Session.Player.UseUniversalPill();
 
-        if ((Game.Player.BadEffect & BadEffectAll.PurificationPillEffects) != 0)
-            Game.Player.UsePurificationPill();
+        if ((UBot.Core.RuntimeAccess.Session.Player.BadEffect & BadEffectAll.PurificationPillEffects) != 0)
+            UBot.Core.RuntimeAccess.Session.Player.UsePurificationPill();
     }
 }

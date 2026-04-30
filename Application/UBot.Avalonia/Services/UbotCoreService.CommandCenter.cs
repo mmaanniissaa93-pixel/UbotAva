@@ -53,7 +53,7 @@ internal sealed class UbotCommandCenterService : UbotServiceBase
         var config = LoadPluginJsonConfig(CommandCenterPluginName);
         var descriptions = CommandManager.GetCommandDescriptions() ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        config["enabled"] = PlayerConfig.Get("UBot.CommandCenter.Enabled", true);
+        config["enabled"] = UBot.Core.RuntimeAccess.Player.Get("UBot.CommandCenter.Enabled", true);
         config["commandOptions"] = descriptions
             .Select(entry => new Dictionary<string, object?>
             {
@@ -68,7 +68,7 @@ internal sealed class UbotCommandCenterService : UbotServiceBase
         config["emotes"] = CommandCenterEmoteDefinitions
             .Select(definition =>
             {
-                var mappedCommand = PlayerConfig.Get(
+                var mappedCommand = UBot.Core.RuntimeAccess.Player.Get(
                     $"UBot.CommandCenter.MappedEmotes.{definition.Name}",
                     definition.DefaultCommand);
 
@@ -103,7 +103,7 @@ internal sealed class UbotCommandCenterService : UbotServiceBase
         var changed = false;
         if (TryGetBoolValue(patch, "enabled", out var enabled))
         {
-            PlayerConfig.Set("UBot.CommandCenter.Enabled", enabled);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.CommandCenter.Enabled", enabled);
             changed = true;
         }
 
@@ -118,7 +118,7 @@ internal sealed class UbotCommandCenterService : UbotServiceBase
                         continue;
 
                     var command = NormalizeCommandCenterCommand(entry.Value?.ToString() ?? string.Empty);
-                    PlayerConfig.Set($"UBot.CommandCenter.MappedEmotes.{emoteName}", command);
+                    UBot.Core.RuntimeAccess.Player.Set($"UBot.CommandCenter.MappedEmotes.{emoteName}", command);
                     changed = true;
                 }
             }
@@ -140,14 +140,14 @@ internal sealed class UbotCommandCenterService : UbotServiceBase
                     var command = TryGetStringValue(entry, "command", out var mapped)
                         ? NormalizeCommandCenterCommand(mapped)
                         : "none";
-                    PlayerConfig.Set($"UBot.CommandCenter.MappedEmotes.{emoteName.Trim()}", command);
+                    UBot.Core.RuntimeAccess.Player.Set($"UBot.CommandCenter.MappedEmotes.{emoteName.Trim()}", command);
                     changed = true;
                 }
             }
         }
 
         if (changed)
-            EventManager.FireEvent("OnSavePlayerConfig");
+            UBot.Core.RuntimeAccess.Events.FireEvent("OnSavePlayerConfig");
 
         return changed;
     }

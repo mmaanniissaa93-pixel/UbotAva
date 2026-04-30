@@ -1,4 +1,4 @@
-﻿using UBot.Alchemy.Bundle;
+using UBot.Alchemy.Bundle;
 using UBot.Alchemy.Bundle.Attribute;
 using UBot.Alchemy.Bundle.Enhance;
 using UBot.Alchemy.Bundle.Magic;
@@ -77,7 +77,7 @@ internal class Botbase
             {
                 Log.Warn("[LuckyAlchemyBot] Configuration issue detected!");
 
-                Kernel.Bot.Stop();
+                UBot.Core.RuntimeAccess.Core.Bot.Stop();
 
                 return;
             }
@@ -91,7 +91,7 @@ internal class Botbase
             {
                 Log.Warn("[LuckyAlchemyBot] Configuration issue detected!");
 
-                Kernel.Bot.Stop();
+                UBot.Core.RuntimeAccess.Core.Bot.Stop();
 
                 return;
             }
@@ -105,7 +105,7 @@ internal class Botbase
             {
                 Log.Warn("[LuckyAlchemyBot] Configuration issue detected!");
 
-                Kernel.Bot.Stop();
+                UBot.Core.RuntimeAccess.Core.Bot.Stop();
 
                 return;
             }
@@ -141,7 +141,7 @@ internal class Botbase
                 {
                     Log.Warn("[Alchemy] Configuration issue detected!");
 
-                    Kernel.Bot.Stop();
+                    UBot.Core.RuntimeAccess.Core.Bot.Stop();
 
                     return;
                 }
@@ -155,7 +155,7 @@ internal class Botbase
                 {
                     Log.Warn("[Alchemy] Configuration issue detected!");
 
-                    Kernel.Bot.Stop();
+                    UBot.Core.RuntimeAccess.Core.Bot.Stop();
 
                     return;
                 }
@@ -169,7 +169,7 @@ internal class Botbase
                 {
                     Log.Warn("[Alchemy] Configuration issue detected!");
 
-                    Kernel.Bot.Stop();
+                    UBot.Core.RuntimeAccess.Core.Bot.Stop();
 
                     return;
                 }

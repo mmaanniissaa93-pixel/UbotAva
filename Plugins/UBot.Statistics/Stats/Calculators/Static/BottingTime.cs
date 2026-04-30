@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UBot.Core;
 using UBot.Core.Components;
 
@@ -39,7 +39,7 @@ internal class BottingTime : IStatisticCalculator
         if (_lastTick == 0)
             _lastTick = DateTime.Now.Ticks;
 
-        if (Kernel.Bot.Running)
+        if (UBot.Core.RuntimeAccess.Core.Bot.Running)
             _totalTicks += _currentTick - _lastTick;
 
         _lastTick = _currentTick;

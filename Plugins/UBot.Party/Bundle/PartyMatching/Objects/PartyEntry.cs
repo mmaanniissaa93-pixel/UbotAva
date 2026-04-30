@@ -87,7 +87,7 @@ internal class PartyEntry
 
         packet.ReadUInt(); // leaderUniqueId
 
-        if (Game.ClientType >= GameClientType.Chinese && Game.ClientType != GameClientType.Rigid)
+        if (UBot.Core.RuntimeAccess.Session.ClientType >= GameClientType.Chinese && UBot.Core.RuntimeAccess.Session.ClientType != GameClientType.Rigid)
             packet.ReadUInt(); // unknown
 
         result.Leader = packet.ReadString();

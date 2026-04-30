@@ -194,7 +194,7 @@ public class BuyItemHook : IPacketHook
             if (cosId != 0)
                 response.WriteString(CoreGame.Player.Name); //OwnerName
             if (itemAmount > 1)
-                ProtocolRuntime.Dispatch(response, Destination);
+                UBot.Protocol.ProtocolRuntime.Dispatch(response, Destination);
             else
                 return response;
         }

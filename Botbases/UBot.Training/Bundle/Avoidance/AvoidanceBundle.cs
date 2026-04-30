@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using UBot.Core;
 using UBot.Core.Objects;
 
@@ -12,7 +12,7 @@ internal class AvoidanceBundle : IBundle
     /// <value>
     ///     The avoidance list.
     /// </value>
-    public MonsterRarity[] AvoidanceList => PlayerConfig.GetEnums<MonsterRarity>("UBot.Avoidance.Avoid");
+    public MonsterRarity[] AvoidanceList => UBot.Core.RuntimeAccess.Player.GetEnums<MonsterRarity>("UBot.Avoidance.Avoid");
 
     /// <summary>
     ///     Gets the preferance list.
@@ -20,7 +20,7 @@ internal class AvoidanceBundle : IBundle
     /// <value>
     ///     The preferance list.
     /// </value>
-    public MonsterRarity[] PreferanceList => PlayerConfig.GetEnums<MonsterRarity>("UBot.Avoidance.Prefer");
+    public MonsterRarity[] PreferanceList => UBot.Core.RuntimeAccess.Player.GetEnums<MonsterRarity>("UBot.Avoidance.Prefer");
 
     /// <summary>
     ///     Gets the berserk list.
@@ -28,7 +28,7 @@ internal class AvoidanceBundle : IBundle
     /// <value>
     ///     The berserk list.
     /// </value>
-    public MonsterRarity[] BerserkerList => PlayerConfig.GetEnums<MonsterRarity>("UBot.Avoidance.Berserk");
+    public MonsterRarity[] BerserkerList => UBot.Core.RuntimeAccess.Player.GetEnums<MonsterRarity>("UBot.Avoidance.Berserk");
 
     /// <summary>
     ///     Invokes this instance.

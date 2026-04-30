@@ -13,6 +13,12 @@ using UBot.Core.Objects.Party;
 using UBot.Core.Objects.Spawn;
 using UBot.Core.Services;
 using UBot.FileSystem;
+using GState = UBot.Core.Game;
+using KState = UBot.Core.Kernel;
+using GConfig = UBot.Core.GlobalConfig;
+using PMgr = UBot.Core.Network.PacketManager;
+using EMgr = UBot.Core.Event.EventManager;
+using SR = UBot.Core.Services.ServiceRuntime;
 
 namespace UBot.Core.Runtime;
 
@@ -25,62 +31,62 @@ public sealed class GameSession : IGameSession
 
     public GameClientType ClientType
     {
-        get => Game.ClientType;
+        get => GState.ClientType;
         set
         {
-            Game.ClientType = value;
+            GState.ClientType = value;
             GameClientTypeAccessor.ActiveClientType = value;
         }
     }
 
-    public object Player => Game.Player;
+    public object Player => GState.Player;
 
     public object SelectedEntity
     {
-        get => Game.SelectedEntity;
-        set => Game.SelectedEntity = value as SpawnedBionic;
+        get => GState.SelectedEntity;
+        set => GState.SelectedEntity = value as SpawnedBionic;
     }
 
-    public object AcceptanceRequest => Game.AcceptanceRequest;
-    public bool Started { get => Game.Started; set => Game.Started = value; }
-    public bool Ready => Game.Ready;
-    public bool Clientless { get => Game.Clientless; set => Game.Clientless = value; }
-    public ushort Port => Game.Port;
-    public IReferenceManager ReferenceManager => Game.ReferenceManager;
+    public object AcceptanceRequest => GState.AcceptanceRequest;
+    public bool Started { get => GState.Started; set => GState.Started = value; }
+    public bool Ready => GState.Ready;
+    public bool Clientless { get => GState.Clientless; set => GState.Clientless = value; }
+    public ushort Port => GState.Port;
+    public IReferenceManager ReferenceManager => GState.ReferenceManager;
 
     public void Start()
     {
-        Game.Started = false;
+        GState.Started = false;
 
-        if (Kernel.Bot?.Running == true)
-            Kernel.Bot.Stop();
+        if (KState.Bot?.Running == true)
+            KState.Bot.Stop();
 
-        Kernel.Proxy?.Shutdown();
+        KState.Proxy?.Shutdown();
 
-        var divisionIndex = GlobalConfig.Get<int>("UBot.DivisionIndex");
-        var serverIndex = GlobalConfig.Get<int>("UBot.GatewayIndex");
+        var divisionIndex = GConfig.Get<int>("UBot.DivisionIndex");
+        var serverIndex = GConfig.Get<int>("UBot.GatewayIndex");
 
-        Game.Port = NetworkUtilities.GetFreePort(33673, 39999, 1);
+        GState.Port = NetworkUtilities.GetFreePort(33673, 39999, 1);
 
-        Kernel.Proxy = new Proxy();
-        Kernel.Proxy.Start(
-            Game.Port,
-            Game.ReferenceManager.DivisionInfo.Divisions[divisionIndex].GatewayServers[serverIndex],
-            Game.ReferenceManager.GatewayInfo.Port
+        KState.Proxy = new Proxy();
+        KState.Proxy.Start(
+            GState.Port,
+            GState.ReferenceManager.DivisionInfo.Divisions[divisionIndex].GatewayServers[serverIndex],
+            GState.ReferenceManager.GatewayInfo.Port
         );
 
-        Game.Started = true;
+        GState.Started = true;
     }
 
     public bool InitializeArchiveFiles()
     {
-        var directory = GlobalConfig.Get<string>("UBot.SilkroadDirectory");
-        var pk2Key = GlobalConfig.Get<string>("UBot.Pk2Key", "169841");
+        var directory = GConfig.Get<string>("UBot.SilkroadDirectory");
+        var pk2Key = GConfig.Get<string>("UBot.Pk2Key", "169841");
 
         try
         {
-            Game.MediaPk2 = new PackFileSystem(Path.Combine(directory, "media.pk2"), pk2Key);
-            Game.DataPk2 = new PackFileSystem(Path.Combine(directory, "data.pk2"), pk2Key);
+            GState.MediaPk2 = new PackFileSystem(Path.Combine(directory, "media.pk2"), pk2Key);
+            GState.DataPk2 = new PackFileSystem(Path.Combine(directory, "data.pk2"), pk2Key);
 
             return true;
         }
@@ -94,30 +100,30 @@ public sealed class GameSession : IGameSession
 
     public void Initialize()
     {
-        ClientType = GlobalConfig.GetEnum("UBot.Game.ClientType", GameClientType.Vietnam);
-        Game.ReferenceManager = new ReferenceManager();
-        Game.Party = new Party();
+        ClientType = GConfig.GetEnum("UBot.Game.ClientType", GameClientType.Vietnam);
+        GState.ReferenceManager = new ReferenceManager();
+        GState.Party = new Party();
 
-        SkillManager.Initialize(ServiceRuntime.Skill ?? new SkillService());
+        SkillManager.Initialize(SR.Skill ?? new SkillService());
         RegisterSkillServiceEvents();
         ShoppingManager.Initialize();
-        ClientlessManager.Initialize(ServiceRuntime.Clientless ?? new ClientlessService());
+        ClientlessManager.Initialize(SR.Clientless ?? new ClientlessService());
         RegisterClientlessServiceEvents();
-        ProfileManager.Initialize(ServiceRuntime.Profile ?? new ProfileService());
-        ClientManager.Initialize(ServiceRuntime.ClientLaunchPolicy ?? new ClientLaunchPolicyService());
+        ProfileManager.Initialize(SR.Profile ?? new ProfileService());
+        ClientManager.Initialize(SR.ClientLaunchPolicy ?? new ClientLaunchPolicyService());
         ScriptManager.Initialize();
     }
 
     public void ShowNotification(string message)
     {
-        if (!Game.Ready)
+        if (!GState.Ready)
             return;
 
         var chatPacket = new Packet(0x3026);
         chatPacket.WriteByte(ChatType.Notice);
         chatPacket.WriteConditonalString(message);
 
-        PacketManager.SendPacket(chatPacket, PacketDestination.Client);
+        PMgr.SendPacket(chatPacket, PacketDestination.Client);
     }
 
     private void RegisterSkillServiceEvents()
@@ -125,8 +131,8 @@ public sealed class GameSession : IGameSession
         if (_skillEventsRegistered)
             return;
 
-        EventManager.SubscribeEvent("OnLoadGameData", new System.Action(SkillManager.ResetBaseSkills));
-        EventManager.SubscribeEvent("OnCastSkill", new System.Action<uint>(SkillManager.NotifySkillCasted));
+        EMgr.SubscribeEvent("OnLoadGameData", new System.Action(SkillManager.ResetBaseSkills));
+        EMgr.SubscribeEvent("OnCastSkill", new System.Action<uint>(SkillManager.NotifySkillCasted));
         _skillEventsRegistered = true;
     }
 
@@ -135,8 +141,8 @@ public sealed class GameSession : IGameSession
         if (_clientlessEventsRegistered)
             return;
 
-        EventManager.SubscribeEvent("OnAgentServerDisconnected", new System.Action(ClientlessManager.OnAgentServerDisconnected));
-        EventManager.SubscribeEvent("OnAgentServerConnected", new System.Action(ClientlessManager.OnAgentServerConnected));
+        EMgr.SubscribeEvent("OnAgentServerDisconnected", new System.Action(ClientlessManager.OnAgentServerDisconnected));
+        EMgr.SubscribeEvent("OnAgentServerConnected", new System.Action(ClientlessManager.OnAgentServerConnected));
         _clientlessEventsRegistered = true;
     }
 }

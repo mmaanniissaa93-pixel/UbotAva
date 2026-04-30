@@ -59,17 +59,17 @@ public class EntityUpdateStatusResponse : IPacketHandler
         if ((updateFlag & EntityUpdateStatusFlag.HP) == EntityUpdateStatusFlag.HP)
         {
             CoreGame.Player.Health = packet.ReadInt();
-            EventManager.FireEvent("OnUpdateHP");
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnUpdateHP");
         }
 
         if ((updateFlag & EntityUpdateStatusFlag.MP) == EntityUpdateStatusFlag.MP)
         {
             CoreGame.Player.Mana = packet.ReadInt();
-            EventManager.FireEvent("OnUpdateMP");
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnUpdateMP");
         }
 
         if ((updateFlag & EntityUpdateStatusFlag.HPMP) != EntityUpdateStatusFlag.HPMP)
-            EventManager.FireEvent("OnUpdateHPMP");
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnUpdateHPMP");
 
         if ((updateFlag & EntityUpdateStatusFlag.BadEffect) == EntityUpdateStatusFlag.BadEffect)
         {
@@ -98,10 +98,10 @@ public class EntityUpdateStatusResponse : IPacketHandler
             CoreGame.Player.BadEffect = effectCurrent;
 
             if (effectStarted != BadEffect.None)
-                EventManager.FireEvent("OnPlayerBadEffect");
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnPlayerBadEffect");
 
             if (effectEnded != BadEffect.None)
-                EventManager.FireEvent("OnPlayerBadEffectEnd");
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnPlayerBadEffectEnd");
         }
     }
 
@@ -114,7 +114,7 @@ public class EntityUpdateStatusResponse : IPacketHandler
             packet.ReadUInt();
 
         if ((updateFlag & EntityUpdateStatusFlag.HPMP) != EntityUpdateStatusFlag.HPMP)
-            EventManager.FireEvent("OnGrowthHealthUpdate");
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnGrowthHealthUpdate");
 
         if ((updateFlag & EntityUpdateStatusFlag.BadEffect) == EntityUpdateStatusFlag.BadEffect)
         {
@@ -143,10 +143,10 @@ public class EntityUpdateStatusResponse : IPacketHandler
             CoreGame.Player.Growth.BadEffect = effectCurrent;
 
             if (effectStarted != BadEffect.None)
-                EventManager.FireEvent("OnCosBadEffect", CoreGame.Player.Growth);
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnCosBadEffect", CoreGame.Player.Growth);
 
             if (effectEnded != BadEffect.None)
-                EventManager.FireEvent("OnCosGrowthEffectEnd", CoreGame.Player.Growth);
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnCosGrowthEffectEnd", CoreGame.Player.Growth);
         }
     }
 
@@ -159,12 +159,12 @@ public class EntityUpdateStatusResponse : IPacketHandler
             packet.ReadUInt();
 
         if ((updateFlag & EntityUpdateStatusFlag.HPMP) != EntityUpdateStatusFlag.HPMP)
-            EventManager.FireEvent("OnFellowHealthUpdate");
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnFellowHealthUpdate");
 
         if (updateFlag == EntityUpdateStatusFlag.Fellow)
         {
             CoreGame.Player.Fellow.Satiety = packet.ReadInt();
-            EventManager.FireEvent("OnFellowSatietyUpdate");
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnFellowSatietyUpdate");
             //packet.ReadInt(); // bad status??
         }
 
@@ -195,10 +195,10 @@ public class EntityUpdateStatusResponse : IPacketHandler
             CoreGame.Player.Fellow.BadEffect = effectCurrent;
 
             if (effectStarted != BadEffect.None)
-                EventManager.FireEvent("OnCosBadEffect", CoreGame.Player.Fellow);
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnCosBadEffect", CoreGame.Player.Fellow);
 
             if (effectEnded != BadEffect.None)
-                EventManager.FireEvent("OnCosBadEffectEnd", CoreGame.Player.Fellow);
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnCosBadEffectEnd", CoreGame.Player.Fellow);
         }
     }
 
@@ -211,7 +211,7 @@ public class EntityUpdateStatusResponse : IPacketHandler
             packet.ReadUInt();
 
         if ((updateFlag & EntityUpdateStatusFlag.HPMP) != EntityUpdateStatusFlag.HPMP)
-            EventManager.FireEvent("OnUpdateTransportHealth");
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnUpdateTransportHealth");
 
         if ((updateFlag & EntityUpdateStatusFlag.BadEffect) == EntityUpdateStatusFlag.BadEffect)
         {
@@ -240,10 +240,10 @@ public class EntityUpdateStatusResponse : IPacketHandler
             CoreGame.Player.Transport.BadEffect = effectCurrent;
 
             if (effectStarted != BadEffect.None)
-                EventManager.FireEvent("OnCosBadEffect", CoreGame.Player.Transport);
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnCosBadEffect", CoreGame.Player.Transport);
 
             if (effectEnded != BadEffect.None)
-                EventManager.FireEvent("OnCosBadEffectEnd", CoreGame.Player.Transport);
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnCosBadEffectEnd", CoreGame.Player.Transport);
         }
     }
 
@@ -256,7 +256,7 @@ public class EntityUpdateStatusResponse : IPacketHandler
             packet.ReadUInt();
 
         if ((updateFlag & EntityUpdateStatusFlag.HPMP) != EntityUpdateStatusFlag.HPMP)
-            EventManager.FireEvent("OnUpdateJobTransportHealth");
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnUpdateJobTransportHealth");
 
         if ((updateFlag & EntityUpdateStatusFlag.BadEffect) == EntityUpdateStatusFlag.BadEffect)
         {
@@ -285,10 +285,10 @@ public class EntityUpdateStatusResponse : IPacketHandler
             CoreGame.Player.JobTransport.BadEffect = effectCurrent;
 
             if (effectStarted != BadEffect.None)
-                EventManager.FireEvent("OnCosBadEffect", CoreGame.Player.JobTransport);
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnCosBadEffect", CoreGame.Player.JobTransport);
 
             if (effectEnded != BadEffect.None)
-                EventManager.FireEvent("OnCosBadEffectEnd", CoreGame.Player.JobTransport);
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnCosBadEffectEnd", CoreGame.Player.JobTransport);
         }
     }
 
@@ -302,7 +302,7 @@ public class EntityUpdateStatusResponse : IPacketHandler
             if (health <= 0 && CoreGame.SelectedEntity?.UniqueId == bionic.UniqueId)
                 CoreGame.SelectedEntity = null;
 
-            EventManager.FireEvent("OnUpdateEntityHp", bionic);
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnUpdateEntityHp", bionic);
         }
 
         if ((updateFlag & EntityUpdateStatusFlag.MP) == EntityUpdateStatusFlag.MP)

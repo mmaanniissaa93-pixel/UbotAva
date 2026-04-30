@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Event;
 using UBot.Core.Objects;
 
@@ -21,7 +21,7 @@ internal class CosBadStatusHandler
     /// </summary>
     public static void UnsubscribeAll()
     {
-        EventManager.UnsubscribeOwner(EventOwner);
+        UBot.Core.RuntimeAccess.Events.UnsubscribeOwner(EventOwner);
     }
 
     /// <summary>
@@ -29,7 +29,7 @@ internal class CosBadStatusHandler
     /// </summary>
     private static void SubscribeEvents()
     {
-        EventManager.SubscribeEvent("OnTick", OnTick, EventOwner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnTick", OnTick, EventOwner);
     }
 
     /// <summary>
@@ -37,37 +37,37 @@ internal class CosBadStatusHandler
     /// </summary>
     private static void OnTick()
     {
-        if (!PlayerConfig.Get<bool>("UBot.Protection.checkUseAbnormalStatePotion", true))
+        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkUseAbnormalStatePotion", true))
             return;
 
         if (
-            Game.Player.Growth != null
+            UBot.Core.RuntimeAccess.Session.Player.Growth != null
             && (
-                (Game.Player.Growth.BadEffect & BadEffectAll.UniversallPillEffects) != 0
-                || (Game.Player.Growth.BadEffect & BadEffectAll.PurificationPillEffects) != 0
+                (UBot.Core.RuntimeAccess.Session.Player.Growth.BadEffect & BadEffectAll.UniversallPillEffects) != 0
+                || (UBot.Core.RuntimeAccess.Session.Player.Growth.BadEffect & BadEffectAll.PurificationPillEffects) != 0
             )
         )
-            Game.Player.Growth.UseBadStatusPotion();
+            UBot.Core.RuntimeAccess.Session.Player.Growth.UseBadStatusPotion();
 
-        if (Game.Player.Fellow != null && (Game.Player.Fellow.BadEffect & BadEffectAll.UniversallPillEffects) != 0)
-            Game.Player.Fellow.UseBadStatusPotion(); //PurificationPillEffects are not removed on fellow by pills
-
-        if (
-            Game.Player.Transport != null
-            && (
-                (Game.Player.Transport.BadEffect & BadEffectAll.UniversallPillEffects) != 0
-                || (Game.Player.Transport.BadEffect & BadEffectAll.PurificationPillEffects) != 0
-            )
-        )
-            Game.Player.Transport.UseBadStatusPotion();
+        if (UBot.Core.RuntimeAccess.Session.Player.Fellow != null && (UBot.Core.RuntimeAccess.Session.Player.Fellow.BadEffect & BadEffectAll.UniversallPillEffects) != 0)
+            UBot.Core.RuntimeAccess.Session.Player.Fellow.UseBadStatusPotion(); //PurificationPillEffects are not removed on fellow by pills
 
         if (
-            Game.Player.JobTransport != null
+            UBot.Core.RuntimeAccess.Session.Player.Transport != null
             && (
-                (Game.Player.JobTransport.BadEffect & BadEffectAll.UniversallPillEffects) != 0
-                || (Game.Player.JobTransport.BadEffect & BadEffectAll.PurificationPillEffects) != 0
+                (UBot.Core.RuntimeAccess.Session.Player.Transport.BadEffect & BadEffectAll.UniversallPillEffects) != 0
+                || (UBot.Core.RuntimeAccess.Session.Player.Transport.BadEffect & BadEffectAll.PurificationPillEffects) != 0
             )
         )
-            Game.Player.JobTransport.UseBadStatusPotion();
+            UBot.Core.RuntimeAccess.Session.Player.Transport.UseBadStatusPotion();
+
+        if (
+            UBot.Core.RuntimeAccess.Session.Player.JobTransport != null
+            && (
+                (UBot.Core.RuntimeAccess.Session.Player.JobTransport.BadEffect & BadEffectAll.UniversallPillEffects) != 0
+                || (UBot.Core.RuntimeAccess.Session.Player.JobTransport.BadEffect & BadEffectAll.PurificationPillEffects) != 0
+            )
+        )
+            UBot.Core.RuntimeAccess.Session.Player.JobTransport.UseBadStatusPotion();
     }
 }

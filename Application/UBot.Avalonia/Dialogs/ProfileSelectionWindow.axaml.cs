@@ -126,16 +126,16 @@ public partial class ProfileSelectionWindow : Window
 
             try
             {
-                GlobalConfig.Load();
+                UBot.Core.RuntimeAccess.Global.Load();
                 
                 var activeChar = ProfileManager.SelectedCharacter;
                 if (string.IsNullOrWhiteSpace(activeChar))
-                    activeChar = GlobalConfig.Get("UBot.General.AutoLoginCharacter", string.Empty)?.Trim() ?? string.Empty;
+                    activeChar = UBot.Core.RuntimeAccess.Global.Get("UBot.General.AutoLoginCharacter", string.Empty)?.Trim() ?? string.Empty;
 
                 if (!string.IsNullOrWhiteSpace(activeChar))
                 {
                     ProfileManager.SelectedCharacter = activeChar;
-                    PlayerConfig.Load(activeChar);
+                    UBot.Core.RuntimeAccess.Player.Load(activeChar);
                 }
 
                 ExtensionManager.OnProfileChanged();

@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Event;
 using UBot.Training.Bundle;
 
@@ -11,8 +11,8 @@ internal class TeleportSubscriber
     /// </summary>
     public static void SubscribeEvents()
     {
-        EventManager.SubscribeEvent("OnTeleportStart", OnTeleportStart);
-        EventManager.SubscribeEvent("OnTeleportComplete", OnTeleportComplete);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnTeleportStart", OnTeleportStart);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnTeleportComplete", OnTeleportComplete);
     }
 
     #region Event listeners
@@ -22,7 +22,7 @@ internal class TeleportSubscriber
     /// </summary>
     private static void OnTeleportStart()
     {
-        if (!Kernel.Bot.Running)
+        if (!UBot.Core.RuntimeAccess.Core.Bot.Running)
             return;
 
         if (Bundles.Loop.Running)
@@ -34,7 +34,7 @@ internal class TeleportSubscriber
     /// </summary>
     private static void OnTeleportComplete()
     {
-        if (!Kernel.Bot.Running)
+        if (!UBot.Core.RuntimeAccess.Core.Bot.Running)
             return;
     }
 

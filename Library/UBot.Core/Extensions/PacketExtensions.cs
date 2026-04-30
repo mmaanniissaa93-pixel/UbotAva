@@ -1,4 +1,4 @@
-﻿using UBot.Core.Network;
+using UBot.Core.Network;
 
 namespace UBot.Core.Extensions;
 
@@ -11,7 +11,7 @@ public static class PacketExtensions
     /// <param name="packet">The packet</param>
     public static string ReadConditonalString(this Packet packet)
     {
-        switch (Game.ClientType)
+        switch (UBot.Core.RuntimeAccess.Session.ClientType)
         {
             case GameClientType.Thailand:
             //case GameClientType.Global:
@@ -37,7 +37,7 @@ public static class PacketExtensions
     /// <param name="packet">The packet</param>
     public static void WriteConditonalString(this Packet packet, string str)
     {
-        switch (Game.ClientType)
+        switch (UBot.Core.RuntimeAccess.Session.ClientType)
         {
             case GameClientType.Thailand:
             //case GameClientType.Global:

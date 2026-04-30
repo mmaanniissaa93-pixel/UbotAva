@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using UBot.Core.Abstractions;
 using UBot.Core.Network;
 using UBot.Core.Plugins;
+using KState = UBot.Core.Kernel;
 
 namespace UBot.Core.Runtime;
 
@@ -9,30 +10,30 @@ public sealed class KernelRuntime : IKernelRuntime
 {
     public object Proxy
     {
-        get => Kernel.Proxy;
-        set => Kernel.Proxy = value as Proxy;
+        get => KState.Proxy;
+        set => KState.Proxy = value as Proxy;
     }
 
     public object Bot
     {
-        get => Kernel.Bot;
-        set => Kernel.Bot = value as Bot;
+        get => KState.Bot;
+        set => KState.Bot = value as Bot;
     }
 
-    public string Language { get => Kernel.Language; set => Kernel.Language = value; }
-    public string LaunchMode { get => Kernel.LaunchMode; set => Kernel.LaunchMode = value; }
-    public int TickCount => Kernel.TickCount;
-    public string BasePath => Kernel.BasePath;
-    public bool EnableCollisionDetection { get => Kernel.EnableCollisionDetection; set => Kernel.EnableCollisionDetection = value; }
-    public bool Debug { get => Kernel.Debug; set => Kernel.Debug = value; }
+    public string Language { get => KState.Language; set => KState.Language = value; }
+    public string LaunchMode { get => KState.LaunchMode; set => KState.LaunchMode = value; }
+    public int TickCount => KState.TickCount;
+    public string BasePath => KState.BasePath;
+    public bool EnableCollisionDetection { get => KState.EnableCollisionDetection; set => KState.EnableCollisionDetection = value; }
+    public bool Debug { get => KState.Debug; set => KState.Debug = value; }
 
-    public void Initialize() => Kernel.Initialize();
+    public void Initialize() => KState.Initialize();
 
     public Task StartAsync()
     {
-        Kernel.Initialize();
+        KState.Initialize();
         return Task.CompletedTask;
     }
 
-    public void Shutdown() => Kernel.Shutdown();
+    public void Shutdown() => KState.Shutdown();
 }

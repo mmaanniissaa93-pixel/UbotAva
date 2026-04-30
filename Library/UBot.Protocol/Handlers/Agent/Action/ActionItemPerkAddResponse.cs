@@ -27,7 +27,7 @@ public class ActionItemPerkAddResponse : IPacketHandler
             target.State.ActiveItemPerks[token].Value = value;
             target.State.ActiveItemPerks[token].RemainingTime = remainingTime;
 
-            EventManager.FireEvent("OnUpdateItemPerk", targetId, token);
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnUpdateItemPerk", targetId, token);
         }
         else
         {
@@ -41,7 +41,7 @@ public class ActionItemPerkAddResponse : IPacketHandler
                 }
             );
 
-            EventManager.FireEvent("OnAddItemPerk", targetId, token);
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnAddItemPerk", targetId, token);
         }
     }
 

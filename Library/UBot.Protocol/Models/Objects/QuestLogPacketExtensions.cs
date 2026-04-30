@@ -47,7 +47,7 @@ public static class QuestLogPacketExtensions
         packet.WriteUInt(questId);
 
         var callback = new AwaitCallback(null, 0xB0D9);
-        PacketManager.SendPacket(packet, PacketDestination.Server, callback);
+        UBot.Protocol.ProtocolRuntime.SendPacket(packet, PacketDestination.Server, callback);
         callback.AwaitResponse();
     }
 

@@ -23,18 +23,18 @@ internal class PartyMatchingInviteRequest : IPacketHandler
             //var member = packet.ReadPartyMember();
 
             ushort opcode = 0x306E;
-            if (Game.ClientType >= GameClientType.Chinese)
+            if (UBot.Core.RuntimeAccess.Session.ClientType >= GameClientType.Chinese)
                 opcode = 0x308D;
 
             var requestPacket = new Packet(opcode);
             requestPacket.WriteUInt(requestID);
             requestPacket.WriteUInt(requestType);
             requestPacket.WriteByte(1); //1 - accept, 2 - decline
-            PacketManager.SendPacket(requestPacket, PacketDestination.Server);
+            UBot.Core.RuntimeAccess.Packets.SendPacket(requestPacket, PacketDestination.Server);
         }
 
         if (Container.PartyMatching.Config.AutoReform)
-            if (Game.Party != null && Game.Party.Members?.Count + 1 >= Game.Party.Settings.MaxMember)
+            if (UBot.Core.RuntimeAccess.Session.Party != null && UBot.Core.RuntimeAccess.Session.Party.Members?.Count + 1 >= UBot.Core.RuntimeAccess.Session.Party.Settings.MaxMember)
                 _ = Task.Run(() => Container.PartyMatching.RequestPartyList());
     }
 }

@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Components.Command;
 
 namespace UBot.CommandCenter.Components.Command;
@@ -12,10 +12,10 @@ internal class StartCommandExecutor : ICommandExecutor
     public bool Execute(bool silent)
     {
         if (!silent)
-            Game.ShowNotification($"[UBot] Starting bot [{Kernel.Bot?.Botbase.Title}]");
+            UBot.Core.RuntimeAccess.Session.ShowNotification($"[UBot] Starting bot [{UBot.Core.RuntimeAccess.Core.Bot?.Botbase.Title}]");
 
-        Kernel.Bot?.Start();
+        UBot.Core.RuntimeAccess.Core.Bot?.Start();
 
-        return Kernel.Bot?.Running == true;
+        return UBot.Core.RuntimeAccess.Core.Bot?.Running == true;
     }
 }

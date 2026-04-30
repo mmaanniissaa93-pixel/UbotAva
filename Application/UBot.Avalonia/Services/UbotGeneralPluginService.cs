@@ -48,30 +48,30 @@ internal sealed class UbotGeneralPluginService : UbotServiceBase
     {
         var config = LoadPluginJsonConfig("UBot.General");
         var savedAccounts = _autoLoginService.GetAutoLoginAccountsAsync().GetAwaiter().GetResult();
-        config["enableAutomatedLogin"] = GlobalConfig.Get("UBot.General.EnableAutomatedLogin", false);
-        config["autoLoginAccount"] = GlobalConfig.Get("UBot.General.AutoLoginAccountUsername", string.Empty);
-        config["selectedCharacter"] = GlobalConfig.Get("UBot.General.AutoLoginCharacter", string.Empty);
-        config["autoCharSelect"] = GlobalConfig.Get("UBot.General.CharacterAutoSelect", false);
-        config["enableLoginDelay"] = GlobalConfig.Get("UBot.General.EnableLoginDelay", false);
-        config["loginDelay"] = GlobalConfig.Get("UBot.General.LoginDelay", 10);
-        config["enableWaitAfterDc"] = GlobalConfig.Get("UBot.General.EnableWaitAfterDC", false);
-        config["waitAfterDc"] = GlobalConfig.Get("UBot.General.WaitAfterDC", 3);
-        config["enableStaticCaptcha"] = GlobalConfig.Get("UBot.General.EnableStaticCaptcha", false);
-        config["staticCaptcha"] = GlobalConfig.Get("UBot.General.StaticCaptcha", string.Empty);
-        config["autoStartBot"] = GlobalConfig.Get("UBot.General.StartBot", false);
-        config["useReturnScroll"] = GlobalConfig.Get("UBot.General.UseReturnScroll", false);
-        config["autoHideClient"] = GlobalConfig.Get("UBot.General.HideOnStartClient", false);
-        config["characterAutoSelectFirst"] = GlobalConfig.Get("UBot.General.CharacterAutoSelectFirst", false);
-        config["characterAutoSelectHigher"] = GlobalConfig.Get("UBot.General.CharacterAutoSelectHigher", false);
-        config["stayConnectedAfterClientExit"] = GlobalConfig.Get("UBot.General.StayConnected", false);
-        config["moveToTrayOnMinimize"] = GlobalConfig.Get("UBot.General.TrayWhenMinimize", false);
-        config["autoHidePendingWindow"] = GlobalConfig.Get("UBot.General.AutoHidePendingWindow", false);
-        config["enablePendingQueueLogs"] = GlobalConfig.Get("UBot.General.PendingEnableQueueLogs", false);
-        config["enableQueueNotification"] = GlobalConfig.Get("UBot.General.EnableQueueNotification", false);
-        config["queuePeopleLeft"] = GlobalConfig.Get("UBot.General.QueueLeft", 30);
+        config["enableAutomatedLogin"] = UBot.Core.RuntimeAccess.Global.Get("UBot.General.EnableAutomatedLogin", false);
+        config["autoLoginAccount"] = UBot.Core.RuntimeAccess.Global.Get("UBot.General.AutoLoginAccountUsername", string.Empty);
+        config["selectedCharacter"] = UBot.Core.RuntimeAccess.Global.Get("UBot.General.AutoLoginCharacter", string.Empty);
+        config["autoCharSelect"] = UBot.Core.RuntimeAccess.Global.Get("UBot.General.CharacterAutoSelect", false);
+        config["enableLoginDelay"] = UBot.Core.RuntimeAccess.Global.Get("UBot.General.EnableLoginDelay", false);
+        config["loginDelay"] = UBot.Core.RuntimeAccess.Global.Get("UBot.General.LoginDelay", 10);
+        config["enableWaitAfterDc"] = UBot.Core.RuntimeAccess.Global.Get("UBot.General.EnableWaitAfterDC", false);
+        config["waitAfterDc"] = UBot.Core.RuntimeAccess.Global.Get("UBot.General.WaitAfterDC", 3);
+        config["enableStaticCaptcha"] = UBot.Core.RuntimeAccess.Global.Get("UBot.General.EnableStaticCaptcha", false);
+        config["staticCaptcha"] = UBot.Core.RuntimeAccess.Global.Get("UBot.General.StaticCaptcha", string.Empty);
+        config["autoStartBot"] = UBot.Core.RuntimeAccess.Global.Get("UBot.General.StartBot", false);
+        config["useReturnScroll"] = UBot.Core.RuntimeAccess.Global.Get("UBot.General.UseReturnScroll", false);
+        config["autoHideClient"] = UBot.Core.RuntimeAccess.Global.Get("UBot.General.HideOnStartClient", false);
+        config["characterAutoSelectFirst"] = UBot.Core.RuntimeAccess.Global.Get("UBot.General.CharacterAutoSelectFirst", false);
+        config["characterAutoSelectHigher"] = UBot.Core.RuntimeAccess.Global.Get("UBot.General.CharacterAutoSelectHigher", false);
+        config["stayConnectedAfterClientExit"] = UBot.Core.RuntimeAccess.Global.Get("UBot.General.StayConnected", false);
+        config["moveToTrayOnMinimize"] = UBot.Core.RuntimeAccess.Global.Get("UBot.General.TrayWhenMinimize", false);
+        config["autoHidePendingWindow"] = UBot.Core.RuntimeAccess.Global.Get("UBot.General.AutoHidePendingWindow", false);
+        config["enablePendingQueueLogs"] = UBot.Core.RuntimeAccess.Global.Get("UBot.General.PendingEnableQueueLogs", false);
+        config["enableQueueNotification"] = UBot.Core.RuntimeAccess.Global.Get("UBot.General.EnableQueueNotification", false);
+        config["queuePeopleLeft"] = UBot.Core.RuntimeAccess.Global.Get("UBot.General.QueueLeft", 30);
         config["sroExecutable"] = Path.Combine(
-            GlobalConfig.Get("UBot.SilkroadDirectory", string.Empty),
-            GlobalConfig.Get("UBot.SilkroadExecutable", string.Empty));
+            UBot.Core.RuntimeAccess.Global.Get("UBot.SilkroadDirectory", string.Empty),
+            UBot.Core.RuntimeAccess.Global.Get("UBot.SilkroadExecutable", string.Empty));
 
         var accounts = savedAccounts.Select(x => x.Username).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         var characterMap = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
@@ -86,9 +86,9 @@ internal sealed class UbotGeneralPluginService : UbotServiceBase
                 .ToList();
         }
 
-        var selectedAccount = GlobalConfig.Get("UBot.General.AutoLoginAccountUsername", string.Empty);
+        var selectedAccount = UBot.Core.RuntimeAccess.Global.Get("UBot.General.AutoLoginAccountUsername", string.Empty);
         characterMap.TryGetValue(selectedAccount, out var selectedCharacters);
-        var selectedCharacter = GlobalConfig.Get("UBot.General.AutoLoginCharacter", string.Empty);
+        var selectedCharacter = UBot.Core.RuntimeAccess.Global.Get("UBot.General.AutoLoginCharacter", string.Empty);
 
         if (string.IsNullOrWhiteSpace(selectedCharacter))
         {
@@ -122,8 +122,8 @@ internal sealed class UbotGeneralPluginService : UbotServiceBase
                         var path = sroPath.Trim().Trim('"');
                         if (File.Exists(path))
                         {
-                            GlobalConfig.Set("UBot.SilkroadDirectory", Path.GetDirectoryName(path) ?? string.Empty);
-                            GlobalConfig.Set("UBot.SilkroadExecutable", Path.GetFileName(path));
+                            UBot.Core.RuntimeAccess.Global.Set("UBot.SilkroadDirectory", Path.GetDirectoryName(path) ?? string.Empty);
+                            UBot.Core.RuntimeAccess.Global.Set("UBot.SilkroadExecutable", Path.GetFileName(path));
                             changed = true;
                         }
                     }
@@ -202,7 +202,7 @@ internal sealed class UbotGeneralPluginService : UbotServiceBase
         if (selectedCharacterPatched)
         {
             if (string.IsNullOrWhiteSpace(selectedAccountValue))
-                selectedAccountValue = GlobalConfig.Get("UBot.General.AutoLoginAccountUsername", string.Empty);
+                selectedAccountValue = UBot.Core.RuntimeAccess.Global.Get("UBot.General.AutoLoginAccountUsername", string.Empty);
 
             changed |= _autoLoginService.UpdateSelectedCharacterForAccount(selectedAccountValue, selectedCharacterValue);
         }

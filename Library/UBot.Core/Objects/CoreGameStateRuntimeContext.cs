@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -56,11 +56,11 @@ internal sealed class CoreGameStateRuntimeContext : IGameStateRuntimeContext
     public GameClientType ClientType => _game.ClientType;
     public IReferenceManager References => _game.ReferenceManager;
     public int TickCount => _kernel.TickCount;
-    public bool IsBotRunning => Kernel.Bot?.Running == true;
-    public bool IsPlayerInAction => Game.Player?.InAction == true;
-    public string PlayerName => Game.Player?.Name;
-    public uint PlayerUniqueId => Game.Player?.UniqueId ?? 0;
-    public int PlayerLevel => Game.Player?.Level ?? 0;
+    public bool IsBotRunning => UBot.Core.RuntimeAccess.Core.Bot?.Running == true;
+    public bool IsPlayerInAction => UBot.Core.RuntimeAccess.Session.Player?.InAction == true;
+    public string PlayerName => UBot.Core.RuntimeAccess.Session.Player?.Name;
+    public uint PlayerUniqueId => UBot.Core.RuntimeAccess.Session.Player?.UniqueId ?? 0;
+    public int PlayerLevel => UBot.Core.RuntimeAccess.Session.Player?.Level ?? 0;
     public object Player => _game.Player;
     public object SelectedEntity => _game.SelectedEntity;
     public object AcceptanceRequest => _game.AcceptanceRequest;
@@ -69,20 +69,20 @@ internal sealed class CoreGameStateRuntimeContext : IGameStateRuntimeContext
     {
         return kind switch
         {
-            "RefObjChar" => Game.ReferenceManager.GetRefObjChar(Convert.ToUInt32(key)),
+            "RefObjChar" => UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefObjChar(Convert.ToUInt32(key)),
             "RefItem" => key is string codeName
-                ? Game.ReferenceManager.GetRefItem(codeName)
-                : Game.ReferenceManager.GetRefItem(Convert.ToUInt32(key)),
-            "RefLevel" => Game.ReferenceManager.GetRefLevel(Convert.ToByte(key)),
+                ? UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefItem(codeName)
+                : UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefItem(Convert.ToUInt32(key)),
+            "RefLevel" => UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefLevel(Convert.ToByte(key)),
             "RefSkill" => key is string skillCode
-                ? Game.ReferenceManager.GetRefSkill(skillCode)
-                : Game.ReferenceManager.GetRefSkill(Convert.ToUInt32(key)),
-            "RefQuest" => Game.ReferenceManager.GetRefQuest(Convert.ToUInt32(key)),
+                ? UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefSkill(skillCode)
+                : UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefSkill(Convert.ToUInt32(key)),
+            "RefQuest" => UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefQuest(Convert.ToUInt32(key)),
             "AbilityItem" => ((uint itemId, byte optLevel))key is var tuple
-                ? Game.ReferenceManager.GetAbilityItem(tuple.itemId, tuple.optLevel)
+                ? UBot.Core.RuntimeAccess.Session.ReferenceManager.GetAbilityItem(tuple.itemId, tuple.optLevel)
                 : null,
             "ExtraAbilityItems" => ((uint itemId, byte optLevel))key is var tuple
-                ? Game.ReferenceManager.GetExtraAbilityItems(tuple.itemId, tuple.optLevel)
+                ? UBot.Core.RuntimeAccess.Session.ReferenceManager.GetExtraAbilityItems(tuple.itemId, tuple.optLevel)
                 : null,
             _ => null,
         };
@@ -115,7 +115,7 @@ internal sealed class CoreGameStateRuntimeContext : IGameStateRuntimeContext
     public bool SendPlayerMove(object destination, bool sleep)
     {
         var target = (Position)destination;
-        var player = Game.Player;
+        var player = UBot.Core.RuntimeAccess.Session.Player;
         var distance = player.Movement.Source.DistanceTo(target);
         if (distance > 150)
         {
@@ -154,7 +154,7 @@ internal sealed class CoreGameStateRuntimeContext : IGameStateRuntimeContext
             0xB021
         );
 
-        PacketManager.SendPacket(packet, PacketDestination.Server, awaitCallback);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, awaitCallback);
         awaitCallback.AwaitResponse();
 
         if (!awaitCallback.IsCompleted)
@@ -172,7 +172,7 @@ internal sealed class CoreGameStateRuntimeContext : IGameStateRuntimeContext
         packet.WriteByte(0x1);
 
         var callback = new AwaitCallback(null, 0xB0A7);
-        PacketManager.SendPacket(packet, PacketDestination.Server, callback);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, callback);
         callback.AwaitResponse(500);
         return callback.IsCompleted;
     }
@@ -196,7 +196,7 @@ internal sealed class CoreGameStateRuntimeContext : IGameStateRuntimeContext
             0xB045
         );
 
-        PacketManager.SendPacket(packet, PacketDestination.Server, awaitCallback);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, awaitCallback);
         awaitCallback.AwaitResponse();
         return awaitCallback.IsCompleted;
     }
@@ -222,7 +222,7 @@ internal sealed class CoreGameStateRuntimeContext : IGameStateRuntimeContext
             0xB04B
         );
 
-        PacketManager.SendPacket(packet, PacketDestination.Server, awaitResult);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, awaitResult);
         awaitResult.AwaitResponse();
         return awaitResult.IsCompleted;
     }
@@ -234,13 +234,13 @@ internal sealed class CoreGameStateRuntimeContext : IGameStateRuntimeContext
         if (!isInParty)
             packet.WriteByte(partyType);
 
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server);
         return true;
     }
 
     public void SendPartyLeave()
     {
-        PacketManager.SendPacket(new Packet(0x7061), PacketDestination.Server);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(new Packet(0x7061), PacketDestination.Server);
     }
 
     public bool SendInventoryMove(byte sourceSlot, byte destinationSlot, ushort amount)
@@ -252,7 +252,7 @@ internal sealed class CoreGameStateRuntimeContext : IGameStateRuntimeContext
         packet.WriteUShort(amount);
 
         var asyncResult = CreateMoveCallback(sourceSlot, destinationSlot, 0x00);
-        PacketManager.SendPacket(packet, PacketDestination.Server, asyncResult);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, asyncResult);
         asyncResult.AwaitResponse(500);
         return asyncResult.IsCompleted;
     }
@@ -271,7 +271,7 @@ internal sealed class CoreGameStateRuntimeContext : IGameStateRuntimeContext
         packet.WriteUInt(bionic.UniqueId);
 
         var asyncResult = CreateMoveCallback(sourceSlot, destinationSlot, 0x01, 0x1D);
-        PacketManager.SendPacket(packet, PacketDestination.Server, asyncResult);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, asyncResult);
         asyncResult.AwaitResponse(500);
         return asyncResult.IsCompleted;
     }
@@ -284,7 +284,7 @@ internal sealed class CoreGameStateRuntimeContext : IGameStateRuntimeContext
             0xB04C
         );
 
-        PacketManager.SendPacket(packet, PacketDestination.Server, asyncCallback);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, asyncCallback);
         asyncCallback.AwaitResponse(500);
         return asyncCallback.IsCompleted;
     }
@@ -302,7 +302,7 @@ internal sealed class CoreGameStateRuntimeContext : IGameStateRuntimeContext
             0xB04C
         );
 
-        PacketManager.SendPacket(packet, PacketDestination.Server, asyncCallback);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, asyncCallback);
         asyncCallback.AwaitResponse(500);
         return asyncCallback.IsCompleted;
     }
@@ -311,7 +311,7 @@ internal sealed class CoreGameStateRuntimeContext : IGameStateRuntimeContext
     {
         var packet = CreateUseInventoryItemPacket(slot, tid);
         packet.WriteUInt(uniqueId);
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server);
     }
 
     public bool SendDropInventoryItem(byte slot, bool cos, uint? cosUniqueId)
@@ -328,31 +328,31 @@ internal sealed class CoreGameStateRuntimeContext : IGameStateRuntimeContext
         }
 
         packet.WriteByte(slot);
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server);
         return true;
     }
 
     public bool HasPendingPartyRequest()
     {
-        return Game.AcceptanceRequest?.Type == InviteRequestType.Party1
-            || (Game.AcceptanceRequest?.Type == InviteRequestType.Party2 && Game.AcceptanceRequest.Player != null);
+        return UBot.Core.RuntimeAccess.Session.AcceptanceRequest?.Type == InviteRequestType.Party1
+            || (UBot.Core.RuntimeAccess.Session.AcceptanceRequest?.Type == InviteRequestType.Party2 && UBot.Core.RuntimeAccess.Session.AcceptanceRequest.Player != null);
     }
 
-    public bool IsSelectedEntityNpc() => Game.SelectedEntity is SpawnedNpcNpc;
+    public bool IsSelectedEntityNpc() => UBot.Core.RuntimeAccess.Session.SelectedEntity is SpawnedNpcNpc;
 
     public bool IsBehindObstacle(object position)
     {
-        return Game.Player != null && Game.Player.Position.HasCollisionBetween((Position)position);
+        return UBot.Core.RuntimeAccess.Session.Player != null && UBot.Core.RuntimeAccess.Session.Player.Position.HasCollisionBetween((Position)position);
     }
 
     public double DistanceToPlayer(object position)
     {
-        return Game.Player == null ? 0 : Game.Player.Movement.Source.DistanceTo((Position)position);
+        return UBot.Core.RuntimeAccess.Session.Player == null ? 0 : UBot.Core.RuntimeAccess.Session.Player.Movement.Source.DistanceTo((Position)position);
     }
 
     public bool StopBot()
     {
-        Kernel.Bot.Stop();
+        UBot.Core.RuntimeAccess.Core.Bot.Stop();
         return true;
     }
 
@@ -369,7 +369,7 @@ internal sealed class CoreGameStateRuntimeContext : IGameStateRuntimeContext
         var packet = new Packet(0x704C);
         packet.WriteByte(slot);
 
-        if (Game.ClientType > GameClientType.Vietnam)
+        if (UBot.Core.RuntimeAccess.Session.ClientType > GameClientType.Vietnam)
             packet.WriteInt(tid);
         else
             packet.WriteUShort((ushort)tid);

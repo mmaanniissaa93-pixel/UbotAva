@@ -36,17 +36,17 @@ internal class MagicBundle : IAlchemyBundle
     /// </summary>
     private void SubscribeEvents()
     {
-        EventManager.SubscribeEvent(
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent(
             "OnAlchemySuccess",
             new Action<InventoryItem, InventoryItem, AlchemyType>(OnStoneAlchemySuccess)
         );
-        EventManager.SubscribeEvent(
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent(
             "OnAlchemyFailed",
             new Action<InventoryItem, InventoryItem, AlchemyType>(OnStoneAlchemyFailed)
         );
-        EventManager.SubscribeEvent("OnAlchemyError", new Action<ushort, AlchemyType>(OnStoneAlchemyError));
-        EventManager.SubscribeEvent("OnAlchemy", new Action<AlchemyType>(OnStoneAlchemy));
-        EventManager.SubscribeEvent("OnFuseRequest", new Action<AlchemyAction, AlchemyType>(OnFuseRequest));
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnAlchemyError", new Action<ushort, AlchemyType>(OnStoneAlchemyError));
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnAlchemy", new Action<AlchemyType>(OnStoneAlchemy));
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnFuseRequest", new Action<AlchemyAction, AlchemyType>(OnFuseRequest));
     }
 
     /// <summary>
@@ -114,7 +114,7 @@ internal class MagicBundle : IAlchemyBundle
         if (config?.MagicStones?.Count == 0)
         {
             Log.Warn("[Alchemy] No magic stones configured!");
-            Kernel.Bot.Stop();
+            UBot.Core.RuntimeAccess.Core.Bot.Stop();
 
             return;
         }
@@ -136,7 +136,7 @@ internal class MagicBundle : IAlchemyBundle
                 break;
 
             //Check if the stone to be fused is in the correct slot, otherwise get the same item type again from the inventory
-            var magicStone = Game.Player.Inventory.GetItem(stone.Key.ItemId);
+            var magicStone = UBot.Core.RuntimeAccess.Session.Player.Inventory.GetItem(stone.Key.ItemId);
             if (magicStone == null)
                 continue;
 
@@ -147,7 +147,7 @@ internal class MagicBundle : IAlchemyBundle
             if (stone.Value.Group == RefMagicOpt.MaterialAstral)
             {
                 var immortalInfo = config.Item.MagicOptions.FirstOrDefault(m =>
-                    Game.ReferenceManager.GetMagicOption(m.Id).Group == RefMagicOpt.MaterialImmortal
+                    UBot.Core.RuntimeAccess.Session.ReferenceManager.GetMagicOption(m.Id).Group == RefMagicOpt.MaterialImmortal
                 );
 
                 //Not enough immortal attribute -> Need to skip astral
@@ -159,7 +159,7 @@ internal class MagicBundle : IAlchemyBundle
             if (current != null && current.Record.Level != config.Item.Record.Degree)
             {
                 //Fix in case the server sends a lower magic option id than expected (dunno why this happens)
-                var actualMagicOption = Game.ReferenceManager.GetMagicOption(
+                var actualMagicOption = UBot.Core.RuntimeAccess.Session.ReferenceManager.GetMagicOption(
                     current.Record.Group,
                     (byte)config.Item.Record.Degree
                 );
@@ -199,7 +199,7 @@ internal class MagicBundle : IAlchemyBundle
         {
             Log.Notify("[Alchemy] Magic stone fusing finished!");
 
-            Kernel.Bot.Stop();
+            UBot.Core.RuntimeAccess.Core.Bot.Stop();
         }
     }
 
@@ -273,7 +273,7 @@ internal class MagicBundle : IAlchemyBundle
             return;
 
         //Print the messages
-        var record = Game.ReferenceManager.GetMagicOption(changedOption.Id);
+        var record = UBot.Core.RuntimeAccess.Session.ReferenceManager.GetMagicOption(changedOption.Id);
 
         var message = !isNew
             ? Game
@@ -303,7 +303,7 @@ internal class MagicBundle : IAlchemyBundle
 
         Globals.View.AddLog(
             newItem.Record.GetRealName(),
-            Game.ReferenceManager.GetTranslation("UIIT_MSG_REINFORCERR_FAIL")
+            UBot.Core.RuntimeAccess.Session.ReferenceManager.GetTranslation("UIIT_MSG_REINFORCERR_FAIL")
         );
 
         _shouldRun = true;
@@ -324,7 +324,7 @@ internal class MagicBundle : IAlchemyBundle
             AlchemyManager.ActiveAlchemyItems?.Count > 0
                 ? AlchemyManager.ActiveAlchemyItems.First().Record.GetRealName()
                 : "",
-            Game.ReferenceManager.GetTranslation(translationName)
+            UBot.Core.RuntimeAccess.Session.ReferenceManager.GetTranslation(translationName)
         );
 
         _shouldRun = true;

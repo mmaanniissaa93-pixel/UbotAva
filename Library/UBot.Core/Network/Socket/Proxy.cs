@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using UBot.Core.Event;
 
@@ -76,7 +76,7 @@ public class Proxy
         _gatewayIp = gatewayIp;
         _gatewayPort = gatewayPort;
 
-        if (!Game.Clientless)
+        if (!UBot.Core.RuntimeAccess.Session.Clientless)
             CreateNewClientInstance(clientPort);
         else
             ConnectToGatewayserver();
@@ -177,7 +177,7 @@ public class Proxy
 
         try
         {
-            packet = PacketManager.CallHook(packet, destination);
+            packet = UBot.Core.RuntimeAccess.Packets.CallHook(packet, destination);
         }
         catch (Exception e)
         {
@@ -188,12 +188,12 @@ public class Proxy
             if (packet != null)
                 try
                 {
-                    PacketManager.SendPacket(packet, destination);
+                    UBot.Core.RuntimeAccess.Packets.SendPacket(packet, destination);
 
                     packet.SeekRead(0, SeekOrigin.Begin);
 
-                    PacketManager.CallHandler(packet, destination);
-                    PacketManager.CallCallback(packet);
+                    UBot.Core.RuntimeAccess.Packets.CallHandler(packet, destination);
+                    UBot.Core.RuntimeAccess.Packets.CallCallback(packet);
                 }
                 catch (Exception e)
                 {
@@ -230,7 +230,7 @@ public class Proxy
     {
         Log.Notify("A new silkroad client connected.");
 
-        EventManager.FireEvent("OnClientConnected");
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnClientConnected");
 
         ClientConnected = true;
 
@@ -256,7 +256,7 @@ public class Proxy
             return;
 
         HandleReceivedPacket(packet, PacketDestination.Server);
-        EventManager.FireEvent("OnClientPacketReceive", packet);
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnClientPacketReceive", packet);
     }
 
     #endregion Client
@@ -271,7 +271,7 @@ public class Proxy
     {
         HandleReceivedPacket(packet, PacketDestination.Client);
 
-        EventManager.FireEvent("OnServerPacketReceive", packet);
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnServerPacketReceive", packet);
     }
 
     /// <summary>
@@ -298,10 +298,10 @@ public class Proxy
 
             IsConnectedToAgentserver = false;
 
-            Game.Ready = false;
-            Game.Started = false;
+            UBot.Core.RuntimeAccess.Session.Ready = false;
+            UBot.Core.RuntimeAccess.Session.Started = false;
 
-            EventManager.FireEvent("OnAgentServerDisconnected");
+            UBot.Core.RuntimeAccess.Events.FireEvent("OnAgentServerDisconnected");
         }
         else if (IsConnectedToGatewayserver)
         {
@@ -309,7 +309,7 @@ public class Proxy
 
             IsConnectedToGatewayserver = false;
 
-            EventManager.FireEvent("OnGatewayServerDisconnected");
+            UBot.Core.RuntimeAccess.Events.FireEvent("OnGatewayServerDisconnected");
         }
     }
 
@@ -324,15 +324,15 @@ public class Proxy
                 IsConnectedToGatewayserver = true;
                 IsConnectedToAgentserver = false;
                 _pendingServerConnectionTarget = ServerConnectionTarget.None;
-                EventManager.FireEvent("OnGatewayServerConnected");
-                EventManager.FireEvent("OnGatewayServerConntected");
+                UBot.Core.RuntimeAccess.Events.FireEvent("OnGatewayServerConnected");
+                UBot.Core.RuntimeAccess.Events.FireEvent("OnGatewayServerConntected");
                 break;
 
             case ServerConnectionTarget.Agent:
                 IsConnectedToGatewayserver = false;
                 IsConnectedToAgentserver = true;
                 _pendingServerConnectionTarget = ServerConnectionTarget.None;
-                EventManager.FireEvent("OnAgentServerConnected");
+                UBot.Core.RuntimeAccess.Events.FireEvent("OnAgentServerConnected");
                 break;
 
             default:

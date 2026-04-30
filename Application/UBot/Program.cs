@@ -112,8 +112,8 @@ internal static class Program
     {
         try
         {
-            if (Kernel.Bot != null && Kernel.Bot.Running)
-                Kernel.Bot.Stop();
+            if (UBot.Core.RuntimeAccess.Core.Bot != null && UBot.Core.RuntimeAccess.Core.Bot.Running)
+                UBot.Core.RuntimeAccess.Core.Bot.Stop();
         }
         catch (Exception ex)
         {
@@ -122,7 +122,7 @@ internal static class Program
 
         try
         {
-            Kernel.Shutdown();
+            UBot.Core.RuntimeAccess.Core.Shutdown();
         }
         catch (Exception ex)
         {
@@ -131,7 +131,7 @@ internal static class Program
 
         try
         {
-            Kernel.Proxy?.Shutdown();
+            UBot.Core.RuntimeAccess.Core.Proxy?.Shutdown();
             ClientManager.Kill();
         }
         catch (Exception ex)
@@ -150,7 +150,7 @@ internal static class Program
 
         try
         {
-            GlobalConfig.Save();
+            UBot.Core.RuntimeAccess.Global.Save();
         }
         catch (Exception ex)
         {
@@ -159,7 +159,7 @@ internal static class Program
 
         try
         {
-            PlayerConfig.Save();
+            UBot.Core.RuntimeAccess.Player.Save();
         }
         catch (Exception ex)
         {
@@ -174,12 +174,12 @@ internal static class Program
 
         if (options.LaunchClient)
         {
-            Kernel.LaunchMode = "client";
+            UBot.Core.RuntimeAccess.Core.LaunchMode = "client";
             Log.Debug("Launching with client dictated by launch paramaters");
         }
         else if (options.LaunchClientless)
         {
-            Kernel.LaunchMode = "clientless";
+            UBot.Core.RuntimeAccess.Core.LaunchMode = "clientless";
             Log.Debug("Launching client as clientless dictated by launch paramaters");
         }
 

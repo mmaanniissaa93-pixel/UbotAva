@@ -57,8 +57,8 @@ public partial class ProxyConfigWindow : Window
                 return;
         }
 
-        GlobalConfig.Set("UBot.Network.BindIp", bindIp);
-        GlobalConfig.SetArray(
+        UBot.Core.RuntimeAccess.Global.Set("UBot.Network.BindIp", bindIp);
+        UBot.Core.RuntimeAccess.Global.SetArray(
             "UBot.Network.Proxy",
             new List<string>
             {
@@ -70,7 +70,7 @@ public partial class ProxyConfigWindow : Window
                 version.ToString(CultureInfo.InvariantCulture)
             },
             "|");
-        GlobalConfig.Save();
+        UBot.Core.RuntimeAccess.Global.Save();
 
         Config = new NetworkConfig
         {
@@ -93,8 +93,8 @@ public partial class ProxyConfigWindow : Window
 
     private void LoadFromGlobalConfig()
     {
-        var bindIp = GlobalConfig.Get("UBot.Network.BindIp", "0.0.0.0");
-        var proxy = GlobalConfig.GetArray<string>("UBot.Network.Proxy", '|', StringSplitOptions.TrimEntries);
+        var bindIp = UBot.Core.RuntimeAccess.Global.Get("UBot.Network.BindIp", "0.0.0.0");
+        var proxy = UBot.Core.RuntimeAccess.Global.GetArray<string>("UBot.Network.Proxy", '|', StringSplitOptions.TrimEntries);
 
         var active = false;
         var proxyIp = string.Empty;

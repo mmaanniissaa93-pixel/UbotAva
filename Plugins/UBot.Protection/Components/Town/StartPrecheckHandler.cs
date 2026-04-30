@@ -8,12 +8,12 @@ internal static class StartPrecheckHandler
 {
     public static void Initialize()
     {
-        EventManager.SubscribeEvent("OnStartBot", OnStartBot);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnStartBot", OnStartBot);
     }
 
     private static void OnStartBot()
     {
-        if (!Kernel.Bot.Running)
+        if (!UBot.Core.RuntimeAccess.Core.Bot.Running)
             return;
 
         if (!TryHandleTownReturnPrecheck())

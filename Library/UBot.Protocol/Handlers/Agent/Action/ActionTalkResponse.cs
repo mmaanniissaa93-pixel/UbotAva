@@ -33,8 +33,8 @@ public class ActionTalkResponse : IPacketHandler
 
         CoreGame.SelectedEntity = CoreGame.Player.State.DialogState.Npc;
 
-        EventManager.FireEvent("OnSelectEntity", CoreGame.SelectedEntity);
-        EventManager.FireEvent("OnTalkToNpc", CoreGame.Player.State.DialogState.RequestedNpcId);
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnSelectEntity", CoreGame.SelectedEntity);
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnTalkToNpc", CoreGame.Player.State.DialogState.RequestedNpcId);
     }
 
     #endregion Methods

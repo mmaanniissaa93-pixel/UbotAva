@@ -12,13 +12,13 @@ public class ActionDeselectResponse : IPacketHandler
 
     public void Invoke(Packet packet)
     {
-        var player = ProtocolRuntime.GameState?.Player as Player;
+        var player = UBot.Protocol.ProtocolRuntime.GameState?.Player as Player;
         if (player == null || packet.ReadByte() != 1)
             return;
 
         if (player.State.DialogState is { IsInDialog: true } && player.State.DialogState.RequestedCloseNpcId != 0)
             player.State.DialogState = null;
 
-        ProtocolRuntime.EventBus?.Fire("OnDeselectEntity");
+        UBot.Protocol.ProtocolRuntime.EventBus?.Fire("OnDeselectEntity");
     }
 }

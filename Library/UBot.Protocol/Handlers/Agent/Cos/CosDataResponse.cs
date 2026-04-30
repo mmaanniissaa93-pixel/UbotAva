@@ -55,8 +55,8 @@ public class CosDataResponse : IPacketHandler
                     CoreGame.Player.StopMoving();
                     CoreGame.Player.SetSpeed(objChar.Speed1, objChar.Speed2);
 
-                    EventManager.FireEvent("OnSummonTransport");
-                    EventManager.FireEvent("OnSummonCos", CoreGame.Player.Transport);
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnSummonTransport");
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnSummonCos", CoreGame.Player.Transport);
 
                     break;
                 case 2:
@@ -71,8 +71,8 @@ public class CosDataResponse : IPacketHandler
                         OwnerUniqueId = packet.ReadUInt(),
                     };
 
-                    EventManager.FireEvent("OnSummonJobTransport");
-                    EventManager.FireEvent("OnSummonCos", CoreGame.Player.JobTransport);
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnSummonJobTransport");
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnSummonCos", CoreGame.Player.JobTransport);
 
                     CoreGame.Player.StopMoving();
                     CoreGame.Player.SetSpeed(objChar.Speed1, objChar.Speed2);
@@ -89,8 +89,8 @@ public class CosDataResponse : IPacketHandler
                     };
                     CoreGame.Player.Growth.Deserialize(packet);
 
-                    EventManager.FireEvent("OnSummonGrowth");
-                    EventManager.FireEvent("OnSummonCos", CoreGame.Player.Growth);
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnSummonGrowth");
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnSummonCos", CoreGame.Player.Growth);
 
                     break;
                 case 4:
@@ -104,8 +104,8 @@ public class CosDataResponse : IPacketHandler
                     };
 
                     CoreGame.Player.AbilityPet.Deserialize(packet);
-                    EventManager.FireEvent("OnSummonCos", CoreGame.Player.AbilityPet);
-                    EventManager.FireEvent("OnSummonAbility");
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnSummonCos", CoreGame.Player.AbilityPet);
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnSummonAbility");
 
                     break;
                 case 9:
@@ -119,7 +119,7 @@ public class CosDataResponse : IPacketHandler
                     };
 
                     CoreGame.Player.Fellow.Deserialize(packet);
-                    EventManager.FireEvent("OnSummonCos", CoreGame.Player.Fellow);
+                    UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnSummonCos", CoreGame.Player.Fellow);
 
                     break;
             }

@@ -1,4 +1,4 @@
-﻿using UBot.Core.Network;
+using UBot.Core.Network;
 using UBot.Core.Objects.Job;
 using UBot.Protocol;
 
@@ -13,8 +13,8 @@ public class JobCosStuckResponse : IPacketHandler
     public void Invoke(Packet packet)
     {
         var reason = (TransportStuckReason)packet.ReadByte();
-        ProtocolRuntime.GameState?.FireEvent("OnJobCosStuck", reason);
-        ProtocolRuntime.GameState?.LogNotify("[Job] Your transport is stuck!");
+        UBot.Protocol.ProtocolRuntime.GameState?.FireEvent("OnJobCosStuck", reason);
+        UBot.Protocol.ProtocolRuntime.GameState?.LogNotify("[Job] Your transport is stuck!");
     }
 }
 

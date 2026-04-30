@@ -14,7 +14,7 @@ public class Transport : Cos
         packet.WriteByte(0);
         packet.WriteUInt(UniqueId);
 
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Protocol.ProtocolRuntime.SendPacket(packet, PacketDestination.Server);
 
         return base.Dismount();
     }

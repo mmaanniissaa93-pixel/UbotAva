@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -122,7 +122,7 @@ public class AwaitCallback
             _succeeded = true;
             _invoked = true;
             _completionSource.TrySetResult(true);
-            PacketManager.RemoveCallback(this);
+            UBot.Core.RuntimeAccess.Packets.RemoveCallback(this);
             return;
         }
 
@@ -143,7 +143,7 @@ public class AwaitCallback
                 _succeeded = true;
                 _invoked = true;
                 _completionSource.TrySetResult(true);
-                PacketManager.RemoveCallback(this);
+                UBot.Core.RuntimeAccess.Packets.RemoveCallback(this);
                 break;
 
             case AwaitCallbackResult.ConditionFailed:
@@ -153,7 +153,7 @@ public class AwaitCallback
                 _succeeded = false;
                 _invoked = true;
                 _completionSource.TrySetResult(false);
-                PacketManager.RemoveCallback(this);
+                UBot.Core.RuntimeAccess.Packets.RemoveCallback(this);
                 break;
         }
     }
@@ -179,7 +179,7 @@ public class AwaitCallback
         if (!task.IsCompleted)
         {
             _timeout = true;
-            PacketManager.RemoveCallback(this);
+            UBot.Core.RuntimeAccess.Packets.RemoveCallback(this);
             Log.Debug($"Callback timeout, ResponseOpcode: 0x{ResponseOpcode:X}");
         }
     }
@@ -206,7 +206,7 @@ public class AwaitCallback
             if (!cancellationToken.IsCancellationRequested)
             {
                 _timeout = true;
-                PacketManager.RemoveCallback(this);
+                UBot.Core.RuntimeAccess.Packets.RemoveCallback(this);
                 Log.Debug($"Callback timeout, ResponseOpcode: 0x{ResponseOpcode:X}");
             }
         }

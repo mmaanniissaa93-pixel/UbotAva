@@ -1,27 +1,28 @@
 using System;
 using UBot.Core.Abstractions.Services;
+using EMgr = UBot.Core.Event.EventManager;
 
 namespace UBot.Core.Event;
 
 public sealed class ScriptEventBus : IScriptEventBus, IDisposable
 {
     public void SubscribeEvent(string eventName, Delegate handler) =>
-        EventManager.SubscribeEvent(eventName, handler);
+        EMgr.SubscribeEvent(eventName, handler);
 
     public void SubscribeEvent(string eventName, Delegate handler, object owner) =>
-        EventManager.SubscribeEvent(eventName, handler, owner);
+        EMgr.SubscribeEvent(eventName, handler, owner);
 
     public void UnsubscribeEvent(string eventName, Delegate handler) =>
-        EventManager.UnsubscribeEvent(eventName, handler);
+        EMgr.UnsubscribeEvent(eventName, handler);
 
-    public void UnsubscribeOwner(object owner) => EventManager.UnsubscribeOwner(owner);
+    public void UnsubscribeOwner(object owner) => EMgr.UnsubscribeOwner(owner);
 
     public void RaiseEvent(string eventName, params object[] args) =>
-        EventManager.FireEvent(eventName, args);
+        EMgr.FireEvent(eventName, args);
 
     public void Fire(string eventName, params object[] args) => RaiseEvent(eventName, args);
 
-    public void ClearSubscribers() => EventManager.ClearSubscribers();
+    public void ClearSubscribers() => EMgr.ClearSubscribers();
 
     public void Dispose() => ClearSubscribers();
 }

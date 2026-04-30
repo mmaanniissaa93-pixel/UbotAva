@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using UBot.Core;
@@ -59,7 +59,7 @@ internal record EmoticonItem(string Name, string Label, string Icon, EmoticonTyp
 {
     public Image GetIconImage()
     {
-        if (!Game.MediaPk2.TryGetFile(Icon, out var iconFile))
+        if (!UBot.Core.RuntimeAccess.Session.MediaPk2.TryGetFile(Icon, out var iconFile))
             return new Bitmap(32, 32);
 
         return iconFile.ToImage();

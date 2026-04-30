@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Linq;
 using System.Net;
@@ -34,7 +34,7 @@ public struct ProxyConfig
             TimeOut = 5000,
         };
 
-        var values = GlobalConfig.GetArray<string>("UBot.Network.Proxy", '|', StringSplitOptions.TrimEntries);
+        var values = UBot.Core.RuntimeAccess.Global.GetArray<string>("UBot.Network.Proxy", '|', StringSplitOptions.TrimEntries);
         if (values.Length != 6)
             return false;
 

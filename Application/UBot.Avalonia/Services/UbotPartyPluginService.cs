@@ -43,59 +43,59 @@ internal sealed class UbotPartyPluginService : UbotServiceBase
     {
         var config = LoadPluginJsonConfig(PartyPluginName);
 
-        config["expAutoShare"] = PlayerConfig.Get("UBot.Party.EXPAutoShare", true);
-        config["itemAutoShare"] = PlayerConfig.Get("UBot.Party.ItemAutoShare", true);
-        config["allowInvitations"] = PlayerConfig.Get("UBot.Party.AllowInvitations", true);
+        config["expAutoShare"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.EXPAutoShare", true);
+        config["itemAutoShare"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.ItemAutoShare", true);
+        config["allowInvitations"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.AllowInvitations", true);
 
-        config["acceptAllInvitations"] = PlayerConfig.Get("UBot.Party.AcceptAll", false);
-        config["acceptInvitationsFromList"] = PlayerConfig.Get("UBot.Party.AcceptList", false);
-        config["autoInviteAllPlayers"] = PlayerConfig.Get("UBot.Party.InviteAll", false);
-        config["autoInviteAllPlayersFromList"] = PlayerConfig.Get("UBot.Party.InviteList", false);
-        config["acceptInviteOnlyTrainingPlace"] = PlayerConfig.Get("UBot.Party.AtTrainingPlace", false);
-        config["acceptIfBotStopped"] = PlayerConfig.Get("UBot.Party.AcceptIfBotStopped", false);
-        config["leaveIfMasterNot"] = PlayerConfig.Get("UBot.Party.LeaveIfMasterNot", false);
-        config["leaveIfMasterNotName"] = PlayerConfig.Get("UBot.Party.LeaveIfMasterNotName", string.Empty);
-        config["alwaysFollowPartyMaster"] = PlayerConfig.Get("UBot.Party.AlwaysFollowPartyMaster", false);
-        config["listenPartyMasterCommands"] = PlayerConfig.Get("UBot.Party.Commands.ListenFromMaster", false);
-        config["listenCommandsInList"] = PlayerConfig.Get("UBot.Party.Commands.ListenOnlyList", false);
+        config["acceptAllInvitations"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.AcceptAll", false);
+        config["acceptInvitationsFromList"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.AcceptList", false);
+        config["autoInviteAllPlayers"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.InviteAll", false);
+        config["autoInviteAllPlayersFromList"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.InviteList", false);
+        config["acceptInviteOnlyTrainingPlace"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.AtTrainingPlace", false);
+        config["acceptIfBotStopped"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.AcceptIfBotStopped", false);
+        config["leaveIfMasterNot"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.LeaveIfMasterNot", false);
+        config["leaveIfMasterNotName"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.LeaveIfMasterNotName", string.Empty);
+        config["alwaysFollowPartyMaster"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.AlwaysFollowPartyMaster", false);
+        config["listenPartyMasterCommands"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.Commands.ListenFromMaster", false);
+        config["listenCommandsInList"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.Commands.ListenOnlyList", false);
 
-        config["autoPartyPlayers"] = PlayerConfig.GetArray<string>("UBot.Party.AutoPartyList")
+        config["autoPartyPlayers"] = UBot.Core.RuntimeAccess.Player.GetArray<string>("UBot.Party.AutoPartyList")
             .Where(value => !string.IsNullOrWhiteSpace(value))
             .Select(value => value.Trim())
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .Cast<object?>()
             .ToList();
 
-        config["commandPlayers"] = PlayerConfig.GetArray<string>("UBot.Party.Commands.PlayersList")
+        config["commandPlayers"] = UBot.Core.RuntimeAccess.Player.GetArray<string>("UBot.Party.Commands.PlayersList")
             .Where(value => !string.IsNullOrWhiteSpace(value))
             .Select(value => value.Trim())
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .Cast<object?>()
             .ToList();
 
-        config["matchingPurpose"] = (int)PlayerConfig.Get<byte>("UBot.Party.Matching.Purpose", 0);
-        config["matchingTitle"] = PlayerConfig.Get("UBot.Party.Matching.Title", "For opening hunting on the silkroad!");
-        config["matchingAutoReform"] = PlayerConfig.Get("UBot.Party.Matching.AutoReform", false);
-        config["matchingAutoAccept"] = PlayerConfig.Get("UBot.Party.Matching.AutoAccept", true);
-        config["matchingLevelFrom"] = (int)PlayerConfig.Get<byte>("UBot.Party.Matching.LevelFrom", 1);
-        config["matchingLevelTo"] = (int)PlayerConfig.Get<byte>("UBot.Party.Matching.LevelTo", 140);
-        config["autoJoinByName"] = PlayerConfig.Get("UBot.Party.AutoJoin.ByName", false);
-        config["autoJoinByTitle"] = PlayerConfig.Get("UBot.Party.AutoJoin.ByTitle", false);
-        config["autoJoinByNameText"] = PlayerConfig.Get("UBot.Party.AutoJoin.Name", string.Empty);
-        config["autoJoinByTitleText"] = PlayerConfig.Get("UBot.Party.AutoJoin.Title", string.Empty);
+        config["matchingPurpose"] = (int)UBot.Core.RuntimeAccess.Player.Get<byte>("UBot.Party.Matching.Purpose", 0);
+        config["matchingTitle"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.Matching.Title", "For opening hunting on the silkroad!");
+        config["matchingAutoReform"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.Matching.AutoReform", false);
+        config["matchingAutoAccept"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.Matching.AutoAccept", true);
+        config["matchingLevelFrom"] = (int)UBot.Core.RuntimeAccess.Player.Get<byte>("UBot.Party.Matching.LevelFrom", 1);
+        config["matchingLevelTo"] = (int)UBot.Core.RuntimeAccess.Player.Get<byte>("UBot.Party.Matching.LevelTo", 140);
+        config["autoJoinByName"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.AutoJoin.ByName", false);
+        config["autoJoinByTitle"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.AutoJoin.ByTitle", false);
+        config["autoJoinByNameText"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.AutoJoin.Name", string.Empty);
+        config["autoJoinByTitleText"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.AutoJoin.Title", string.Empty);
 
-        config["buffHideLowLevelSkills"] = PlayerConfig.Get("UBot.Party.Buff.HideLowLevelSkills", false);
-        config["buffGroups"] = PlayerConfig.GetArray<string>("UBot.Party.Buff.Groups")
+        config["buffHideLowLevelSkills"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.Buff.HideLowLevelSkills", false);
+        config["buffGroups"] = UBot.Core.RuntimeAccess.Player.GetArray<string>("UBot.Party.Buff.Groups")
             .Where(value => !string.IsNullOrWhiteSpace(value))
             .Select(value => value.Trim())
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .Cast<object?>()
             .ToList();
-        config["buffSkillIds"] = PlayerConfig.GetArray<uint>("UBot.Party.Buff.SkillIds")
+        config["buffSkillIds"] = UBot.Core.RuntimeAccess.Player.GetArray<uint>("UBot.Party.Buff.SkillIds")
             .Distinct()
             .Cast<object?>()
             .ToList();
-        config["buffAssignments"] = PlayerConfig.GetArray<string>("UBot.Party.Buff.Assignments")
+        config["buffAssignments"] = UBot.Core.RuntimeAccess.Player.GetArray<string>("UBot.Party.Buff.Assignments")
             .Where(value => !string.IsNullOrWhiteSpace(value))
             .Select(value => value.Trim())
             .Cast<object?>()
@@ -214,33 +214,33 @@ internal sealed class UbotPartyPluginService : UbotServiceBase
 
     private static PartySettings GetPartySettingsSnapshot()
     {
-        if (Game.Party?.Settings != null)
-            return Game.Party.Settings;
+        if (UBot.Core.RuntimeAccess.Session.Party?.Settings != null)
+            return UBot.Core.RuntimeAccess.Session.Party.Settings;
 
         return new PartySettings
         {
-            ExperienceAutoShare = PlayerConfig.Get("UBot.Party.EXPAutoShare", true),
-            ItemAutoShare = PlayerConfig.Get("UBot.Party.ItemAutoShare", true),
-            AllowInvitation = PlayerConfig.Get("UBot.Party.AllowInvitations", true)
+            ExperienceAutoShare = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.EXPAutoShare", true),
+            ItemAutoShare = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.ItemAutoShare", true),
+            AllowInvitation = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.AllowInvitations", true)
         };
     }
 
     internal static void ApplyLivePartySettingsFromConfig()
     {
-        if (Game.Party == null)
+        if (UBot.Core.RuntimeAccess.Session.Party == null)
             return;
 
-        var expAutoShare = PlayerConfig.Get("UBot.Party.EXPAutoShare", true);
-        var itemAutoShare = PlayerConfig.Get("UBot.Party.ItemAutoShare", true);
-        var allowInvitations = PlayerConfig.Get("UBot.Party.AllowInvitations", true);
+        var expAutoShare = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.EXPAutoShare", true);
+        var itemAutoShare = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.ItemAutoShare", true);
+        var allowInvitations = UBot.Core.RuntimeAccess.Player.Get("UBot.Party.AllowInvitations", true);
 
-        if (Game.Party.Settings == null)
-            Game.Party.Settings = new PartySettings(expAutoShare, itemAutoShare, allowInvitations);
+        if (UBot.Core.RuntimeAccess.Session.Party.Settings == null)
+            UBot.Core.RuntimeAccess.Session.Party.Settings = new PartySettings(expAutoShare, itemAutoShare, allowInvitations);
         else
         {
-            Game.Party.Settings.ExperienceAutoShare = expAutoShare;
-            Game.Party.Settings.ItemAutoShare = itemAutoShare;
-            Game.Party.Settings.AllowInvitation = allowInvitations;
+            UBot.Core.RuntimeAccess.Session.Party.Settings.ExperienceAutoShare = expAutoShare;
+            UBot.Core.RuntimeAccess.Session.Party.Settings.ItemAutoShare = itemAutoShare;
+            UBot.Core.RuntimeAccess.Session.Party.Settings.AllowInvitation = allowInvitations;
         }
     }
 
@@ -288,19 +288,19 @@ internal sealed class UbotPartyPluginService : UbotServiceBase
 
         if (TryGetIntValue(patch, "matchingPurpose", out var matchingPurpose))
         {
-            PlayerConfig.Set("UBot.Party.Matching.Purpose", (byte)Math.Clamp(matchingPurpose, 0, 3));
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Party.Matching.Purpose", (byte)Math.Clamp(matchingPurpose, 0, 3));
             changed = true;
         }
 
         if (TryGetIntValue(patch, "matchingLevelFrom", out var levelFrom))
         {
-            PlayerConfig.Set("UBot.Party.Matching.LevelFrom", (byte)Math.Clamp(levelFrom, 1, 140));
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Party.Matching.LevelFrom", (byte)Math.Clamp(levelFrom, 1, 140));
             changed = true;
         }
 
         if (TryGetIntValue(patch, "matchingLevelTo", out var levelTo))
         {
-            PlayerConfig.Set("UBot.Party.Matching.LevelTo", (byte)Math.Clamp(levelTo, 1, 140));
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Party.Matching.LevelTo", (byte)Math.Clamp(levelTo, 1, 140));
             changed = true;
         }
 
@@ -311,7 +311,7 @@ internal sealed class UbotPartyPluginService : UbotServiceBase
                 .Select(value => value.Trim())
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToArray();
-            PlayerConfig.SetArray("UBot.Party.AutoPartyList", normalized);
+            UBot.Core.RuntimeAccess.Player.SetArray("UBot.Party.AutoPartyList", normalized);
             changed = true;
         }
 
@@ -322,7 +322,7 @@ internal sealed class UbotPartyPluginService : UbotServiceBase
                 .Select(value => value.Trim())
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToArray();
-            PlayerConfig.SetArray("UBot.Party.Commands.PlayersList", normalized);
+            UBot.Core.RuntimeAccess.Player.SetArray("UBot.Party.Commands.PlayersList", normalized);
             changed = true;
         }
 
@@ -333,20 +333,20 @@ internal sealed class UbotPartyPluginService : UbotServiceBase
                 .Select(value => value.Trim())
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToArray();
-            PlayerConfig.SetArray("UBot.Party.Buff.Groups", normalized);
+            UBot.Core.RuntimeAccess.Player.SetArray("UBot.Party.Buff.Groups", normalized);
             changed = true;
         }
 
         if (TryGetUIntListValue(patch, "buffSkillIds", out var buffSkillIds))
         {
-            PlayerConfig.SetArray("UBot.Party.Buff.SkillIds", buffSkillIds.Distinct().ToArray());
+            UBot.Core.RuntimeAccess.Player.SetArray("UBot.Party.Buff.SkillIds", buffSkillIds.Distinct().ToArray());
             changed = true;
         }
 
         if (TryGetStringListValue(patch, "buffAssignments", out var buffAssignments))
         {
             var normalizedAssignments = ParsePartyBuffAssignments(buffAssignments);
-            PlayerConfig.SetArray("UBot.Party.Buff.Assignments", SerializePartyBuffAssignments(normalizedAssignments).ToArray());
+            UBot.Core.RuntimeAccess.Player.SetArray("UBot.Party.Buff.Assignments", SerializePartyBuffAssignments(normalizedAssignments).ToArray());
             changed = true;
         }
 
@@ -376,7 +376,7 @@ internal sealed class UbotPartyPluginService : UbotServiceBase
         {
             ApplyLivePartySettingsFromConfig();
             RefreshPartyPluginRuntime();
-            EventManager.FireEvent("OnSavePlayerConfig");
+            UBot.Core.RuntimeAccess.Events.FireEvent("OnSavePlayerConfig");
         }
 
         return changed;
@@ -386,7 +386,7 @@ internal sealed class UbotPartyPluginService : UbotServiceBase
     {
         var settings = GetPartySettingsSnapshot();
         var members = new List<Dictionary<string, object?>>();
-        var party = Game.Party;
+        var party = UBot.Core.RuntimeAccess.Session.Party;
 
         if (party?.Members != null)
         {
@@ -414,8 +414,8 @@ internal sealed class UbotPartyPluginService : UbotServiceBase
             }
         }
 
-        var buffCatalog = BuildPartyBuffCatalog(PlayerConfig.Get("UBot.Party.Buff.HideLowLevelSkills", false));
-        var assignments = ParsePartyBuffAssignments(PlayerConfig.GetArray<string>("UBot.Party.Buff.Assignments"));
+        var buffCatalog = BuildPartyBuffCatalog(UBot.Core.RuntimeAccess.Player.Get("UBot.Party.Buff.HideLowLevelSkills", false));
+        var assignments = ParsePartyBuffAssignments(UBot.Core.RuntimeAccess.Player.GetArray<string>("UBot.Party.Buff.Assignments"));
         var memberBuffs = assignments
             .Select(assignment => new Dictionary<string, object?>
             {
@@ -450,7 +450,7 @@ internal sealed class UbotPartyPluginService : UbotServiceBase
     private static List<SkillInfo> CollectKnownAndAbilitySkills()
     {
         var result = new Dictionary<uint, SkillInfo>();
-        var knownSkills = Game.Player?.Skills?.KnownSkills;
+        var knownSkills = UBot.Core.RuntimeAccess.Session.Player?.Skills?.KnownSkills;
         if (knownSkills != null)
         {
             foreach (var known in knownSkills)
@@ -462,7 +462,7 @@ internal sealed class UbotPartyPluginService : UbotServiceBase
             }
         }
 
-        if (Game.Player != null && Game.Player.TryGetAbilitySkills(out var abilitySkills))
+        if (UBot.Core.RuntimeAccess.Session.Player != null && UBot.Core.RuntimeAccess.Session.Player.TryGetAbilitySkills(out var abilitySkills))
         {
             foreach (var ability in abilitySkills)
             {

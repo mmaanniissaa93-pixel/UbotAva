@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using UBot.Core.Components;
@@ -18,7 +18,7 @@ public static class GlobalConfig
     /// </summary>
     public static void Load()
     {
-        var path = Path.Combine(Kernel.BasePath, "User", ProfileManager.SelectedProfile + ".rs");
+        var path = Path.Combine(UBot.Core.RuntimeAccess.Core.BasePath, "User", ProfileManager.SelectedProfile + ".rs");
 
         _config = new Config(path);
 
@@ -126,6 +126,6 @@ public static class GlobalConfig
             return;
 
         _config.Save();
-        EventManager.FireEvent("OnSaveGlobalConfig");
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnSaveGlobalConfig");
     }
 }

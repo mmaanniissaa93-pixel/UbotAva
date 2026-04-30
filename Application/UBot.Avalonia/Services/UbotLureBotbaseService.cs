@@ -41,13 +41,13 @@ internal sealed class UbotLureBotbaseService : UbotServiceBase
 {
     private static Dictionary<string, object?> BuildLureBotbaseConfig()
     {
-        var region = PlayerConfig.Get<ushort>("UBot.Lure.Area.Region");
-        var x = PlayerConfig.Get("UBot.Lure.Area.X", 0f);
-        var y = PlayerConfig.Get("UBot.Lure.Area.Y", 0f);
-        var z = PlayerConfig.Get("UBot.Lure.Area.Z", 0f);
-        var selectedMonsterType = PlayerConfig.GetEnum("UBot.Lure.SelectedMonsterType", MonsterRarity.General);
-        var useScript = PlayerConfig.Get("UBot.Lure.UseScript", false);
-        var stayAtCenter = PlayerConfig.Get("UBot.Lure.StayAtCenter", false);
+        var region = UBot.Core.RuntimeAccess.Player.Get<ushort>("UBot.Lure.Area.Region");
+        var x = UBot.Core.RuntimeAccess.Player.Get("UBot.Lure.Area.X", 0f);
+        var y = UBot.Core.RuntimeAccess.Player.Get("UBot.Lure.Area.Y", 0f);
+        var z = UBot.Core.RuntimeAccess.Player.Get("UBot.Lure.Area.Z", 0f);
+        var selectedMonsterType = UBot.Core.RuntimeAccess.Player.GetEnum("UBot.Lure.SelectedMonsterType", MonsterRarity.General);
+        var useScript = UBot.Core.RuntimeAccess.Player.Get("UBot.Lure.UseScript", false);
+        var stayAtCenter = UBot.Core.RuntimeAccess.Player.Get("UBot.Lure.StayAtCenter", false);
 
         var lureMode = useScript
             ? "useScript"
@@ -57,31 +57,31 @@ internal sealed class UbotLureBotbaseService : UbotServiceBase
 
         return new Dictionary<string, object?>
         {
-            ["lureLocationScript"] = PlayerConfig.Get("UBot.Lure.Walkback.File", string.Empty),
+            ["lureLocationScript"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Lure.Walkback.File", string.Empty),
             ["lureCenterRegion"] = (int)region,
             ["lureCenterXSector"] = (int)((CoreRegion)region).X,
             ["lureCenterYSector"] = (int)((CoreRegion)region).Y,
             ["lureCenterX"] = Math.Round(x, 2),
             ["lureCenterY"] = Math.Round(y, 2),
             ["lureCenterZ"] = Math.Round(z, 2),
-            ["lureRadius"] = Math.Clamp(PlayerConfig.Get("UBot.Lure.Area.Radius", 20), 1, 200),
+            ["lureRadius"] = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Lure.Area.Radius", 20), 1, 200),
             ["lureMode"] = lureMode,
-            ["lureScriptPath"] = PlayerConfig.Get("UBot.Lure.SelectedScriptPath", string.Empty),
-            ["lureStayAtCenterForEnabled"] = PlayerConfig.Get("UBot.Lure.StayAtCenterFor", false),
-            ["lureStayAtCenterSeconds"] = Math.Clamp(PlayerConfig.Get("UBot.Lure.StayAtCenterForSeconds", 10), 0, 3600),
-            ["lureCastHowlingShout"] = PlayerConfig.Get("UBot.Lure.UseHowlingShout", false),
-            ["lureDontCastNearCenter"] = PlayerConfig.Get("UBot.Lure.NoHowlingAtCenter", true),
-            ["lureUseNormalAttackSwitch"] = PlayerConfig.Get("UBot.Lure.UseNormalAttack", false),
-            ["lureUseAttackSkillSwitch"] = PlayerConfig.Get("UBot.Lure.UseAttackingSkills", false),
-            ["lureStopOnDeadPartyMembersEnabled"] = PlayerConfig.Get("UBot.Lure.StopIfNumPartyMemberDead", false),
-            ["lureStopDeadPartyMembers"] = Math.Clamp(PlayerConfig.Get("UBot.Lure.NumPartyMemberDead", 0), 0, 8),
-            ["lureStopOnPartyMembersEnabled"] = PlayerConfig.Get("UBot.Lure.StopIfNumPartyMember", false),
-            ["lureStopPartyMembersLe"] = Math.Clamp(PlayerConfig.Get("UBot.Lure.NumPartyMember", 0), 0, 8),
-            ["lureStopOnPartyMembersOnSpotEnabled"] = PlayerConfig.Get("UBot.Lure.StopIfNumPartyMembersOnSpot", false),
-            ["lureStopPartyMembersOnSpotLe"] = Math.Clamp(PlayerConfig.Get("UBot.Lure.NumPartyMembersOnSpot", 0), 0, 8),
-            ["lureStopOnMonsterTypeEnabled"] = PlayerConfig.Get("UBot.Lure.StopIfNumMonsterType", false),
+            ["lureScriptPath"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Lure.SelectedScriptPath", string.Empty),
+            ["lureStayAtCenterForEnabled"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Lure.StayAtCenterFor", false),
+            ["lureStayAtCenterSeconds"] = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Lure.StayAtCenterForSeconds", 10), 0, 3600),
+            ["lureCastHowlingShout"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Lure.UseHowlingShout", false),
+            ["lureDontCastNearCenter"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Lure.NoHowlingAtCenter", true),
+            ["lureUseNormalAttackSwitch"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Lure.UseNormalAttack", false),
+            ["lureUseAttackSkillSwitch"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Lure.UseAttackingSkills", false),
+            ["lureStopOnDeadPartyMembersEnabled"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Lure.StopIfNumPartyMemberDead", false),
+            ["lureStopDeadPartyMembers"] = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Lure.NumPartyMemberDead", 0), 0, 8),
+            ["lureStopOnPartyMembersEnabled"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Lure.StopIfNumPartyMember", false),
+            ["lureStopPartyMembersLe"] = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Lure.NumPartyMember", 0), 0, 8),
+            ["lureStopOnPartyMembersOnSpotEnabled"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Lure.StopIfNumPartyMembersOnSpot", false),
+            ["lureStopPartyMembersOnSpotLe"] = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Lure.NumPartyMembersOnSpot", 0), 0, 8),
+            ["lureStopOnMonsterTypeEnabled"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Lure.StopIfNumMonsterType", false),
             ["lureMonsterType"] = FormatMonsterTypeToken(selectedMonsterType),
-            ["lureStopMonsterCount"] = Math.Clamp(PlayerConfig.Get("UBot.Lure.NumMonsterType", 1), 0, 50)
+            ["lureStopMonsterCount"] = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Lure.NumMonsterType", 1), 0, 50)
         };
     }
 
@@ -117,15 +117,15 @@ internal sealed class UbotLureBotbaseService : UbotServiceBase
             var stayAtCenter = mode == "stayatcenter";
             var useScript = mode == "usescript";
 
-            PlayerConfig.Set("UBot.Lure.WalkRandomly", walkRandomly);
-            PlayerConfig.Set("UBot.Lure.StayAtCenter", stayAtCenter);
-            PlayerConfig.Set("UBot.Lure.UseScript", useScript);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Lure.WalkRandomly", walkRandomly);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Lure.StayAtCenter", stayAtCenter);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Lure.UseScript", useScript);
             changed = true;
         }
 
         if (patch.TryGetValue("lureMonsterType", out var lureMonsterTypeRaw) && lureMonsterTypeRaw != null)
         {
-            var current = PlayerConfig.GetEnum("UBot.Lure.SelectedMonsterType", MonsterRarity.General);
+            var current = UBot.Core.RuntimeAccess.Player.GetEnum("UBot.Lure.SelectedMonsterType", MonsterRarity.General);
             var next = current;
 
             if (lureMonsterTypeRaw is string token)
@@ -133,12 +133,12 @@ internal sealed class UbotLureBotbaseService : UbotServiceBase
             else if (TryConvertInt(lureMonsterTypeRaw, out var numericMonsterType))
                 next = (MonsterRarity)Math.Clamp(numericMonsterType, byte.MinValue, byte.MaxValue);
 
-            PlayerConfig.Set("UBot.Lure.SelectedMonsterType", (byte)next);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Lure.SelectedMonsterType", (byte)next);
             changed = true;
         }
 
         if (changed)
-            EventManager.FireEvent("OnSavePlayerConfig");
+            UBot.Core.RuntimeAccess.Events.FireEvent("OnSavePlayerConfig");
 
         return changed;
     }
@@ -185,18 +185,18 @@ internal sealed class UbotLureBotbaseService : UbotServiceBase
     {
         var area = botbase?.Area;
         var areaPosition = area?.Position ?? default;
-        var playerPosition = Game.Player?.Position ?? default;
+        var playerPosition = UBot.Core.RuntimeAccess.Session.Player?.Position ?? default;
 
         return new Dictionary<string, object?>
         {
-            ["selected"] = Kernel.Bot?.Botbase?.Name == botbase?.Name,
+            ["selected"] = UBot.Core.RuntimeAccess.Core.Bot?.Botbase?.Name == botbase?.Name,
             ["centerRegion"] = (int)areaPosition.Region.Id,
             ["centerXSector"] = (int)areaPosition.Region.X,
             ["centerYSector"] = (int)areaPosition.Region.Y,
             ["centerX"] = Math.Round(areaPosition.XOffset, 2),
             ["centerY"] = Math.Round(areaPosition.YOffset, 2),
             ["centerZ"] = Math.Round(areaPosition.ZOffset, 2),
-            ["radius"] = area?.Radius ?? Math.Clamp(PlayerConfig.Get("UBot.Lure.Area.Radius", 20), 1, 200),
+            ["radius"] = area?.Radius ?? Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Lure.Area.Radius", 20), 1, 200),
             ["currentPosition"] = new Dictionary<string, object?>
             {
                 ["region"] = (int)playerPosition.Region.Id,

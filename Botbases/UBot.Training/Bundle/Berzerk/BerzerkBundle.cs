@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Objects.Spawn;
 
@@ -20,12 +20,12 @@ internal class BerzerkBundle : IBundle
     /// <exception cref="System.NotImplementedException"></exception>
     public void Invoke()
     {
-        if (!Game.Player.CanEnterBerzerk || Game.Player.HasActiveVehicle)
+        if (!UBot.Core.RuntimeAccess.Session.Player.CanEnterBerzerk || UBot.Core.RuntimeAccess.Session.Player.HasActiveVehicle)
             return;
 
         if (Config.WhenFull)
         {
-            Game.Player.EnterBerzerkMode();
+            UBot.Core.RuntimeAccess.Session.Player.EnterBerzerkMode();
 
             return;
         }
@@ -35,16 +35,16 @@ internal class BerzerkBundle : IBundle
             var mobAmount = SpawnManager.Count<SpawnedMonster>(m => m.AttackingPlayer && m.DistanceToPlayer < 20);
             if (mobAmount >= Config.SurroundingMonsterAmount)
             {
-                Game.Player.EnterBerzerkMode();
+                UBot.Core.RuntimeAccess.Session.Player.EnterBerzerkMode();
                 return;
             }
         }
 
         if (Config.WhenTargetSpecificRartiyMonster)
         {
-            if (Game.SelectedEntity is SpawnedMonster e && Bundles.Avoidance.UseBerserkOnMonster(e.Rarity))
+            if (UBot.Core.RuntimeAccess.Session.SelectedEntity is SpawnedMonster e && Bundles.Avoidance.UseBerserkOnMonster(e.Rarity))
             {
-                Game.Player.EnterBerzerkMode();
+                UBot.Core.RuntimeAccess.Session.Player.EnterBerzerkMode();
                 return;
             }
         }
@@ -52,11 +52,11 @@ internal class BerzerkBundle : IBundle
         if (!Config.BeeingAttackedByAwareMonster)
             return;
 
-        if (Game.SelectedEntity is not SpawnedMonster entity)
+        if (UBot.Core.RuntimeAccess.Session.SelectedEntity is not SpawnedMonster entity)
             return;
 
         if (Bundles.Avoidance.AvoidMonster(entity.Rarity))
-            Game.Player.EnterBerzerkMode();
+            UBot.Core.RuntimeAccess.Session.Player.EnterBerzerkMode();
     }
 
     /// <summary>
@@ -66,11 +66,11 @@ internal class BerzerkBundle : IBundle
     {
         Config = new BerzerkConfig
         {
-            WhenFull = PlayerConfig.Get<bool>("UBot.Training.checkBerzerkWhenFull"),
-            BeeingAttackedByAwareMonster = PlayerConfig.Get<bool>("UBot.Training.checkBerzerkAvoidance"),
-            SurroundedByMonsters = PlayerConfig.Get<bool>("UBot.Training.checkBerzerkMonsterAmount"),
-            SurroundingMonsterAmount = PlayerConfig.Get<byte>("UBot.Training.numBerzerkMonsterAmount", 5),
-            WhenTargetSpecificRartiyMonster = PlayerConfig.Get<bool>("UBot.Training.checkBerserkOnMonsterRarity"),
+            WhenFull = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Training.checkBerzerkWhenFull"),
+            BeeingAttackedByAwareMonster = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Training.checkBerzerkAvoidance"),
+            SurroundedByMonsters = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Training.checkBerzerkMonsterAmount"),
+            SurroundingMonsterAmount = UBot.Core.RuntimeAccess.Player.Get<byte>("UBot.Training.numBerzerkMonsterAmount", 5),
+            WhenTargetSpecificRartiyMonster = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Training.checkBerserkOnMonsterRarity"),
         };
     }
 

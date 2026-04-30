@@ -18,7 +18,7 @@ public class ExchangeUpdateItemsResponse : IPacketHandler
     {
         CoreGame.Player.Exchange?.UpdateItems(packet, CoreGame.Player.UniqueId);
 
-        EventManager.FireEvent("OnUpdateExchangeItems");
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnUpdateExchangeItems");
     }
 }
 

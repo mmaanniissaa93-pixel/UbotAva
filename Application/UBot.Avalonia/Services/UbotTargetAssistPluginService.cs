@@ -41,7 +41,7 @@ internal sealed class UbotTargetAssistPluginService : UbotServiceBase
 {
     private static Dictionary<string, object?> BuildTargetAssistPluginConfig()
     {
-        var roleModeRaw = PlayerConfig.Get("UBot.TargetAssist.RoleMode", "Civil");
+        var roleModeRaw = UBot.Core.RuntimeAccess.Player.Get("UBot.TargetAssist.RoleMode", "Civil");
         var roleMode = roleModeRaw.Equals("Thief", StringComparison.OrdinalIgnoreCase)
             ? "thief"
             : roleModeRaw.Equals("HunterTrader", StringComparison.OrdinalIgnoreCase)
@@ -50,16 +50,16 @@ internal sealed class UbotTargetAssistPluginService : UbotServiceBase
 
         return new Dictionary<string, object?>
         {
-            ["enabled"] = PlayerConfig.Get("UBot.TargetAssist.Enabled", false),
-            ["maxRange"] = Math.Clamp(PlayerConfig.Get("UBot.TargetAssist.MaxRange", 40f), 5f, 400f),
-            ["includeDeadTargets"] = PlayerConfig.Get("UBot.TargetAssist.IncludeDeadTargets", false),
-            ["ignoreSnowShieldTargets"] = PlayerConfig.Get("UBot.TargetAssist.IgnoreSnowShieldTargets", true),
-            ["ignoreBloodyStormTargets"] = PlayerConfig.Get("UBot.TargetAssist.IgnoreBloodyStormTargets", false),
-            ["ignoredGuilds"] = PlayerConfig.GetArray<string>("UBot.TargetAssist.IgnoredGuilds", '|').Cast<object?>().ToList(),
-            ["customPlayers"] = PlayerConfig.GetArray<string>("UBot.TargetAssist.CustomPlayers", '|').Cast<object?>().ToList(),
-            ["onlyCustomPlayers"] = PlayerConfig.Get("UBot.TargetAssist.OnlyCustomPlayers", false),
+            ["enabled"] = UBot.Core.RuntimeAccess.Player.Get("UBot.TargetAssist.Enabled", false),
+            ["maxRange"] = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.TargetAssist.MaxRange", 40f), 5f, 400f),
+            ["includeDeadTargets"] = UBot.Core.RuntimeAccess.Player.Get("UBot.TargetAssist.IncludeDeadTargets", false),
+            ["ignoreSnowShieldTargets"] = UBot.Core.RuntimeAccess.Player.Get("UBot.TargetAssist.IgnoreSnowShieldTargets", true),
+            ["ignoreBloodyStormTargets"] = UBot.Core.RuntimeAccess.Player.Get("UBot.TargetAssist.IgnoreBloodyStormTargets", false),
+            ["ignoredGuilds"] = UBot.Core.RuntimeAccess.Player.GetArray<string>("UBot.TargetAssist.IgnoredGuilds", '|').Cast<object?>().ToList(),
+            ["customPlayers"] = UBot.Core.RuntimeAccess.Player.GetArray<string>("UBot.TargetAssist.CustomPlayers", '|').Cast<object?>().ToList(),
+            ["onlyCustomPlayers"] = UBot.Core.RuntimeAccess.Player.Get("UBot.TargetAssist.OnlyCustomPlayers", false),
             ["roleMode"] = roleMode,
-            ["targetCycleKey"] = PlayerConfig.Get("UBot.TargetAssist.TargetCycleKey", "Oem3")
+            ["targetCycleKey"] = UBot.Core.RuntimeAccess.Player.Get("UBot.TargetAssist.TargetCycleKey", "Oem3")
         };
     }
 
@@ -75,13 +75,13 @@ internal sealed class UbotTargetAssistPluginService : UbotServiceBase
 
         if (TryGetDoubleValue(patch, "maxRange", out var maxRange))
         {
-            PlayerConfig.Set("UBot.TargetAssist.MaxRange", (float)Math.Clamp(maxRange, 5d, 400d));
+            UBot.Core.RuntimeAccess.Player.Set("UBot.TargetAssist.MaxRange", (float)Math.Clamp(maxRange, 5d, 400d));
             changed = true;
         }
 
         if (TryGetStringListValue(patch, "ignoredGuilds", out var ignoredGuilds))
         {
-            PlayerConfig.SetArray(
+            UBot.Core.RuntimeAccess.Player.SetArray(
                 "UBot.TargetAssist.IgnoredGuilds",
                 ignoredGuilds.Select(value => value.Trim())
                     .Where(value => !string.IsNullOrWhiteSpace(value))
@@ -92,7 +92,7 @@ internal sealed class UbotTargetAssistPluginService : UbotServiceBase
 
         if (TryGetStringListValue(patch, "customPlayers", out var customPlayers))
         {
-            PlayerConfig.SetArray(
+            UBot.Core.RuntimeAccess.Player.SetArray(
                 "UBot.TargetAssist.CustomPlayers",
                 customPlayers.Select(value => value.Trim())
                     .Where(value => !string.IsNullOrWhiteSpace(value))
@@ -111,12 +111,12 @@ internal sealed class UbotTargetAssistPluginService : UbotServiceBase
                 "hunter-trader" => "HunterTrader",
                 _ => "Civil"
             };
-            PlayerConfig.Set("UBot.TargetAssist.RoleMode", roleMode);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.TargetAssist.RoleMode", roleMode);
             changed = true;
         }
 
         if (changed)
-            EventManager.FireEvent("OnSavePlayerConfig");
+            UBot.Core.RuntimeAccess.Events.FireEvent("OnSavePlayerConfig");
 
         return changed;
     }
@@ -126,28 +126,28 @@ internal sealed class UbotTargetAssistPluginService : UbotServiceBase
         const int effectTransferParam = 1701213281;
         var bloodyStormCodeTokens = new[] { "FANSTORM", "FAN_STORM" };
 
-        var enabled = PlayerConfig.Get("UBot.TargetAssist.Enabled", false);
-        var maxRange = Math.Clamp(PlayerConfig.Get("UBot.TargetAssist.MaxRange", 40f), 5f, 400f);
-        var includeDeadTargets = PlayerConfig.Get("UBot.TargetAssist.IncludeDeadTargets", false);
-        var ignoreSnowShieldTargets = PlayerConfig.Get("UBot.TargetAssist.IgnoreSnowShieldTargets", true);
-        var ignoreBloodyStormTargets = PlayerConfig.Get("UBot.TargetAssist.IgnoreBloodyStormTargets", false);
-        var onlyCustomPlayers = PlayerConfig.Get("UBot.TargetAssist.OnlyCustomPlayers", false);
+        var enabled = UBot.Core.RuntimeAccess.Player.Get("UBot.TargetAssist.Enabled", false);
+        var maxRange = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.TargetAssist.MaxRange", 40f), 5f, 400f);
+        var includeDeadTargets = UBot.Core.RuntimeAccess.Player.Get("UBot.TargetAssist.IncludeDeadTargets", false);
+        var ignoreSnowShieldTargets = UBot.Core.RuntimeAccess.Player.Get("UBot.TargetAssist.IgnoreSnowShieldTargets", true);
+        var ignoreBloodyStormTargets = UBot.Core.RuntimeAccess.Player.Get("UBot.TargetAssist.IgnoreBloodyStormTargets", false);
+        var onlyCustomPlayers = UBot.Core.RuntimeAccess.Player.Get("UBot.TargetAssist.OnlyCustomPlayers", false);
 
-        var roleModeRaw = PlayerConfig.Get("UBot.TargetAssist.RoleMode", "Civil");
+        var roleModeRaw = UBot.Core.RuntimeAccess.Player.Get("UBot.TargetAssist.RoleMode", "Civil");
         var roleMode = roleModeRaw.Equals("Thief", StringComparison.OrdinalIgnoreCase)
             ? "thief"
             : roleModeRaw.Equals("HunterTrader", StringComparison.OrdinalIgnoreCase)
                 ? "hunterTrader"
                 : "civil";
 
-        var ignoredGuilds = PlayerConfig.GetArray<string>("UBot.TargetAssist.IgnoredGuilds", '|')
+        var ignoredGuilds = UBot.Core.RuntimeAccess.Player.GetArray<string>("UBot.TargetAssist.IgnoredGuilds", '|')
             .Where(value => !string.IsNullOrWhiteSpace(value))
             .Select(value => value.Trim())
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
         var ignoredGuildSet = new HashSet<string>(ignoredGuilds, StringComparer.OrdinalIgnoreCase);
 
-        var customPlayers = PlayerConfig.GetArray<string>("UBot.TargetAssist.CustomPlayers", '|')
+        var customPlayers = UBot.Core.RuntimeAccess.Player.GetArray<string>("UBot.TargetAssist.CustomPlayers", '|')
             .Where(value => !string.IsNullOrWhiteSpace(value))
             .Select(value => value.Trim())
             .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -159,13 +159,13 @@ internal sealed class UbotTargetAssistPluginService : UbotServiceBase
         var nearestTargetDistance = -1d;
 
         if (enabled
-            && Game.Ready
-            && Game.Player != null
-            && Game.Player.State.LifeState == LifeState.Alive
+            && UBot.Core.RuntimeAccess.Session.Ready
+            && UBot.Core.RuntimeAccess.Session.Player != null
+            && UBot.Core.RuntimeAccess.Session.Player.State.LifeState == LifeState.Alive
             && SpawnManager.TryGetEntities<SpawnedPlayer>(out var players))
         {
             var candidates = players
-                .Where(player => player != null && player.UniqueId != Game.Player.UniqueId)
+                .Where(player => player != null && player.UniqueId != UBot.Core.RuntimeAccess.Session.Player.UniqueId)
                 .Where(player => !string.IsNullOrWhiteSpace(player.Name))
                 .Where(player => includeDeadTargets || player.State.LifeState == LifeState.Alive)
                 .Where(player => player.DistanceToPlayer <= maxRange)
@@ -194,7 +194,7 @@ internal sealed class UbotTargetAssistPluginService : UbotServiceBase
             ["ignoreBloodyStormTargets"] = ignoreBloodyStormTargets,
             ["onlyCustomPlayers"] = onlyCustomPlayers,
             ["roleMode"] = roleMode,
-            ["targetCycleKey"] = PlayerConfig.Get("UBot.TargetAssist.TargetCycleKey", "Oem3"),
+            ["targetCycleKey"] = UBot.Core.RuntimeAccess.Player.Get("UBot.TargetAssist.TargetCycleKey", "Oem3"),
             ["ignoredGuilds"] = ignoredGuilds.Cast<object?>().ToList(),
             ["customPlayers"] = customPlayers.Cast<object?>().ToList(),
             ["candidateCount"] = candidateCount,

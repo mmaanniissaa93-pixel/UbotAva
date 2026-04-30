@@ -52,7 +52,7 @@ internal class CharacterListing : IPacketHandler
 
             var name = packet.ReadString();
 
-            if (Game.ClientType >= GameClientType.Chinese && Game.ClientType != GameClientType.Rigid)
+            if (UBot.Core.RuntimeAccess.Session.ClientType >= GameClientType.Chinese && UBot.Core.RuntimeAccess.Session.ClientType != GameClientType.Rigid)
                 packet.ReadString(); // what is this?
 
             packet.ReadByte(); //Scale
@@ -62,13 +62,13 @@ internal class CharacterListing : IPacketHandler
             packet.ReadUShort(); //Intelligence
             packet.ReadUShort(); //Stat point(s)
 
-            if (Game.ClientType >= GameClientType.Chinese_Old)
+            if (UBot.Core.RuntimeAccess.Session.ClientType >= GameClientType.Chinese_Old)
                 packet.ReadInt(); // skill point
 
             packet.ReadInt(); //Health
             packet.ReadInt(); //Mana
 
-            if (Game.ClientType >= GameClientType.Chinese_Old)
+            if (UBot.Core.RuntimeAccess.Session.ClientType >= GameClientType.Chinese_Old)
                 packet.ReadUShort(); // Region
 
             //Check if the character is being deleted
@@ -76,7 +76,7 @@ internal class CharacterListing : IPacketHandler
             if (characterDeletionFlag)
                 packet.ReadInt(); //Time till deletion
 
-            if (Game.ClientType >= GameClientType.Chinese && Game.ClientType != GameClientType.Rigid)
+            if (UBot.Core.RuntimeAccess.Session.ClientType >= GameClientType.Chinese && UBot.Core.RuntimeAccess.Session.ClientType != GameClientType.Rigid)
                 packet.ReadUInt(); // last logged out timestamp
 
             packet.ReadByte(); //Has guild?
@@ -94,7 +94,7 @@ internal class CharacterListing : IPacketHandler
                 packet.ReadByte(); //Item plus value (enhancement)
             }
 
-            if (Game.ClientType >= GameClientType.Thailand)
+            if (UBot.Core.RuntimeAccess.Session.ClientType >= GameClientType.Thailand)
             {
                 //Read avatars
                 var avatarCount = packet.ReadByte();
@@ -111,14 +111,14 @@ internal class CharacterListing : IPacketHandler
             Log.NotifyLang("PlayerDetected", name, level);
         }
 
-        var username = GlobalConfig.Get<string>("UBot.General.AutoLoginAccountUsername");
+        var username = UBot.Core.RuntimeAccess.Global.Get<string>("UBot.General.AutoLoginAccountUsername");
         var selectedAccount = Accounts.SavedAccounts?.Find(p => p.Username == username);
         if (selectedAccount == null)
             return;
 
         selectedAccount.Characters = lobbyCharacters.Select(p => p.name).ToList();
 
-        EventManager.FireEvent("OnCharacterListReceived");
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnCharacterListReceived");
 
         if (
             !string.IsNullOrWhiteSpace(ProfileManager.SelectedCharacter)
@@ -138,17 +138,17 @@ internal class CharacterListing : IPacketHandler
                 return;
             }
 
-            if (!GlobalConfig.Get("UBot.General.CharacterAutoSelect", false))
+            if (!UBot.Core.RuntimeAccess.Global.Get("UBot.General.CharacterAutoSelect", false))
             {
                 Log.StatusLang("SelectYourCharacterManually");
                 return;
             }
 
-            if (GlobalConfig.Get<bool>("UBot.General.CharacterAutoSelectFirst"))
+            if (UBot.Core.RuntimeAccess.Global.Get<bool>("UBot.General.CharacterAutoSelectFirst"))
             {
                 selectedAccount.SelectedCharacter = lobbyCharacters.FirstOrDefault().name;
             }
-            else if (GlobalConfig.Get<bool>("UBot.General.CharacterAutoSelectHigher"))
+            else if (UBot.Core.RuntimeAccess.Global.Get<bool>("UBot.General.CharacterAutoSelectHigher"))
             {
                 selectedAccount.SelectedCharacter = lobbyCharacters.MaxBy(p => p.level).name;
             }

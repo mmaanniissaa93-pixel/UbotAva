@@ -243,7 +243,7 @@ public class InventoryOperationResponse : IPacketHandler
                 break;
         }
 
-        EventManager.FireEvent("OnInventoryUpdate");
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnInventoryUpdate");
     }
 
     /// <summary>
@@ -270,7 +270,7 @@ public class InventoryOperationResponse : IPacketHandler
             var goldAmount = packet.ReadUInt();
             CoreGame.Player.Gold += goldAmount;
 
-            EventManager.FireEvent("OnPickupGold", goldAmount);
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnPickupGold", goldAmount);
 
             Log.Notify($"Picked up [{goldAmount}] gold");
             return;
@@ -283,7 +283,7 @@ public class InventoryOperationResponse : IPacketHandler
         {
             itemAtSlot.Amount = item.Amount;
 
-            EventManager.FireEvent("OnUpdateInventoryItem", itemAtSlot.Slot);
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnUpdateInventoryItem", itemAtSlot.Slot);
             Log.Debug(
                 $"[Floor->Inventory] Merge item {itemAtSlot.Record.GetRealName()} (slot={destinationSlot}, amount={item.Amount})"
             );
@@ -299,7 +299,7 @@ public class InventoryOperationResponse : IPacketHandler
 
         Log.Notify($"Picked up item [{item.Record.GetRealName(true)}]");
 
-        EventManager.FireEvent("OnPickupItem", item);
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnPickupItem", item);
     }
 
     /// <summary>
@@ -358,7 +358,7 @@ public class InventoryOperationResponse : IPacketHandler
                 }
             );
 
-            EventManager.FireEvent("OnBuyItem", destinationSlots[0], entityUniqueId);
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnBuyItem", destinationSlots[0], entityUniqueId);
         }
         else
         {
@@ -376,7 +376,7 @@ public class InventoryOperationResponse : IPacketHandler
                     }
                 );
 
-                EventManager.FireEvent("OnBuyItem", slot, entityUniqueId);
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnBuyItem", slot, entityUniqueId);
             }
         }
     }
@@ -464,7 +464,7 @@ public class InventoryOperationResponse : IPacketHandler
 
         storage.Gold += userGold;
 
-        EventManager.FireEvent("OnStorageGoldUpdated");
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnStorageGoldUpdated");
     }
 
     /// <summary>
@@ -479,7 +479,7 @@ public class InventoryOperationResponse : IPacketHandler
         CoreGame.Player.Gold = userGold;
         storage.Gold -= gold;
 
-        EventManager.FireEvent("OnStorageGoldUpdated");
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnStorageGoldUpdated");
     }
 
     /// <summary>
@@ -749,7 +749,7 @@ public class InventoryOperationResponse : IPacketHandler
             else
                 itemAtSlot.Amount = item.Amount;
 
-            EventManager.FireEvent("OnPartyPickItem", item);
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnPartyPickItem", item);
         }
     }
 

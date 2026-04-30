@@ -42,38 +42,38 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
     private static Dictionary<string, object?> BuildSkillsPluginConfig()
     {
         var config = LoadPluginJsonConfig(SkillsPluginName);
-        config["enableAttacks"] = PlayerConfig.Get("UBot.Desktop.Skills.EnableAttacks", true);
-        config["enableBuffs"] = PlayerConfig.Get("UBot.Desktop.Skills.EnableBuffs", true);
+        config["enableAttacks"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Desktop.Skills.EnableAttacks", true);
+        config["enableBuffs"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Desktop.Skills.EnableBuffs", true);
         config["attackTypeIndex"] = Math.Clamp(
-            PlayerConfig.Get("UBot.Desktop.Skills.AttackTypeIndex", 0),
+            UBot.Core.RuntimeAccess.Player.Get("UBot.Desktop.Skills.AttackTypeIndex", 0),
             0,
             AttackRarityByIndex.Length - 1);
-        config["noAttack"] = PlayerConfig.Get("UBot.Skills.checkBoxNoAttack", false);
-        config["useSkillsInOrder"] = PlayerConfig.Get("UBot.Skills.checkUseSkillsInOrder", false);
-        config["useDefaultAttack"] = PlayerConfig.Get("UBot.Skills.checkUseDefaultAttack", true);
-        config["useTeleportSkill"] = PlayerConfig.Get("UBot.Skills.checkUseTeleportSkill", false);
-        config["castBuffsInTowns"] = PlayerConfig.Get("UBot.Skills.checkCastBuffsInTowns", false);
-        config["castBuffsDuringWalkBack"] = PlayerConfig.Get("UBot.Skills.checkCastBuffsDuringWalkBack", true);
-        config["castBuffsBetweenAttacks"] = PlayerConfig.Get("UBot.Skills.checkCastBuffsBetweenAttacks", false);
-        config["acceptResurrection"] = PlayerConfig.Get("UBot.Skills.checkAcceptResurrection", false);
-        config["resurrectParty"] = PlayerConfig.Get("UBot.Skills.checkResurrectParty", false);
-        config["resDelay"] = Math.Clamp(PlayerConfig.Get("UBot.Skills.numResDelay", 120), 1, 3600);
-        config["resRadius"] = Math.Clamp(PlayerConfig.Get("UBot.Skills.numResRadius", 100), 1, 500);
-        config["learnMastery"] = PlayerConfig.Get("UBot.Skills.checkLearnMastery", false);
-        config["learnMasteryBotStopped"] = PlayerConfig.Get("UBot.Skills.checkLearnMasteryBotStopped", false);
-        config["masteryGap"] = Math.Clamp(PlayerConfig.Get("UBot.Skills.numMasteryGap", 0), 0, 120);
-        config["warlockMode"] = PlayerConfig.Get("UBot.Skills.checkWarlockMode", false);
-        config["imbueSkillId"] = RedirectIdIfPossible(PlayerConfig.Get("UBot.Desktop.Skills.ImbueSkillId", 0U));
-        config["resurrectionSkillId"] = RedirectIdIfPossible(PlayerConfig.Get("UBot.Skills.ResurrectionSkill", 0U));
-        config["teleportSkillId"] = RedirectIdIfPossible(PlayerConfig.Get("UBot.Skills.TeleportSkill", 0U));
-        config["selectedMasteryId"] = PlayerConfig.Get("UBot.Skills.selectedMastery", 0U);
+        config["noAttack"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.checkBoxNoAttack", false);
+        config["useSkillsInOrder"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.checkUseSkillsInOrder", false);
+        config["useDefaultAttack"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.checkUseDefaultAttack", true);
+        config["useTeleportSkill"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.checkUseTeleportSkill", false);
+        config["castBuffsInTowns"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.checkCastBuffsInTowns", false);
+        config["castBuffsDuringWalkBack"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.checkCastBuffsDuringWalkBack", true);
+        config["castBuffsBetweenAttacks"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.checkCastBuffsBetweenAttacks", false);
+        config["acceptResurrection"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.checkAcceptResurrection", false);
+        config["resurrectParty"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.checkResurrectParty", false);
+        config["resDelay"] = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.numResDelay", 120), 1, 3600);
+        config["resRadius"] = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.numResRadius", 100), 1, 500);
+        config["learnMastery"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.checkLearnMastery", false);
+        config["learnMasteryBotStopped"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.checkLearnMasteryBotStopped", false);
+        config["masteryGap"] = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.numMasteryGap", 0), 0, 120);
+        config["warlockMode"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.checkWarlockMode", false);
+        config["imbueSkillId"] = RedirectIdIfPossible(UBot.Core.RuntimeAccess.Player.Get("UBot.Desktop.Skills.ImbueSkillId", 0U));
+        config["resurrectionSkillId"] = RedirectIdIfPossible(UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.ResurrectionSkill", 0U));
+        config["teleportSkillId"] = RedirectIdIfPossible(UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.TeleportSkill", 0U));
+        config["selectedMasteryId"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.selectedMastery", 0U);
 
         for (var i = 0; i < AttackRarityByIndex.Length; i++)
-            config[$"attackSkills_{i}"] = PlayerConfig.GetArray<uint>($"UBot.Skills.Attacks_{i}")
+            config[$"attackSkills_{i}"] = UBot.Core.RuntimeAccess.Player.GetArray<uint>($"UBot.Skills.Attacks_{i}")
                 .Select(RedirectIdIfPossible)
                 .Distinct().ToList();
 
-        config["buffSkills"] = PlayerConfig.GetArray<uint>("UBot.Skills.Buffs")
+        config["buffSkills"] = UBot.Core.RuntimeAccess.Player.GetArray<uint>("UBot.Skills.Buffs")
             .Select(RedirectIdIfPossible)
             .Distinct().ToList();
         config["skillCatalog"] = BuildSkillCatalog();
@@ -113,31 +113,31 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
 
         if (TryGetUIntValue(patch, "imbueSkillId", out var imbueSkillId))
         {
-            PlayerConfig.Set("UBot.Desktop.Skills.ImbueSkillId", imbueSkillId);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Desktop.Skills.ImbueSkillId", imbueSkillId);
             changed = true;
         }
 
         if (TryGetUIntValue(patch, "resurrectionSkillId", out var resurrectionSkillId))
         {
-            PlayerConfig.Set("UBot.Skills.ResurrectionSkill", resurrectionSkillId);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Skills.ResurrectionSkill", resurrectionSkillId);
             changed = true;
         }
 
         if (TryGetUIntValue(patch, "teleportSkillId", out var teleportSkillId))
         {
-            PlayerConfig.Set("UBot.Skills.TeleportSkill", teleportSkillId);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Skills.TeleportSkill", teleportSkillId);
             changed = true;
         }
 
         if (TryGetUIntValue(patch, "selectedMasteryId", out var masteryId))
         {
-            PlayerConfig.Set("UBot.Skills.selectedMastery", masteryId);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Skills.selectedMastery", masteryId);
             changed = true;
         }
 
         if (TryGetUIntListValue(patch, "buffSkills", out var buffs))
         {
-            PlayerConfig.SetArray("UBot.Skills.Buffs", buffs);
+            UBot.Core.RuntimeAccess.Player.SetArray("UBot.Skills.Buffs", buffs);
             changed = true;
         }
 
@@ -146,7 +146,7 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
             if (!TryGetUIntListValue(patch, $"attackSkills_{i}", out var attackSkills))
                 continue;
 
-            PlayerConfig.SetArray($"UBot.Skills.Attacks_{i}", attackSkills);
+            UBot.Core.RuntimeAccess.Player.SetArray($"UBot.Skills.Attacks_{i}", attackSkills);
             changed = true;
         }
 
@@ -158,25 +158,25 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
 
     private static void RefreshLiveSkillsFromConfig()
     {
-        if (Game.Player?.Skills == null || SkillManager.Skills == null || SkillManager.Buffs == null)
+        if (UBot.Core.RuntimeAccess.Session.Player?.Skills == null || SkillManager.Skills == null || SkillManager.Buffs == null)
             return;
 
-        Game.Player.TryGetAbilitySkills(out var abilitySkills);
+        UBot.Core.RuntimeAccess.Session.Player.TryGetAbilitySkills(out var abilitySkills);
 
         SkillManager.Buffs.Clear();
         foreach (var rarity in SkillManager.Skills.Keys.ToArray())
             SkillManager.Skills[rarity].Clear();
 
-        var imbueSkillId = PlayerConfig.Get("UBot.Desktop.Skills.ImbueSkillId", 0U);
+        var imbueSkillId = UBot.Core.RuntimeAccess.Player.Get("UBot.Desktop.Skills.ImbueSkillId", 0U);
         SkillManager.ImbueSkill = ResolveSkillInfoById(imbueSkillId, abilitySkills);
 
-        var resurrectionSkillId = PlayerConfig.Get("UBot.Skills.ResurrectionSkill", 0U);
+        var resurrectionSkillId = UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.ResurrectionSkill", 0U);
         SkillManager.ResurrectionSkill = ResolveSkillInfoById(resurrectionSkillId, abilitySkills);
 
-        var teleportSkillId = PlayerConfig.Get("UBot.Skills.TeleportSkill", 0U);
+        var teleportSkillId = UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.TeleportSkill", 0U);
         SkillManager.TeleportSkill = ResolveSkillInfoById(teleportSkillId, abilitySkills);
 
-        foreach (var buffId in PlayerConfig.GetArray<uint>("UBot.Skills.Buffs").Distinct())
+        foreach (var buffId in UBot.Core.RuntimeAccess.Player.GetArray<uint>("UBot.Skills.Buffs").Distinct())
         {
             var skill = ResolveSkillInfoById(buffId, abilitySkills);
             if (skill != null)
@@ -186,7 +186,7 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
         for (var i = 0; i < AttackRarityByIndex.Length; i++)
         {
             var rarity = AttackRarityByIndex[i];
-            foreach (var attackSkillId in PlayerConfig.GetArray<uint>($"UBot.Skills.Attacks_{i}").Distinct())
+            foreach (var attackSkillId in UBot.Core.RuntimeAccess.Player.GetArray<uint>($"UBot.Skills.Attacks_{i}").Distinct())
             {
                 var skill = ResolveSkillInfoById(attackSkillId, abilitySkills);
                 if (skill != null)
@@ -200,7 +200,7 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
         if (skillId == 0)
             return null;
 
-        var knownSkill = Game.Player?.Skills?.GetSkillInfoById(skillId);
+        var knownSkill = UBot.Core.RuntimeAccess.Session.Player?.Skills?.GetSkillInfoById(skillId);
         if (knownSkill != null)
             return knownSkill;
 
@@ -212,24 +212,24 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
         var state = new Dictionary<string, object?>
         {
             ["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-            ["playerReady"] = Game.Player != null,
+            ["playerReady"] = UBot.Core.RuntimeAccess.Session.Player != null,
             ["skillCatalog"] = BuildSkillCatalog(),
             ["masteryCatalog"] = BuildMasteryCatalog(),
             ["activeBuffs"] = BuildActiveBuffSnapshot()
         };
 
-        if (Game.Player != null)
+        if (UBot.Core.RuntimeAccess.Session.Player != null)
         {
-            state["imbueSkillId"] = RedirectIdIfPossible(PlayerConfig.Get("UBot.Desktop.Skills.ImbueSkillId", 0U));
-            state["resurrectionSkillId"] = RedirectIdIfPossible(PlayerConfig.Get("UBot.Skills.ResurrectionSkill", 0U));
-            state["teleportSkillId"] = RedirectIdIfPossible(PlayerConfig.Get("UBot.Skills.TeleportSkill", 0U));
+            state["imbueSkillId"] = RedirectIdIfPossible(UBot.Core.RuntimeAccess.Player.Get("UBot.Desktop.Skills.ImbueSkillId", 0U));
+            state["resurrectionSkillId"] = RedirectIdIfPossible(UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.ResurrectionSkill", 0U));
+            state["teleportSkillId"] = RedirectIdIfPossible(UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.TeleportSkill", 0U));
 
             for (var i = 0; i < AttackRarityByIndex.Length; i++)
-                state[$"attackSkills_{i}"] = PlayerConfig.GetArray<uint>($"UBot.Skills.Attacks_{i}")
+                state[$"attackSkills_{i}"] = UBot.Core.RuntimeAccess.Player.GetArray<uint>($"UBot.Skills.Attacks_{i}")
                     .Select(RedirectIdIfPossible)
                     .Distinct().ToList();
 
-            state["buffSkills"] = PlayerConfig.GetArray<uint>("UBot.Skills.Buffs")
+            state["buffSkills"] = UBot.Core.RuntimeAccess.Player.GetArray<uint>("UBot.Skills.Buffs")
                 .Select(RedirectIdIfPossible)
                 .Distinct().ToList();
         }
@@ -254,7 +254,7 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
         {
             if (id != 0 && seenIds.Add(id))
             {
-                var record = Game.ReferenceManager?.GetRefSkill(id);
+                var record = UBot.Core.RuntimeAccess.Session.ReferenceManager?.GetRefSkill(id);
                 if (record != null)
                     entries.Add(MapSkillToEntry(id, record, null, false));
             }
@@ -275,17 +275,17 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
     private static HashSet<uint> GetReferencedSkillIds()
     {
         var ids = new HashSet<uint>();
-        ids.Add(PlayerConfig.Get("UBot.Desktop.Skills.ImbueSkillId", 0U));
-        ids.Add(PlayerConfig.Get("UBot.Skills.ResurrectionSkill", 0U));
-        ids.Add(PlayerConfig.Get("UBot.Skills.TeleportSkill", 0U));
+        ids.Add(UBot.Core.RuntimeAccess.Player.Get("UBot.Desktop.Skills.ImbueSkillId", 0U));
+        ids.Add(UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.ResurrectionSkill", 0U));
+        ids.Add(UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.TeleportSkill", 0U));
 
         for (var i = 0; i < AttackRarityByIndex.Length; i++)
         {
-            foreach (var id in PlayerConfig.GetArray<uint>($"UBot.Skills.Attacks_{i}"))
+            foreach (var id in UBot.Core.RuntimeAccess.Player.GetArray<uint>($"UBot.Skills.Attacks_{i}"))
                 ids.Add(id);
         }
 
-        foreach (var id in PlayerConfig.GetArray<uint>("UBot.Skills.Buffs"))
+        foreach (var id in UBot.Core.RuntimeAccess.Player.GetArray<uint>("UBot.Skills.Buffs"))
             ids.Add(id);
 
         return ids;
@@ -328,7 +328,7 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
     private static List<Dictionary<string, object?>> BuildMasteryCatalog()
     {
         var result = new List<Dictionary<string, object?>>();
-        var masteries = Game.Player?.Skills?.Masteries;
+        var masteries = UBot.Core.RuntimeAccess.Session.Player?.Skills?.Masteries;
         if (masteries == null)
             return result;
 
@@ -358,7 +358,7 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
     private static List<Dictionary<string, object?>> BuildActiveBuffSnapshot()
     {
         var result = new List<Dictionary<string, object?>>();
-        var buffs = Game.Player?.State?.ActiveBuffs;
+        var buffs = UBot.Core.RuntimeAccess.Session.Player?.State?.ActiveBuffs;
         if (buffs == null)
             return result;
 
@@ -392,7 +392,7 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
     private static List<SkillInfo> CollectKnownAndAbilitySkills()
     {
         var result = new Dictionary<uint, SkillInfo>();
-        var knownSkills = Game.Player?.Skills?.KnownSkills;
+        var knownSkills = UBot.Core.RuntimeAccess.Session.Player?.Skills?.KnownSkills;
         if (knownSkills != null)
         {
             foreach (var known in knownSkills)
@@ -404,7 +404,7 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
             }
         }
 
-        if (Game.Player != null && Game.Player.TryGetAbilitySkills(out var abilitySkills))
+        if (UBot.Core.RuntimeAccess.Session.Player != null && UBot.Core.RuntimeAccess.Session.Player.TryGetAbilitySkills(out var abilitySkills))
         {
             foreach (var ability in abilitySkills)
             {
@@ -424,7 +424,7 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
     private static uint RedirectIdIfPossible(uint skillId)
     {
         if (skillId == 0) return 0;
-        var info = Game.Player?.Skills?.GetSkillInfoById(skillId);
+        var info = UBot.Core.RuntimeAccess.Session.Player?.Skills?.GetSkillInfoById(skillId);
         return info?.Id ?? skillId;
     }
 

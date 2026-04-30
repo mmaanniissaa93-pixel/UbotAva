@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Event;
 
 namespace UBot.Protection.Components.Town;
@@ -18,7 +18,7 @@ public class LevelUpHandler : AbstractTownHandler
     /// </summary>
     private static void SubscribeEvents()
     {
-        EventManager.SubscribeEvent("OnLevelUp", OnPlayerLevelUp);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnLevelUp", OnPlayerLevelUp);
     }
 
     /// <summary>
@@ -26,10 +26,10 @@ public class LevelUpHandler : AbstractTownHandler
     /// </summary>
     private static void OnPlayerLevelUp()
     {
-        if (!Kernel.Bot.Running)
+        if (!UBot.Core.RuntimeAccess.Core.Bot.Running)
             return;
 
-        if (!PlayerConfig.Get<bool>("UBot.Protection.checkLevelUp"))
+        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkLevelUp"))
             return;
 
         if (PlayerInTownScriptRegion())
@@ -37,6 +37,6 @@ public class LevelUpHandler : AbstractTownHandler
 
         Log.NotifyLang("ReturnToTownLevelUpAchieved");
 
-        Game.Player.UseReturnScroll();
+        UBot.Core.RuntimeAccess.Session.Player.UseReturnScroll();
     }
 }

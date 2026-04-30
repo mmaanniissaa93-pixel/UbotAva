@@ -31,20 +31,20 @@ public class ExtensionManagerTests
             extensionState.PluginHooks["Plugin.A"] = new List<IPacketHook> { hook };
             extensionState.PluginHooks["Plugin.B"] = new List<IPacketHook> { hook };
 
-            PacketManager.RegisterHandler(handler);
-            PacketManager.RegisterHook(hook);
+            UBot.Core.RuntimeAccess.Packets.RegisterHandler(handler);
+            UBot.Core.RuntimeAccess.Packets.RegisterHook(hook);
 
             Assert.True(ExtensionManager.DisablePlugin("Plugin.A"));
 
             Assert.False(pluginA.Enabled);
             Assert.True(pluginB.Enabled);
-            Assert.Contains(handler, PacketManager.GetHandlers());
-            Assert.Contains(hook, PacketManager.GetHooks());
+            Assert.Contains(handler, UBot.Core.RuntimeAccess.Packets.GetHandlers());
+            Assert.Contains(hook, UBot.Core.RuntimeAccess.Packets.GetHooks());
 
             Assert.True(ExtensionManager.DisablePlugin("Plugin.B"));
 
-            Assert.DoesNotContain(handler, PacketManager.GetHandlers());
-            Assert.DoesNotContain(hook, PacketManager.GetHooks());
+            Assert.DoesNotContain(handler, UBot.Core.RuntimeAccess.Packets.GetHandlers());
+            Assert.DoesNotContain(hook, UBot.Core.RuntimeAccess.Packets.GetHooks());
         }
         finally
         {
@@ -123,31 +123,31 @@ public class ExtensionManagerTests
 
         public static PacketManagerState CaptureAndClear()
         {
-            var handlers = PacketManager.GetHandlers();
-            var hooks = PacketManager.GetHooks();
+            var handlers = UBot.Core.RuntimeAccess.Packets.GetHandlers();
+            var hooks = UBot.Core.RuntimeAccess.Packets.GetHooks();
 
             foreach (var handler in handlers)
-                PacketManager.RemoveHandler(handler);
+                UBot.Core.RuntimeAccess.Packets.RemoveHandler(handler);
 
             foreach (var hook in hooks)
-                PacketManager.RemoveHook(hook);
+                UBot.Core.RuntimeAccess.Packets.RemoveHook(hook);
 
             return new PacketManagerState(handlers, hooks);
         }
 
         public void Restore()
         {
-            foreach (var handler in PacketManager.GetHandlers())
-                PacketManager.RemoveHandler(handler);
+            foreach (var handler in UBot.Core.RuntimeAccess.Packets.GetHandlers())
+                UBot.Core.RuntimeAccess.Packets.RemoveHandler(handler);
 
-            foreach (var hook in PacketManager.GetHooks())
-                PacketManager.RemoveHook(hook);
+            foreach (var hook in UBot.Core.RuntimeAccess.Packets.GetHooks())
+                UBot.Core.RuntimeAccess.Packets.RemoveHook(hook);
 
             foreach (var handler in _handlers)
-                PacketManager.RegisterHandler(handler);
+                UBot.Core.RuntimeAccess.Packets.RegisterHandler(handler);
 
             foreach (var hook in _hooks)
-                PacketManager.RegisterHook(hook);
+                UBot.Core.RuntimeAccess.Packets.RegisterHook(hook);
         }
     }
 

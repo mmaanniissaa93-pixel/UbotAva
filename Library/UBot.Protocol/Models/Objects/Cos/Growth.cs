@@ -76,7 +76,7 @@ public class Growth : Cos
     {
         var packet = new Packet(0x7116);
         packet.WriteInt(UniqueId);
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Protocol.ProtocolRuntime.SendPacket(packet, PacketDestination.Server);
 
         return true;
     }
@@ -90,7 +90,7 @@ public class Growth : Cos
         {
             CurrentHungerPoints--;
             _lastHungerTick = LegacyKernel.TickCount;
-            EventManager.FireEvent("OnGrowthHungerUpdate");
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnGrowthHungerUpdate");
         }
 
         return base.Update(delta);

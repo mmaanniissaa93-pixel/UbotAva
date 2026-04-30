@@ -16,10 +16,10 @@ public class PacketManagerTests
         {
             var handler = new CountingHandler(0x1234, PacketDestination.Client);
 
-            PacketManager.RegisterHandler(handler);
-            PacketManager.RegisterHandler(handler);
+            UBot.Core.RuntimeAccess.Packets.RegisterHandler(handler);
+            UBot.Core.RuntimeAccess.Packets.RegisterHandler(handler);
 
-            var handlers = PacketManager.GetHandlers();
+            var handlers = UBot.Core.RuntimeAccess.Packets.GetHandlers();
             Assert.Single(handlers);
             Assert.Same(handler, handlers[0]);
         }
@@ -38,10 +38,10 @@ public class PacketManagerTests
         {
             var hook = new CountingHook(0x1234, PacketDestination.Client);
 
-            PacketManager.RegisterHook(hook);
-            PacketManager.RegisterHook(hook);
+            UBot.Core.RuntimeAccess.Packets.RegisterHook(hook);
+            UBot.Core.RuntimeAccess.Packets.RegisterHook(hook);
 
-            var hooks = PacketManager.GetHooks();
+            var hooks = UBot.Core.RuntimeAccess.Packets.GetHooks();
             Assert.Single(hooks);
             Assert.Same(hook, hooks[0]);
         }
@@ -61,10 +61,10 @@ public class PacketManagerTests
             var dropHook = new DroppingHook(0x1234, PacketDestination.Client);
             var nextHook = new CountingHook(0x1234, PacketDestination.Client);
 
-            PacketManager.RegisterHook(dropHook);
-            PacketManager.RegisterHook(nextHook);
+            UBot.Core.RuntimeAccess.Packets.RegisterHook(dropHook);
+            UBot.Core.RuntimeAccess.Packets.RegisterHook(nextHook);
 
-            var result = PacketManager.CallHook(new Packet(0x1234), PacketDestination.Client);
+            var result = UBot.Core.RuntimeAccess.Packets.CallHook(new Packet(0x1234), PacketDestination.Client);
 
             Assert.Null(result);
             Assert.Equal(1, dropHook.InvocationCount);
@@ -79,55 +79,55 @@ public class PacketManagerTests
     [Fact]
     public void AwaitResponse_ShouldRemoveTimedOutCallback()
     {
-        var previousProxy = Kernel.Proxy;
+        var previousProxy = UBot.Core.RuntimeAccess.Core.Proxy;
         var callback = new AwaitCallback(null, 0xBEEF);
-        var baselineCount = PacketManager.PendingCallbackCount;
+        var baselineCount = UBot.Core.RuntimeAccess.Packets.PendingCallbackCount;
 
         try
         {
-            Kernel.Proxy = new Proxy();
+            UBot.Core.RuntimeAccess.Core.Proxy = new Proxy();
 
-            PacketManager.SendPacket(new Packet(0x1234), PacketDestination.Server, callback);
-            Assert.Equal(baselineCount + 1, PacketManager.PendingCallbackCount);
+            UBot.Core.RuntimeAccess.Packets.SendPacket(new Packet(0x1234), PacketDestination.Server, callback);
+            Assert.Equal(baselineCount + 1, UBot.Core.RuntimeAccess.Packets.PendingCallbackCount);
 
             callback.AwaitResponse(1);
 
             Assert.True(callback.IsClosed);
-            Assert.Equal(baselineCount, PacketManager.PendingCallbackCount);
+            Assert.Equal(baselineCount, UBot.Core.RuntimeAccess.Packets.PendingCallbackCount);
         }
         finally
         {
-            PacketManager.RemoveCallback(callback);
-            Kernel.Proxy = previousProxy;
+            UBot.Core.RuntimeAccess.Packets.RemoveCallback(callback);
+            UBot.Core.RuntimeAccess.Core.Proxy = previousProxy;
         }
     }
 
     [Fact]
     public void CallCallback_ShouldRemoveCompletedCallback()
     {
-        var previousProxy = Kernel.Proxy;
+        var previousProxy = UBot.Core.RuntimeAccess.Core.Proxy;
         var callback = new AwaitCallback(null, 0xBEEF);
-        var baselineCount = PacketManager.PendingCallbackCount;
+        var baselineCount = UBot.Core.RuntimeAccess.Packets.PendingCallbackCount;
 
         try
         {
-            Kernel.Proxy = new Proxy();
+            UBot.Core.RuntimeAccess.Core.Proxy = new Proxy();
 
-            PacketManager.SendPacket(new Packet(0x1234), PacketDestination.Server, callback);
-            Assert.Equal(baselineCount + 1, PacketManager.PendingCallbackCount);
+            UBot.Core.RuntimeAccess.Packets.SendPacket(new Packet(0x1234), PacketDestination.Server, callback);
+            Assert.Equal(baselineCount + 1, UBot.Core.RuntimeAccess.Packets.PendingCallbackCount);
 
             var response = new Packet(0xBEEF);
             response.Lock();
 
-            PacketManager.CallCallback(response);
+            UBot.Core.RuntimeAccess.Packets.CallCallback(response);
 
             Assert.True(callback.IsCompleted);
-            Assert.Equal(baselineCount, PacketManager.PendingCallbackCount);
+            Assert.Equal(baselineCount, UBot.Core.RuntimeAccess.Packets.PendingCallbackCount);
         }
         finally
         {
-            PacketManager.RemoveCallback(callback);
-            Kernel.Proxy = previousProxy;
+            UBot.Core.RuntimeAccess.Packets.RemoveCallback(callback);
+            UBot.Core.RuntimeAccess.Core.Proxy = previousProxy;
         }
     }
 
@@ -144,31 +144,31 @@ public class PacketManagerTests
 
         public static PacketManagerState CaptureAndClear()
         {
-            var handlers = PacketManager.GetHandlers();
-            var hooks = PacketManager.GetHooks();
+            var handlers = UBot.Core.RuntimeAccess.Packets.GetHandlers();
+            var hooks = UBot.Core.RuntimeAccess.Packets.GetHooks();
 
             foreach (var handler in handlers)
-                PacketManager.RemoveHandler(handler);
+                UBot.Core.RuntimeAccess.Packets.RemoveHandler(handler);
 
             foreach (var hook in hooks)
-                PacketManager.RemoveHook(hook);
+                UBot.Core.RuntimeAccess.Packets.RemoveHook(hook);
 
             return new PacketManagerState(handlers, hooks);
         }
 
         public void Restore()
         {
-            foreach (var handler in PacketManager.GetHandlers())
-                PacketManager.RemoveHandler(handler);
+            foreach (var handler in UBot.Core.RuntimeAccess.Packets.GetHandlers())
+                UBot.Core.RuntimeAccess.Packets.RemoveHandler(handler);
 
-            foreach (var hook in PacketManager.GetHooks())
-                PacketManager.RemoveHook(hook);
+            foreach (var hook in UBot.Core.RuntimeAccess.Packets.GetHooks())
+                UBot.Core.RuntimeAccess.Packets.RemoveHook(hook);
 
             foreach (var handler in _handlers)
-                PacketManager.RegisterHandler(handler);
+                UBot.Core.RuntimeAccess.Packets.RegisterHandler(handler);
 
             foreach (var hook in _hooks)
-                PacketManager.RegisterHook(hook);
+                UBot.Core.RuntimeAccess.Packets.RegisterHook(hook);
         }
     }
 

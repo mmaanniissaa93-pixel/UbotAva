@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using UBot.Core;
 
 namespace UBot.Protection.Components.Town;
@@ -29,7 +29,7 @@ public abstract class AbstractTownHandler
 
     public static bool PlayerInTownScriptRegion()
     {
-        var regionId = Game.Player.Position.Region;
+        var regionId = UBot.Core.RuntimeAccess.Session.Player.Position.Region;
 
         return TownSpawnRegionIds.Contains(regionId);
     }

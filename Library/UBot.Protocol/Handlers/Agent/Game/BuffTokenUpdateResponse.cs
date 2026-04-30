@@ -36,7 +36,7 @@ public class BuffTokenUpdateResponse : IPacketHandler
         player.Teleportation = null;
 
         Log.Debug("Game loaded!");
-        EventManager.FireEvent("OnTeleportComplete");
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnTeleportComplete");
 
         var itemCount = packet.ReadByte();
         for (var i = 0; i < itemCount; i++)

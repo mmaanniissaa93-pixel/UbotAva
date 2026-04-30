@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Network;
 using UBot.General.Components;
 
@@ -34,17 +34,17 @@ internal class GatewayLoginRequest : IPacketHandler
         packet.ReadString(); //password
 
         if (
-            (packet.Opcode == 0x610A && Game.ClientType == GameClientType.Turkey)
-            || Game.ClientType == GameClientType.VTC_Game
-            || Game.ClientType == GameClientType.RuSro
-            || Game.ClientType == GameClientType.Japanese
-            || Game.ClientType == GameClientType.Taiwan
+            (packet.Opcode == 0x610A && UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Turkey)
+            || UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.VTC_Game
+            || UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.RuSro
+            || UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Japanese
+            || UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Taiwan
         )
-            Game.MacAddress = packet.ReadBytes(6); //reassigned in case of manual login when auto is enabled
+            UBot.Core.RuntimeAccess.Session.MacAddress = packet.ReadBytes(6); //reassigned in case of manual login when auto is enabled
 
         var shardId = packet.ReadUShort();
 
-        if (Game.ClientType >= GameClientType.Chinese && packet.Remaining > 0)
+        if (UBot.Core.RuntimeAccess.Session.ClientType >= GameClientType.Chinese && packet.Remaining > 0)
             packet.ReadByte(); // channel
 
         Serverlist.SetJoining(shardId);

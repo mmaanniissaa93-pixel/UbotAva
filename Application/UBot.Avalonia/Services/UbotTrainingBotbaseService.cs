@@ -43,27 +43,27 @@ internal sealed class UbotTrainingBotbaseService : UbotServiceBase
     {
         return new Dictionary<string, object?>
         {
-            ["areaRegion"] = (int)PlayerConfig.Get<ushort>("UBot.Area.Region"),
-            ["areaX"] = PlayerConfig.Get("UBot.Area.X", 0f),
-            ["areaY"] = PlayerConfig.Get("UBot.Area.Y", 0f),
-            ["areaZ"] = PlayerConfig.Get("UBot.Area.Z", 0f),
-            ["areaRadius"] = Math.Clamp(PlayerConfig.Get("UBot.Area.Radius", 50), 5, 100),
-            ["walkScript"] = PlayerConfig.Get("UBot.Walkback.File", string.Empty),
-            ["useMount"] = PlayerConfig.Get("UBot.Training.checkUseMount", true),
-            ["castBuffs"] = PlayerConfig.Get("UBot.Training.checkCastBuffs", true),
-            ["useSpeedDrug"] = PlayerConfig.Get("UBot.Training.checkUseSpeedDrug", true),
-            ["useReverse"] = PlayerConfig.Get("UBot.Training.checkBoxUseReverse", false),
-            ["berserkWhenFull"] = PlayerConfig.Get("UBot.Training.checkBerzerkWhenFull", false),
-            ["berserkByMonsterAmount"] = PlayerConfig.Get("UBot.Training.checkBerzerkMonsterAmount", false),
-            ["berserkMonsterAmount"] = PlayerConfig.Get("UBot.Training.numBerzerkMonsterAmount", 5),
-            ["berserkByAvoidance"] = PlayerConfig.Get("UBot.Training.checkBerzerkAvoidance", false),
-            ["berserkByMonsterRarity"] = PlayerConfig.Get("UBot.Training.checkBerserkOnMonsterRarity", false),
-            ["ignoreDimensionPillar"] = PlayerConfig.Get("UBot.Training.checkBoxDimensionPillar", false),
-            ["attackWeakerFirst"] = PlayerConfig.Get("UBot.Training.checkAttackWeakerFirst", false),
-            ["dontFollowMobs"] = PlayerConfig.Get("UBot.Training.checkBoxDontFollowMobs", false),
-            ["avoidanceList"] = PlayerConfig.GetArray<string>("UBot.Avoidance.Avoid").ToList(),
-            ["preferList"] = PlayerConfig.GetArray<string>("UBot.Avoidance.Prefer").ToList(),
-            ["berserkList"] = PlayerConfig.GetArray<string>("UBot.Avoidance.Berserk").ToList()
+            ["areaRegion"] = (int)UBot.Core.RuntimeAccess.Player.Get<ushort>("UBot.Area.Region"),
+            ["areaX"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Area.X", 0f),
+            ["areaY"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Area.Y", 0f),
+            ["areaZ"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Area.Z", 0f),
+            ["areaRadius"] = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Area.Radius", 50), 5, 100),
+            ["walkScript"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Walkback.File", string.Empty),
+            ["useMount"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Training.checkUseMount", true),
+            ["castBuffs"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Training.checkCastBuffs", true),
+            ["useSpeedDrug"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Training.checkUseSpeedDrug", true),
+            ["useReverse"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Training.checkBoxUseReverse", false),
+            ["berserkWhenFull"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Training.checkBerzerkWhenFull", false),
+            ["berserkByMonsterAmount"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Training.checkBerzerkMonsterAmount", false),
+            ["berserkMonsterAmount"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Training.numBerzerkMonsterAmount", 5),
+            ["berserkByAvoidance"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Training.checkBerzerkAvoidance", false),
+            ["berserkByMonsterRarity"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Training.checkBerserkOnMonsterRarity", false),
+            ["ignoreDimensionPillar"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Training.checkBoxDimensionPillar", false),
+            ["attackWeakerFirst"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Training.checkAttackWeakerFirst", false),
+            ["dontFollowMobs"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Training.checkBoxDontFollowMobs", false),
+            ["avoidanceList"] = UBot.Core.RuntimeAccess.Player.GetArray<string>("UBot.Avoidance.Avoid").ToList(),
+            ["preferList"] = UBot.Core.RuntimeAccess.Player.GetArray<string>("UBot.Avoidance.Prefer").ToList(),
+            ["berserkList"] = UBot.Core.RuntimeAccess.Player.GetArray<string>("UBot.Avoidance.Berserk").ToList()
         };
     }
 
@@ -91,24 +91,24 @@ internal sealed class UbotTrainingBotbaseService : UbotServiceBase
 
         if (TryGetStringListValue(patch, "avoidanceList", out var avoidance))
         {
-            PlayerConfig.SetArray("UBot.Avoidance.Avoid", avoidance.ToArray());
+            UBot.Core.RuntimeAccess.Player.SetArray("UBot.Avoidance.Avoid", avoidance.ToArray());
             changed = true;
         }
 
         if (TryGetStringListValue(patch, "preferList", out var prefer))
         {
-            PlayerConfig.SetArray("UBot.Avoidance.Prefer", prefer.ToArray());
+            UBot.Core.RuntimeAccess.Player.SetArray("UBot.Avoidance.Prefer", prefer.ToArray());
             changed = true;
         }
 
         if (TryGetStringListValue(patch, "berserkList", out var berserk))
         {
-            PlayerConfig.SetArray("UBot.Avoidance.Berserk", berserk.ToArray());
+            UBot.Core.RuntimeAccess.Player.SetArray("UBot.Avoidance.Berserk", berserk.ToArray());
             changed = true;
         }
 
         if (changed)
-            PlayerConfig.Save();
+            UBot.Core.RuntimeAccess.Player.Save();
 
         return changed;
     }

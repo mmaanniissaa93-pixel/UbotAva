@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Event;
 
 namespace UBot.Protection.Components.Town;
@@ -18,7 +18,7 @@ public class InventoryFullHandler : AbstractTownHandler
     /// </summary>
     private static void SubscribeEvents()
     {
-        EventManager.SubscribeEvent("OnInventoryUpdate", OnUpdateInventory);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnInventoryUpdate", OnUpdateInventory);
     }
 
     /// <summary>
@@ -35,13 +35,13 @@ public class InventoryFullHandler : AbstractTownHandler
 
     private static bool CheckForInventoryFull()
     {
-        if (!Kernel.Bot.Running)
+        if (!UBot.Core.RuntimeAccess.Core.Bot.Running)
             return false;
 
-        if (!PlayerConfig.Get<bool>("UBot.Protection.checkInventory"))
+        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkInventory"))
             return false;
 
-        if (!Game.Player.Inventory.Full)
+        if (!UBot.Core.RuntimeAccess.Session.Player.Inventory.Full)
             return false;
 
         if (PlayerInTownScriptRegion())
@@ -49,6 +49,6 @@ public class InventoryFullHandler : AbstractTownHandler
 
         Log.NotifyLang("ReturnToTownInventoryFull");
 
-        return Game.Player.UseReturnScroll();
+        return UBot.Core.RuntimeAccess.Session.Player.UseReturnScroll();
     }
 }

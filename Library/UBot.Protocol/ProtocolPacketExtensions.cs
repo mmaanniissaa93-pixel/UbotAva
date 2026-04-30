@@ -17,7 +17,7 @@ internal static class ProtocolPacketExtensions
     public static ActiveQuest ReadActiveQuest(this Packet packet, uint questId)
     {
         var activeQuest = new ActiveQuest { Id = questId };
-        var clientType = ProtocolRuntime.GameState?.ClientType ?? GameClientType.Thailand;
+        var clientType = UBot.Protocol.ProtocolRuntime.GameState?.ClientType ?? GameClientType.Thailand;
 
         if (clientType == GameClientType.Vietnam274)
         {

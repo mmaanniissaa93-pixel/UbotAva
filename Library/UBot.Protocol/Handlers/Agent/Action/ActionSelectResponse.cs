@@ -73,7 +73,7 @@ public class ActionSelectResponse : IPacketHandler
         }
         */
 
-        EventManager.FireEvent("OnSelectEntity", entity);
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnSelectEntity", entity);
     }
 }
 

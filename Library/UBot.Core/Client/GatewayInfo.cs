@@ -1,4 +1,4 @@
-﻿using UBot.Core.Event;
+using UBot.Core.Event;
 
 namespace UBot.Core.Client;
 
@@ -19,13 +19,13 @@ public class GatewayInfo
     internal static GatewayInfo Load()
     {
         var result = new GatewayInfo();
-        if (Game.MediaPk2 == null)
+        if (UBot.Core.RuntimeAccess.Session.MediaPk2 == null)
         {
             Log.Notify("Could not load the GATEPORT.TXT file, because there is no active Archive.");
             return result;
         }
 
-        if (!Game.MediaPk2.TryGetFile(Filename, out var file))
+        if (!UBot.Core.RuntimeAccess.Session.MediaPk2.TryGetFile(Filename, out var file))
         {
             Log.Error("Could not load the GATEPORT.txt file, because the file was not found.");
             return result;
@@ -39,7 +39,7 @@ public class GatewayInfo
 
         result.Port = port;
 
-        EventManager.FireEvent("OnLoadGateport", result);
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnLoadGateport", result);
 
         return result;
     }

@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Event;
 using UBot.Core.Objects;
@@ -38,7 +38,7 @@ public class LureBotbase : IBotbase
     /// <inheritdoc />
     public void Tick()
     {
-        if (!Kernel.Bot.Running)
+        if (!UBot.Core.RuntimeAccess.Core.Bot.Running)
             return;
 
         if (PickupManager.RunningPlayerPickup)
@@ -47,16 +47,16 @@ public class LureBotbase : IBotbase
         if (Area.Position.DistanceToPlayer() > 80)
         {
             if (!ScriptManager.Running)
-                EventManager.FireEvent("Bundle.Loop.Start");
+                UBot.Core.RuntimeAccess.Events.FireEvent("Bundle.Loop.Start");
 
-            EventManager.FireEvent("Bundle.Loop.Invoke");
+            UBot.Core.RuntimeAccess.Events.FireEvent("Bundle.Loop.Invoke");
 
             return;
         }
 
-        EventManager.FireEvent("Bundle.Resurrect.Invoke");
-        EventManager.FireEvent("Bundle.Buff.Invoke");
-        EventManager.FireEvent("Bundle.PartyBuffing.Invoke");
+        UBot.Core.RuntimeAccess.Events.FireEvent("Bundle.Resurrect.Invoke");
+        UBot.Core.RuntimeAccess.Events.FireEvent("Bundle.Buff.Invoke");
+        UBot.Core.RuntimeAccess.Events.FireEvent("Bundle.PartyBuffing.Invoke");
 
         var interruptMessage = LoopConditionValidator.CheckLoopConditions();
         if (interruptMessage != null)
@@ -64,7 +64,7 @@ public class LureBotbase : IBotbase
             ScriptManager.Stop();
 
             if (LureConfig.Area.Position.DistanceToPlayer() > 2)
-                Game.Player.MoveTo(LureConfig.Area.Position);
+                UBot.Core.RuntimeAccess.Session.Player.MoveTo(LureConfig.Area.Position);
 
             if (!_interrupted)
                 Log.Warn(interruptMessage);
@@ -76,8 +76,8 @@ public class LureBotbase : IBotbase
 
         _interrupted = false;
 
-        if (Game.Player.HasActiveVehicle)
-            Game.Player.Vehicle.Dismount();
+        if (UBot.Core.RuntimeAccess.Session.Player.HasActiveVehicle)
+            UBot.Core.RuntimeAccess.Session.Player.Vehicle.Dismount();
 
         if (LureConfig.UseHowlingShout)
             HowlingShoutBundle.Tick();
@@ -87,7 +87,7 @@ public class LureBotbase : IBotbase
         MovementBundle.Tick();
 
         if (!PickupManager.RunningPlayerPickup && !PickupManager.RunningAbilityPetPickup)
-            EventManager.FireEvent("Bundle.Loot.Invoke");
+            UBot.Core.RuntimeAccess.Events.FireEvent("Bundle.Loot.Invoke");
     }
 
     /// <inheritdoc />
@@ -102,10 +102,10 @@ public class LureBotbase : IBotbase
     /// <inheritdoc />
     public void Stop()
     {
-        EventManager.FireEvent("Bundle.Loop.Stop");
-        EventManager.FireEvent("Bundle.Loot.Stop");
-        EventManager.FireEvent("Bundle.PartyBuffing.Stop");
-        EventManager.FireEvent("Bundle.Buff.Stop");
+        UBot.Core.RuntimeAccess.Events.FireEvent("Bundle.Loop.Stop");
+        UBot.Core.RuntimeAccess.Events.FireEvent("Bundle.Loot.Stop");
+        UBot.Core.RuntimeAccess.Events.FireEvent("Bundle.PartyBuffing.Stop");
+        UBot.Core.RuntimeAccess.Events.FireEvent("Bundle.Buff.Stop");
 
         Log.Notify("[Lure] bot stopped!");
     }
@@ -113,7 +113,7 @@ public class LureBotbase : IBotbase
     /// <inheritdoc />
     public void Translate()
     {
-        LanguageManager.Translate(View, Kernel.Language);
+        LanguageManager.Translate(View, UBot.Core.RuntimeAccess.Core.Language);
     }
 
     /// <inheritdoc />

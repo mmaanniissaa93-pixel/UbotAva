@@ -1,4 +1,4 @@
-﻿using System.Threading;
+using System.Threading;
 using UBot.Core;
 using UBot.Core.Event;
 using UBot.Core.Extensions;
@@ -37,7 +37,7 @@ internal class PartyMatchingFormResponse : IPacketHandler
         Container.PartyMatching.Id = packet.ReadUInt();
         packet.ReadUInt();
 
-        Game.Party.Settings = PartySettings.FromType(packet.ReadByte());
+        UBot.Core.RuntimeAccess.Session.Party.Settings = PartySettings.FromType(packet.ReadByte());
         Container.PartyMatching.Config.Purpose = (PartyPurpose)packet.ReadByte();
         Container.PartyMatching.Config.LevelFrom = packet.ReadByte();
         Container.PartyMatching.Config.LevelTo = packet.ReadByte();
@@ -48,6 +48,6 @@ internal class PartyMatchingFormResponse : IPacketHandler
         Container.PartyMatching.DeletionCts = new CancellationTokenSource();
         _ = Container.PartyMatching.ScheduleDeletion(Container.PartyMatching.DeletionCts.Token);
 
-        EventManager.FireEvent("OnCreatePartyEntry");
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnCreatePartyEntry");
     }
 }

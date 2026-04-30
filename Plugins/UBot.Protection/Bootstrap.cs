@@ -1,4 +1,4 @@
-﻿using System.Windows.Forms;
+using System.Windows.Forms;
 using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Plugins;
@@ -74,7 +74,7 @@ public class Bootstrap : IPlugin
     /// <inheritdoc />
     public void Translate()
     {
-        LanguageManager.Translate(View, Kernel.Language);
+        LanguageManager.Translate(View, UBot.Core.RuntimeAccess.Core.Language);
     }
 
     /// <inheritdoc />

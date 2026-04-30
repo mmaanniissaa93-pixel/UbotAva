@@ -30,7 +30,7 @@ public class LogoutSuccessResponse : IPacketHandler
     {
         Log.Notify("The player has left the game!");
         CoreKernel.Proxy?.Shutdown(); //Forced disconnect because LogoutMode of 0x7005 is not yet supported.
-        EventManager.FireEvent("OnLogout");
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnLogout");
     }
 }
 

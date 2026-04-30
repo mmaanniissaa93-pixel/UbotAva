@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows.Forms;
 using UBot.Core;
 using UBot.Core.Components;
@@ -37,16 +37,16 @@ public class Bootstrap : IBotbase
     /// <inheritdoc />
     public void Tick()
     {
-        if (!Kernel.Bot.Running)
+        if (!UBot.Core.RuntimeAccess.Core.Bot.Running)
             return;
 
-        if (Game.Player.Exchanging)
+        if (UBot.Core.RuntimeAccess.Session.Player.Exchanging)
             return;
 
-        if (Game.Player.Untouchable)
+        if (UBot.Core.RuntimeAccess.Session.Player.Untouchable)
             return;
 
-        if (Game.Player.State.LifeState == LifeState.Dead)
+        if (UBot.Core.RuntimeAccess.Session.Player.State.LifeState == LifeState.Dead)
             return;
 
         //Begin the loopback if needed
@@ -58,8 +58,8 @@ public class Bootstrap : IBotbase
 
         //Nothing if in scroll state!
         if (
-            Game.Player.State.ScrollState == ScrollState.NormalScroll
-            || Game.Player.State.ScrollState == ScrollState.ThiefScroll
+            UBot.Core.RuntimeAccess.Session.Player.State.ScrollState == ScrollState.NormalScroll
+            || UBot.Core.RuntimeAccess.Session.Player.State.ScrollState == ScrollState.ThiefScroll
         )
             return;
 
@@ -79,10 +79,10 @@ public class Bootstrap : IBotbase
     /// <inheritdoc />
     public void Start()
     {
-        if (Kernel.Bot.Botbase.Area.Position.X == 0)
+        if (UBot.Core.RuntimeAccess.Core.Bot.Botbase.Area.Position.X == 0)
         {
             Log.WarnLang("ConfigureTrainingAreaBeforeStartBot");
-            Kernel.Bot.Stop();
+            UBot.Core.RuntimeAccess.Core.Bot.Stop();
         }
 
         //Already reloading when config saved via ConfigSubscriber
@@ -95,7 +95,7 @@ public class Bootstrap : IBotbase
     {
         lock (Container.Lock)
         {
-            if (Game.Player.InAction)
+            if (UBot.Core.RuntimeAccess.Session.Player.InAction)
                 SkillManager.CancelAction();
 
             Bundles.Stop();
@@ -105,7 +105,7 @@ public class Bootstrap : IBotbase
     /// <inheritdoc />
     public void Translate()
     {
-        LanguageManager.Translate(View, Kernel.Language);
+        LanguageManager.Translate(View, UBot.Core.RuntimeAccess.Core.Language);
     }
 
     /// <inheritdoc />

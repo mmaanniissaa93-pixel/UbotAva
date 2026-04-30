@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using UBot.Core;
 using UBot.Core.Components;
@@ -44,7 +44,7 @@ internal class BuyGoodsScriptCommand : IScriptCommand
             return false;
         }
 
-        if (Game.Player.JobTransport == null)
+        if (UBot.Core.RuntimeAccess.Session.Player.JobTransport == null)
         {
             Log.Warn("[Script] Can not buy items: No active job transport.");
 
@@ -65,18 +65,18 @@ internal class BuyGoodsScriptCommand : IScriptCommand
             ShoppingManager.Running = true;
             ShoppingManager.ChooseTalkOption(codeName, TalkOption.Trade);
 
-            if (Game.SelectedEntity == null)
+            if (UBot.Core.RuntimeAccess.Session.SelectedEntity == null)
             {
                 Log.Warn("[Script] Can not buy items: Not in dialog with an NPC.");
 
                 return false;
             }
 
-            Log.Notify($"[Script] Selling goods to {Game.SelectedEntity.Record.GetRealName()}...");
+            Log.Notify($"[Script] Selling goods to {UBot.Core.RuntimeAccess.Session.SelectedEntity.Record.GetRealName()}...");
 
             SellGoods();
 
-            Log.Notify($"[Script] Purchasing goods from {Game.SelectedEntity.Record.GetRealName()}...");
+            Log.Notify($"[Script] Purchasing goods from {UBot.Core.RuntimeAccess.Session.SelectedEntity.Record.GetRealName()}...");
 
             BuyGoods();
 
@@ -97,14 +97,14 @@ internal class BuyGoodsScriptCommand : IScriptCommand
     /// </summary>
     private void SellGoods()
     {
-        if (!TradeConfig.SellGoods || Game.Player.JobTransport == null)
+        if (!TradeConfig.SellGoods || UBot.Core.RuntimeAccess.Session.Player.JobTransport == null)
             return;
 
-        var items = Game.Player.JobTransport.Inventory.ToArray();
+        var items = UBot.Core.RuntimeAccess.Session.Player.JobTransport.Inventory.ToArray();
         if (items.Length == 0)
             return;
 
-        var shopGroup = Game.ReferenceManager.GetRefShopGroup(Game.SelectedEntity?.Record.CodeName);
+        var shopGroup = UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefShopGroup(UBot.Core.RuntimeAccess.Session.SelectedEntity?.Record.CodeName);
         if (shopGroup == null)
         {
             Log.Warn("[Script] Can not buy items: Can not find the shop info.");
@@ -112,19 +112,19 @@ internal class BuyGoodsScriptCommand : IScriptCommand
             return;
         }
 
-        var shopGoods = Game.ReferenceManager.GetRefShopGoods(shopGroup);
+        var shopGoods = UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefShopGoods(shopGroup);
 
         foreach (var item in items)
         {
             var canSellToNpc =
                 shopGoods.FirstOrDefault(i =>
-                    Game.ReferenceManager.GetRefPackageItem(i.RefPackageItemCodeName).RefItem.ID == item.ItemId
+                    UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefPackageItem(i.RefPackageItemCodeName).RefItem.ID == item.ItemId
                 ) == null;
 
             if (!canSellToNpc)
                 continue;
 
-            ShoppingManager.SellItem(item, Game.Player.JobTransport.Bionic);
+            ShoppingManager.SellItem(item, UBot.Core.RuntimeAccess.Session.Player.JobTransport.Bionic);
         }
     }
 
@@ -136,7 +136,7 @@ internal class BuyGoodsScriptCommand : IScriptCommand
         if (!TradeConfig.BuyGoods)
             return;
 
-        var shopGroup = Game.ReferenceManager.GetRefShopGroup(Game.SelectedEntity?.Record.CodeName);
+        var shopGroup = UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefShopGroup(UBot.Core.RuntimeAccess.Session.SelectedEntity?.Record.CodeName);
         if (shopGroup == null)
         {
             Log.Warn("[Script] Can not buy items: Can not find the shop info.");
@@ -144,7 +144,7 @@ internal class BuyGoodsScriptCommand : IScriptCommand
             return;
         }
 
-        var shopGoods = Game.ReferenceManager.GetRefShopGoods(shopGroup);
+        var shopGoods = UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefShopGoods(shopGroup);
         var item = shopGoods?.FirstOrDefault();
 
         if (item == null)
@@ -154,7 +154,7 @@ internal class BuyGoodsScriptCommand : IScriptCommand
             return;
         }
 
-        var tabIndex = Game.ReferenceManager.GetRefShopGoodTabIndex(Game.SelectedEntity?.Record.CodeName, item);
+        var tabIndex = UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefShopGoodTabIndex(UBot.Core.RuntimeAccess.Session.SelectedEntity?.Record.CodeName, item);
         if (tabIndex == 0xFF) //Specified item not available in this shop!
         {
             Log.Warn("[Script] Can not buy items: Can not find the item in the shop.");
@@ -162,7 +162,7 @@ internal class BuyGoodsScriptCommand : IScriptCommand
             return;
         }
 
-        var packageItem = Game.ReferenceManager.GetRefPackageItem(item.RefPackageItemCodeName);
+        var packageItem = UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefPackageItem(item.RefPackageItemCodeName);
         if (packageItem?.RefItem == null)
         {
             Log.Warn("[Script] Can not buy items: Can not find the referenced item.");
@@ -171,10 +171,10 @@ internal class BuyGoodsScriptCommand : IScriptCommand
         }
 
         var bought = 0;
-        var maxSteps = Game.Player.JobTransport.Inventory.Capacity;
-        var existingItemsCount = Game.Player.JobTransport.Inventory.GetSumAmount(packageItem.RefItemCodeName);
+        var maxSteps = UBot.Core.RuntimeAccess.Session.Player.JobTransport.Inventory.Capacity;
+        var existingItemsCount = UBot.Core.RuntimeAccess.Session.Player.JobTransport.Inventory.GetSumAmount(packageItem.RefItemCodeName);
         while (
-            !Game.Player.JobTransport.Inventory.Full
+            !UBot.Core.RuntimeAccess.Session.Player.JobTransport.Inventory.Full
             && (existingItemsCount < TradeConfig.BuyGoodsQuantity || TradeConfig.BuyGoodsQuantity == 0)
         )
         {
@@ -189,10 +189,10 @@ internal class BuyGoodsScriptCommand : IScriptCommand
             if (TradeConfig.BuyGoodsQuantity > 0 && bought + buyNextQty > TradeConfig.BuyGoodsQuantity)
                 buyNextQty = TradeConfig.BuyGoodsQuantity - bought;
 
-            ShoppingManager.PurchaseItem(Game.Player.JobTransport, tabIndex, item.SlotIndex, (ushort)buyNextQty);
+            ShoppingManager.PurchaseItem(UBot.Core.RuntimeAccess.Session.Player.JobTransport, tabIndex, item.SlotIndex, (ushort)buyNextQty);
 
             bought += buyNextQty;
-            existingItemsCount = Game.Player.JobTransport.Inventory.GetSumAmount(packageItem.RefItemCodeName);
+            existingItemsCount = UBot.Core.RuntimeAccess.Session.Player.JobTransport.Inventory.GetSumAmount(packageItem.RefItemCodeName);
         }
     }
 

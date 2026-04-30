@@ -1,4 +1,4 @@
-﻿using UBot.Alchemy.Bot;
+using UBot.Alchemy.Bot;
 using UBot.Alchemy.Subscriber;
 using UBot.Core;
 using UBot.Core.Components;
@@ -18,7 +18,7 @@ public class Bootstrap : IBotbase
     /// <remarks>The property returns <see langword="true"/> only if the bot is running and its base name
     /// matches the specified name. Use this property to check the operational status of a particular bot
     /// instance.</remarks>
-    public static bool IsActive => Kernel.Bot.Running && Kernel.Bot.Botbase.Name == _name;
+    public static bool IsActive => UBot.Core.RuntimeAccess.Core.Bot.Running && UBot.Core.RuntimeAccess.Core.Bot.Botbase.Name == _name;
 
     /// <inheritdoc />
     public string Author => "UBot Team";
@@ -71,7 +71,7 @@ public class Bootstrap : IBotbase
     /// <inheritdoc />
     public void Translate()
     {
-        LanguageManager.Translate(View, Kernel.Language);
+        LanguageManager.Translate(View, UBot.Core.RuntimeAccess.Core.Language);
     }
 
     /// <inheritdoc />

@@ -1,4 +1,4 @@
-﻿using System.Windows.Forms;
+using System.Windows.Forms;
 using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Network;
@@ -33,7 +33,7 @@ public class GatewayPatchResponse : IPacketHandler
         {
             Log.NotifyLang("NoPatchRequired");
 
-            if (Game.Clientless)
+            if (UBot.Core.RuntimeAccess.Session.Clientless)
                 ClientlessManager.RequestServerList();
         }
         else
@@ -45,7 +45,7 @@ public class GatewayPatchResponse : IPacketHandler
                 packet.ReadString(); //DLServer IP
                 packet.ReadUShort(); //DLServer Port
                 var version = packet.ReadInt();
-                Log.WarnLang("ClientUpdateWarn", Game.ReferenceManager.VersionInfo.Version, version);
+                Log.WarnLang("ClientUpdateWarn", UBot.Core.RuntimeAccess.Session.ReferenceManager.VersionInfo.Version, version);
             }
 
             var title = string.Empty;

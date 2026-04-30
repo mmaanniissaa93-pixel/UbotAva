@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Objects;
@@ -14,31 +14,31 @@ internal class ResurrectBundle : IBundle
 
     public void Invoke()
     {
-        if (Game.Party == null || Game.Party.Members == null || Game.Player.HasActiveVehicle)
+        if (UBot.Core.RuntimeAccess.Session.Party == null || UBot.Core.RuntimeAccess.Session.Party.Members == null || UBot.Core.RuntimeAccess.Session.Player.HasActiveVehicle)
             return;
 
-        if (!PlayerConfig.Get<bool>("UBot.Skills.checkResurrectParty"))
+        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Skills.checkResurrectParty"))
             return;
 
-        ushort resDelay = PlayerConfig.Get<ushort>("UBot.Skills.numResDelay", 120);
-        ushort resRadius = PlayerConfig.Get<ushort>("UBot.Skills.numResRadius", 100);
+        ushort resDelay = UBot.Core.RuntimeAccess.Player.Get<ushort>("UBot.Skills.numResDelay", 120);
+        ushort resRadius = UBot.Core.RuntimeAccess.Player.Get<ushort>("UBot.Skills.numResRadius", 100);
 
-        foreach (var member in Game.Party.Members)
+        foreach (var member in UBot.Core.RuntimeAccess.Session.Party.Members)
         {
             if (
                 _lastResurrectedPlayers.ContainsKey(member.Name)
-                && Kernel.TickCount - _lastResurrectedPlayers[member.Name] < resDelay * 1000
+                && UBot.Core.RuntimeAccess.Core.TickCount - _lastResurrectedPlayers[member.Name] < resDelay * 1000
             )
                 continue;
 
             if (
                 (
-                    member.Player?.Movement.Source.DistanceTo(Game.Player.Movement.Source)
-                    ?? member.Position.DistanceTo(Game.Player.Movement.Source)
+                    member.Player?.Movement.Source.DistanceTo(UBot.Core.RuntimeAccess.Session.Player.Movement.Source)
+                    ?? member.Position.DistanceTo(UBot.Core.RuntimeAccess.Session.Player.Movement.Source)
                 ) > resRadius
                 || (
-                    member.Player?.Movement.Source.HasCollisionBetween(Game.Player.Movement.Source)
-                    ?? member.Position.HasCollisionBetween(Game.Player.Movement.Source)
+                    member.Player?.Movement.Source.HasCollisionBetween(UBot.Core.RuntimeAccess.Session.Player.Movement.Source)
+                    ?? member.Position.HasCollisionBetween(UBot.Core.RuntimeAccess.Session.Player.Movement.Source)
                 )
             )
                 continue;
@@ -47,11 +47,11 @@ internal class ResurrectBundle : IBundle
                 continue;
 
             if (!_lastResurrectedPlayers.ContainsKey(member.Name))
-                _lastResurrectedPlayers.Add(member.Name, Kernel.TickCount);
+                _lastResurrectedPlayers.Add(member.Name, UBot.Core.RuntimeAccess.Core.TickCount);
             else
-                _lastResurrectedPlayers[member.Name] = Kernel.TickCount;
+                _lastResurrectedPlayers[member.Name] = UBot.Core.RuntimeAccess.Core.TickCount;
 
-            var moved = Game.Player.MoveTo(member.Player?.Movement.Source ?? member.Position, true);
+            var moved = UBot.Core.RuntimeAccess.Session.Player.MoveTo(member.Player?.Movement.Source ?? member.Position, true);
             if (!moved)
                 continue;
 

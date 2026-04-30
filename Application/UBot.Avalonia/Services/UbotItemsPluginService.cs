@@ -51,10 +51,10 @@ internal sealed class UbotItemsPluginService : UbotServiceBase
     {
         var config = LoadPluginJsonConfig(ItemsPluginName);
 
-        var shoppingEnabled = PlayerConfig.Get("UBot.Shopping.Enabled", true);
-        var repairGear = PlayerConfig.Get("UBot.Shopping.RepairGear", true);
-        var sellPetItems = PlayerConfig.Get("UBot.Shopping.SellPet", true);
-        var storePetItems = PlayerConfig.Get("UBot.Shopping.StorePet", true);
+        var shoppingEnabled = UBot.Core.RuntimeAccess.Player.Get("UBot.Shopping.Enabled", true);
+        var repairGear = UBot.Core.RuntimeAccess.Player.Get("UBot.Shopping.RepairGear", true);
+        var sellPetItems = UBot.Core.RuntimeAccess.Player.Get("UBot.Shopping.SellPet", true);
+        var storePetItems = UBot.Core.RuntimeAccess.Player.Get("UBot.Shopping.StorePet", true);
 
         ShoppingManager.Enabled = shoppingEnabled;
         ShoppingManager.RepairGear = repairGear;
@@ -70,16 +70,16 @@ internal sealed class UbotItemsPluginService : UbotServiceBase
         config["repairGear"] = repairGear;
         config["sellPetItems"] = sellPetItems;
         config["storePetItems"] = storePetItems;
-        config["pickupUseAbilityPet"] = PlayerConfig.Get("UBot.Items.Pickup.EnableAbilityPet", true);
-        config["pickupJustMyItems"] = PlayerConfig.Get("UBot.Items.Pickup.JustPickMyItems", false);
-        config["pickupDontInBerzerk"] = PlayerConfig.Get("UBot.Items.Pickup.DontPickupInBerzerk", true);
-        config["pickupDontWhileBotting"] = PlayerConfig.Get("UBot.Items.Pickup.DontPickupWhileBotting", false);
-        config["pickupGold"] = PlayerConfig.Get("UBot.Items.Pickup.Gold", true);
-        config["pickupBlueItems"] = PlayerConfig.Get("UBot.Items.Pickup.Blue", true);
-        config["pickupQuestItems"] = PlayerConfig.Get("UBot.Items.Pickup.Quest", true);
-        config["pickupRareItems"] = PlayerConfig.Get("UBot.Items.Pickup.Rare", true);
-        config["pickupAnyEquips"] = PlayerConfig.Get("UBot.Items.Pickup.AnyEquips", true);
-        config["pickupEverything"] = PlayerConfig.Get("UBot.Items.Pickup.Everything", true);
+        config["pickupUseAbilityPet"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Items.Pickup.EnableAbilityPet", true);
+        config["pickupJustMyItems"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Items.Pickup.JustPickMyItems", false);
+        config["pickupDontInBerzerk"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Items.Pickup.DontPickupInBerzerk", true);
+        config["pickupDontWhileBotting"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Items.Pickup.DontPickupWhileBotting", false);
+        config["pickupGold"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Items.Pickup.Gold", true);
+        config["pickupBlueItems"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Items.Pickup.Blue", true);
+        config["pickupQuestItems"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Items.Pickup.Quest", true);
+        config["pickupRareItems"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Items.Pickup.Rare", true);
+        config["pickupAnyEquips"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Items.Pickup.AnyEquips", true);
+        config["pickupEverything"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Items.Pickup.Everything", true);
         config["sellFilter"] = ShoppingManager.SellFilter.Where(item => !string.IsNullOrWhiteSpace(item)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         config["storeFilter"] = ShoppingManager.StoreFilter.Where(item => !string.IsNullOrWhiteSpace(item)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         config["pickupFilter"] = BuildPickupFilterSnapshot();
@@ -127,26 +127,26 @@ internal sealed class UbotItemsPluginService : UbotServiceBase
     private static List<Dictionary<string, object?>> BuildItemsShopCatalog()
     {
         var result = new List<Dictionary<string, object?>>();
-        if (Game.ReferenceManager?.ShopGroups == null)
+        if (UBot.Core.RuntimeAccess.Session.ReferenceManager?.ShopGroups == null)
             return result;
 
-        Game.ReferenceManager.EnsureShopDataLoaded();
+        UBot.Core.RuntimeAccess.Session.ReferenceManager.EnsureShopDataLoaded();
 
-        foreach (var shopGroup in Game.ReferenceManager.ShopGroups.Values)
+        foreach (var shopGroup in UBot.Core.RuntimeAccess.Session.ReferenceManager.ShopGroups.Values)
         {
             if (shopGroup == null || string.IsNullOrWhiteSpace(shopGroup.RefNpcCodeName))
                 continue;
 
             var items = new List<Dictionary<string, object?>>();
             var itemCodeNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var good in Game.ReferenceManager.GetRefShopGoods(shopGroup))
+            foreach (var good in UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefShopGoods(shopGroup))
             {
-                var package = Game.ReferenceManager.GetRefPackageItem(good.RefPackageItemCodeName);
+                var package = UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefPackageItem(good.RefPackageItemCodeName);
                 var itemCodeName = package?.RefItemCodeName;
                 if (string.IsNullOrWhiteSpace(itemCodeName) || !itemCodeNames.Add(itemCodeName))
                     continue;
 
-                var refItem = Game.ReferenceManager.GetRefItem(itemCodeName);
+                var refItem = UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefItem(itemCodeName);
                 if (refItem == null)
                     continue;
 
@@ -182,12 +182,12 @@ internal sealed class UbotItemsPluginService : UbotServiceBase
     private static List<Dictionary<string, object?>> BuildItemsItemCatalog()
     {
         var result = new List<Dictionary<string, object?>>();
-        if (Game.ReferenceManager?.ItemData == null)
+        if (UBot.Core.RuntimeAccess.Session.ReferenceManager?.ItemData == null)
             return result;
 
-        Game.ReferenceManager.EnsureItemDataLoaded();
+        UBot.Core.RuntimeAccess.Session.ReferenceManager.EnsureItemDataLoaded();
 
-        foreach (var refItem in Game.ReferenceManager.ItemData.Values)
+        foreach (var refItem in UBot.Core.RuntimeAccess.Session.ReferenceManager.ItemData.Values)
         {
             if (refItem == null || refItem.TypeID1 != 3 || refItem.IsGold)
                 continue;
@@ -217,7 +217,7 @@ internal sealed class UbotItemsPluginService : UbotServiceBase
 
     private static string ResolveShopDisplayName(RefShopGroup shopGroup)
     {
-        var npc = Game.ReferenceManager?.GetRefObjChar(shopGroup.RefNpcCodeName);
+        var npc = UBot.Core.RuntimeAccess.Session.ReferenceManager?.GetRefObjChar(shopGroup.RefNpcCodeName);
         var translated = npc?.GetRealName();
         if (!string.IsNullOrWhiteSpace(translated))
             return translated;
@@ -295,19 +295,19 @@ internal sealed class UbotItemsPluginService : UbotServiceBase
         ShoppingManager.ShoppingList ??= new Dictionary<RefShopGood, int>();
         ShoppingManager.ShoppingList.Clear();
 
-        if (Game.ReferenceManager == null || targets.Count == 0)
+        if (UBot.Core.RuntimeAccess.Session.ReferenceManager == null || targets.Count == 0)
             return;
 
         foreach (var target in targets)
         {
-            var shopGroup = Game.ReferenceManager.GetRefShopGroup(target.ShopCodeName);
+            var shopGroup = UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefShopGroup(target.ShopCodeName);
             if (shopGroup == null)
                 continue;
 
             RefShopGood? matchedGood = null;
-            foreach (var good in Game.ReferenceManager.GetRefShopGoods(shopGroup))
+            foreach (var good in UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefShopGoods(shopGroup))
             {
-                var package = Game.ReferenceManager.GetRefPackageItem(good.RefPackageItemCodeName);
+                var package = UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefPackageItem(good.RefPackageItemCodeName);
                 if (package == null || string.IsNullOrWhiteSpace(package.RefItemCodeName))
                     continue;
 
@@ -334,28 +334,28 @@ internal sealed class UbotItemsPluginService : UbotServiceBase
 
         if (TryGetBoolValue(patch, "shoppingEnabled", out var shoppingEnabled))
         {
-            PlayerConfig.Set("UBot.Shopping.Enabled", shoppingEnabled);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Shopping.Enabled", shoppingEnabled);
             ShoppingManager.Enabled = shoppingEnabled;
             changed = true;
         }
 
         if (TryGetBoolValue(patch, "repairGear", out var repairGear))
         {
-            PlayerConfig.Set("UBot.Shopping.RepairGear", repairGear);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Shopping.RepairGear", repairGear);
             ShoppingManager.RepairGear = repairGear;
             changed = true;
         }
 
         if (TryGetBoolValue(patch, "sellPetItems", out var sellPetItems))
         {
-            PlayerConfig.Set("UBot.Shopping.SellPet", sellPetItems);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Shopping.SellPet", sellPetItems);
             ShoppingManager.SellPetItems = sellPetItems;
             changed = true;
         }
 
         if (TryGetBoolValue(patch, "storePetItems", out var storePetItems))
         {
-            PlayerConfig.Set("UBot.Shopping.StorePet", storePetItems);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Shopping.StorePet", storePetItems);
             ShoppingManager.StorePetItems = storePetItems;
             changed = true;
         }
@@ -480,10 +480,10 @@ internal sealed class UbotItemsPluginService : UbotServiceBase
     }
     private static object BuildInventoryPluginState()
     {
-        var player = Game.Player;
+        var player = UBot.Core.RuntimeAccess.Session.Player;
         if (player == null) return new { selectedTab = "Inventory", items = new List<object>(), freeSlots = 0, totalSlots = 0 };
 
-        var type = PlayerConfig.Get("UBot.Desktop.Inventory.SelectedTab", "Inventory");
+        var type = UBot.Core.RuntimeAccess.Player.Get("UBot.Desktop.Inventory.SelectedTab", "Inventory");
         var items = new List<InventoryItemDto>();
         var freeSlots = 0;
         var totalSlots = 0;
@@ -578,7 +578,7 @@ internal sealed class UbotItemsPluginService : UbotServiceBase
             items = items,
             freeSlots = freeSlots,
             totalSlots = totalSlots,
-            autoSort = PlayerConfig.Get("UBot.Inventory.AutoSort", false)
+            autoSort = UBot.Core.RuntimeAccess.Player.Get("UBot.Inventory.AutoSort", false)
         };
     }
 

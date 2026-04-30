@@ -43,7 +43,7 @@ internal static class RefMagicOptExtension
                 break;
         }
 
-        return Game.ReferenceManager.GetTranslation(translationGroup);
+        return UBot.Core.RuntimeAccess.Session.ReferenceManager.GetTranslation(translationGroup);
     }
 
     /// <summary>

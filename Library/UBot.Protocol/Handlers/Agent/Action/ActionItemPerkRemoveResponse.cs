@@ -22,7 +22,7 @@ public class ActionItemPerkRemoveResponse : IPacketHandler
         var perk = target.State.ActiveItemPerks[token];
         target.State.ActiveItemPerks.Remove(token);
 
-        EventManager.FireEvent("OnRemoveItemPerk", targetId, perk);
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnRemoveItemPerk", targetId, perk);
     }
 
     #region Properites

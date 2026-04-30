@@ -30,7 +30,7 @@ internal class ChatResponse : IPacketHandler
                 var senderId = packet.ReadUInt();
                 message = packet.ReadConditonalString();
 
-                if (senderId == Game.Player.UniqueId)
+                if (senderId == UBot.Core.RuntimeAccess.Session.Player.UniqueId)
                     return;
 
                 if (!SpawnManager.TryGetEntity(senderId, out sender))

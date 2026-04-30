@@ -38,7 +38,7 @@ public class JobLeaveResponse : IPacketHandler
 
         Log.Notify("[Job] Left previous job guild.");
 
-        EventManager.FireEvent("OnJobLeave");
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnJobLeave");
     }
 }
 

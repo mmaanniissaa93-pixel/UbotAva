@@ -91,7 +91,7 @@ public static class PacketReplayHarness
                     payload.Length,
                     locked: true
                 );
-                packet = PacketManager.CallHook(packet, destination);
+                packet = UBot.Core.RuntimeAccess.Packets.CallHook(packet, destination);
 
                 if (packet == null)
                 {
@@ -100,8 +100,8 @@ public static class PacketReplayHarness
                 }
 
                 packet.SeekRead(0, SeekOrigin.Begin);
-                PacketManager.CallHandler(packet, destination);
-                PacketManager.CallCallback(packet);
+                UBot.Core.RuntimeAccess.Packets.CallHandler(packet, destination);
+                UBot.Core.RuntimeAccess.Packets.CallCallback(packet);
 
                 result.ReplayedPackets++;
             }

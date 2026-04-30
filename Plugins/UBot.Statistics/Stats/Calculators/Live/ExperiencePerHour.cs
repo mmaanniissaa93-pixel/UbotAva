@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using UBot.Core;
 using UBot.Core.Components;
@@ -40,11 +40,11 @@ internal class ExperiencePerHour : IStatisticCalculator
     /// <inheritdoc />
     public object GetValue()
     {
-        if (!Game.Ready)
+        if (!UBot.Core.RuntimeAccess.Session.Ready)
             return 0;
 
         var currentPercent =
-            Game.Player.Experience / (double)Game.ReferenceManager.GetRefLevel(Game.Player.Level).Exp_C * 100;
+            UBot.Core.RuntimeAccess.Session.Player.Experience / (double)UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefLevel(UBot.Core.RuntimeAccess.Session.Player.Level).Exp_C * 100;
 
         if (++_currentTickIndex >= _values.Length)
             _currentTickIndex = 0;
@@ -58,11 +58,11 @@ internal class ExperiencePerHour : IStatisticCalculator
     /// <inheritdoc />
     public void Reset()
     {
-        if (!Game.Ready)
+        if (!UBot.Core.RuntimeAccess.Session.Ready)
             return;
 
         _lastTickValue =
-            Game.Player.Experience / (double)Game.ReferenceManager.GetRefLevel(Game.Player.Level).Exp_C * 100;
+            UBot.Core.RuntimeAccess.Session.Player.Experience / (double)UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefLevel(UBot.Core.RuntimeAccess.Session.Player.Level).Exp_C * 100;
 
         _values = new double[60];
     }

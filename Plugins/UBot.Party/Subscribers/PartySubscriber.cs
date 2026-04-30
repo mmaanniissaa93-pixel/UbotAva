@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using UBot.Core;
 using UBot.Core.Event;
 using UBot.Party.Bundle;
@@ -13,8 +13,8 @@ internal class PartySubscriber
     /// <returns></returns>
     public static void SubscribeEvents()
     {
-        EventManager.SubscribeEvent("OnPartyRequest", OnPartyRequest);
-        EventManager.SubscribeEvent("OnLoadCharacter", Container.Refresh);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnPartyRequest", OnPartyRequest);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnLoadCharacter", Container.Refresh);
     }
 
     /// <summary>
@@ -24,26 +24,26 @@ internal class PartySubscriber
     private static bool CheckRequest()
     {
         //Check for the pending request
-        if (!Game.Party.HasPendingRequest)
+        if (!UBot.Core.RuntimeAccess.Session.Party.HasPendingRequest)
             return false;
 
-        Log.NotifyLang("PartyPlayerInvite", Game.AcceptanceRequest.Player.Name);
+        Log.NotifyLang("PartyPlayerInvite", UBot.Core.RuntimeAccess.Session.AcceptanceRequest.Player.Name);
 
         //Check if we are already in a party - don't auto-accept if we're already in a party
-        if (Game.Party.IsInParty)
+        if (UBot.Core.RuntimeAccess.Session.Party.IsInParty)
             return false;
 
         //Check if we are near the training place
         if (
             Container.AutoParty.Config.OnlyAtTrainingPlace
-            && Game.Player.Movement.Source.DistanceTo(Container.AutoParty.Config.CenterPosition) > 50
+            && UBot.Core.RuntimeAccess.Session.Player.Movement.Source.DistanceTo(Container.AutoParty.Config.CenterPosition) > 50
         )
             return false;
 
         //Check if the inviting player matches our party list
         if (
             Container.AutoParty.Config.AcceptFromList
-            && Container.AutoParty.Config.PlayerList.Contains(Game.AcceptanceRequest.Player.Name)
+            && Container.AutoParty.Config.PlayerList.Contains(UBot.Core.RuntimeAccess.Session.AcceptanceRequest.Player.Name)
         )
             return true;
 
@@ -59,12 +59,12 @@ internal class PartySubscriber
     /// </summary>
     private static void OnPartyRequest()
     {
-        if (!Kernel.Bot.Running && !Container.AutoParty.Config.AcceptIfBotIsStopped)
+        if (!UBot.Core.RuntimeAccess.Core.Bot.Running && !Container.AutoParty.Config.AcceptIfBotIsStopped)
             return;
 
         if (CheckRequest())
-            Game.AcceptanceRequest.Accept();
+            UBot.Core.RuntimeAccess.Session.AcceptanceRequest.Accept();
         else
-            Game.AcceptanceRequest.Refuse();
+            UBot.Core.RuntimeAccess.Session.AcceptanceRequest.Refuse();
     }
 }

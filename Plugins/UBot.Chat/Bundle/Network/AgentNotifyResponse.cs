@@ -1,4 +1,4 @@
-﻿using System.Windows.Forms;
+using System.Windows.Forms;
 using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Network;
@@ -30,10 +30,10 @@ internal class AgentNotifyResponse : IPacketHandler
     /// <param name="packet">The packet.</param>
     public void Invoke(Packet packet)
     {
-        var player = Game.Player;
+        var player = UBot.Core.RuntimeAccess.Session.Player;
 
         var noticeType = packet.ReadByte();
-        if (Game.ClientType > GameClientType.Thailand)
+        if (UBot.Core.RuntimeAccess.Session.ClientType > GameClientType.Thailand)
             packet.ReadByte();
 
         switch (noticeType)
@@ -41,7 +41,7 @@ internal class AgentNotifyResponse : IPacketHandler
             //[%s] has appeared
             case 0x5:
                 var refObjId = packet.ReadUInt();
-                if (!Game.ReferenceManager.CharacterData.TryGetValue(refObjId, out var obj))
+                if (!UBot.Core.RuntimeAccess.Session.ReferenceManager.CharacterData.TryGetValue(refObjId, out var obj))
                     return;
 
                 string realName = obj.GetRealName();
@@ -57,7 +57,7 @@ internal class AgentNotifyResponse : IPacketHandler
             case 0x6:
 
                 refObjId = packet.ReadUInt();
-                if (!Game.ReferenceManager.CharacterData.TryGetValue(refObjId, out obj))
+                if (!UBot.Core.RuntimeAccess.Session.ReferenceManager.CharacterData.TryGetValue(refObjId, out obj))
                     return;
 
                 var characterName = packet.ReadString();

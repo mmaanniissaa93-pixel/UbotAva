@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net;
 using System.Net.Sockets;
 using UBot.Core.Event;
@@ -45,7 +45,7 @@ public class Server : NetBase
 
             try
             {
-                var bindIp = GlobalConfig.Get("UBot.Network.BindIp", "0.0.0.0");
+                var bindIp = UBot.Core.RuntimeAccess.Global.Get("UBot.Network.BindIp", "0.0.0.0");
                 if (!string.IsNullOrWhiteSpace(bindIp) && bindIp != "0.0.0.0")
                     _socket.Bind(new IPEndPoint(IPAddress.Parse(bindIp), port));
 
@@ -91,7 +91,7 @@ public class Server : NetBase
 
             OnConnected();
 
-            EventManager.FireEvent("OnServerConnected");
+            UBot.Core.RuntimeAccess.Events.FireEvent("OnServerConnected");
             Log.Debug("Server connection established!");
             return true;
         }
@@ -135,7 +135,7 @@ public class Server : NetBase
         catch (HandshakeSecurityException)
         {
             Log.Notify("[Fatal]: Could not handshake the client, restarting client process now...");
-            Game.Start();
+            UBot.Core.RuntimeAccess.Session.Start();
         }
         finally
         {

@@ -18,7 +18,7 @@ public class AcceptanceRequest
         packet.WriteByte(1);
         packet.WriteByte(1);
 
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Protocol.ProtocolRuntime.SendPacket(packet, PacketDestination.Server);
     }
 
     public void Refuse()
@@ -40,7 +40,7 @@ public class AcceptanceRequest
                 break;
         }
 
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Protocol.ProtocolRuntime.SendPacket(packet, PacketDestination.Server);
     }
 
     public static AcceptanceRequest FromPacket(Packet packet)

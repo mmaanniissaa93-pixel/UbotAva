@@ -57,7 +57,7 @@ internal sealed class UbotPluginConfigHelpers : UbotServiceBase
     {
         if (!TryConvertBool(value, out var parsed))
             return false;
-        GlobalConfig.Set(key, parsed);
+        UBot.Core.RuntimeAccess.Global.Set(key, parsed);
         return true;
     }
 
@@ -65,7 +65,7 @@ internal sealed class UbotPluginConfigHelpers : UbotServiceBase
     {
         if (!TryConvertInt(value, out var parsed))
             return false;
-        GlobalConfig.Set(key, Math.Clamp(parsed, min, max));
+        UBot.Core.RuntimeAccess.Global.Set(key, Math.Clamp(parsed, min, max));
         return true;
     }
 
@@ -73,7 +73,7 @@ internal sealed class UbotPluginConfigHelpers : UbotServiceBase
     {
         if (value == null)
             return false;
-        GlobalConfig.Set(key, value.ToString() ?? string.Empty);
+        UBot.Core.RuntimeAccess.Global.Set(key, value.ToString() ?? string.Empty);
         return true;
     }
 
@@ -81,7 +81,7 @@ internal sealed class UbotPluginConfigHelpers : UbotServiceBase
     {
         if (!patch.TryGetValue(patchKey, out var value) || !TryConvertBool(value, out var parsed))
             return false;
-        PlayerConfig.Set(targetKey, parsed);
+        UBot.Core.RuntimeAccess.Player.Set(targetKey, parsed);
         return true;
     }
 
@@ -89,7 +89,7 @@ internal sealed class UbotPluginConfigHelpers : UbotServiceBase
     {
         if (!patch.TryGetValue(patchKey, out var value) || !TryConvertInt(value, out var parsed))
             return false;
-        PlayerConfig.Set(targetKey, Math.Clamp(parsed, min, max));
+        UBot.Core.RuntimeAccess.Player.Set(targetKey, Math.Clamp(parsed, min, max));
         return true;
     }
 
@@ -97,7 +97,7 @@ internal sealed class UbotPluginConfigHelpers : UbotServiceBase
     {
         if (!patch.TryGetValue(patchKey, out var value) || !TryConvertDouble(value, out var parsed))
             return false;
-        PlayerConfig.Set(targetKey, (float)parsed);
+        UBot.Core.RuntimeAccess.Player.Set(targetKey, (float)parsed);
         return true;
     }
 
@@ -105,7 +105,7 @@ internal sealed class UbotPluginConfigHelpers : UbotServiceBase
     {
         if (!patch.TryGetValue(patchKey, out var value))
             return false;
-        PlayerConfig.Set(targetKey, value?.ToString() ?? string.Empty);
+        UBot.Core.RuntimeAccess.Player.Set(targetKey, value?.ToString() ?? string.Empty);
         return true;
     }
 }

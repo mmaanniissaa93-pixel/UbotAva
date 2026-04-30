@@ -14,51 +14,51 @@ namespace UBot.Core.ProtocolServices;
 
 internal sealed class CoreShoppingRuntime : IShoppingRuntime
 {
-    public bool Clientless => Game.Clientless;
+    public bool Clientless => UBot.Core.RuntimeAccess.Session.Clientless;
 
-    public GameClientType ClientType => Game.ClientType;
+    public GameClientType ClientType => UBot.Core.RuntimeAccess.Session.ClientType;
 
-    public object SelectedEntity => Game.SelectedEntity;
+    public object SelectedEntity => UBot.Core.RuntimeAccess.Session.SelectedEntity;
 
-    public string[] LoadSellFilter() => PlayerConfig.GetArray<string>("UBot.Shopping.Sell");
+    public string[] LoadSellFilter() => UBot.Core.RuntimeAccess.Player.GetArray<string>("UBot.Shopping.Sell");
 
-    public string[] LoadStoreFilter() => PlayerConfig.GetArray<string>("UBot.Shopping.Store");
+    public string[] LoadStoreFilter() => UBot.Core.RuntimeAccess.Player.GetArray<string>("UBot.Shopping.Store");
 
-    public void SaveSellFilter(IEnumerable<string> values) => PlayerConfig.SetArray("UBot.Shopping.Sell", values);
+    public void SaveSellFilter(IEnumerable<string> values) => UBot.Core.RuntimeAccess.Player.SetArray("UBot.Shopping.Sell", values);
 
-    public void SaveStoreFilter(IEnumerable<string> values) => PlayerConfig.SetArray("UBot.Shopping.Store", values);
+    public void SaveStoreFilter(IEnumerable<string> values) => UBot.Core.RuntimeAccess.Player.SetArray("UBot.Shopping.Store", values);
 
-    public object GetShopGroup(string npcCodeName) => Game.ReferenceManager.GetRefShopGroup(npcCodeName);
+    public object GetShopGroup(string npcCodeName) => UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefShopGroup(npcCodeName);
 
     public IEnumerable<object> GetShopGoods(object shopGroup)
     {
         return shopGroup is RefShopGroup group
-            ? Game.ReferenceManager.GetRefShopGoods(group).Cast<object>()
+            ? UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefShopGoods(group).Cast<object>()
             : [];
     }
 
     public byte GetShopGoodTabIndex(string npcCodeName, object shopGood)
     {
         return shopGood is RefShopGood typedShopGood
-            ? Game.ReferenceManager.GetRefShopGoodTabIndex(npcCodeName, typedShopGood)
+            ? UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefShopGoodTabIndex(npcCodeName, typedShopGood)
             : byte.MaxValue;
     }
 
     public object GetPackageItem(string packageItemCodeName)
     {
-        return Game.ReferenceManager.GetRefPackageItem(packageItemCodeName);
+        return UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefPackageItem(packageItemCodeName);
     }
 
-    public object GetRefItem(string itemCodeName) => Game.ReferenceManager.GetRefItem(itemCodeName);
+    public object GetRefItem(string itemCodeName) => UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefItem(itemCodeName);
 
     public IEnumerable<object> GetEventRewardItems(uint questId)
     {
-        return Game.ReferenceManager.GetEventRewardItems(questId).Cast<object>();
+        return UBot.Core.RuntimeAccess.Session.ReferenceManager.GetEventRewardItems(questId).Cast<object>();
     }
 
     public void SelectNPC(string npcCodeName)
     {
-        if (Game.SelectedEntity != null && Game.SelectedEntity.Record.CodeName == npcCodeName)
+        if (UBot.Core.RuntimeAccess.Session.SelectedEntity != null && UBot.Core.RuntimeAccess.Session.SelectedEntity.Record.CodeName == npcCodeName)
             return;
 
         if (!SpawnManager.TryGetEntity<SpawnedNpcNpc>(p => p.Record.CodeName == npcCodeName, out var entity))
@@ -72,7 +72,7 @@ internal sealed class CoreShoppingRuntime : IShoppingRuntime
 
     public void SellItem(object item, object cos = null)
     {
-        if (Game.SelectedEntity == null || item is not InventoryItem inventoryItem)
+        if (UBot.Core.RuntimeAccess.Session.SelectedEntity == null || item is not InventoryItem inventoryItem)
             return;
 
         var bionic = cos as SpawnedBionic;
@@ -84,10 +84,10 @@ internal sealed class CoreShoppingRuntime : IShoppingRuntime
 
         packet.WriteByte(inventoryItem.Slot);
         packet.WriteUShort(inventoryItem.Amount);
-        packet.WriteUInt(Game.SelectedEntity.UniqueId);
+        packet.WriteUInt(UBot.Core.RuntimeAccess.Session.SelectedEntity.UniqueId);
 
         var awaitResult = new AwaitCallback(null, 0xB034);
-        PacketManager.SendPacket(packet, PacketDestination.Server, awaitResult);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, awaitResult);
         awaitResult.AwaitResponse();
 
         Log.Debug("[Shopping manager] - Sold item: " + inventoryItem.Record.GetRealName());
@@ -95,7 +95,7 @@ internal sealed class CoreShoppingRuntime : IShoppingRuntime
 
     public void PurchaseItem(int tab, int slot, ushort amount)
     {
-        if (Game.SelectedEntity == null)
+        if (UBot.Core.RuntimeAccess.Session.SelectedEntity == null)
         {
             Log.Debug("Cannot buy items, because no shop is selected!");
             return;
@@ -106,16 +106,16 @@ internal sealed class CoreShoppingRuntime : IShoppingRuntime
         packet.WriteByte(tab);
         packet.WriteByte(slot);
         packet.WriteUShort(amount);
-        packet.WriteUInt(Game.SelectedEntity.UniqueId);
+        packet.WriteUInt(UBot.Core.RuntimeAccess.Session.SelectedEntity.UniqueId);
 
         var awaitResult = new AwaitCallback(null, 0xB034);
-        PacketManager.SendPacket(packet, PacketDestination.Server, awaitResult);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, awaitResult);
         awaitResult.AwaitResponse();
     }
 
     public void PurchaseItem(object transport, int tab, int slot, ushort amount)
     {
-        if (Game.SelectedEntity == null)
+        if (UBot.Core.RuntimeAccess.Session.SelectedEntity == null)
         {
             Log.Debug("Cannot buy items, because no shop is selected!");
             return;
@@ -127,10 +127,10 @@ internal sealed class CoreShoppingRuntime : IShoppingRuntime
         packet.WriteByte(tab);
         packet.WriteByte(slot);
         packet.WriteUShort(amount);
-        packet.WriteUInt(Game.SelectedEntity.UniqueId);
+        packet.WriteUInt(UBot.Core.RuntimeAccess.Session.SelectedEntity.UniqueId);
 
         var awaitResult = new AwaitCallback(null, 0xB034);
-        PacketManager.SendPacket(packet, PacketDestination.Server, awaitResult);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, awaitResult);
         awaitResult.AwaitResponse();
     }
 
@@ -151,7 +151,7 @@ internal sealed class CoreShoppingRuntime : IShoppingRuntime
             0x3514
         );
 
-        PacketManager.SendPacket(packet, PacketDestination.Server, awaitCallback);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, awaitCallback);
         awaitCallback.AwaitResponse();
 
         return questId;
@@ -165,7 +165,7 @@ internal sealed class CoreShoppingRuntime : IShoppingRuntime
         packet.WriteUInt(questId);
         packet.WriteByte(1);
         packet.WriteUInt(rewardId);
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server);
 
         CloseShop();
     }
@@ -177,14 +177,14 @@ internal sealed class CoreShoppingRuntime : IShoppingRuntime
 
         SelectNPC(npcCodeName);
 
-        if (Game.SelectedEntity == null)
+        if (UBot.Core.RuntimeAccess.Session.SelectedEntity == null)
         {
             Log.Debug("Cannot repair items because there is no smith selected!");
             return;
         }
 
         var packet = new Packet(0x703E);
-        packet.WriteUInt(Game.SelectedEntity.UniqueId);
+        packet.WriteUInt(UBot.Core.RuntimeAccess.Session.SelectedEntity.UniqueId);
         packet.WriteByte(2);
 
         var awaitCallback = new AwaitCallback(
@@ -204,7 +204,7 @@ internal sealed class CoreShoppingRuntime : IShoppingRuntime
             0xB03E
         );
 
-        PacketManager.SendPacket(packet, PacketDestination.Server, awaitCallback);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, awaitCallback);
         awaitCallback.AwaitResponse();
 
         CloseShop();
@@ -217,8 +217,8 @@ internal sealed class CoreShoppingRuntime : IShoppingRuntime
 
         var isWarehouse = IsWarehouseNpc(bionic);
         var destinationSlot = isWarehouse
-            ? Game.Player.Storage.GetFreeSlot()
-            : Game.Player.GuildStorage.GetFreeSlot();
+            ? UBot.Core.RuntimeAccess.Session.Player.Storage.GetFreeSlot()
+            : UBot.Core.RuntimeAccess.Session.Player.GuildStorage.GetFreeSlot();
 
         var packet = new Packet(0x7034);
         packet.WriteByte(isWarehouse ? 0x02 : 0x1E);
@@ -227,13 +227,13 @@ internal sealed class CoreShoppingRuntime : IShoppingRuntime
         packet.WriteUInt(bionic.UniqueId);
 
         var awaitResult = new AwaitCallback(null, 0xB034);
-        PacketManager.SendPacket(packet, PacketDestination.Server, awaitResult);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, awaitResult);
         awaitResult.AwaitResponse();
     }
 
     public void OpenStorage(uint uniqueId)
     {
-        if (Game.Player.Storage != null)
+        if (UBot.Core.RuntimeAccess.Session.Player.Storage != null)
             return;
 
         var packet = new Packet(0x703C);
@@ -241,7 +241,7 @@ internal sealed class CoreShoppingRuntime : IShoppingRuntime
         packet.WriteByte(0);
 
         var awaitResult = new AwaitCallback(null, 0x3049);
-        PacketManager.SendPacket(packet, PacketDestination.Server, awaitResult);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, awaitResult);
         awaitResult.AwaitResponse();
 
         packet = new Packet(0x7046);
@@ -250,7 +250,7 @@ internal sealed class CoreShoppingRuntime : IShoppingRuntime
 
         awaitResult = new AwaitCallback(null, 0xB046);
 
-        PacketManager.SendPacket(packet, PacketDestination.Server, awaitResult);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, awaitResult);
         awaitResult.AwaitResponse();
     }
 
@@ -260,35 +260,35 @@ internal sealed class CoreShoppingRuntime : IShoppingRuntime
         packet.WriteUInt(uniqueId);
         packet.WriteByte(0x0D);
         var awaitResult = new AwaitCallback(null, 0xB046);
-        PacketManager.SendPacket(packet, PacketDestination.Server, awaitResult);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, awaitResult);
         awaitResult.AwaitResponse();
 
         Thread.Sleep(2000);
 
-        if (!Game.Clientless)
+        if (!UBot.Core.RuntimeAccess.Session.Clientless)
             return;
 
         packet = new Packet(0x7250);
         packet.WriteInt(uniqueId);
         awaitResult = new AwaitCallback(null, 0xB250);
-        PacketManager.SendPacket(packet, PacketDestination.Server, awaitResult);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, awaitResult);
         awaitResult.AwaitResponse();
 
         packet = new Packet(0x7252);
         packet.WriteInt(uniqueId);
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server);
     }
 
     public void CloseShop()
     {
-        if (Game.SelectedEntity != null && Game.SelectedEntity.TryDeselect())
-            Game.SelectedEntity = null;
+        if (UBot.Core.RuntimeAccess.Session.SelectedEntity != null && UBot.Core.RuntimeAccess.Session.SelectedEntity.TryDeselect())
+            UBot.Core.RuntimeAccess.Session.SelectedEntity = null;
     }
 
     public void CloseGuildShop()
     {
-        if (Game.SelectedEntity != null)
-            Game.SelectedEntity = null;
+        if (UBot.Core.RuntimeAccess.Session.SelectedEntity != null)
+            UBot.Core.RuntimeAccess.Session.SelectedEntity = null;
     }
 
     public void CloseGuildStorage(uint uniqueId)
@@ -296,7 +296,7 @@ internal sealed class CoreShoppingRuntime : IShoppingRuntime
         var packet = new Packet(0x7251);
         packet.WriteUInt(uniqueId);
         var awaitResult = new AwaitCallback(null, 0xB251);
-        PacketManager.SendPacket(packet, PacketDestination.Server, awaitResult);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, awaitResult);
         awaitResult.AwaitResponse();
 
         Thread.Sleep(2000);
@@ -326,11 +326,11 @@ internal sealed class CoreShoppingRuntime : IShoppingRuntime
             },
             0xB046
         );
-        PacketManager.SendPacket(packet, PacketDestination.Server, awaitResult);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, awaitResult);
         awaitResult.AwaitResponse(1000);
     }
 
-    public object GetSelectedNpc() => Game.SelectedEntity;
+    public object GetSelectedNpc() => UBot.Core.RuntimeAccess.Session.SelectedEntity;
 
     public uint GetNpcUniqueId(object npc) => npc is SpawnedBionic bionic ? bionic.UniqueId : 0;
 
@@ -343,6 +343,6 @@ internal sealed class CoreShoppingRuntime : IShoppingRuntime
 
     public bool HasPlayerStorage(bool guildStorage)
     {
-        return guildStorage ? Game.Player.GuildStorage != null : Game.Player.Storage != null;
+        return guildStorage ? UBot.Core.RuntimeAccess.Session.Player.GuildStorage != null : UBot.Core.RuntimeAccess.Session.Player.Storage != null;
     }
 }

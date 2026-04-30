@@ -35,7 +35,7 @@ public class GameResetRequest : IPacketHandler
         if (CoreGame.Clientless)
         {
             Packet gameResetResponse = new Packet(0x34B6);
-            ProtocolRuntime.Dispatch(gameResetResponse, PacketDestination.Server);
+            UBot.Protocol.ProtocolRuntime.Dispatch(gameResetResponse, PacketDestination.Server);
         }
 
         if (CoreGame.Player.Teleportation == null)
@@ -44,7 +44,7 @@ public class GameResetRequest : IPacketHandler
         CoreGame.Player.Teleportation.IsTeleporting = true;
         CoreGame.Player.State.DialogState = null;
 
-        EventManager.FireEvent("OnTeleportStart");
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnTeleportStart");
     }
 }
 

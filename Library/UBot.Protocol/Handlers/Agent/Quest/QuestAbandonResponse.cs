@@ -12,7 +12,7 @@ public class QuestAbandonResponse : IPacketHandler
 
     public void Invoke(Packet packet)
     {
-        var player = ProtocolRuntime.GameState?.Player as Player;
+        var player = UBot.Protocol.ProtocolRuntime.GameState?.Player as Player;
 
         if (player != null && packet.ReadByte() == 0x01)
         {
@@ -21,10 +21,10 @@ public class QuestAbandonResponse : IPacketHandler
             if (player.QuestLog.ActiveQuests.TryGetValue(questId, out var playerQuest))
             {
                 player.QuestLog.ActiveQuests.Remove(questId);
-                ProtocolRuntime.Feedback?.Notify($"Abandoned quest [{playerQuest.Quest.GetTranslatedName()}]");
+                UBot.Protocol.ProtocolRuntime.Feedback?.Notify($"Abandoned quest [{playerQuest.Quest.GetTranslatedName()}]");
             }
         }
 
-        ProtocolRuntime.EventBus?.Fire("OnUpdateQuests");
+        UBot.Protocol.ProtocolRuntime.EventBus?.Fire("OnUpdateQuests");
     }
 }

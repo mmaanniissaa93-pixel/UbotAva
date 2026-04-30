@@ -50,7 +50,7 @@ public class PartyCreateFromMatching : IPacketHandler
 
         CoreGame.Party.Leader = CoreGame.Party.GetMemberById(leaderId);
 
-        EventManager.FireEvent("OnPartyData");
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnPartyData");
     }
 }
 

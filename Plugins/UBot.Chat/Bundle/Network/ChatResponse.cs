@@ -1,4 +1,4 @@
-﻿using UBot.Chat.Views;
+using UBot.Chat.Views;
 using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Extensions;
@@ -47,7 +47,7 @@ internal class ChatResponse : IPacketHandler
 
                 message = ReadChatWithLinkedItems(message);
 
-                if (senderId != Game.Player.UniqueId)
+                if (senderId != UBot.Core.RuntimeAccess.Session.Player.UniqueId)
                 {
                     if (!SpawnManager.TryGetEntity<SpawnedPlayer>(senderId, out var player))
                         return;
@@ -56,7 +56,7 @@ internal class ChatResponse : IPacketHandler
                 }
                 else
                 {
-                    View.Instance.AppendMessage(message, Game.Player.Name, ChatType.All);
+                    View.Instance.AppendMessage(message, UBot.Core.RuntimeAccess.Session.Player.Name, ChatType.All);
                 }
 
                 break;

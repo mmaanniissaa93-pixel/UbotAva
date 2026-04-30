@@ -26,7 +26,7 @@ public class Ability : Cos
     {
         var packet = new Packet(0x7116);
         packet.WriteInt(UniqueId);
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+        UBot.Protocol.ProtocolRuntime.SendPacket(packet, PacketDestination.Server);
 
         return true;
     }
@@ -49,7 +49,7 @@ public class Ability : Cos
         packet.WriteByte(destinationSlot);
 
         var callback = new AwaitCallback(null, 0xB034);
-        PacketManager.SendPacket(packet, PacketDestination.Server, callback);
+        UBot.Protocol.ProtocolRuntime.SendPacket(packet, PacketDestination.Server, callback);
         callback.AwaitResponse();
 
         if (callback.IsCompleted)

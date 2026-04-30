@@ -13,7 +13,7 @@ public class SkillWithdrawResponse : IPacketHandler
 
     public void Invoke(Packet packet)
     {
-        var player = ProtocolRuntime.GameState?.Player as Player;
+        var player = UBot.Protocol.ProtocolRuntime.GameState?.Player as Player;
         if (player == null)
             return;
 
@@ -36,6 +36,6 @@ public class SkillWithdrawResponse : IPacketHandler
             player.Skills.KnownSkills.Add(newSkill);
 
         player.Skills.PendingWithdrawSkill = 0;
-        ProtocolRuntime.EventBus?.Fire("OnWithdrawSkill", oldSkill, newSkill);
+        UBot.Protocol.ProtocolRuntime.EventBus?.Fire("OnWithdrawSkill", oldSkill, newSkill);
     }
 }

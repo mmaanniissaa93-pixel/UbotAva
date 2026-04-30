@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Objects;
@@ -10,7 +10,7 @@ internal class LoopConditionValidator
 {
     public static string CheckLoopConditions()
     {
-        if (Game.Player.State.LifeState == LifeState.Dead)
+        if (UBot.Core.RuntimeAccess.Session.Player.State.LifeState == LifeState.Dead)
             return "[Lure] Pausing lure bot because the player is dead.";
 
         if (!CheckNumPartyMember())
@@ -34,10 +34,10 @@ internal class LoopConditionValidator
             return true;
 
         //Skip check if player is not in a pt.
-        if (Game.Party == null || Game.Party.Members == null)
+        if (UBot.Core.RuntimeAccess.Session.Party == null || UBot.Core.RuntimeAccess.Session.Party.Members == null)
             return true;
 
-        return Game.Party.Members.Count > LureConfig.NumPartyMember;
+        return UBot.Core.RuntimeAccess.Session.Party.Members.Count > LureConfig.NumPartyMember;
     }
 
     private static bool CheckNumPartyMemberDead()
@@ -46,10 +46,10 @@ internal class LoopConditionValidator
             return true;
 
         //Skip check if player is not in a pt.
-        if (Game.Party == null || Game.Party.Members == null)
+        if (UBot.Core.RuntimeAccess.Session.Party == null || UBot.Core.RuntimeAccess.Session.Party.Members == null)
             return true;
 
-        return Game.Party.Members.Count(p => p.Player != null && p.Player.State.LifeState == LifeState.Dead)
+        return UBot.Core.RuntimeAccess.Session.Party.Members.Count(p => p.Player != null && p.Player.State.LifeState == LifeState.Dead)
             < LureConfig.NumPartyMemberDead;
     }
 
@@ -59,10 +59,10 @@ internal class LoopConditionValidator
             return true;
 
         //Skip check if player is not in a pt.
-        if (Game.Party == null || Game.Party.Members == null)
+        if (UBot.Core.RuntimeAccess.Session.Party == null || UBot.Core.RuntimeAccess.Session.Party.Members == null)
             return true;
 
-        return Game.Party.Members.Count(p =>
+        return UBot.Core.RuntimeAccess.Session.Party.Members.Count(p =>
                 (
                     p.Player?.Movement.Source.DistanceTo(LureConfig.Area.Position)
                     ?? p.Position.DistanceTo(LureConfig.Area.Position)

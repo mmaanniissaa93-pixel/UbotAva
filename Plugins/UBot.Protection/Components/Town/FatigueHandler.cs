@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using UBot.Core;
 using UBot.Core.Event;
@@ -16,8 +16,8 @@ public class FatigueHandler : AbstractTownHandler
     /// </summary>
     public static void Initialize()
     {
-        EventManager.SubscribeEvent("OnFatigueTimeUpdate", OnFatigueTimeUpdate);
-        EventManager.SubscribeEvent("OnAgentServerDisconnected", OnAgentServerDisconnected);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnFatigueTimeUpdate", OnFatigueTimeUpdate);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnAgentServerDisconnected", OnAgentServerDisconnected);
     }
 
     private static void OnFatigueTimeUpdate()
@@ -25,7 +25,7 @@ public class FatigueHandler : AbstractTownHandler
         _disconnectTimer?.Dispose();
         _disconnectTimer = null;
 
-        int shardFatigueSecondsToDC = PlayerConfig.Get<int>("UBot.Protection.numShardFatigueMinToDC") * 60;
+        int shardFatigueSecondsToDC = UBot.Core.RuntimeAccess.Player.Get<int>("UBot.Protection.numShardFatigueMinToDC") * 60;
 
         int secondsToDC = ShardFatigueFullExpSeconds - shardFatigueSecondsToDC;
 
@@ -35,7 +35,7 @@ public class FatigueHandler : AbstractTownHandler
             return;
         }
 
-        if (Kernel.Bot.Running && PlayerConfig.Get<bool>("UBot.Protection.checkShardFatigue"))
+        if (UBot.Core.RuntimeAccess.Core.Bot.Running && UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkShardFatigue"))
         {
             TimeSpan remaining = TimeSpan.FromSeconds(secondsToDC);
             Log.Debug(
@@ -56,21 +56,21 @@ public class FatigueHandler : AbstractTownHandler
 
     private static void ReturnToTown()
     {
-        if (!Kernel.Bot.Running)
+        if (!UBot.Core.RuntimeAccess.Core.Bot.Running)
         {
             Log.WarnLang("FatigueBotIsNotRunning");
             return;
         }
 
-        if (!PlayerConfig.Get<bool>("UBot.Protection.checkShardFatigue"))
+        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkShardFatigue"))
             return;
 
-        Kernel.Bot.Stop();
-        Game.Player.UseReturnScroll();
+        UBot.Core.RuntimeAccess.Core.Bot.Stop();
+        UBot.Core.RuntimeAccess.Session.Player.UseReturnScroll();
         Log.WarnLang("ReturnToTownAndDC");
 
         Thread.Sleep(40000); // for slowest return scrolls and teleportation lag
-        Kernel.Proxy?.Shutdown();
+        UBot.Core.RuntimeAccess.Core.Proxy?.Shutdown();
     }
 
     private static void OnAgentServerDisconnected()

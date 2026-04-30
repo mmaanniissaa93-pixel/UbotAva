@@ -18,7 +18,7 @@ public class MagicOptionUpdateResponse : IPacketHandler
         {
             var errorCode = packet.ReadUShort();
 
-            EventManager.FireEvent("OnMagicOptionUpdateError", errorCode);
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnMagicOptionUpdateError", errorCode);
         }
 
         var unkByte = packet.ReadByte(); //planned counter?
@@ -29,7 +29,7 @@ public class MagicOptionUpdateResponse : IPacketHandler
             var oldItem = CoreGame.Player.Inventory.GetItemAt(slot);
             var item = packet.ReadInventoryItem(slot);
 
-            EventManager.FireEvent("OnMagicOptionUpdate", oldItem, item);
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnMagicOptionUpdate", oldItem, item);
         }
     }
 }

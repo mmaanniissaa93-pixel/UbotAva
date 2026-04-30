@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Threading;
 using UBot.Core;
 using UBot.Core.Components;
@@ -40,9 +40,9 @@ internal class LoopBundle : IBundle
         if (!Running)
             return;
 
-        if (Config.UseVehicle && !Game.Player.HasActiveVehicle && !Game.Player.IsInDungeon)
+        if (Config.UseVehicle && !UBot.Core.RuntimeAccess.Session.Player.HasActiveVehicle && !UBot.Core.RuntimeAccess.Session.Player.IsInDungeon)
         {
-            Game.Player.SummonVehicle();
+            UBot.Core.RuntimeAccess.Session.Player.SummonVehicle();
             Thread.Sleep(1000);
             return;
         }
@@ -76,13 +76,13 @@ internal class LoopBundle : IBundle
     {
         Config = new LoopConfig
         {
-            WalkScript = PlayerConfig.Get<string>("UBot.Walkback.File"),
-            UseSpeedDrug = PlayerConfig.Get<bool>("UBot.Training.checkUseSpeedDrug", true),
-            UseVehicle = PlayerConfig.Get<bool>("UBot.Training.checkUseMount", true),
-            CastBuffs = PlayerConfig.Get<bool>("UBot.Training.checkCastBuffs", true),
-            CastBuffsWhileWalkBack = PlayerConfig.Get<bool>("UBot.Skills.checkCastBuffsDuringWalkBack", true),
-            CastBuffsInTowns = PlayerConfig.Get<bool>("UBot.Skills.checkCastBuffsInTowns", false),
-            UseReverse = PlayerConfig.Get<bool>("UBot.Training.checkBoxUseReverse", false),
+            WalkScript = UBot.Core.RuntimeAccess.Player.Get<string>("UBot.Walkback.File"),
+            UseSpeedDrug = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Training.checkUseSpeedDrug", true),
+            UseVehicle = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Training.checkUseMount", true),
+            CastBuffs = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Training.checkCastBuffs", true),
+            CastBuffsWhileWalkBack = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Skills.checkCastBuffsDuringWalkBack", true),
+            CastBuffsInTowns = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Skills.checkCastBuffsInTowns", false),
+            UseReverse = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Training.checkBoxUseReverse", false),
         };
     }
 
@@ -121,7 +121,7 @@ internal class LoopBundle : IBundle
         var filename = Path.Combine(
             ScriptManager.InitialDirectory,
             "Towns",
-            Game.Player.Movement.Source.Region + ".rbs"
+            UBot.Core.RuntimeAccess.Session.Player.Movement.Source.Region + ".rbs"
         );
 
         //The player is in town, therefore, we need to run the town script first.
@@ -131,9 +131,9 @@ internal class LoopBundle : IBundle
             return;
         }
 
-        if (PlayerConfig.Get<bool>("UBot.Protection.checkStopBotOnReturnToTown"))
+        if (UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkStopBotOnReturnToTown"))
         {
-            Kernel.Bot.Stop();
+            UBot.Core.RuntimeAccess.Core.Bot.Stop();
             return;
         }
 
@@ -147,7 +147,7 @@ internal class LoopBundle : IBundle
         if (Running && Config.UseReverse)
         {
             var filter = new TypeIdFilter(3, 3, 3, 3);
-            var item = Game.Player.Inventory.GetItem(filter);
+            var item = UBot.Core.RuntimeAccess.Session.Player.Inventory.GetItem(filter);
             if (item != null)
                 /*
                     2 => go to last recall point
@@ -181,7 +181,7 @@ internal class LoopBundle : IBundle
             Config.WalkScript == null
             || ScriptManager.Running
             || !File.Exists(Config.WalkScript)
-            || !Kernel.Bot.Running
+            || !UBot.Core.RuntimeAccess.Core.Bot.Running
         )
             return;
 

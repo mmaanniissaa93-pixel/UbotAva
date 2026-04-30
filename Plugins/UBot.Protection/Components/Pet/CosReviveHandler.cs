@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UBot.Core;
 using UBot.Core.Event;
 using UBot.Core.Objects;
@@ -20,8 +20,8 @@ public class CosReviveHandler
     /// </summary>
     private static void SubscribeEvents()
     {
-        EventManager.SubscribeEvent("OnUpdateInventoryItem", new Action<byte>(OnItemUpdate));
-        EventManager.SubscribeEvent("OnStartBot", OnStartBot);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnUpdateInventoryItem", new Action<byte>(OnItemUpdate));
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnStartBot", OnStartBot);
     }
 
     /// <summary>
@@ -29,13 +29,13 @@ public class CosReviveHandler
     /// <param name="slot">The slot.</param>
     private static void OnItemUpdate(byte slot)
     {
-        if (!Kernel.Bot.Running)
+        if (!UBot.Core.RuntimeAccess.Core.Bot.Running)
             return;
 
-        if (!PlayerConfig.Get<bool>("UBot.Protection.checkReviveAttackPet"))
+        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkReviveAttackPet"))
             return;
 
-        var item = Game.Player.Inventory.GetItemAt(slot);
+        var item = UBot.Core.RuntimeAccess.Session.Player.Inventory.GetItemAt(slot);
         if (item == null)
             return;
 
@@ -50,25 +50,25 @@ public class CosReviveHandler
         System.Threading.Thread.Sleep(5000);
 
         if (itemRecord.IsGrowthPet)
-            Game.Player.ReviveGrowth();
+            UBot.Core.RuntimeAccess.Session.Player.ReviveGrowth();
 
         if (item.Record.IsFellowPet)
-            Game.Player.ReviveFellow();
+            UBot.Core.RuntimeAccess.Session.Player.ReviveFellow();
     }
 
     /// <summary>
     /// </summary>
     private static void OnStartBot()
     {
-        if (!Kernel.Bot.Running)
+        if (!UBot.Core.RuntimeAccess.Core.Bot.Running)
             return;
 
-        if (!PlayerConfig.Get<bool>("UBot.Protection.checkReviveAttackPet"))
+        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkReviveAttackPet"))
             return;
 
-        if (Game.Player.ReviveFellow())
+        if (UBot.Core.RuntimeAccess.Session.Player.ReviveFellow())
             return;
 
-        Game.Player.ReviveGrowth();
+        UBot.Core.RuntimeAccess.Session.Player.ReviveGrowth();
     }
 }

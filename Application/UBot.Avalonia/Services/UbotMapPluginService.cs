@@ -43,20 +43,20 @@ internal sealed class UbotMapPluginService : UbotServiceBase
     {
         var config = LoadPluginJsonConfig(MapPluginName);
         var showFilter = NormalizeMapShowFilterValue(
-            PlayerConfig.Get("UBot.Desktop.Map.ShowFilter",
-                PlayerConfig.Get("UBot.Desktop.Map.EntityFilter", "All")));
+            UBot.Core.RuntimeAccess.Player.Get("UBot.Desktop.Map.ShowFilter",
+                UBot.Core.RuntimeAccess.Player.Get("UBot.Desktop.Map.EntityFilter", "All")));
 
-        var collisionDetection = GlobalConfig.Get("UBot.EnableCollisionDetection",
-            PlayerConfig.Get("UBot.Desktop.Map.CollisionDetection", false));
-        var autoSelectUniques = PlayerConfig.Get("UBot.Map.AutoSelectUnique",
-            PlayerConfig.Get("UBot.Desktop.Map.AutoSelectUniques", false));
+        var collisionDetection = UBot.Core.RuntimeAccess.Global.Get("UBot.EnableCollisionDetection",
+            UBot.Core.RuntimeAccess.Player.Get("UBot.Desktop.Map.CollisionDetection", false));
+        var autoSelectUniques = UBot.Core.RuntimeAccess.Player.Get("UBot.Map.AutoSelectUnique",
+            UBot.Core.RuntimeAccess.Player.Get("UBot.Desktop.Map.AutoSelectUniques", false));
 
         config["showFilter"] = showFilter;
         config["entityFilter"] = showFilter;
         config["collisionDetection"] = collisionDetection;
         config["autoSelectUniques"] = autoSelectUniques;
         config["autoSelectUnique"] = autoSelectUniques;
-        config["resetToPlayerAt"] = PlayerConfig.Get("UBot.Desktop.Map.ResetToPlayerAt", 0L);
+        config["resetToPlayerAt"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Desktop.Map.ResetToPlayerAt", 0L);
         return config;
     }
 
@@ -66,27 +66,27 @@ internal sealed class UbotMapPluginService : UbotServiceBase
         if (TryGetStringValue(patch, "showFilter", out var showFilter) || TryGetStringValue(patch, "entityFilter", out showFilter))
         {
             var normalized = NormalizeMapShowFilterValue(showFilter);
-            PlayerConfig.Set("UBot.Desktop.Map.ShowFilter", normalized);
-            PlayerConfig.Set("UBot.Desktop.Map.EntityFilter", normalized);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Desktop.Map.ShowFilter", normalized);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Desktop.Map.EntityFilter", normalized);
             changed = true;
         }
 
         if (TryGetBoolValue(patch, "collisionDetection", out var collision))
         {
-            GlobalConfig.Set("UBot.EnableCollisionDetection", collision);
-            PlayerConfig.Set("UBot.Desktop.Map.CollisionDetection", collision);
+            UBot.Core.RuntimeAccess.Global.Set("UBot.EnableCollisionDetection", collision);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Desktop.Map.CollisionDetection", collision);
             changed = true;
         }
 
         if (TryGetBoolValue(patch, "autoSelectUniques", out var autoSelect) || TryGetBoolValue(patch, "autoSelectUnique", out autoSelect))
         {
-            PlayerConfig.Set("UBot.Map.AutoSelectUnique", autoSelect);
-            PlayerConfig.Set("UBot.Desktop.Map.AutoSelectUniques", autoSelect);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Map.AutoSelectUnique", autoSelect);
+            UBot.Core.RuntimeAccess.Player.Set("UBot.Desktop.Map.AutoSelectUniques", autoSelect);
             changed = true;
         }
 
         if (changed)
-            EventManager.FireEvent("OnSavePlayerConfig");
+            UBot.Core.RuntimeAccess.Events.FireEvent("OnSavePlayerConfig");
         return changed;
     }
 

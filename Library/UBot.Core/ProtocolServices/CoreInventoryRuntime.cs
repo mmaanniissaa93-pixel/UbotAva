@@ -10,60 +10,60 @@ namespace UBot.Core.ProtocolServices;
 
 internal sealed class CoreInventoryRuntime : IInventoryRuntime
 {
-    public bool PlayerInventoryFull => Game.Player?.Inventory?.Full == true;
+    public bool PlayerInventoryFull => UBot.Core.RuntimeAccess.Session.Player?.Inventory?.Full == true;
 
-    public bool PlayerHasActiveAbilityPet => Game.Player?.HasActiveAbilityPet == true;
+    public bool PlayerHasActiveAbilityPet => UBot.Core.RuntimeAccess.Session.Player?.HasActiveAbilityPet == true;
 
-    public int PlayerLevel => Game.Player?.Level ?? 0;
+    public int PlayerLevel => UBot.Core.RuntimeAccess.Session.Player?.Level ?? 0;
 
-    public object CurrentWeapon => Game.Player?.Weapon;
+    public object CurrentWeapon => UBot.Core.RuntimeAccess.Session.Player?.Weapon;
 
     public IList<object> GetPlayerNormalPartItems(Func<object, bool> predicate)
     {
-        return Game.Player?.Inventory?.GetNormalPartItems(item => predicate(item)).Cast<object>().ToList() ?? new List<object>();
+        return UBot.Core.RuntimeAccess.Session.Player?.Inventory?.GetNormalPartItems(item => predicate(item)).Cast<object>().ToList() ?? new List<object>();
     }
 
     public IList<object> GetPlayerInventoryItems(Func<object, bool> predicate)
     {
-        return Game.Player?.Inventory?.GetItems(item => predicate(item)).Cast<object>().ToList() ?? new List<object>();
+        return UBot.Core.RuntimeAccess.Session.Player?.Inventory?.GetItems(item => predicate(item)).Cast<object>().ToList() ?? new List<object>();
     }
 
     public object GetPlayerInventoryItemAt(byte slot)
     {
-        return Game.Player?.Inventory?.GetItemAt(slot);
+        return UBot.Core.RuntimeAccess.Session.Player?.Inventory?.GetItemAt(slot);
     }
 
     public int GetPlayerInventorySumAmount(string recordCodeName)
     {
-        return Game.Player?.Inventory?.GetSumAmount(recordCodeName) ?? 0;
+        return UBot.Core.RuntimeAccess.Session.Player?.Inventory?.GetSumAmount(recordCodeName) ?? 0;
     }
 
     public void MovePlayerInventoryItem(byte sourceSlot, byte destinationSlot, ushort amount)
     {
-        Game.Player?.Inventory?.MoveItem(sourceSlot, destinationSlot, amount);
+        UBot.Core.RuntimeAccess.Session.Player?.Inventory?.MoveItem(sourceSlot, destinationSlot, amount);
     }
 
     public IList<object> GetAbilityPetItems(Func<object, bool> predicate)
     {
-        return Game.Player?.AbilityPet is Ability ability
+        return UBot.Core.RuntimeAccess.Session.Player?.AbilityPet is Ability ability
             ? ability.Inventory.GetItems(item => predicate(item)).Cast<object>().ToList()
             : new List<object>();
     }
 
     public byte MoveAbilityPetItemToPlayer(byte slot)
     {
-        return Game.Player?.AbilityPet is Ability ability ? ability.MoveItemToPlayer(slot) : byte.MaxValue;
+        return UBot.Core.RuntimeAccess.Session.Player?.AbilityPet is Ability ability ? ability.MoveItemToPlayer(slot) : byte.MaxValue;
     }
 
     public IList<object> GetStorageItems(bool guildStorage, Func<object, bool> predicate)
     {
-        var storage = guildStorage ? Game.Player?.GuildStorage : Game.Player?.Storage;
+        var storage = guildStorage ? UBot.Core.RuntimeAccess.Session.Player?.GuildStorage : UBot.Core.RuntimeAccess.Session.Player?.Storage;
         return storage?.GetItems(item => predicate(item)).Cast<object>().ToList() ?? new List<object>();
     }
 
     public object GetStorageItemAt(bool guildStorage, byte slot)
     {
-        var storage = guildStorage ? Game.Player?.GuildStorage : Game.Player?.Storage;
+        var storage = guildStorage ? UBot.Core.RuntimeAccess.Session.Player?.GuildStorage : UBot.Core.RuntimeAccess.Session.Player?.Storage;
         return storage?.GetItemAt(slot);
     }
 
@@ -73,14 +73,14 @@ internal sealed class CoreInventoryRuntime : IInventoryRuntime
             return;
 
         if (guildStorage)
-            Game.Player?.GuildStorage?.MoveItem(sourceSlot, destinationSlot, amount, bionic);
+            UBot.Core.RuntimeAccess.Session.Player?.GuildStorage?.MoveItem(sourceSlot, destinationSlot, amount, bionic);
         else
-            Game.Player?.Storage?.MoveItem(sourceSlot, destinationSlot, amount, bionic);
+            UBot.Core.RuntimeAccess.Session.Player?.Storage?.MoveItem(sourceSlot, destinationSlot, amount, bionic);
     }
 
     public byte GetStorageFreeSlot(bool guildStorage)
     {
-        var storage = guildStorage ? Game.Player?.GuildStorage : Game.Player?.Storage;
+        var storage = guildStorage ? UBot.Core.RuntimeAccess.Session.Player?.GuildStorage : UBot.Core.RuntimeAccess.Session.Player?.Storage;
         return storage?.GetFreeSlot() ?? byte.MaxValue;
     }
 }

@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Cryptography;
 using UBot.Core.Network;
 using UBot.General.Components;
@@ -29,7 +29,7 @@ internal class GlobalIdentificationRequest : IPacketHandler
     /// <param name="packet">The packet.</param>
     public void Invoke(Packet packet)
     {
-        if (!Game.Clientless)
+        if (!UBot.Core.RuntimeAccess.Session.Clientless)
             return;
 
         var serviceName = packet.ReadString();
@@ -37,16 +37,16 @@ internal class GlobalIdentificationRequest : IPacketHandler
         if (serviceName == "GatewayServer")
         {
             var response = new Packet(0x6100);
-            response.WriteByte(Game.ReferenceManager.DivisionInfo.Locale);
+            response.WriteByte(UBot.Core.RuntimeAccess.Session.ReferenceManager.DivisionInfo.Locale);
             response.WriteString("SR_Client");
-            response.WriteUInt(Game.ReferenceManager.VersionInfo.Version);
+            response.WriteUInt(UBot.Core.RuntimeAccess.Session.ReferenceManager.VersionInfo.Version);
 
-            PacketManager.SendPacket(response, PacketDestination.Server);
+            UBot.Core.RuntimeAccess.Packets.SendPacket(response, PacketDestination.Server);
         }
         else if (serviceName == "AgentServer")
         {
             var selectedAccount = Accounts.SavedAccounts.Find(p =>
-                p.Username == GlobalConfig.Get<string>("UBot.General.AutoLoginAccountUsername")
+                p.Username == UBot.Core.RuntimeAccess.Global.Get<string>("UBot.General.AutoLoginAccountUsername")
             );
             if (selectedAccount == null)
             {
@@ -56,24 +56,24 @@ internal class GlobalIdentificationRequest : IPacketHandler
 
             Log.NotifyLang("UBot.General", "AuthAgentCertify");
 
-            var opcode = (ushort)(Game.ClientType == GameClientType.Rigid ? 0x6118 : 0x6103);
+            var opcode = (ushort)(UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Rigid ? 0x6118 : 0x6103);
             var response = new Packet(opcode, true);
-            response.WriteUInt(Kernel.Proxy.Token);
+            response.WriteUInt(UBot.Core.RuntimeAccess.Core.Proxy.Token);
 
-            if (Game.ClientType == GameClientType.RuSro)
+            if (UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.RuSro)
             {
-                response.WriteString(GlobalConfig.Get<string>("UBot.RuSro.login"));
-                response.WriteString(Sha256.ComputeHash(GlobalConfig.Get<string>("UBot.RuSro.password")));
+                response.WriteString(UBot.Core.RuntimeAccess.Global.Get<string>("UBot.RuSro.login"));
+                response.WriteString(Sha256.ComputeHash(UBot.Core.RuntimeAccess.Global.Get<string>("UBot.RuSro.password")));
             }
-            else if (Game.ClientType == GameClientType.Japanese)
+            else if (UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Japanese)
             {
-                response.WriteString(GlobalConfig.Get<string>("UBot.JSRO.login"));
-                response.WriteString(Sha256.ComputeHash(GlobalConfig.Get<string>("UBot.JSRO.token")));
+                response.WriteString(UBot.Core.RuntimeAccess.Global.Get<string>("UBot.JSRO.login"));
+                response.WriteString(Sha256.ComputeHash(UBot.Core.RuntimeAccess.Global.Get<string>("UBot.JSRO.token")));
             }
             else
             {
-                if (Game.ClientType == GameClientType.Global && selectedAccount.Channel == 0x02)
-                    response.WriteString(GlobalConfig.Get<string>("UBot.JCPlanet.login"));
+                if (UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Global && selectedAccount.Channel == 0x02)
+                    response.WriteString(UBot.Core.RuntimeAccess.Global.Get<string>("UBot.JCPlanet.login"));
                 else
                     response.WriteString(selectedAccount.Username);
 
@@ -83,9 +83,9 @@ internal class GlobalIdentificationRequest : IPacketHandler
                     response.WriteString(selectedAccount.Password);
             }
 
-            response.WriteByte(Game.ReferenceManager.DivisionInfo.Locale);
-            response.WriteBytes(Game.MacAddress);
-            PacketManager.SendPacket(response, PacketDestination.Server);
+            response.WriteByte(UBot.Core.RuntimeAccess.Session.ReferenceManager.DivisionInfo.Locale);
+            response.WriteBytes(UBot.Core.RuntimeAccess.Session.MacAddress);
+            UBot.Core.RuntimeAccess.Packets.SendPacket(response, PacketDestination.Server);
         }
     }
 }

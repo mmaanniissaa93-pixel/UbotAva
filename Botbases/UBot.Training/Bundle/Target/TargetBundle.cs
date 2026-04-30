@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using UBot.Core;
 using UBot.Core.Components;
@@ -32,16 +32,16 @@ internal class TargetBundle : IBundle
 
     private void OnTargetBehindObstacle()
     {
-        if (Game.SelectedEntity == null)
+        if (UBot.Core.RuntimeAccess.Session.SelectedEntity == null)
             return;
 
-        var selectedEntityUniqueId = Game.SelectedEntity.UniqueId;
-        Game.SelectedEntity?.TryDeselect();
-        Game.SelectedEntity = null;
+        var selectedEntityUniqueId = UBot.Core.RuntimeAccess.Session.SelectedEntity.UniqueId;
+        UBot.Core.RuntimeAccess.Session.SelectedEntity?.TryDeselect();
+        UBot.Core.RuntimeAccess.Session.SelectedEntity = null;
 
         Bundles.Movement.LastEntityWasBehindObstacle = true;
 
-        if (_blacklist?.TryAdd(selectedEntityUniqueId, Kernel.TickCount) == true)
+        if (_blacklist?.TryAdd(selectedEntityUniqueId, UBot.Core.RuntimeAccess.Core.TickCount) == true)
             Log.Debug($"Add mob [{selectedEntityUniqueId} to blacklist for {BLACKLIST_TIMEOUT}ms");
     }
 
@@ -51,7 +51,7 @@ internal class TargetBundle : IBundle
 
     private void SubscribeEvents()
     {
-        EventManager.SubscribeEvent("OnTargetBehindObstacle", OnTargetBehindObstacle);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnTargetBehindObstacle", OnTargetBehindObstacle);
     }
 
     /// <summary>
@@ -62,7 +62,7 @@ internal class TargetBundle : IBundle
         _blacklist?.RemoveAll(
             (uniqueId, tick) =>
             {
-                var flag = Kernel.TickCount - tick > BLACKLIST_TIMEOUT;
+                var flag = UBot.Core.RuntimeAccess.Core.TickCount - tick > BLACKLIST_TIMEOUT;
                 if (flag)
                     Log.Debug($"Removed mob [{uniqueId} from blacklist!");
 
@@ -71,7 +71,7 @@ internal class TargetBundle : IBundle
         );
 
         var attacker = GetFromCurrentAttackers();
-        if (attacker != null && Game.SelectedEntity == null)
+        if (attacker != null && UBot.Core.RuntimeAccess.Session.SelectedEntity == null)
         {
             Log.Debug("[TargetBundle] Emergency situation: Attacking the weaker mob first!");
 
@@ -83,7 +83,7 @@ internal class TargetBundle : IBundle
 
         if (
             attacker != null
-            && SpawnManager.TryGetEntity<SpawnedMonster>(Game.SelectedEntity.UniqueId, out var selectedMonster)
+            && SpawnManager.TryGetEntity<SpawnedMonster>(UBot.Core.RuntimeAccess.Session.SelectedEntity.UniqueId, out var selectedMonster)
             && (byte)attacker.Rarity < (byte)selectedMonster.Rarity
         )
         {
@@ -95,14 +95,14 @@ internal class TargetBundle : IBundle
             return;
         }
 
-        var warlockModeEnabled = PlayerConfig.Get("UBot.Skills.checkWarlockMode", false);
-        if (warlockModeEnabled && Game.SelectedEntity?.State.HasTwoDots() == true)
+        var warlockModeEnabled = UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.checkWarlockMode", false);
+        if (warlockModeEnabled && UBot.Core.RuntimeAccess.Session.SelectedEntity?.State.HasTwoDots() == true)
             return;
 
-        if (Game.SelectedEntity != null && Game.SelectedEntity is not SpawnedMonster)
-            Game.SelectedEntity = null;
+        if (UBot.Core.RuntimeAccess.Session.SelectedEntity != null && UBot.Core.RuntimeAccess.Session.SelectedEntity is not SpawnedMonster)
+            UBot.Core.RuntimeAccess.Session.SelectedEntity = null;
 
-        if (Game.SelectedEntity?.State.LifeState == LifeState.Alive)
+        if (UBot.Core.RuntimeAccess.Session.SelectedEntity?.State.LifeState == LifeState.Alive)
             return;
 
         var monster = GetNearestEnemy();
@@ -118,7 +118,7 @@ internal class TargetBundle : IBundle
 
     private SpawnedMonster GetFromCurrentAttackers()
     {
-        var attackWeakerFirst = PlayerConfig.Get<bool>("UBot.Training.checkAttackWeakerFirst");
+        var attackWeakerFirst = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Training.checkAttackWeakerFirst");
         if (!attackWeakerFirst || !IsEmergencySituation())
             return null;
 
@@ -150,8 +150,8 @@ internal class TargetBundle : IBundle
     /// <returns></returns>
     private SpawnedMonster GetNearestEnemy()
     {
-        var warlockModeEnabled = PlayerConfig.Get<bool>("UBot.Skills.checkWarlockMode");
-        var ignorePillar = PlayerConfig.Get<bool>("UBot.Training.checkBoxDimensionPillar");
+        var warlockModeEnabled = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Skills.checkWarlockMode");
+        var ignorePillar = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Training.checkBoxDimensionPillar");
 
         if (
             !SpawnManager.TryGetEntities<SpawnedMonster>(

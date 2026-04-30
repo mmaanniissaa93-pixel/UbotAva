@@ -47,14 +47,14 @@ public class EntityUpdateMovementResponse : IPacketHandler
             {
                 // Movement through angle
                 player.Move(movement.Angle);
-                EventManager.FireEvent("OnPlayerMoveAngle");
+                UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnPlayerMoveAngle");
 
                 return;
             }
 
             // Movement through click
             player.Move(movement.Destination);
-            EventManager.FireEvent("OnPlayerMove");
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnPlayerMove");
 
             return;
         }
@@ -70,15 +70,15 @@ public class EntityUpdateMovementResponse : IPacketHandler
         {
             // Movement through angle
             entity.Move(movement.Angle);
-            EventManager.FireEvent("OnEntityMoveAngle", uniqueId);
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnEntityMoveAngle", uniqueId);
 
             return;
         }
 
         if (player.Vehicle?.UniqueId == uniqueId)
-            EventManager.FireEvent("OnVehicleMove");
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnVehicleMove");
         else
-            EventManager.FireEvent("OnEntityMove", uniqueId);
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnEntityMove", uniqueId);
 
         // Movement through click
         entity.Move(movement.Destination);

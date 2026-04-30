@@ -65,20 +65,20 @@ internal class EnhanceBundle : IAlchemyBundle
     /// </summary>
     private void SubscribeEvents()
     {
-        EventManager.SubscribeEvent(
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent(
             "OnAlchemyDestroyed",
             new Action<InventoryItem, AlchemyType>(OnElixirAlchemyDestroyed)
         );
-        EventManager.SubscribeEvent(
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent(
             "OnAlchemySuccess",
             new Action<InventoryItem, InventoryItem, AlchemyType>(OnElixirAlchemySuccess)
         );
-        EventManager.SubscribeEvent("OnAlchemy", OnElixirAlchemy);
-        EventManager.SubscribeEvent(
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnAlchemy", OnElixirAlchemy);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent(
             "OnAlchemyFailed",
             new Action<InventoryItem, InventoryItem, AlchemyType>(OnElixirAlchemyFailed)
         );
-        EventManager.SubscribeEvent("OnFuseRequest", new Action<AlchemyAction, AlchemyType>(OnFuseRequest));
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnFuseRequest", new Action<AlchemyAction, AlchemyType>(OnFuseRequest));
     }
 
     /// <summary>
@@ -93,17 +93,17 @@ internal class EnhanceBundle : IAlchemyBundle
         if (config.Item == null)
         {
             Log.Warn("[Alchemy] No item configured");
-            Kernel.Bot.Stop();
+            UBot.Core.RuntimeAccess.Core.Bot.Stop();
 
             return;
         }
 
         //Item still there and available?
-        var item = Game.Player.Inventory.GetItemAt(config.Item.Slot);
+        var item = UBot.Core.RuntimeAccess.Session.Player.Inventory.GetItemAt(config.Item.Slot);
         if (item == null || item.Amount == 0)
         {
             Log.Warn("[Alchemy] Item to enhance is unavailable");
-            Kernel.Bot.Stop();
+            UBot.Core.RuntimeAccess.Core.Bot.Stop();
 
             return;
         }
@@ -115,7 +115,7 @@ internal class EnhanceBundle : IAlchemyBundle
         if (config.Elixirs == null || !config.Elixirs.Any() || config.Elixirs.Sum(i => i.Amount) == 0)
         {
             Log.Warn("[Alchemy] No enhancement elixir selected");
-            Kernel.Bot.Stop();
+            UBot.Core.RuntimeAccess.Core.Bot.Stop();
 
             return;
         }
@@ -128,7 +128,7 @@ internal class EnhanceBundle : IAlchemyBundle
         {
             Log.Warn("[Alchemy] No lucky powder left, stopping alchemy now!");
 
-            Kernel.Bot.Stop();
+            UBot.Core.RuntimeAccess.Core.Bot.Stop();
             MessageBox.Show(
                 "No more lucky powder left in the inventory.",
                 "Lucky powder",
@@ -147,7 +147,7 @@ internal class EnhanceBundle : IAlchemyBundle
                 config.Item.Record.GetRealName(),
                 $"The item's option level is {config.Item.OptLevel}/{config.MaxOptLevel}"
             );
-            Kernel.Bot.Stop();
+            UBot.Core.RuntimeAccess.Core.Bot.Stop();
 
             return;
         }
@@ -226,7 +226,7 @@ internal class EnhanceBundle : IAlchemyBundle
             )
             {
                 //Is immortal high enough?
-                var magicOption = Game.ReferenceManager.GetMagicOption(
+                var magicOption = UBot.Core.RuntimeAccess.Session.ReferenceManager.GetMagicOption(
                     RefMagicOpt.MaterialImmortal,
                     (byte)config.Item.Record.Degree
                 );
@@ -271,7 +271,7 @@ internal class EnhanceBundle : IAlchemyBundle
             return;
 
         var powder = _luckyPowders.FirstOrDefault();
-        var elixir = Game.Player.Inventory.GetItem(_config.Elixirs.First().ItemId);
+        var elixir = UBot.Core.RuntimeAccess.Session.Player.Inventory.GetItem(_config.Elixirs.First().ItemId);
 
         AlchemyManager.TryFuseElixir(_config.Item, elixir, powder);
     }
@@ -341,7 +341,7 @@ internal class EnhanceBundle : IAlchemyBundle
             return;
 
         _shouldRun = true;
-        var message = Game.ReferenceManager.GetTranslation("UIIT_MSG_REINFORCERR_FAIL");
+        var message = UBot.Core.RuntimeAccess.Session.ReferenceManager.GetTranslation("UIIT_MSG_REINFORCERR_FAIL");
         Log.Warn(message);
         Globals.View.AddLog(newItem.Record.GetRealName(), message);
 
@@ -355,7 +355,7 @@ internal class EnhanceBundle : IAlchemyBundle
                 .JoymaxFormat(newItem.Durability);
 
         if (oldItem.OptLevel > 0 && newItem.OptLevel == 0)
-            message = Game.ReferenceManager.GetTranslation("UIIT_MSG_REINFORCERR_FAIL_RESULT_OPTLV_ZERO");
+            message = UBot.Core.RuntimeAccess.Session.ReferenceManager.GetTranslation("UIIT_MSG_REINFORCERR_FAIL_RESULT_OPTLV_ZERO");
 
         if (oldItem.OptLevel > 0 && oldItem.OptLevel < newItem.OptLevel)
             message = Game

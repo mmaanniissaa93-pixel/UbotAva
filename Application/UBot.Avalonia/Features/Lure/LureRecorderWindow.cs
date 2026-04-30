@@ -672,7 +672,7 @@ public sealed class LureRecorderWindow : Window
         if (!_isRecording || !IsVisible)
             return;
 
-        var player = Game.Player;
+        var player = UBot.Core.RuntimeAccess.Session.Player;
         if (player == null)
             return;
 
@@ -716,7 +716,7 @@ public sealed class LureRecorderWindow : Window
         if (nowMs - _lastCastAtMs < 450)
             return;
 
-        var skillCode = Game.Player?.Skills?.GetSkillInfoById(skillId)?.Record?.Basic_Code?.Trim();
+        var skillCode = UBot.Core.RuntimeAccess.Session.Player?.Skills?.GetSkillInfoById(skillId)?.Record?.Basic_Code?.Trim();
         if (string.IsNullOrWhiteSpace(skillCode))
             skillCode = skillId.ToString(CultureInfo.InvariantCulture);
 
@@ -749,8 +749,8 @@ public sealed class LureRecorderWindow : Window
             if (_eventsSubscribed)
                 return;
 
-            EventManager.SubscribeEvent("OnPlayerMove", new Action(OnGlobalPlayerMove));
-            EventManager.SubscribeEvent("OnCastSkill", new Action<uint>(OnGlobalCastSkill));
+            UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnPlayerMove", new Action(OnGlobalPlayerMove));
+            UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnCastSkill", new Action<uint>(OnGlobalCastSkill));
             _eventsSubscribed = true;
         }
     }

@@ -32,7 +32,7 @@ internal static class AutoDungeonConfig
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray() ?? [];
 
-        PlayerConfig.SetArray(IgnoreNamesKey, values);
+        UBot.Core.RuntimeAccess.Player.SetArray(IgnoreNamesKey, values);
     }
 
     public static HashSet<MonsterRarity> LoadIgnoreTypes()
@@ -46,7 +46,7 @@ internal static class AutoDungeonConfig
     public static void SaveIgnoreTypes(IEnumerable<MonsterRarity> rarities)
     {
         var values = rarities?.Select(rarity => (byte)rarity).Distinct().ToArray() ?? [];
-        PlayerConfig.SetArray(IgnoreTypesKey, values);
+        UBot.Core.RuntimeAccess.Player.SetArray(IgnoreTypesKey, values);
     }
 
     public static HashSet<MonsterRarity> LoadOnlyCountTypes()
@@ -60,16 +60,16 @@ internal static class AutoDungeonConfig
     public static void SaveOnlyCountTypes(IEnumerable<MonsterRarity> rarities)
     {
         var values = rarities?.Select(rarity => (byte)rarity).Distinct().ToArray() ?? [];
-        PlayerConfig.SetArray(OnlyCountTypesKey, values);
+        UBot.Core.RuntimeAccess.Player.SetArray(OnlyCountTypesKey, values);
     }
 
     public static bool LoadAcceptForgottenWorld()
     {
-        return PlayerConfig.Get(AcceptForgottenWorldKey, false);
+        return UBot.Core.RuntimeAccess.Player.Get(AcceptForgottenWorldKey, false);
     }
 
     public static void SaveAcceptForgottenWorld(bool enabled)
     {
-        PlayerConfig.Set(AcceptForgottenWorldKey, enabled);
+        UBot.Core.RuntimeAccess.Player.Set(AcceptForgottenWorldKey, enabled);
     }
 }

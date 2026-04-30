@@ -33,7 +33,7 @@ public class JobUpdateExperienceResponse : IPacketHandler
         CoreGame.Player.JobInformation.Level = packet.ReadByte();
         CoreGame.Player.JobInformation.Experience = packet.ReadUInt();
 
-        EventManager.FireEvent("OnJobExperienceUpdate");
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnJobExperienceUpdate");
     }
 }
 

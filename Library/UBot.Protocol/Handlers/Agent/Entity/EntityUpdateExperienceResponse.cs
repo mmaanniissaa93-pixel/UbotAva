@@ -58,10 +58,10 @@ public class EntityUpdateExperienceResponse : IPacketHandler
 
             Log.Notify($"Congratulations, your level has increased to lv.{CoreGame.Player.Level}");
 
-            EventManager.FireEvent("OnLevelUp", oldLevel);
+            UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnLevelUp", oldLevel);
         }
 
-        EventManager.FireEvent("OnExpSpUpdate");
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnExpSpUpdate");
     }
 }
 

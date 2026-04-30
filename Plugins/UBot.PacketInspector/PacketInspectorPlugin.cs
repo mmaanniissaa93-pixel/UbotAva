@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows.Forms;
 using UBot.Core;
 using UBot.Core.Components;
@@ -20,15 +20,15 @@ public class PacketInspectorPlugin : IPlugin
 
     public void Initialize()
     {
-        PacketCaptureStore.CaptureEnabled = GlobalConfig.Get("UBot.PacketInspector.CaptureEnabled", false);
-        PacketCaptureStore.MaxEntries = Math.Clamp(GlobalConfig.Get("UBot.PacketInspector.MaxRows", 2000), 100, 10000);
+        PacketCaptureStore.CaptureEnabled = UBot.Core.RuntimeAccess.Global.Get("UBot.PacketInspector.CaptureEnabled", false);
+        PacketCaptureStore.MaxEntries = Math.Clamp(UBot.Core.RuntimeAccess.Global.Get("UBot.PacketInspector.MaxRows", 2000), 100, 10000);
     }
 
     public Control View => Views.View.Instance;
 
     public void Translate()
     {
-        LanguageManager.Translate(View, Kernel.Language);
+        LanguageManager.Translate(View, UBot.Core.RuntimeAccess.Core.Language);
     }
 
     public void OnLoadCharacter()
@@ -38,7 +38,7 @@ public class PacketInspectorPlugin : IPlugin
 
     public void Enable()
     {
-        PacketCaptureStore.CaptureEnabled = GlobalConfig.Get("UBot.PacketInspector.CaptureEnabled", false);
+        PacketCaptureStore.CaptureEnabled = UBot.Core.RuntimeAccess.Global.Get("UBot.PacketInspector.CaptureEnabled", false);
 
         if (View != null)
             View.Enabled = true;

@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using UBot.Core;
@@ -15,10 +15,10 @@ internal static class MovementBundle
     {
         if (
             LureConfig.UseSpeedDrug
-            && Game.Player.State.ActiveBuffs.FindIndex(p => p.Record.Params.Contains(1752396901)) < 0
+            && UBot.Core.RuntimeAccess.Session.Player.State.ActiveBuffs.FindIndex(p => p.Record.Params.Contains(1752396901)) < 0
         )
         {
-            var item = Game.Player.Inventory.GetItem(
+            var item = UBot.Core.RuntimeAccess.Session.Player.Inventory.GetItem(
                 new TypeIdFilter(3, 3, 13, 1),
                 p => p.Record.Desc1.Contains("_SPEED_")
             );
@@ -32,13 +32,13 @@ internal static class MovementBundle
 
             Log.Debug("[Lure] Walking back to center");
 
-            var moved = Game.Player.MoveTo(LureConfig.Area.Position, false);
+            var moved = UBot.Core.RuntimeAccess.Session.Player.MoveTo(LureConfig.Area.Position, false);
             if (!moved)
                 return;
 
             Log.Debug($"[Lure] Waiting at the center for {LureConfig.StayAtCenterForSeconds}s");
 
-            EventManager.FireEvent(
+            UBot.Core.RuntimeAccess.Events.FireEvent(
                 "OnChangeStatusText",
                 $"Waiting for {LureConfig.StayAtCenterForSeconds}s at center..."
             );
@@ -53,7 +53,7 @@ internal static class MovementBundle
             {
                 Log.Error($"[Lure] The file for the script {LureConfig.SelectedScriptPath} does not exist!");
 
-                Kernel.Bot.Stop();
+                UBot.Core.RuntimeAccess.Core.Bot.Stop();
 
                 return;
             }
@@ -66,18 +66,18 @@ internal static class MovementBundle
             Task.Run(() => ScriptManager.RunScript(false));
         }
 
-        if (LureConfig.StayAtCenter || Game.Player.Movement.Moving)
+        if (LureConfig.StayAtCenter || UBot.Core.RuntimeAccess.Session.Player.Movement.Moving)
             return;
 
         var minDistance = LureConfig.Area.Radius / 1.5f;
         var destination = LureConfig.Area.GetRandomPosition();
-        while (destination.DistanceToPlayer() < minDistance || Game.Player.Position.HasCollisionBetween(destination))
+        while (destination.DistanceToPlayer() < minDistance || UBot.Core.RuntimeAccess.Session.Player.Position.HasCollisionBetween(destination))
             destination = LureConfig.Area.GetRandomPosition();
 
         Log.Status("Walking to random position...");
         Log.Debug(
             $"[Lure] Moving to random position {destination} (distance={destination.DistanceToPlayer()}, min. distance={minDistance})"
         );
-        Game.Player.MoveTo(destination);
+        UBot.Core.RuntimeAccess.Session.Player.MoveTo(destination);
     }
 }

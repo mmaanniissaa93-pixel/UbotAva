@@ -4,5 +4,5 @@ namespace UBot.Core.ProtocolServices;
 
 internal sealed class CoreServiceRuntimeEnvironment : IServiceRuntimeEnvironment
 {
-    public string BasePath => Kernel.BasePath;
+    public string BasePath => UBot.Core.RuntimeAccess.Core.BasePath;
 }

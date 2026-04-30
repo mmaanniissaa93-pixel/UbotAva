@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UBot.Core.Objects;
 
 namespace UBot.Core.Extensions;
@@ -12,7 +12,7 @@ public static class AttributesInfoExtension
     /// <returns></returns>
     public static string GetTranslation(this ItemAttributeGroup group)
     {
-        return Game.ReferenceManager.GetTranslation(GetAttributeTranslationName(group));
+        return UBot.Core.RuntimeAccess.Session.ReferenceManager.GetTranslation(GetAttributeTranslationName(group));
     }
 
     /// <summary>

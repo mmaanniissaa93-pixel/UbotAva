@@ -48,7 +48,7 @@ internal sealed class UbotPluginStateService : UbotServiceBase
         var state = new Dictionary<string, object?>
         {
             ["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-            ["botRunning"] = Kernel.Bot != null && Kernel.Bot.Running,
+            ["botRunning"] = UBot.Core.RuntimeAccess.Core.Bot != null && UBot.Core.RuntimeAccess.Core.Bot.Running,
             ["statusText"] = statusSnapshot.StatusText,
             ["player"] = statusSnapshot.Player
         };
@@ -96,7 +96,7 @@ internal sealed class UbotPluginStateService : UbotServiceBase
         if (TryResolvePlugin(pluginId, out var plugin))
             return plugin.Enabled;
         if (TryResolveBotbase(pluginId, out var botbase))
-            return Kernel.Bot?.Botbase?.Name == botbase.Name;
+            return UBot.Core.RuntimeAccess.Core.Bot?.Botbase?.Name == botbase.Name;
         return false;
     }
 }
@@ -227,8 +227,8 @@ internal sealed class UbotPluginConfigService : UbotServiceBase
 
         if (changed)
         {
-            GlobalConfig.Save();
-            PlayerConfig.Save();
+            UBot.Core.RuntimeAccess.Global.Save();
+            UBot.Core.RuntimeAccess.Player.Save();
         }
 
         return Task.FromResult(changed);

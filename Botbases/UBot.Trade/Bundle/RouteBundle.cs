@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -63,7 +63,7 @@ internal class RouteBundle
     /// </summary>
     private void SubscribeEvents()
     {
-        EventManager.SubscribeEvent("OnFinishScript", new Action<bool>(OnFinishScript));
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnFinishScript", new Action<bool>(OnFinishScript));
     }
 
     /// <summary>
@@ -75,7 +75,7 @@ internal class RouteBundle
         if (error)
             return;
 
-        if (!TradeBotbase.IsActive || !Game.Ready)
+        if (!TradeBotbase.IsActive || !UBot.Core.RuntimeAccess.Session.Ready)
             return;
 
         TownscriptRunning = false;
@@ -107,7 +107,7 @@ internal class RouteBundle
         var filename = Path.Combine(
             ScriptManager.InitialDirectory,
             "Towns",
-            Game.Player.Movement.Source.Region + ".rbs"
+            UBot.Core.RuntimeAccess.Session.Player.Movement.Source.Region + ".rbs"
         );
 
         if (!File.Exists(filename))
@@ -138,7 +138,7 @@ internal class RouteBundle
     public void Tick()
     {
         //Wait for player to revive
-        if (Game.Player.State.LifeState == LifeState.Dead)
+        if (UBot.Core.RuntimeAccess.Session.Player.State.LifeState == LifeState.Dead)
         {
             Log.Status("Waiting for resurrection");
 
@@ -170,7 +170,7 @@ internal class RouteBundle
         if (!TradeConfig.UseRouteScripts)
             return;
 
-        if (Game.Player.Movement.HasDestination)
+        if (UBot.Core.RuntimeAccess.Session.Player.Movement.HasDestination)
             return;
 
         //Run town script
@@ -214,14 +214,14 @@ internal class RouteBundle
             if (CurrentRouteFile == null)
             {
                 Log.Warn("[Trade] Could not find the next route!");
-                Kernel.Bot.Stop();
+                UBot.Core.RuntimeAccess.Core.Bot.Stop();
 
                 return;
             }
 
             _blockedByRouteDialog = false;
 
-            Game.ShowNotification($"[UBot] Picked trade route {Path.GetFileNameWithoutExtension(CurrentRouteFile)}");
+            UBot.Core.RuntimeAccess.Session.ShowNotification($"[UBot] Picked trade route {Path.GetFileNameWithoutExtension(CurrentRouteFile)}");
 
             ScriptManager.Load(CurrentRouteFile);
             Task.Run(() => ScriptManager.RunScript(restartNearby));
@@ -235,7 +235,7 @@ internal class RouteBundle
             ScriptManager.Load(CurrentRouteFile);
 
         //Continue previous script
-        if ((!Game.Player.InAction && !ScriptManager.Running) || ScriptManager.Paused)
+        if ((!UBot.Core.RuntimeAccess.Session.Player.InAction && !ScriptManager.Running) || ScriptManager.Paused)
         {
             Task.Run(() => ScriptManager.RunScript());
 
@@ -280,7 +280,7 @@ internal class RouteBundle
 
             Log.Error("[Trade] Enter a name for a player to trace and try again.");
 
-            Kernel.Bot.Stop();
+            UBot.Core.RuntimeAccess.Core.Bot.Stop();
 
             return false;
         }
@@ -295,7 +295,7 @@ internal class RouteBundle
 
         WaitingForTracePlayer = false;
 
-        Game.Player.MoveTo(player.Position);
+        UBot.Core.RuntimeAccess.Session.Player.MoveTo(player.Position);
 
         return true;
     }
@@ -322,7 +322,7 @@ internal class RouteBundle
         {
             Log.Error("[Trade] No route found!");
 
-            Kernel.Bot.Stop();
+            UBot.Core.RuntimeAccess.Core.Bot.Stop();
 
             _blockedByRouteDialog = false;
 
@@ -361,7 +361,7 @@ internal class RouteBundle
                 continue;
 
             var startPosition = walkScript.FirstOrDefault();
-            if (startPosition.Region.Id != Game.Player.Position.Region.Id)
+            if (startPosition.Region.Id != UBot.Core.RuntimeAccess.Session.Player.Position.Region.Id)
                 continue;
 
             return file;

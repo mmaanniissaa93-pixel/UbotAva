@@ -1,4 +1,4 @@
-﻿using UBot.Core.Network;
+using UBot.Core.Network;
 using UBot.Protocol;
 
 namespace UBot.Protocol.Handlers.Agent.Character;
@@ -14,12 +14,12 @@ public class CharacterIncreaseStrResponse : IPacketHandler
         if (packet.ReadByte() != 1)
             return;
 
-        dynamic player = ProtocolRuntime.GameState?.Player;
+        dynamic player = UBot.Protocol.ProtocolRuntime.GameState?.Player;
         if (player == null)
             return;
 
         player.StatPoints--;
-        ProtocolRuntime.GameState?.FireEvent("OnIncreaseStrength");
+        UBot.Protocol.ProtocolRuntime.GameState?.FireEvent("OnIncreaseStrength");
     }
 }
 

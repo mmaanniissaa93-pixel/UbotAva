@@ -68,11 +68,11 @@ public class ClientlessManagerTests
         {
             ClientlessManager.Shutdown();
 
-            var previousRuntime = ServiceRuntime.ClientConnectionRuntime;
-            var previousService = ServiceRuntime.Clientless;
+            var previousRuntime = UBot.Core.RuntimeAccess.Services.ClientConnectionRuntime;
+            var previousService = UBot.Core.RuntimeAccess.Services.Clientless;
             var service = new ClientlessService();
 
-            ServiceRuntime.ClientConnectionRuntime = new FakeClientConnectionRuntime(agentConnected);
+            UBot.Core.RuntimeAccess.Services.ClientConnectionRuntime = new FakeClientConnectionRuntime(agentConnected);
             ClientlessManager.Initialize(service);
 
             return new ClientlessScope(previousRuntime, previousService, service);
@@ -85,8 +85,8 @@ public class ClientlessManagerTests
         public void Dispose()
         {
             ClientlessManager.Shutdown();
-            ServiceRuntime.ClientConnectionRuntime = _previousRuntime;
-            ServiceRuntime.Clientless = _previousService;
+            UBot.Core.RuntimeAccess.Services.ClientConnectionRuntime = _previousRuntime;
+            UBot.Core.RuntimeAccess.Services.Clientless = _previousService;
         }
     }
 

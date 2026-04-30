@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Event;
 
@@ -29,7 +29,7 @@ internal class Kills : IStatisticCalculator
     /// <inheritdoc />
     public object GetValue()
     {
-        return !Game.Ready ? 0 : _lastTickValue;
+        return !UBot.Core.RuntimeAccess.Session.Ready ? 0 : _lastTickValue;
     }
 
     /// <inheritdoc />
@@ -41,7 +41,7 @@ internal class Kills : IStatisticCalculator
     /// <inheritdoc />
     public void Initialize()
     {
-        EventManager.SubscribeEvent("OnKillEnemy", OnKillEnemy);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnKillEnemy", OnKillEnemy);
     }
 
     private void OnKillEnemy()

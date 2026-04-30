@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Objects;
 using UBot.Core.Objects.Spawn;
@@ -24,20 +24,20 @@ internal class LootBundle : IBundle
             return;
 
         //If we use the ability pet, we can attack during the work of the Pickup manager
-        if (Config.UseAbilityPet && Game.Player.HasActiveAbilityPet && !PickupManager.RunningAbilityPetPickup)
+        if (Config.UseAbilityPet && UBot.Core.RuntimeAccess.Session.Player.HasActiveAbilityPet && !PickupManager.RunningAbilityPetPickup)
         {
             PickupManager.RunAbilityPet(Container.Bot.Area.Position, Container.Bot.Area.Radius);
             return;
         }
 
-        if ((Bundles.Loot.Config.DontPickupInBerzerk && Game.Player.Berzerking) || ScriptManager.Running)
+        if ((Bundles.Loot.Config.DontPickupInBerzerk && UBot.Core.RuntimeAccess.Session.Player.Berzerking) || ScriptManager.Running)
             return;
 
         //Don't pickup if a mob is selected
-        if (Game.SelectedEntity is SpawnedMonster monster && monster.State.LifeState == LifeState.Alive)
+        if (UBot.Core.RuntimeAccess.Session.SelectedEntity is SpawnedMonster monster && monster.State.LifeState == LifeState.Alive)
             return;
 
-        PickupManager.RunPlayer(Game.Player.Position, Container.Bot.Area.Position, Container.Bot.Area.Radius);
+        PickupManager.RunPlayer(UBot.Core.RuntimeAccess.Session.Player.Position, Container.Bot.Area.Position, Container.Bot.Area.Radius);
     }
 
     /// <summary>
@@ -47,9 +47,9 @@ internal class LootBundle : IBundle
     {
         Config = new LootConfig
         {
-            UseAbilityPet = PlayerConfig.Get("UBot.Items.Pickup.EnableAbilityPet", true),
-            DontPickupWhileBotting = PlayerConfig.Get("UBot.Items.Pickup.DontPickupWhileBotting", false),
-            DontPickupInBerzerk = PlayerConfig.Get("UBot.Items.Pickup.DontPickupInBerzerk", true),
+            UseAbilityPet = UBot.Core.RuntimeAccess.Player.Get("UBot.Items.Pickup.EnableAbilityPet", true),
+            DontPickupWhileBotting = UBot.Core.RuntimeAccess.Player.Get("UBot.Items.Pickup.DontPickupWhileBotting", false),
+            DontPickupInBerzerk = UBot.Core.RuntimeAccess.Player.Get("UBot.Items.Pickup.DontPickupInBerzerk", true),
         };
     }
 

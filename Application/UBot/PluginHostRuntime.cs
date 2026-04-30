@@ -27,7 +27,7 @@ internal static class PluginHostRuntime
         IPlugin plugin = null;
         try
         {
-            GlobalConfig.Load();
+            UBot.Core.RuntimeAccess.Global.Load();
 
             var assembly = Assembly.LoadFrom(pluginPath);
             var pluginType = assembly

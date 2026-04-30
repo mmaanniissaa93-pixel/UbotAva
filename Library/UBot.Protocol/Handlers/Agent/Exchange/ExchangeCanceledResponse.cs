@@ -19,7 +19,7 @@ public class ExchangeCanceledResponse : IPacketHandler
 
         Log.Notify("Exchange has been canceled.");
 
-        EventManager.FireEvent("OnCancelExchange");
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnCancelExchange");
     }
 }
 

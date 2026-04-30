@@ -14,7 +14,7 @@ public class ActionBuffAddResponse : IPacketHandler
 
     public void Invoke(Packet packet)
     {
-        var player = ProtocolRuntime.GameState?.Player as Player;
+        var player = UBot.Protocol.ProtocolRuntime.GameState?.Player as Player;
         if (player == null)
             return;
 
@@ -40,14 +40,14 @@ public class ActionBuffAddResponse : IPacketHandler
             }
 
             player.State.ActiveBuffs.Add(buff);
-            ProtocolRuntime.EventBus?.Fire("OnAddBuff", buff);
+            UBot.Protocol.ProtocolRuntime.EventBus?.Fire("OnAddBuff", buff);
 
             var buffName = buff.Record?.GetRealName() ?? buff.Id.ToString();
-            ProtocolRuntime.Feedback?.Notify($"Buff [{buffName}] added.");
+            UBot.Protocol.ProtocolRuntime.Feedback?.Notify($"Buff [{buffName}] added.");
             return;
         }
 
-        if (ProtocolRuntime.SpawnController?.GetEntity(targetId) is SpawnedBionic entity)
+        if (UBot.Protocol.ProtocolRuntime.SpawnController?.GetEntity(targetId) is SpawnedBionic entity)
             entity.State.ActiveBuffs.Add(buff);
     }
 }

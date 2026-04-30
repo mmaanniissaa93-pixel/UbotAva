@@ -19,7 +19,7 @@ internal sealed class SkillRuntimeAdapter : ISkillRuntime
                     typedCallbacks.Add(typedCallback);
         }
 
-        PacketManager.SendPacket(networkPacket, PacketDestination.Server, typedCallbacks.ToArray());
+        UBot.Core.RuntimeAccess.Packets.SendPacket(networkPacket, PacketDestination.Server, typedCallbacks.ToArray());
     }
 
     public object CreateActionAckCallback()

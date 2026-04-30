@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Event;
 using UBot.Core.Objects;
 
@@ -19,8 +19,8 @@ public class AutoSummonAttackPet
     /// </summary>
     private static void SubscribeEvents()
     {
-        EventManager.SubscribeEvent("OnKillSelectedEnemy", OnKillSelectedEnemy);
-        EventManager.SubscribeEvent("OnStartBot", OnStartBot);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnKillSelectedEnemy", OnKillSelectedEnemy);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnStartBot", OnStartBot);
     }
 
     /// <summary>
@@ -28,43 +28,43 @@ public class AutoSummonAttackPet
     /// <param name="uniqueId">The unique identifier.</param>
     private static void OnKillSelectedEnemy()
     {
-        if (!Kernel.Bot.Running)
+        if (!UBot.Core.RuntimeAccess.Core.Bot.Running)
             return;
 
-        if (Game.Player.State.LifeState == LifeState.Dead)
+        if (UBot.Core.RuntimeAccess.Session.Player.State.LifeState == LifeState.Dead)
             return;
 
-        if (Game.Player.Growth != null || Game.Player.Fellow != null)
+        if (UBot.Core.RuntimeAccess.Session.Player.Growth != null || UBot.Core.RuntimeAccess.Session.Player.Fellow != null)
             return;
 
-        if (!PlayerConfig.Get<bool>("UBot.Protection.checkAutoSummonAttackPet"))
+        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkAutoSummonAttackPet"))
             return;
 
-        //if (Game.Player.State.BattleState != BattleState.InPeace)
+        //if (UBot.Core.RuntimeAccess.Session.Player.State.BattleState != BattleState.InPeace)
         //    return;
 
-        if (Game.Player.SummonFellow())
+        if (UBot.Core.RuntimeAccess.Session.Player.SummonFellow())
             return;
 
-        Game.Player.SummonGrowth();
+        UBot.Core.RuntimeAccess.Session.Player.SummonGrowth();
     }
 
     /// <summary>
     /// </summary>
     private static void OnStartBot()
     {
-        if (Game.Player.Growth != null || Game.Player.Fellow != null)
+        if (UBot.Core.RuntimeAccess.Session.Player.Growth != null || UBot.Core.RuntimeAccess.Session.Player.Fellow != null)
             return;
 
-        if (!PlayerConfig.Get<bool>("UBot.Protection.checkAutoSummonAttackPet"))
+        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkAutoSummonAttackPet"))
             return;
 
-        if (Game.Player.State.BattleState != BattleState.InPeace)
+        if (UBot.Core.RuntimeAccess.Session.Player.State.BattleState != BattleState.InPeace)
             return;
 
-        if (Game.Player.SummonFellow())
+        if (UBot.Core.RuntimeAccess.Session.Player.SummonFellow())
             return;
 
-        Game.Player.SummonGrowth();
+        UBot.Core.RuntimeAccess.Session.Player.SummonGrowth();
     }
 }

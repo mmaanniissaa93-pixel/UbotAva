@@ -43,7 +43,7 @@ public class JobJoinResponse : IPacketHandler
 
         Log.Notify($"[Job] Joined job guild {CoreGame.Player.JobInformation.Type}.");
 
-        EventManager.FireEvent("OnJobJoin");
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnJobJoin");
     }
 }
 

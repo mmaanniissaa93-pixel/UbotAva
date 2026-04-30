@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Threading.Tasks;
 using UBot.Core;
 using UBot.Core.Event;
@@ -22,15 +22,15 @@ public class DeadHandler : AbstractTownHandler
     /// </summary>
     private static void SubscribeEvents()
     {
-        EventManager.SubscribeEvent("OnPlayerDied", OnPlayerDied);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnPlayerDied", OnPlayerDied);
     }
 
     internal static bool TryHandleStartPrecheck()
     {
-        if (!Kernel.Bot.Running)
+        if (!UBot.Core.RuntimeAccess.Core.Bot.Running)
             return false;
 
-        if (Game.Player?.State?.LifeState == LifeState.Dead)
+        if (UBot.Core.RuntimeAccess.Session.Player?.State?.LifeState == LifeState.Dead)
         {
             OnPlayerDied();
             return true;
@@ -45,26 +45,26 @@ public class DeadHandler : AbstractTownHandler
     /// <param name="uniqueId">The unique identifier.</param>
     private static async void OnPlayerDied()
     {
-        if (!Kernel.Bot.Running)
+        if (!UBot.Core.RuntimeAccess.Core.Bot.Running)
             return;
 
-        if (Game.Player.Level < 10)
+        if (UBot.Core.RuntimeAccess.Session.Player.Level < 10)
         {
             await Task.Delay(5000);
             var upPacket = new Packet(0x3053);
             upPacket.WriteByte(2);
-            PacketManager.SendPacket(upPacket, PacketDestination.Server);
+            UBot.Core.RuntimeAccess.Packets.SendPacket(upPacket, PacketDestination.Server);
             return;
         }
 
-        if (!PlayerConfig.Get<bool>("UBot.Protection.checkDead"))
+        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkDead"))
             return;
 
-        if (Game.Player.State.LifeState != LifeState.Dead)
+        if (UBot.Core.RuntimeAccess.Session.Player.State.LifeState != LifeState.Dead)
             return;
 
-        var itemsToUse = PlayerConfig.GetArray<string>("UBot.Inventory.AutoUseAccordingToPurpose");
-        var inventoryItem = Game.Player.Inventory.GetItem(
+        var itemsToUse = UBot.Core.RuntimeAccess.Player.GetArray<string>("UBot.Inventory.AutoUseAccordingToPurpose");
+        var inventoryItem = UBot.Core.RuntimeAccess.Session.Player.Inventory.GetItem(
             new TypeIdFilter(3, 3, 13, 6),
             p => itemsToUse.Contains(p.Record.CodeName)
         );
@@ -74,17 +74,17 @@ public class DeadHandler : AbstractTownHandler
             return;
         }
 
-        var timeOut = PlayerConfig.Get("UBot.Protection.numDeadTimeout", 30);
+        var timeOut = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.numDeadTimeout", 30);
 
         Log.WarnLang("ResurrectSPointSeconds", timeOut);
 
         await Task.Delay(timeOut * 1000);
 
-        if (Game.Player.State.LifeState != LifeState.Dead)
+        if (UBot.Core.RuntimeAccess.Session.Player.State.LifeState != LifeState.Dead)
             return;
 
         var packet = new Packet(0x3053);
         packet.WriteByte(1);
-        PacketManager.SendPacket(packet, PacketDestination.Server); //Only works if not teleporting at that moment
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server); //Only works if not teleporting at that moment
     }
 }

@@ -15,7 +15,7 @@ public class StorageOpenRequest : IPacketHandler
     {
         var entityId = packet.ReadUInt();
 
-        EventManager.FireEvent("OnStorageOpenRequest", entityId);
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnStorageOpenRequest", entityId);
     }
 
     #endregion Methods

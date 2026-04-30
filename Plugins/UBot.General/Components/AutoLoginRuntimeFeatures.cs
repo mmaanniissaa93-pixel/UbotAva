@@ -19,15 +19,15 @@ internal static class AutoLoginRuntimeFeatures
         if (Interlocked.Exchange(ref _initialized, 1) == 1)
             return;
 
-        EventManager.SubscribeEvent("OnEnterGame", new System.Action(OnEnterGame), Owner);
-        EventManager.SubscribeEvent("OnLoadCharacter", new System.Action(OnLoadCharacter), Owner);
-        EventManager.SubscribeEvent("OnStartClient", new System.Action(OnStartClient), Owner);
-        EventManager.SubscribeEvent("OnAgentServerDisconnected", new System.Action(OnAgentServerDisconnected), Owner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnEnterGame", new System.Action(OnEnterGame), Owner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnLoadCharacter", new System.Action(OnLoadCharacter), Owner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnStartClient", new System.Action(OnStartClient), Owner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnAgentServerDisconnected", new System.Action(OnAgentServerDisconnected), Owner);
     }
 
     public static void UnsubscribeAll()
     {
-        EventManager.UnsubscribeOwner(Owner);
+        UBot.Core.RuntimeAccess.Events.UnsubscribeOwner(Owner);
     }
 
     private static void OnEnterGame()
@@ -37,10 +37,10 @@ internal static class AutoLoginRuntimeFeatures
 
     private static void OnStartClient()
     {
-        if (!GlobalConfig.Get("UBot.General.EnableAutomatedLogin", false))
+        if (!UBot.Core.RuntimeAccess.Global.Get("UBot.General.EnableAutomatedLogin", false))
             return;
 
-        if (!GlobalConfig.Get("UBot.General.HideOnStartClient", false))
+        if (!UBot.Core.RuntimeAccess.Global.Get("UBot.General.HideOnStartClient", false))
             return;
 
         _ = Task.Run(async () =>
@@ -63,26 +63,26 @@ internal static class AutoLoginRuntimeFeatures
             if (actionSequence != Volatile.Read(ref _actionSequence))
                 return;
 
-            if (!GlobalConfig.Get("UBot.General.EnableAutomatedLogin", false))
+            if (!UBot.Core.RuntimeAccess.Global.Get("UBot.General.EnableAutomatedLogin", false))
                 return;
 
-            if (GlobalConfig.Get("UBot.General.HideOnStartClient", false))
+            if (UBot.Core.RuntimeAccess.Global.Get("UBot.General.HideOnStartClient", false))
                 ClientManager.SetVisible(false);
 
-            if (GlobalConfig.Get("UBot.General.UseReturnScroll", false))
+            if (UBot.Core.RuntimeAccess.Global.Get("UBot.General.UseReturnScroll", false))
                 await TryUseReturnScrollAsync(actionSequence);
 
-            if (GlobalConfig.Get("UBot.General.StartBot", false))
+            if (UBot.Core.RuntimeAccess.Global.Get("UBot.General.StartBot", false))
                 await TryStartBotAsync(actionSequence, trackedSession);
         });
     }
 
     private static void OnAgentServerDisconnected()
     {
-        if (Game.Clientless)
+        if (UBot.Core.RuntimeAccess.Session.Clientless)
             return;
 
-        if (!GlobalConfig.Get("UBot.General.EnableAutomatedLogin", false))
+        if (!UBot.Core.RuntimeAccess.Global.Get("UBot.General.EnableAutomatedLogin", false))
             return;
 
         var reconnectSequence = Interlocked.Increment(ref _reconnectSequence);
@@ -90,8 +90,8 @@ internal static class AutoLoginRuntimeFeatures
         _ = Task.Run(async () =>
         {
             var delay = 10000;
-            if (GlobalConfig.Get("UBot.General.EnableWaitAfterDC", false))
-                delay = GlobalConfig.Get("UBot.General.WaitAfterDC", 3) * 60 * 1000;
+            if (UBot.Core.RuntimeAccess.Global.Get("UBot.General.EnableWaitAfterDC", false))
+                delay = UBot.Core.RuntimeAccess.Global.Get("UBot.General.WaitAfterDC", 3) * 60 * 1000;
 
             Log.Warn($"Agent disconnected. Reconnecting in {delay / 1000} seconds...");
             await Task.Delay(delay);
@@ -99,7 +99,7 @@ internal static class AutoLoginRuntimeFeatures
             if (reconnectSequence != Volatile.Read(ref _reconnectSequence))
                 return;
 
-            if (Kernel.Proxy != null && (Kernel.Proxy.IsConnectedToGatewayserver || Kernel.Proxy.IsConnectedToAgentserver))
+            if (UBot.Core.RuntimeAccess.Core.Proxy != null && (UBot.Core.RuntimeAccess.Core.Proxy.IsConnectedToGatewayserver || UBot.Core.RuntimeAccess.Core.Proxy.IsConnectedToAgentserver))
                 return;
 
             try
@@ -112,7 +112,7 @@ internal static class AutoLoginRuntimeFeatures
                 // ignore and continue with reconnect
             }
 
-            Game.Start();
+            UBot.Core.RuntimeAccess.Session.Start();
             await Task.Delay(800);
 
             var started = await ClientManager.Start();
@@ -129,7 +129,7 @@ internal static class AutoLoginRuntimeFeatures
             if (actionSequence != Volatile.Read(ref _actionSequence))
                 return;
 
-            var player = Game.Player;
+            var player = UBot.Core.RuntimeAccess.Session.Player;
             if (player != null && player.UseReturnScroll())
                 return;
 
@@ -149,10 +149,10 @@ internal static class AutoLoginRuntimeFeatures
             if (sessionSequence != Volatile.Read(ref _sessionSequence))
                 return;
 
-            if (Kernel.Bot != null && Kernel.Bot.Botbase != null)
+            if (UBot.Core.RuntimeAccess.Core.Bot != null && UBot.Core.RuntimeAccess.Core.Bot.Botbase != null)
             {
-                if (!Kernel.Bot.Running)
-                    Kernel.Bot.Start();
+                if (!UBot.Core.RuntimeAccess.Core.Bot.Running)
+                    UBot.Core.RuntimeAccess.Core.Bot.Start();
 
                 return;
             }

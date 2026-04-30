@@ -12,7 +12,7 @@ public class PlayerUpdatePointsResponse : IPacketHandler
 
     public void Invoke(Packet packet)
     {
-        var player = ProtocolRuntime.GameState?.Player as Player;
+        var player = UBot.Protocol.ProtocolRuntime.GameState?.Player as Player;
         if (player == null)
             return;
 
@@ -21,17 +21,17 @@ public class PlayerUpdatePointsResponse : IPacketHandler
         {
             case 1:
                 player.Gold = packet.ReadULong();
-                ProtocolRuntime.EventBus?.Fire("OnUpdateGold");
+                UBot.Protocol.ProtocolRuntime.EventBus?.Fire("OnUpdateGold");
                 break;
 
             case 2:
                 player.SkillPoints = packet.ReadUInt();
-                ProtocolRuntime.EventBus?.Fire("OnUpdateSP");
+                UBot.Protocol.ProtocolRuntime.EventBus?.Fire("OnUpdateSP");
                 break;
 
             case 4:
                 player.BerzerkPoints = packet.ReadByte();
-                ProtocolRuntime.EventBus?.Fire("OnUpdateBerzerkerPoints");
+                UBot.Protocol.ProtocolRuntime.EventBus?.Fire("OnUpdateBerzerkerPoints");
                 break;
         }
     }

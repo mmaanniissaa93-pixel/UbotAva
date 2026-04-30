@@ -23,7 +23,7 @@ internal class AttackAreaScriptCommand : IScriptCommand
 
     public bool Execute(string[] arguments = null)
     {
-        if (!Game.Ready || Game.Player == null)
+        if (!UBot.Core.RuntimeAccess.Session.Ready || UBot.Core.RuntimeAccess.Session.Player == null)
         {
             Log.Warn("[AutoDungeon] AttackArea failed: character is not in game.");
             return false;
@@ -46,7 +46,7 @@ internal class AttackAreaScriptCommand : IScriptCommand
                 radius = Math.Round(parsedRadius, 2);
             }
 
-            var startPosition = Game.Player.Movement.Source;
+            var startPosition = UBot.Core.RuntimeAccess.Session.Player.Movement.Source;
             var monitoredMonsters = AutoDungeonState.GetMonsterCounterSnapshot(startPosition, radius).Count;
             if (monitoredMonsters == 0)
             {
@@ -61,11 +61,11 @@ internal class AttackAreaScriptCommand : IScriptCommand
             );
 
             var originalArea = new TrainingAreaSnapshot(
-                PlayerConfig.Get<ushort>("UBot.Area.Region"),
-                PlayerConfig.Get<float>("UBot.Area.X"),
-                PlayerConfig.Get<float>("UBot.Area.Y"),
-                PlayerConfig.Get<float>("UBot.Area.Z"),
-                Math.Clamp(PlayerConfig.Get("UBot.Area.Radius", 50), 5, 100)
+                UBot.Core.RuntimeAccess.Player.Get<ushort>("UBot.Area.Region"),
+                UBot.Core.RuntimeAccess.Player.Get<float>("UBot.Area.X"),
+                UBot.Core.RuntimeAccess.Player.Get<float>("UBot.Area.Y"),
+                UBot.Core.RuntimeAccess.Player.Get<float>("UBot.Area.Z"),
+                Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Area.Radius", 50), 5, 100)
             );
 
             var areaRadius = radius.HasValue
@@ -74,9 +74,9 @@ internal class AttackAreaScriptCommand : IScriptCommand
 
             AutoDungeonState.SetTrainingArea(startPosition, areaRadius);
 
-            if (!Kernel.Bot.Running)
+            if (!UBot.Core.RuntimeAccess.Core.Bot.Running)
             {
-                Kernel.Bot.Start();
+                UBot.Core.RuntimeAccess.Core.Bot.Start();
                 Thread.Sleep(250);
             }
 
@@ -84,7 +84,7 @@ internal class AttackAreaScriptCommand : IScriptCommand
                 startPosition,
                 radius,
                 timeoutSeconds: 600,
-                continueCondition: () => !_stopRequested && Kernel.Bot.Running
+                continueCondition: () => !_stopRequested && UBot.Core.RuntimeAccess.Core.Bot.Running
             );
 
             AutoDungeonState.WaitForPotentialDrops(startPosition, areaRadius, maxSeconds: 10);
@@ -97,8 +97,8 @@ internal class AttackAreaScriptCommand : IScriptCommand
             );
             AutoDungeonState.SetTrainingArea(restorePosition, originalArea.Radius);
 
-            if (Game.Player.Movement.Source.DistanceTo(startPosition) > 4)
-                Game.Player.MoveTo(startPosition, false);
+            if (UBot.Core.RuntimeAccess.Session.Player.Movement.Source.DistanceTo(startPosition) > 4)
+                UBot.Core.RuntimeAccess.Session.Player.MoveTo(startPosition, false);
 
             if (cleared)
                 Log.Notify("[AutoDungeon] AttackArea finished. Area restored.");

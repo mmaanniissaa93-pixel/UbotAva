@@ -111,7 +111,7 @@ internal sealed class ClientNativeRuntimeAdapter : IClientNativeRuntime
                 _process.EnableRaisingEvents = true;
                 _process.Exited += ClientProcess_Exited;
 
-                EventManager.FireEvent("OnStartClient");
+                UBot.Core.RuntimeAccess.Events.FireEvent("OnStartClient");
                 return true;
             }
             catch (Exception ex)
@@ -394,7 +394,7 @@ internal sealed class ClientNativeRuntimeAdapter : IClientNativeRuntime
     private static void ClientProcess_Exited(object sender, EventArgs e)
     {
         Log.Warn("Client process exited!");
-        EventManager.FireEvent("OnExitClient");
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnExitClient");
     }
 
     private static void PrepareTempConfigFile(uint processId, ClientLaunchConfigDto config)

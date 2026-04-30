@@ -1,4 +1,4 @@
-﻿using System.Threading;
+using System.Threading;
 using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Objects.Spawn;
@@ -29,7 +29,7 @@ internal class MovementBundle : IBundle
     /// </summary>
     public void Invoke()
     {
-        if (Game.SelectedEntity != null && !LastEntityWasBehindObstacle)
+        if (UBot.Core.RuntimeAccess.Session.SelectedEntity != null && !LastEntityWasBehindObstacle)
             return;
 
         var playerUnderAttack = SpawnManager.Any<SpawnedMonster>(m =>
@@ -38,33 +38,33 @@ internal class MovementBundle : IBundle
         if (playerUnderAttack && !LastEntityWasBehindObstacle)
             return;
 
-        if (Game.Player.Movement.Moving)
+        if (UBot.Core.RuntimeAccess.Session.Player.Movement.Moving)
             return;
 
         if (
-            PlayerConfig.Get("UBot.Party.AlwaysFollowPartyMaster", false)
-            && Game.Party.IsInParty
-            && !Game.Party.IsLeader
+            UBot.Core.RuntimeAccess.Player.Get("UBot.Party.AlwaysFollowPartyMaster", false)
+            && UBot.Core.RuntimeAccess.Session.Party.IsInParty
+            && !UBot.Core.RuntimeAccess.Session.Party.IsLeader
         )
         {
-            if (Game.Player.InAction)
+            if (UBot.Core.RuntimeAccess.Session.Player.InAction)
                 return;
 
-            var player = Game.Party.Leader?.Player;
+            var player = UBot.Core.RuntimeAccess.Session.Party.Leader?.Player;
             if (player != null && player.Position.DistanceToPlayer() >= 10)
-                Game.Player.MoveTo(player.Position);
+                UBot.Core.RuntimeAccess.Session.Player.MoveTo(player.Position);
 
             return;
         }
 
-        var distance = Game.Player.Position.DistanceTo(Container.Bot.Area.Position);
-        var hasCollision = Game.Player.Position.HasCollisionBetween(Container.Bot.Area.Position);
+        var distance = UBot.Core.RuntimeAccess.Session.Player.Position.DistanceTo(Container.Bot.Area.Position);
+        var hasCollision = UBot.Core.RuntimeAccess.Session.Player.Position.HasCollisionBetween(Container.Bot.Area.Position);
 
         //Go back if the player is out of the radius
         if ((distance > Container.Bot.Area.Radius || (Config.WalkToCenter && distance > 3)) && !hasCollision)
         {
             Log.Status("Walking to center");
-            Game.Player.MoveTo(Container.Bot.Area.Position);
+            UBot.Core.RuntimeAccess.Session.Player.MoveTo(Container.Bot.Area.Position);
 
             return;
         }
@@ -79,7 +79,7 @@ internal class MovementBundle : IBundle
         var destination = Container.Bot.Area.GetRandomPosition();
 
         var attempt = 0;
-        while (Game.Player.Position.HasCollisionBetween(destination) && distance < Container.Bot.Area.Radius)
+        while (UBot.Core.RuntimeAccess.Session.Player.Position.HasCollisionBetween(destination) && distance < Container.Bot.Area.Radius)
         {
             destination = Container.Bot.Area.GetRandomPosition();
 
@@ -87,7 +87,7 @@ internal class MovementBundle : IBundle
                 break;
         }
 
-        Game.Player.MoveTo(destination, false);
+        UBot.Core.RuntimeAccess.Session.Player.MoveTo(destination, false);
     }
 
     /// <summary>
@@ -97,8 +97,8 @@ internal class MovementBundle : IBundle
     {
         Config = new MovementConfig
         {
-            WalkAround = PlayerConfig.Get("UBot.Training.radioWalkAround", true),
-            WalkToCenter = PlayerConfig.Get<bool>("UBot.Training.radioCenter"),
+            WalkAround = UBot.Core.RuntimeAccess.Player.Get("UBot.Training.radioWalkAround", true),
+            WalkToCenter = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Training.radioCenter"),
         };
     }
 

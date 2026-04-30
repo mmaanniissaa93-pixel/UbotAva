@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Objects;
 using UBot.Core.Objects.Skill;
@@ -10,65 +10,65 @@ internal class AttackBundle : IBundle
     /// <summary>
     ///     The last tick count for checking func call
     /// </summary>
-    private int _lastTick = Kernel.TickCount;
+    private int _lastTick = UBot.Core.RuntimeAccess.Core.TickCount;
 
     /// <summary>
     ///     Invokes this instance.
     /// </summary>
     public void Invoke()
     {
-        if (Game.SelectedEntity == null || !Game.Player.CanAttack)
+        if (UBot.Core.RuntimeAccess.Session.SelectedEntity == null || !UBot.Core.RuntimeAccess.Session.Player.CanAttack)
             return;
 
-        if (Game.SelectedEntity.IsBehindObstacle)
+        if (UBot.Core.RuntimeAccess.Session.SelectedEntity.IsBehindObstacle)
         {
             Log.Debug("Deselecting entity because it moved behind an obstacle!");
 
-            if (Game.Player.InAction)
+            if (UBot.Core.RuntimeAccess.Session.Player.InAction)
                 SkillManager.CancelAction();
 
-            Game.SelectedEntity?.TryDeselect();
-            Game.SelectedEntity = null;
+            UBot.Core.RuntimeAccess.Session.SelectedEntity?.TryDeselect();
+            UBot.Core.RuntimeAccess.Session.SelectedEntity = null;
 
             return;
         }
 
-        bool dontFollowMobs = PlayerConfig.Get<bool>("UBot.Training.checkBoxDontFollowMobs");
-        if (dontFollowMobs && !Kernel.Bot.Botbase.Area.IsInSight(Game.SelectedEntity))
+        bool dontFollowMobs = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Training.checkBoxDontFollowMobs");
+        if (dontFollowMobs && !UBot.Core.RuntimeAccess.Core.Bot.Botbase.Area.IsInSight(UBot.Core.RuntimeAccess.Session.SelectedEntity))
         {
             Log.Debug("Deselecting entity because it moved far away from training area!");
 
-            if (Game.Player.InAction)
+            if (UBot.Core.RuntimeAccess.Session.Player.InAction)
                 SkillManager.CancelAction();
 
-            Game.SelectedEntity?.TryDeselect();
-            Game.SelectedEntity = null;
+            UBot.Core.RuntimeAccess.Session.SelectedEntity?.TryDeselect();
+            UBot.Core.RuntimeAccess.Session.SelectedEntity = null;
 
-            double distance = Game.Player.Position.DistanceTo(Container.Bot.Area.Position);
-            bool hasCollision = Game.Player.Position.HasCollisionBetween(Container.Bot.Area.Position);
+            double distance = UBot.Core.RuntimeAccess.Session.Player.Position.DistanceTo(Container.Bot.Area.Position);
+            bool hasCollision = UBot.Core.RuntimeAccess.Session.Player.Position.HasCollisionBetween(Container.Bot.Area.Position);
 
             if (distance > Container.Bot.Area.Radius && !hasCollision)
-                Game.Player.MoveTo(Container.Bot.Area.Position, false);
+                UBot.Core.RuntimeAccess.Session.Player.MoveTo(Container.Bot.Area.Position, false);
 
             return;
         }
 
         if (
             SkillManager.ImbueSkill != null
-            && !Game.Player.State.HasActiveBuff(SkillManager.ImbueSkill, out _)
+            && !UBot.Core.RuntimeAccess.Session.Player.State.HasActiveBuff(SkillManager.ImbueSkill, out _)
             && SkillManager.ImbueSkill.CanBeCasted
         )
             SkillManager.ImbueSkill.Cast(buff: true);
 
-        if (Kernel.TickCount - _lastTick < 500)
+        if (UBot.Core.RuntimeAccess.Core.TickCount - _lastTick < 500)
             return;
 
-        _lastTick = Kernel.TickCount;
+        _lastTick = UBot.Core.RuntimeAccess.Core.TickCount;
 
-        //if (Game.Player.InAction && !SkillManager.IsLastCastedBasic)
+        //if (UBot.Core.RuntimeAccess.Session.Player.InAction && !SkillManager.IsLastCastedBasic)
         //  return;
 
-        var useTeleportSkill = PlayerConfig.Get("UBot.Skills.checkUseTeleportSkill", false);
+        var useTeleportSkill = UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.checkUseTeleportSkill", false);
         if (useTeleportSkill && CastTeleportation())
             return;
 
@@ -76,26 +76,26 @@ internal class AttackBundle : IBundle
 
         var skill = SkillManager.GetNextSkill();
 
-        //Log.Debug($"Getnextskill: {stopwatch.ElapsedMilliseconds} Action:{Game.Player.InAction} Entity:{Game.SelectedEntity != null} LA:{SkillManager.IsLastCastedBasic} Skill:{skill}");
+        //Log.Debug($"Getnextskill: {stopwatch.ElapsedMilliseconds} Action:{UBot.Core.RuntimeAccess.Session.Player.InAction} Entity:{UBot.Core.RuntimeAccess.Session.SelectedEntity != null} LA:{SkillManager.IsLastCastedBasic} Skill:{skill}");
 
-        if (!Game.Player.InAction)
+        if (!UBot.Core.RuntimeAccess.Session.Player.InAction)
             Log.Status("Attacking");
 
         if (skill == null)
         {
-            if (Game.Player.InAction)
+            if (UBot.Core.RuntimeAccess.Session.Player.InAction)
                 return;
 
-            if (PlayerConfig.Get("UBot.Skills.checkUseDefaultAttack", true))
+            if (UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.checkUseDefaultAttack", true))
                 SkillManager.CastAutoAttack();
 
             return;
         }
 
-        if (Game.Player.InAction && SkillManager.IsLastCastedBasic)
+        if (UBot.Core.RuntimeAccess.Session.Player.InAction && SkillManager.IsLastCastedBasic)
             SkillManager.CancelAction();
 
-        var uniqueId = Game.SelectedEntity?.UniqueId;
+        var uniqueId = UBot.Core.RuntimeAccess.Session.SelectedEntity?.UniqueId;
         if (uniqueId == null)
             return;
 
@@ -121,10 +121,10 @@ internal class AttackBundle : IBundle
     /// <returns></returns>
     private bool CastTeleportation()
     {
-        if (SkillManager.TeleportSkill?.CanBeCasted != true || Game.SelectedEntity?.State.LifeState != LifeState.Alive)
+        if (SkillManager.TeleportSkill?.CanBeCasted != true || UBot.Core.RuntimeAccess.Session.SelectedEntity?.State.LifeState != LifeState.Alive)
             return false;
 
-        var distanceToMonster = Game.SelectedEntity?.DistanceToPlayer;
+        var distanceToMonster = UBot.Core.RuntimeAccess.Session.SelectedEntity?.DistanceToPlayer;
         var availableDistance = GetTeleportTravelDistance(SkillManager.TeleportSkill);
 
         if (availableDistance <= 0)
@@ -139,7 +139,7 @@ internal class AttackBundle : IBundle
 
             if (distanceAfterCasting < distanceToMonster)
             {
-                SkillManager.TeleportSkill.CastAt(Game.SelectedEntity.Position);
+                SkillManager.TeleportSkill.CastAt(UBot.Core.RuntimeAccess.Session.SelectedEntity.Position);
 
                 Log.Debug(
                     $"Used teleportation skill [{SkillManager.TeleportSkill.Record.GetRealName()}] (before: {distanceToMonster}m, after: {distanceAfterCasting}m, traveled: {availableDistance}m)"

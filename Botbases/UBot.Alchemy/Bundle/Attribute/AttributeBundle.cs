@@ -31,17 +31,17 @@ internal class AttributeBundle : IAlchemyBundle
 
     public void SubscribeEvents()
     {
-        EventManager.SubscribeEvent(
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent(
             "OnAlchemySuccess",
             new Action<InventoryItem, InventoryItem, AlchemyType>(OnStoneAlchemySuccess)
         );
-        EventManager.SubscribeEvent(
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent(
             "OnAlchemyFailed",
             new Action<InventoryItem, InventoryItem, AlchemyType>(OnStoneAlchemyFailed)
         );
-        EventManager.SubscribeEvent("OnAlchemyError", new Action<ushort, AlchemyType>(OnStoneAlchemyError));
-        EventManager.SubscribeEvent("OnAlchemy", new Action<AlchemyType>(OnStoneAlchemy));
-        EventManager.SubscribeEvent("OnFuseRequest", new Action<AlchemyAction, AlchemyType>(OnFuseRequest));
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnAlchemyError", new Action<ushort, AlchemyType>(OnStoneAlchemyError));
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnAlchemy", new Action<AlchemyType>(OnStoneAlchemy));
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnFuseRequest", new Action<AlchemyAction, AlchemyType>(OnFuseRequest));
     }
 
     /// <summary>
@@ -61,7 +61,7 @@ internal class AttributeBundle : IAlchemyBundle
         {
             Log.Error("[Alchemy] No attribute stone fusion configured!");
 
-            Kernel.Bot.Stop();
+            UBot.Core.RuntimeAccess.Core.Bot.Stop();
 
             return;
         }
@@ -87,7 +87,7 @@ internal class AttributeBundle : IAlchemyBundle
         {
             Log.Notify("[Alchemy] Attribute stone fusing finished!");
 
-            Kernel.Bot.Stop();
+            UBot.Core.RuntimeAccess.Core.Bot.Stop();
         }
     }
 
@@ -175,7 +175,7 @@ internal class AttributeBundle : IAlchemyBundle
 
         Globals.View.AddLog(
             newItem.Record.GetRealName(),
-            Game.ReferenceManager.GetTranslation("UIIT_MSG_REINFORCERR_FAIL")
+            UBot.Core.RuntimeAccess.Session.ReferenceManager.GetTranslation("UIIT_MSG_REINFORCERR_FAIL")
         );
 
         _shouldRun = true;
@@ -195,7 +195,7 @@ internal class AttributeBundle : IAlchemyBundle
 
         Globals.View.AddLog(
             Globals.Botbase.AttributeBundleConfig?.Item?.Record?.GetRealName(),
-            Game.ReferenceManager.GetTranslation("UIIT_MSG_REINFORCERR_FAIL")
+            UBot.Core.RuntimeAccess.Session.ReferenceManager.GetTranslation("UIIT_MSG_REINFORCERR_FAIL")
         );
     }
 

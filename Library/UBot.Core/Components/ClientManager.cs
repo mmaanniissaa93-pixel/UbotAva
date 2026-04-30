@@ -14,28 +14,28 @@ public static class ClientManager
 
     public static void Initialize()
     {
-        if (ServiceRuntime.ClientNativeRuntime == null)
-            ServiceRuntime.ClientNativeRuntime = new ClientNativeRuntimeAdapter();
+        if (UBot.Core.RuntimeAccess.Services.ClientNativeRuntime == null)
+            UBot.Core.RuntimeAccess.Services.ClientNativeRuntime = new ClientNativeRuntimeAdapter();
 
-        if (ServiceRuntime.ClientLaunchConfigProvider == null)
-            ServiceRuntime.ClientLaunchConfigProvider = new CoreClientLaunchConfigProvider();
+        if (UBot.Core.RuntimeAccess.Services.ClientLaunchConfigProvider == null)
+            UBot.Core.RuntimeAccess.Services.ClientLaunchConfigProvider = new CoreClientLaunchConfigProvider();
 
-        Initialize(ServiceRuntime.ClientLaunchPolicy ?? new ClientLaunchPolicyService());
+        Initialize(UBot.Core.RuntimeAccess.Services.ClientLaunchPolicy ?? new ClientLaunchPolicyService());
     }
 
     public static void Initialize(IClientLaunchPolicy launchPolicy)
     {
-        if (ServiceRuntime.ClientNativeRuntime == null)
-            ServiceRuntime.ClientNativeRuntime = new ClientNativeRuntimeAdapter();
+        if (UBot.Core.RuntimeAccess.Services.ClientNativeRuntime == null)
+            UBot.Core.RuntimeAccess.Services.ClientNativeRuntime = new ClientNativeRuntimeAdapter();
 
-        if (ServiceRuntime.ClientLaunchConfigProvider == null)
-            ServiceRuntime.ClientLaunchConfigProvider = new CoreClientLaunchConfigProvider();
+        if (UBot.Core.RuntimeAccess.Services.ClientLaunchConfigProvider == null)
+            UBot.Core.RuntimeAccess.Services.ClientLaunchConfigProvider = new CoreClientLaunchConfigProvider();
 
-        ServiceRuntime.ClientLaunchPolicy = launchPolicy ?? throw new ArgumentNullException(nameof(launchPolicy));
+        UBot.Core.RuntimeAccess.Services.ClientLaunchPolicy = launchPolicy ?? throw new ArgumentNullException(nameof(launchPolicy));
         Initialize(new ClientManagerRuntime(
-            ServiceRuntime.ClientLaunchPolicy,
-            ServiceRuntime.ClientNativeRuntime,
-            ServiceRuntime.ClientLaunchConfigProvider));
+            UBot.Core.RuntimeAccess.Services.ClientLaunchPolicy,
+            UBot.Core.RuntimeAccess.Services.ClientNativeRuntime,
+            UBot.Core.RuntimeAccess.Services.ClientLaunchConfigProvider));
     }
 
     public static void Initialize(ClientManagerRuntime runtime)
@@ -65,9 +65,9 @@ public static class ClientManager
 
     private static void EnsureInitialized()
     {
-        if (ServiceRuntime.ClientLaunchPolicy == null
-            || ServiceRuntime.ClientNativeRuntime == null
-            || ServiceRuntime.ClientLaunchConfigProvider == null)
+        if (UBot.Core.RuntimeAccess.Services.ClientLaunchPolicy == null
+            || UBot.Core.RuntimeAccess.Services.ClientNativeRuntime == null
+            || UBot.Core.RuntimeAccess.Services.ClientLaunchConfigProvider == null)
         {
             Initialize();
         }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using UBot.Core;
 using UBot.Core.Event;
@@ -11,7 +11,7 @@ public class DurabilityLowHandler : AbstractTownHandler
     /// <summary>
     ///     The last tick count
     /// </summary>
-    private static long _lastTick = Kernel.TickCount;
+    private static long _lastTick = UBot.Core.RuntimeAccess.Core.TickCount;
 
     /// <summary>
     /// Indicates whether the system is currently busy processing an operation.
@@ -33,8 +33,8 @@ public class DurabilityLowHandler : AbstractTownHandler
     /// </summary>
     private static void SubscribeEvents()
     {
-        EventManager.SubscribeEvent("OnUpdateItemDurability", new Action<byte, uint>(OnUpdateItemDurability));
-        EventManager.SubscribeEvent("OnTick", OnTick);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnUpdateItemDurability", new Action<byte, uint>(OnUpdateItemDurability));
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnTick", OnTick);
     }
 
     internal static bool TryHandleStartPrecheck()
@@ -54,13 +54,13 @@ public class DurabilityLowHandler : AbstractTownHandler
 
     private static bool CheckDurability(bool forceImmediate)
     {
-        if (!Kernel.Bot.Running)
+        if (!UBot.Core.RuntimeAccess.Core.Bot.Running)
             return false;
 
-        if (!PlayerConfig.Get<bool>("UBot.Protection.checkDurability"))
+        if (!UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.checkDurability"))
             return false;
 
-        if (!forceImmediate && Kernel.TickCount - _lastTick < 10000)
+        if (!forceImmediate && UBot.Core.RuntimeAccess.Core.TickCount - _lastTick < 10000)
             return false;
 
         if (PlayerInTownScriptRegion())
@@ -72,16 +72,16 @@ public class DurabilityLowHandler : AbstractTownHandler
         _isBusy = true;
         try
         {
-            _lastTick = Kernel.TickCount;
+            _lastTick = UBot.Core.RuntimeAccess.Core.TickCount;
 
             for (byte slot = 0; slot < 8; slot++)
             {
-                var item = Game.Player.Inventory.GetItemAt(slot);
+                var item = UBot.Core.RuntimeAccess.Session.Player.Inventory.GetItemAt(slot);
                 if (item == null || !item.Record.IsEquip || item.Durability > 6)
                     continue;
 
-                var itemsToUse = PlayerConfig.GetArray<string>("UBot.Inventory.AutoUseAccordingToPurpose");
-                var inventoryItem = Game.Player.Inventory.GetItem(
+                var itemsToUse = UBot.Core.RuntimeAccess.Player.GetArray<string>("UBot.Inventory.AutoUseAccordingToPurpose");
+                var inventoryItem = UBot.Core.RuntimeAccess.Session.Player.Inventory.GetItem(
                     new TypeIdFilter(3, 3, 13, 7),
                     p => itemsToUse.Contains(p.Record.CodeName)
                 );
@@ -91,7 +91,7 @@ public class DurabilityLowHandler : AbstractTownHandler
                     return true;
                 }
 
-                if (Game.Player.UseReturnScroll())
+                if (UBot.Core.RuntimeAccess.Session.Player.UseReturnScroll())
                     Log.WarnLang("ReturnToTownDurLow", item.Record.GetRealName());
 
                 return true;
@@ -112,7 +112,7 @@ public class DurabilityLowHandler : AbstractTownHandler
     /// <param name="durability">The durability.</param>
     private static void OnUpdateItemDurability(byte slot, uint durability)
     {
-        var item = Game.Player.Inventory.GetItemAt(slot);
+        var item = UBot.Core.RuntimeAccess.Session.Player.Inventory.GetItemAt(slot);
         if (item == null)
             return;
 

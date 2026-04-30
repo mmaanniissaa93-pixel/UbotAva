@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Event;
@@ -40,10 +40,10 @@ internal class Experience : IStatisticCalculator
     /// <inheritdoc />
     public object GetValue()
     {
-        if (!Game.Ready)
+        if (!UBot.Core.RuntimeAccess.Session.Ready)
             return 0;
 
-        var levelDifference = Game.Player.Level - _initialLevel;
+        var levelDifference = UBot.Core.RuntimeAccess.Session.Player.Level - _initialLevel;
 
         double gainedExpPercent = 0;
         var offset = _initialOffset;
@@ -55,7 +55,7 @@ internal class Experience : IStatisticCalculator
             }
 
         gainedExpPercent +=
-            Game.Player.Experience / (double)Game.ReferenceManager.GetRefLevel(Game.Player.Level).Exp_C * 100 - offset;
+            UBot.Core.RuntimeAccess.Session.Player.Experience / (double)UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefLevel(UBot.Core.RuntimeAccess.Session.Player.Level).Exp_C * 100 - offset;
 
         return Math.Round(gainedExpPercent, 2);
     }
@@ -63,28 +63,28 @@ internal class Experience : IStatisticCalculator
     /// <inheritdoc />
     public void Reset()
     {
-        if (!Game.Ready)
+        if (!UBot.Core.RuntimeAccess.Session.Ready)
             return;
 
         //EXP Percent
         _initialValue =
-            Game.Player.Experience / (double)Game.ReferenceManager.GetRefLevel(Game.Player.Level).Exp_C * 100;
+            UBot.Core.RuntimeAccess.Session.Player.Experience / (double)UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefLevel(UBot.Core.RuntimeAccess.Session.Player.Level).Exp_C * 100;
 
         _initialOffset = _initialValue;
 
-        _initialLevel = Game.Player.Level;
+        _initialLevel = UBot.Core.RuntimeAccess.Session.Player.Level;
     }
 
     /// <inheritdoc />
     public void Initialize()
     {
-        EventManager.SubscribeEvent("OnLevelUp", OnLevelUp);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnLevelUp", OnLevelUp);
     }
 
     private void OnLevelUp()
     {
         //EXP Percent
         _initialValue =
-            Game.Player.Experience / (double)Game.ReferenceManager.GetRefLevel(Game.Player.Level).Exp_C * 100;
+            UBot.Core.RuntimeAccess.Session.Player.Experience / (double)UBot.Core.RuntimeAccess.Session.ReferenceManager.GetRefLevel(UBot.Core.RuntimeAccess.Session.Player.Level).Exp_C * 100;
     }
 }

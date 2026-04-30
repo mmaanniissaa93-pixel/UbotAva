@@ -12,7 +12,7 @@ public class InventoryItemUseResponse : IPacketHandler
 
     public void Invoke(Packet packet)
     {
-        var player = ProtocolRuntime.GameState?.Player as Player;
+        var player = UBot.Protocol.ProtocolRuntime.GameState?.Player as Player;
         if (player == null || packet.ReadByte() != 0x01)
             return;
 
@@ -20,6 +20,6 @@ public class InventoryItemUseResponse : IPacketHandler
         var newAmount = packet.ReadUShort();
 
         player.Inventory.UpdateItemAmount(sourceSlot, newAmount);
-        ProtocolRuntime.EventBus?.Fire("OnUseItem", sourceSlot);
+        UBot.Protocol.ProtocolRuntime.EventBus?.Fire("OnUseItem", sourceSlot);
     }
 }

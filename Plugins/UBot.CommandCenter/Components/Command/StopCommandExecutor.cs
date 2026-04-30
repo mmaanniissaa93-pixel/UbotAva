@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Components.Command;
 
 namespace UBot.CommandCenter.Components.Command;
@@ -12,10 +12,10 @@ internal class StopCommandExecutor : ICommandExecutor
     public bool Execute(bool silent)
     {
         if (!silent)
-            Game.ShowNotification($"[UBot] Stopping bot [{Kernel.Bot?.Botbase.Title}]");
+            UBot.Core.RuntimeAccess.Session.ShowNotification($"[UBot] Stopping bot [{UBot.Core.RuntimeAccess.Core.Bot?.Botbase.Title}]");
 
-        Kernel.Bot?.Stop();
+        UBot.Core.RuntimeAccess.Core.Bot?.Stop();
 
-        return Kernel.Bot?.Running == false;
+        return UBot.Core.RuntimeAccess.Core.Bot?.Running == false;
     }
 }

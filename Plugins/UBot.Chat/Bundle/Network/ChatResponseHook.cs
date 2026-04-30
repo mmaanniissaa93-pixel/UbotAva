@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Network;
 
 namespace UBot.Chat.Network;
@@ -11,7 +11,7 @@ internal class ChatResponseHook : IPacketHook
 
     public Packet ReplacePacket(Packet packet)
     {
-        if (!Game.Clientless && Bundle.Chat.IgnoreChatResponsePacket)
+        if (!UBot.Core.RuntimeAccess.Session.Clientless && Bundle.Chat.IgnoreChatResponsePacket)
         {
             Bundle.Chat.IgnoreChatResponsePacket = false;
             return null;

@@ -1,4 +1,4 @@
-﻿using UBot.Core;
+using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Components.Command;
 using UBot.Core.Objects;
@@ -14,9 +14,9 @@ internal class BuffCommandExecutor : ICommandExecutor
     public bool Execute(bool silent)
     {
         if (!silent)
-            Game.ShowNotification("[UBot] Casting all buffs");
+            UBot.Core.RuntimeAccess.Session.ShowNotification("[UBot] Casting all buffs");
 
-        var buffs = SkillManager.Buffs.FindAll(p => !Game.Player.State.HasActiveBuff(p, out _) && p.CanBeCasted);
+        var buffs = SkillManager.Buffs.FindAll(p => !UBot.Core.RuntimeAccess.Session.Player.State.HasActiveBuff(p, out _) && p.CanBeCasted);
         if (buffs.Count == 0)
             return true;
 
@@ -25,9 +25,9 @@ internal class BuffCommandExecutor : ICommandExecutor
         foreach (var buff in buffs)
         {
             if (
-                Game.Player.State.LifeState != LifeState.Alive
-                || Game.Player.HasActiveVehicle
-                || Game.Player.Untouchable
+                UBot.Core.RuntimeAccess.Session.Player.State.LifeState != LifeState.Alive
+                || UBot.Core.RuntimeAccess.Session.Player.HasActiveVehicle
+                || UBot.Core.RuntimeAccess.Session.Player.Untouchable
             )
                 break;
 

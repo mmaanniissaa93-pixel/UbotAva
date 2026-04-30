@@ -495,7 +495,7 @@ public abstract class UbotServiceBase
     protected static Dictionary<string, object?> LoadPluginJsonConfig(string pluginName)
     {
         var key = GetPluginConfigKey(pluginName);
-        var raw = GlobalConfig.Get(key, "{}");
+        var raw = UBot.Core.RuntimeAccess.Global.Get(key, "{}");
         try
         {
             using var document = JsonDocument.Parse(raw);
@@ -512,7 +512,7 @@ public abstract class UbotServiceBase
 
     protected static void SavePluginJsonConfig(string pluginName, Dictionary<string, object?> config)
     {
-        GlobalConfig.Set(GetPluginConfigKey(pluginName), JsonSerializer.Serialize(config));
+        UBot.Core.RuntimeAccess.Global.Set(GetPluginConfigKey(pluginName), JsonSerializer.Serialize(config));
     }
 
     protected static Dictionary<string, object?> JsonObjectToDictionary(JsonElement element)

@@ -11,18 +11,18 @@ namespace UBot.Core.ProtocolServices;
 
 internal sealed class CorePickupRuntime : IPickupRuntime
 {
-    public bool PlayerHasActiveAbilityPet => Game.Player?.HasActiveAbilityPet == true;
+    public bool PlayerHasActiveAbilityPet => UBot.Core.RuntimeAccess.Session.Player?.HasActiveAbilityPet == true;
 
-    public bool PlayerInAction => Game.Player?.InAction == true;
+    public bool PlayerInAction => UBot.Core.RuntimeAccess.Session.Player?.InAction == true;
 
-    public bool PlayerSpecialtyBagFull => Game.Player?.Job2SpecialtyBag?.Full == true;
+    public bool PlayerSpecialtyBagFull => UBot.Core.RuntimeAccess.Session.Player?.Job2SpecialtyBag?.Full == true;
 
-    public uint PlayerJid => Game.Player?.JID ?? 0;
+    public uint PlayerJid => UBot.Core.RuntimeAccess.Session.Player?.JID ?? 0;
 
     public bool IsItemAutoShareParty =>
-        Game.Party?.IsInParty == true && Game.Party.Settings.GetPartyType() is 2 or 3 or 6 or 7;
+        UBot.Core.RuntimeAccess.Session.Party?.IsInParty == true && UBot.Core.RuntimeAccess.Session.Party.Settings.GetPartyType() is 2 or 3 or 6 or 7;
 
-    public object AbilityPetPosition => Game.Player?.AbilityPet?.Position;
+    public object AbilityPetPosition => UBot.Core.RuntimeAccess.Session.Player?.AbilityPet?.Position;
 
     public IReadOnlyList<IPickupItem> GetItems(Func<IPickupItem, bool> predicate)
     {
@@ -40,7 +40,7 @@ internal sealed class CorePickupRuntime : IPickupRuntime
         return result;
     }
 
-    public bool IsPartyMember(uint memberId) => Game.Party?.Members.Any(m => m.MemberId == memberId) == true;
+    public bool IsPartyMember(uint memberId) => UBot.Core.RuntimeAccess.Session.Party?.Members.Any(m => m.MemberId == memberId) == true;
 
     public double Distance(object source, object destination)
     {
@@ -57,10 +57,10 @@ internal sealed class CorePickupRuntime : IPickupRuntime
 
     public Task<bool> PickupWithAbilityPetAsync(IPickupItem item)
     {
-        if (Game.Player?.AbilityPet == null)
+        if (UBot.Core.RuntimeAccess.Session.Player?.AbilityPet == null)
             return Task.FromResult(false);
 
-        return Game.Player.AbilityPet.PickupAsync(item.UniqueId);
+        return UBot.Core.RuntimeAccess.Session.Player.AbilityPet.PickupAsync(item.UniqueId);
     }
 }
 

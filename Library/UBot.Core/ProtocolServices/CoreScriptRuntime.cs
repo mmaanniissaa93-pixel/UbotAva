@@ -12,23 +12,23 @@ namespace UBot.Core.ProtocolServices;
 
 internal sealed class CoreScriptRuntime : IScriptRuntime
 {
-    public string BasePath => Kernel.BasePath;
+    public string BasePath => UBot.Core.RuntimeAccess.Core.BasePath;
 
-    public bool GameReady => Game.Ready;
+    public bool GameReady => UBot.Core.RuntimeAccess.Session.Ready;
 
-    public bool IsBotRunning => Kernel.Bot?.Running == true;
+    public bool IsBotRunning => UBot.Core.RuntimeAccess.Core.Bot?.Running == true;
 
-    public bool PlayerInAction => Game.Player?.InAction == true;
+    public bool PlayerInAction => UBot.Core.RuntimeAccess.Session.Player?.InAction == true;
 
-    public bool PlayerHasActiveVehicle => Game.Player?.HasActiveVehicle == true;
+    public bool PlayerHasActiveVehicle => UBot.Core.RuntimeAccess.Session.Player?.HasActiveVehicle == true;
 
-    public bool PlayerIsInDungeon => Game.Player?.IsInDungeon == true;
+    public bool PlayerIsInDungeon => UBot.Core.RuntimeAccess.Session.Player?.IsInDungeon == true;
 
-    public object PlayerPosition => Game.Player?.Position;
+    public object PlayerPosition => UBot.Core.RuntimeAccess.Session.Player?.Position;
 
-    public object PlayerMovementSource => Game.Player?.Movement.Source;
+    public object PlayerMovementSource => UBot.Core.RuntimeAccess.Session.Player?.Movement.Source;
 
-    public object FellowPosition => Game.Player?.Fellow?.Position;
+    public object FellowPosition => UBot.Core.RuntimeAccess.Session.Player?.Fellow?.Position;
 
     public object CreatePosition(byte xSector, byte ySector, float xOffset, float yOffset, float zOffset)
     {
@@ -44,8 +44,8 @@ internal sealed class CoreScriptRuntime : IScriptRuntime
 
     public double DistanceToPlayer(object position)
     {
-        return position is Position typedPosition && Game.Player != null
-            ? Game.Player.Movement.Source.DistanceTo(typedPosition)
+        return position is Position typedPosition && UBot.Core.RuntimeAccess.Session.Player != null
+            ? UBot.Core.RuntimeAccess.Session.Player.Movement.Source.DistanceTo(typedPosition)
             : 0;
     }
 
@@ -58,7 +58,7 @@ internal sealed class CoreScriptRuntime : IScriptRuntime
 
     public bool MovePlayerTo(object destination)
     {
-        return destination is Position position && Game.Player?.MoveTo(position, false) == true;
+        return destination is Position position && UBot.Core.RuntimeAccess.Session.Player?.MoveTo(position, false) == true;
     }
 
     public int EstimateMoveDelayMilliseconds(object source, object destination)
@@ -71,18 +71,18 @@ internal sealed class CoreScriptRuntime : IScriptRuntime
         return Math.Max(0, Convert.ToInt32(distance / speed * 10000));
     }
 
-    public bool GetConfigBool(string key, bool defaultValue) => PlayerConfig.Get(key, defaultValue);
+    public bool GetConfigBool(string key, bool defaultValue) => UBot.Core.RuntimeAccess.Player.Get(key, defaultValue);
 
-    public string GetConfigString(string key, string defaultValue) => PlayerConfig.Get(key, defaultValue);
+    public string GetConfigString(string key, string defaultValue) => UBot.Core.RuntimeAccess.Player.Get(key, defaultValue);
 
     public bool HasActiveSpeedBuff()
     {
-        return Game.Player?.State.ActiveBuffs.FindIndex(p => p.Record.Params.Contains(1752396901)) >= 0;
+        return UBot.Core.RuntimeAccess.Session.Player?.State.ActiveBuffs.FindIndex(p => p.Record.Params.Contains(1752396901)) >= 0;
     }
 
     public bool UseSpeedDrug()
     {
-        var item = Game.Player?.Inventory.GetItem(
+        var item = UBot.Core.RuntimeAccess.Session.Player?.Inventory.GetItem(
             new TypeIdFilter(3, 3, 13, 1),
             p => p.Record.Desc1.Contains("_SPEED_")
         );
@@ -91,27 +91,27 @@ internal sealed class CoreScriptRuntime : IScriptRuntime
 
     public void SummonFellow()
     {
-        Game.Player?.SummonFellow();
+        UBot.Core.RuntimeAccess.Session.Player?.SummonFellow();
     }
 
     public void CastFellowSkill(string codeName)
     {
-        Game.Player?.Fellow?.CastSkill(codeName);
+        UBot.Core.RuntimeAccess.Session.Player?.Fellow?.CastSkill(codeName);
     }
 
     public void MountFellow()
     {
-        Game.Player?.Fellow?.Mount();
+        UBot.Core.RuntimeAccess.Session.Player?.Fellow?.Mount();
     }
 
     public void SummonVehicle()
     {
-        Game.Player?.SummonVehicle();
+        UBot.Core.RuntimeAccess.Session.Player?.SummonVehicle();
     }
 
     public void DismountVehicle()
     {
-        Game.Player?.Vehicle?.Dismount();
+        UBot.Core.RuntimeAccess.Session.Player?.Vehicle?.Dismount();
     }
 
     public bool Teleport(string npcCodeName, uint destination)
@@ -130,9 +130,9 @@ internal sealed class CoreScriptRuntime : IScriptRuntime
         packet.WriteByte(0x02);
         packet.WriteUInt(destination);
 
-        var gameReadyOpcode = (ushort)(Game.ClientType == GameClientType.Rigid ? 0x3077 : 0x3012);
+        var gameReadyOpcode = (ushort)(UBot.Core.RuntimeAccess.Session.ClientType == GameClientType.Rigid ? 0x3077 : 0x3012);
         var callback = new AwaitCallback(null, gameReadyOpcode);
-        PacketManager.SendPacket(packet, PacketDestination.Server, callback);
+        UBot.Core.RuntimeAccess.Packets.SendPacket(packet, PacketDestination.Server, callback);
 
         callback.AwaitResponse(30_000);
         return true;
@@ -140,7 +140,7 @@ internal sealed class CoreScriptRuntime : IScriptRuntime
 
     public object GetPlayerSkillByCodeName(string codeName)
     {
-        return Game.Player?.Skills.GetSkillByCodeName(codeName);
+        return UBot.Core.RuntimeAccess.Session.Player?.Skills.GetSkillByCodeName(codeName);
     }
 
     public void CastBuff(object skill)
@@ -151,16 +151,16 @@ internal sealed class CoreScriptRuntime : IScriptRuntime
 
     public void FireEvent(string eventName, params object[] args)
     {
-        Event.EventManager.FireEvent(eventName, args);
+        UBot.Core.RuntimeAccess.Events.FireEvent(eventName, args);
     }
 
     private static float GetMovementSpeed()
     {
-        var vehicle = Game.Player?.Vehicle;
+        var vehicle = UBot.Core.RuntimeAccess.Session.Player?.Vehicle;
         SpawnedCos spawnedCos = null;
         if (vehicle != null && SpawnManager.TryGetEntity<SpawnedCos>(vehicle.UniqueId, out spawnedCos))
             return spawnedCos.ActualSpeed;
 
-        return Game.Player?.ActualSpeed ?? 0;
+        return UBot.Core.RuntimeAccess.Session.Player?.ActualSpeed ?? 0;
     }
 }

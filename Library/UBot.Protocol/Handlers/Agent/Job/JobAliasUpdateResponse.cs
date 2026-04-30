@@ -38,7 +38,7 @@ public class JobAliasUpdateResponse : IPacketHandler
 
         Log.Notify($"[Job] New job alias assigned: {CoreGame.Player.JobInformation.Name}");
 
-        EventManager.FireEvent("OnJobAliasUpdate");
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnJobAliasUpdate");
     }
 }
 

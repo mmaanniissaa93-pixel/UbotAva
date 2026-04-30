@@ -304,7 +304,7 @@ public static class DomainRuntimeBridge
             var packet = new Packet(0x7063);
             packet.WriteUInt(member.MemberId);
 
-            PacketManager.SendPacket(packet, PacketDestination.Server);
+            UBot.Protocol.ProtocolRuntime.SendPacket(packet, PacketDestination.Server);
         }
     }
 }

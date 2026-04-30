@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Text;
 using UBot.Core.Event;
 using UBot.Core.Network.Protocol;
@@ -31,13 +31,13 @@ public class VersionInfo
     internal static VersionInfo Load()
     {
         var result = new VersionInfo();
-        if (Game.MediaPk2 == null)
+        if (UBot.Core.RuntimeAccess.Session.MediaPk2 == null)
         {
             Log.Notify("Could not load the SV.T file, because there is no active Archive.");
             return result;
         }
 
-        if (!Game.MediaPk2.TryGetFile(Filename, out var file))
+        if (!UBot.Core.RuntimeAccess.Session.MediaPk2.TryGetFile(Filename, out var file))
         {
             Log.Error("Could not load the SV.T file, because the file could not be found.");
             return result;
@@ -55,7 +55,7 @@ public class VersionInfo
             result.Version = int.Parse(Encoding.ASCII.GetString(decodedVersionBuffer, 0, 4));
         }
 
-        EventManager.FireEvent("OnLoadVersionInfo", result);
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnLoadVersionInfo", result);
         return result;
     }
 }
