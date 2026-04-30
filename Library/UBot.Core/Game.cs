@@ -4,17 +4,21 @@ using System;
 using System.IO;
 using UBot.Core.Client;
 using UBot.Core.Components;
+using UBot.Core.Event;
 using UBot.Core.Extensions;
 using UBot.Core.Network;
 using UBot.Core.Objects;
 using UBot.Core.Objects.Party;
 using UBot.Core.Objects.Spawn;
+using UBot.Core.Services;
 using UBot.FileSystem;
 
 namespace UBot.Core;
 
 public class Game
 {
+    private static bool _skillEventsRegistered;
+
     /// <summary>
     ///     The acceptance request
     /// </summary>
@@ -188,10 +192,21 @@ public class Game
         ReferenceManager = new ReferenceManager();
         Party = new Party();
 
-        SkillManager.Initialize();
+        SkillManager.Initialize(ServiceRuntime.Skill ?? new SkillService());
+        RegisterSkillServiceEvents();
         ShoppingManager.Initialize();
         ClientlessManager.Initialize();
         ScriptManager.Initialize();
+    }
+
+    private static void RegisterSkillServiceEvents()
+    {
+        if (_skillEventsRegistered)
+            return;
+
+        EventManager.SubscribeEvent("OnLoadGameData", new System.Action(SkillManager.ResetBaseSkills));
+        EventManager.SubscribeEvent("OnCastSkill", new System.Action<uint>(SkillManager.NotifySkillCasted));
+        _skillEventsRegistered = true;
     }
 
     /// <summary>

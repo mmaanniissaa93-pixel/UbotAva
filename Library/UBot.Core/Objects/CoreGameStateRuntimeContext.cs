@@ -401,6 +401,8 @@ internal static class CoreGameStateRuntimeContextBootstrap
         ServiceRuntime.ScriptRuntime = new CoreScriptRuntime();
         ServiceRuntime.ScriptProgress = new CoreScriptProgress(feedback);
         ServiceRuntime.SpawnRuntime = new CoreSpawnRuntime();
+        ServiceRuntime.SkillRuntime = new SkillRuntimeAdapter();
+        ServiceRuntime.SkillConfig = new CoreSkillConfig();
         PickupManager.Initialize(new PickupService());
         ShoppingManager.Initialize(new ShoppingService());
         AlchemyManager.Initialize(new AlchemyService());

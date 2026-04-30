@@ -23,4 +23,7 @@ public static class ServiceRuntime
     public static IScriptProgress ScriptProgress { get; set; }
     public static ISpawnRuntime SpawnRuntime { get; set; }
     public static ILanguageService Language { get; set; }
+    public static ISkillRuntime SkillRuntime { get; set; }
+    public static ISkillConfig SkillConfig { get; set; }
+    public static ISkillService Skill { get; set; }
 }
