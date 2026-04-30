@@ -40,37 +40,37 @@
       "id": "lure_stop_if_num_monster_type",
       "from": "UBot.Lure.NumMonsterType",
       "to": "UBot.Lure.StopIfNumMonsterType",
-      "severity": "warning",
-      "configSeverity": "warning",
-      "allowCodeUsage": false,
-      "description": "Lure threshold keys were renamed to StopIf* format."
+      "severity": "none",
+      "configSeverity": "none",
+      "allowCodeUsage": true,
+      "description": "NumMonsterType (int threshold) and StopIfNumMonsterType (bool toggle) have different semantics. Both are active; this migration corrects misleading rename interpretation."
     },
     {
       "id": "lure_stop_if_num_party_member",
       "from": "UBot.Lure.NumPartyMember",
       "to": "UBot.Lure.StopIfNumPartyMember",
-      "severity": "warning",
-      "configSeverity": "warning",
-      "allowCodeUsage": false,
-      "description": "Lure threshold keys were renamed to StopIf* format."
+      "severity": "none",
+      "configSeverity": "none",
+      "allowCodeUsage": true,
+      "description": "NumPartyMember (int threshold) and StopIfNumPartyMember (bool toggle) have different semantics. Both are active; this migration corrects misleading rename interpretation."
     },
     {
       "id": "lure_stop_if_num_party_member_dead",
       "from": "UBot.Lure.NumPartyMemberDead",
       "to": "UBot.Lure.StopIfNumPartyMemberDead",
-      "severity": "warning",
-      "configSeverity": "warning",
-      "allowCodeUsage": false,
-      "description": "Lure threshold keys were renamed to StopIf* format."
+      "severity": "none",
+      "configSeverity": "none",
+      "allowCodeUsage": true,
+      "description": "NumPartyMemberDead (int threshold) and StopIfNumPartyMemberDead (bool toggle) have different semantics. Both are active; this migration corrects misleading rename interpretation."
     },
     {
       "id": "lure_stop_if_num_party_members_on_spot",
       "from": "UBot.Lure.NumPartyMembersOnSpot",
       "to": "UBot.Lure.StopIfNumPartyMembersOnSpot",
-      "severity": "warning",
-      "configSeverity": "warning",
-      "allowCodeUsage": false,
-      "description": "Lure threshold keys were renamed to StopIf* format."
+      "severity": "none",
+      "configSeverity": "none",
+      "allowCodeUsage": true,
+      "description": "NumPartyMembersOnSpot (int threshold) and StopIfNumPartyMembersOnSpot (bool toggle) have different semantics. Both are active; this migration corrects misleading rename interpretation."
     },
     {
       "id": "sounds_alarm_unique_in_range_play",
