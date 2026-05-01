@@ -7,7 +7,7 @@ namespace UBot.Protection.Components.Pet;
 
 public static class CosHealthRecoveryHandler
 {
-    private static readonly object Owner = new object();
+    private static readonly object EventOwner = new();
 
     /// <summary>
     ///     Initializes this instance.
@@ -31,7 +31,7 @@ public static class CosHealthRecoveryHandler
     /// </summary>
     public static void UnsubscribeAll()
     {
-        UBot.Core.RuntimeAccess.Events.UnsubscribeOwner(Owner);
+        UBot.Core.RuntimeAccess.Events.UnsubscribeOwner(EventOwner);
     }
 
     /// <summary>
@@ -39,10 +39,10 @@ public static class CosHealthRecoveryHandler
     /// </summary>
     private static void SubscribeEvents()
     {
-        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnGrowthHealthUpdate", OnGrowthHealthUpdate, Owner);
-        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnFellowHealthUpdate", OnFellowHealthUpdate, Owner);
-        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnUpdateTransportHealth", OnUpdateTransportHealth, Owner);
-        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnUpdateJobTransportHealth", OnUpdateJobTransportHealth, Owner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnGrowthHealthUpdate", OnGrowthHealthUpdate, EventOwner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnFellowHealthUpdate", OnFellowHealthUpdate, EventOwner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnUpdateTransportHealth", OnUpdateTransportHealth, EventOwner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnUpdateJobTransportHealth", OnUpdateJobTransportHealth, EventOwner);
     }
 
     /// <summary>
