@@ -74,6 +74,8 @@ public class EntityUpdateStateResponse : IPacketHandler
                 var motionState = (MotionState)state;
                 entity.State.MotionState = motionState;
 
+                Log.Debug("EntityUpdate: type=1 MotionState=" + motionState + " uniqueId=" + uniqueId);
+
                 switch (motionState)
                 {
                     case MotionState.Walking:
@@ -129,7 +131,7 @@ public class EntityUpdateStateResponse : IPacketHandler
                 break;
 
             default:
-                Log.Error("EntityUpdate: Unknown update type " + type);
+                Log.Warn("EntityUpdate: Unknown update type " + type);
                 break;
         }
     }

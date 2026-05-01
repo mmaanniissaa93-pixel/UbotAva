@@ -67,10 +67,15 @@ internal sealed class CoreProtocolLegacyRuntime : UBot.Protocol.Legacy.IProtocol
     public bool TryGetEntityIncludingMe<T>(uint uniqueId, out T entity)
     {
         entity = default;
-        var result = InvokeSpawnGeneric(nameof(SpawnManager.TryGetEntityIncludingMe), typeof(T), uniqueId);
-        if (result.Success)
-            entity = (T)result.Entity;
-        return result.Success;
+
+        if (!SpawnManager.TryGetEntityIncludingMe(uniqueId, out var found))
+            return false;
+
+        if (found is not T typed)
+            return false;
+
+        entity = typed;
+        return true;
     }
 
     public T GetEntity<T>(uint uniqueId)
