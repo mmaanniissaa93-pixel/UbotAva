@@ -14,10 +14,16 @@ public static class CosHealthRecoveryHandler
     /// </summary>
     public static void Initialize()
     {
-        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnGrowthHealthUpdate", OnGrowthHealthUpdate, Owner);
-        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnFellowHealthUpdate", OnFellowHealthUpdate, Owner);
-        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnUpdateTransportHealth", OnUpdateTransportHealth, Owner);
-        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnUpdateJobTransportHealth", OnUpdateJobTransportHealth, Owner);
+        SubscribeEvents();
+    }
+
+    /// <summary>
+    ///     Subscribes all events (idempotent - clears existing first).
+    /// </summary>
+    public static void SubscribeAll()
+    {
+        UnsubscribeAll();
+        SubscribeEvents();
     }
 
     /// <summary>
@@ -26,6 +32,17 @@ public static class CosHealthRecoveryHandler
     public static void UnsubscribeAll()
     {
         UBot.Core.RuntimeAccess.Events.UnsubscribeOwner(Owner);
+    }
+
+    /// <summary>
+    ///     Subscribes the events.
+    /// </summary>
+    private static void SubscribeEvents()
+    {
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnGrowthHealthUpdate", OnGrowthHealthUpdate, Owner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnFellowHealthUpdate", OnFellowHealthUpdate, Owner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnUpdateTransportHealth", OnUpdateTransportHealth, Owner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnUpdateJobTransportHealth", OnUpdateJobTransportHealth, Owner);
     }
 
     /// <summary>

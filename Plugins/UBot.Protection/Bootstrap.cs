@@ -1,3 +1,4 @@
+using System;
 using System.Windows.Forms;
 using UBot.Core;
 using UBot.Core.Components;
@@ -86,6 +87,26 @@ public class Bootstrap : IPlugin
     /// <inheritdoc />
     public void Enable()
     {
+        HealthManaRecoveryHandler.SubscribeAll();
+        UniversalPillHandler.SubscribeAll();
+        VigorRecoveryHandler.SubscribeAll();
+        StatPointsHandler.SubscribeAll();
+        StartPrecheckHandler.SubscribeAll();
+        CosHealthRecoveryHandler.SubscribeAll();
+        CosHGPRecoveryHandler.SubscribeAll();
+        CosBadStatusHandler.SubscribeAll();
+        CosReviveHandler.SubscribeAll();
+        AutoSummonAttackPet.SubscribeAll();
+        DeadHandler.SubscribeAll();
+        AmmunitionHandler.SubscribeAll();
+        InventoryFullHandler.SubscribeAll();
+        PetInventoryFullHandler.SubscribeAll();
+        NoManaPotionsHandler.SubscribeAll();
+        NoHealthPotionsHandler.SubscribeAll();
+        LevelUpHandler.SubscribeAll();
+        DurabilityLowHandler.SubscribeAll();
+        FatigueHandler.SubscribeAll();
+
         if (View != null)
             View.Enabled = true;
     }
@@ -93,13 +114,40 @@ public class Bootstrap : IPlugin
     /// <inheritdoc />
     public void Disable()
     {
-        CosHealthRecoveryHandler.UnsubscribeAll();
-        UniversalPillHandler.UnsubscribeAll();
-        HealthManaRecoveryHandler.UnsubscribeAll();
-        CosBadStatusHandler.UnsubscribeAll();
+        TryUnsubscribe(CosHealthRecoveryHandler.UnsubscribeAll);
+        TryUnsubscribe(UniversalPillHandler.UnsubscribeAll);
+        TryUnsubscribe(HealthManaRecoveryHandler.UnsubscribeAll);
+        TryUnsubscribe(CosBadStatusHandler.UnsubscribeAll);
+        TryUnsubscribe(VigorRecoveryHandler.UnsubscribeAll);
+        TryUnsubscribe(StatPointsHandler.UnsubscribeAll);
+        TryUnsubscribe(StartPrecheckHandler.UnsubscribeAll);
+        TryUnsubscribe(CosHGPRecoveryHandler.UnsubscribeAll);
+        TryUnsubscribe(CosReviveHandler.UnsubscribeAll);
+        TryUnsubscribe(AutoSummonAttackPet.UnsubscribeAll);
+        TryUnsubscribe(DeadHandler.UnsubscribeAll);
+        TryUnsubscribe(AmmunitionHandler.UnsubscribeAll);
+        TryUnsubscribe(InventoryFullHandler.UnsubscribeAll);
+        TryUnsubscribe(PetInventoryFullHandler.UnsubscribeAll);
+        TryUnsubscribe(NoManaPotionsHandler.UnsubscribeAll);
+        TryUnsubscribe(NoHealthPotionsHandler.UnsubscribeAll);
+        TryUnsubscribe(LevelUpHandler.UnsubscribeAll);
+        TryUnsubscribe(DurabilityLowHandler.UnsubscribeAll);
+        TryUnsubscribe(FatigueHandler.UnsubscribeAll);
 
         if (View != null)
             View.Enabled = false;
+    }
+
+    private void TryUnsubscribe(Action unsubscribeAction)
+    {
+        try
+        {
+            unsubscribeAction?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            Log.Error($"Error during handler cleanup: {ex.Message}");
+        }
     }
 }
 

@@ -17,6 +17,15 @@ public class UniversalPillHandler
     }
 
     /// <summary>
+    ///     Subscribes all events (idempotent - clears existing first).
+    /// </summary>
+    public static void SubscribeAll()
+    {
+        UnsubscribeAll();
+        SubscribeEvents();
+    }
+
+    /// <summary>
     ///     Unsubscribes all events.
     /// </summary>
     public static void UnsubscribeAll()

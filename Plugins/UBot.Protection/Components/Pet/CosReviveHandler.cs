@@ -7,6 +7,8 @@ namespace UBot.Protection.Components.Pet;
 
 public class CosReviveHandler
 {
+    private static readonly object EventOwner = new();
+
     /// <summary>
     ///     Initializes this instance.
     /// </summary>
@@ -16,12 +18,29 @@ public class CosReviveHandler
     }
 
     /// <summary>
+    ///     Subscribes all events (idempotent - clears existing first).
+    /// </summary>
+    public static void SubscribeAll()
+    {
+        UnsubscribeAll();
+        SubscribeEvents();
+    }
+
+    /// <summary>
+    ///     Unsubscribes all events.
+    /// </summary>
+    public static void UnsubscribeAll()
+    {
+        UBot.Core.RuntimeAccess.Events.UnsubscribeOwner(EventOwner);
+    }
+
+    /// <summary>
     ///     Subscribes the events.
     /// </summary>
     private static void SubscribeEvents()
     {
-        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnUpdateInventoryItem", new Action<byte>(OnItemUpdate));
-        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnStartBot", OnStartBot);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnUpdateInventoryItem", new Action<byte>(OnItemUpdate), EventOwner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnStartBot", OnStartBot, EventOwner);
     }
 
     /// <summary>

@@ -5,6 +5,8 @@ namespace UBot.Protection.Components.Pet;
 
 public class CosHGPRecoveryHandler
 {
+    private static readonly object EventOwner = new();
+
     /// <summary>
     ///     Initiliazes this instance.
     /// </summary>
@@ -14,12 +16,29 @@ public class CosHGPRecoveryHandler
     }
 
     /// <summary>
+    ///     Subscribes all events (idempotent - clears existing first).
+    /// </summary>
+    public static void SubscribeAll()
+    {
+        UnsubscribeAll();
+        SubscribeEvents();
+    }
+
+    /// <summary>
+    ///     Unsubscribes all events.
+    /// </summary>
+    public static void UnsubscribeAll()
+    {
+        UBot.Core.RuntimeAccess.Events.UnsubscribeOwner(EventOwner);
+    }
+
+    /// <summary>
     ///     Subscribes the events.
     /// </summary>
     private static void SubscribeEvents()
     {
-        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnGrowthHungerUpdate", OnGrowthHungerUpdate);
-        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnFellowSatietyUpdate", OnFellowSatietyUpdate);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnGrowthHungerUpdate", OnGrowthHungerUpdate, EventOwner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnFellowSatietyUpdate", OnFellowSatietyUpdate, EventOwner);
     }
 
     /// <summary>

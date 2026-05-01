@@ -7,6 +7,8 @@ namespace UBot.Protection.Components.Town;
 
 public class NoManaPotionsHandler : AbstractTownHandler
 {
+    private static readonly object EventOwner = new();
+
     /// <summary>
     ///     Initializes this instance.
     /// </summary>
@@ -16,11 +18,28 @@ public class NoManaPotionsHandler : AbstractTownHandler
     }
 
     /// <summary>
+    ///     Subscribes all events (idempotent - clears existing first).
+    /// </summary>
+    public static void SubscribeAll()
+    {
+        UnsubscribeAll();
+        SubscribeEvents();
+    }
+
+    /// <summary>
+    ///     Unsubscribes all events.
+    /// </summary>
+    public static void UnsubscribeAll()
+    {
+        UBot.Core.RuntimeAccess.Events.UnsubscribeOwner(EventOwner);
+    }
+
+    /// <summary>
     ///     Subscribes the events.
     /// </summary>
     private static void SubscribeEvents()
     {
-        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnUseItem", new Action<byte>(OnUseItem));
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnUseItem", new Action<byte>(OnUseItem), EventOwner);
     }
 
     /// <summary>

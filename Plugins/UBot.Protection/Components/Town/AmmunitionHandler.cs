@@ -5,6 +5,8 @@ namespace UBot.Protection.Components.Town;
 
 public class AmmunitionHandler : AbstractTownHandler
 {
+    private static readonly object EventOwner = new();
+
     /// <summary>
     ///     Initializes this instance.
     /// </summary>
@@ -14,11 +16,28 @@ public class AmmunitionHandler : AbstractTownHandler
     }
 
     /// <summary>
+    ///     Subscribes all events (idempotent - clears existing first).
+    /// </summary>
+    public static void SubscribeAll()
+    {
+        UnsubscribeAll();
+        SubscribeEvents();
+    }
+
+    /// <summary>
+    ///     Unsubscribes all events.
+    /// </summary>
+    public static void UnsubscribeAll()
+    {
+        UBot.Core.RuntimeAccess.Events.UnsubscribeOwner(EventOwner);
+    }
+
+    /// <summary>
     ///     Subscribes the events.
     /// </summary>
     private static void SubscribeEvents()
     {
-        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnUpdateAmmunition", OnUpdateAmmunition);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnUpdateAmmunition", OnUpdateAmmunition, EventOwner);
     }
 
     /// <summary>

@@ -9,6 +9,13 @@ namespace UBot.Core;
 
 public class Bot
 {
+    private static readonly PluginFaultIsolationManager _faultIsolation = new();
+
+    private volatile bool _isStopping;
+    private string _lastCriticalFailure;
+
+    public static event Action<string, string, Exception> OnCriticalPluginFailure;
+
     /// <summary>
     ///     Gets or sets a value indicating whether this <see cref="Bot" /> is running.
     /// </summary>
@@ -37,7 +44,7 @@ public class Bot
     public void SetBotbase(IBotbase botBase)
     {
         Botbase = botBase;
-        Botbase.Initialize();
+        botBase.Initialize();
 
         UBot.Core.RuntimeAccess.Events.FireEvent("OnSetBotbase", botBase);
     }
@@ -49,6 +56,9 @@ public class Bot
     {
         if (Running || Botbase == null)
             return;
+
+        _isStopping = false;
+        _lastCriticalFailure = null;
 
         TokenSource = new CancellationTokenSource();
 
@@ -68,14 +78,7 @@ public class Bot
                         continue;
                     }
 
-                    try
-                    {
-                        Botbase.Tick();
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error($"Botbase.Tick() exception: {Botbase?.GetType().Name ?? "null"}: {ex.Message}");
-                    }
+                    ExecuteBotbaseTickSafely();
 
                     await Task.Delay(100);
                 }
@@ -85,11 +88,101 @@ public class Bot
         );
     }
 
+    private void ExecuteBotbaseTickSafely()
+    {
+        if (Botbase == null)
+            return;
+
+        var botbaseName = Botbase.Name ?? Botbase.GetType().Name;
+        var tier = ResolveBotbaseTier(botbaseName);
+        var policy = ResolveBotbaseRestartPolicy(botbaseName);
+
+        if (tier == "critical")
+        {
+            ExecuteCriticalTierTick(botbaseName);
+        }
+        else
+        {
+            ExecuteStandardTierTick(botbaseName, policy);
+        }
+    }
+
+    private string ResolveBotbaseTier(string botbaseName)
+    {
+        if (!ExtensionManager.HasPluginContract(botbaseName))
+        {
+            Log.Warn($"Botbase [{botbaseName}] has no manifest; treating Tick failure as critical.");
+            return "critical";
+        }
+
+        return ExtensionManager.GetPluginTier(botbaseName);
+    }
+
+    private PluginRestartPolicyManifest ResolveBotbaseRestartPolicy(string botbaseName)
+    {
+        var policy = ExtensionManager.GetRestartPolicy(botbaseName);
+
+        if (!policy.Enabled || policy.MaxRestarts == 0)
+        {
+            return new PluginRestartPolicyManifest
+            {
+                Enabled = false,
+                MaxRestarts = 0,
+                WindowSeconds = 60,
+                BaseDelayMs = 250,
+                MaxDelayMs = 3000
+            };
+        }
+
+        return policy;
+    }
+
+    private void ExecuteCriticalTierTick(string botbaseName)
+    {
+        if (_isStopping || !Running)
+            return;
+
+        if (_lastCriticalFailure == botbaseName)
+            return;
+
+        if (!_faultIsolation.TryExecute(botbaseName, "tick", new PluginRestartPolicyManifest { Enabled = false }, Botbase.Tick, out var failure))
+        {
+            _lastCriticalFailure = botbaseName;
+            Log.Error($"CRITICAL: Botbase [{botbaseName}] failed in critical tier. Stopping bot to prevent further damage.");
+            OnCriticalPluginFailure?.Invoke(botbaseName, "tick", failure);
+
+            try
+            {
+                Stop();
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Failed to stop bot after critical failure: {ex.Message}");
+            }
+        }
+    }
+
+    private void ExecuteStandardTierTick(string botbaseName, PluginRestartPolicyManifest policy)
+    {
+        if (_isStopping || !Running)
+            return;
+
+        if (!_faultIsolation.TryExecute(botbaseName, "tick", policy, Botbase.Tick, out var failure))
+        {
+            Log.Warn($"Botbase [{botbaseName}] Tick() failed after {policy.MaxRestarts} restart attempts. Continuing loop.");
+        }
+    }
+
     /// <summary>
     ///     Stops this instance.
     /// </summary>
     public void Stop()
     {
+        if (_isStopping)
+            return;
+
+        _isStopping = true;
+
         ScriptManager.Stop();
         ShoppingManager.Stop();
         PickupManager.Stop();

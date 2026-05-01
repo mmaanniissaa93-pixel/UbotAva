@@ -6,6 +6,8 @@ namespace UBot.Protection.Components.Pet;
 
 public class AutoSummonAttackPet
 {
+    private static readonly object EventOwner = new();
+
     /// <summary>
     ///     Initializes this instance.
     /// </summary>
@@ -15,12 +17,29 @@ public class AutoSummonAttackPet
     }
 
     /// <summary>
+    ///     Subscribes all events (idempotent - clears existing first).
+    /// </summary>
+    public static void SubscribeAll()
+    {
+        UnsubscribeAll();
+        SubscribeEvents();
+    }
+
+    /// <summary>
+    ///     Unsubscribes all events.
+    /// </summary>
+    public static void UnsubscribeAll()
+    {
+        UBot.Core.RuntimeAccess.Events.UnsubscribeOwner(EventOwner);
+    }
+
+    /// <summary>
     ///     Subscribes the events.
     /// </summary>
     private static void SubscribeEvents()
     {
-        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnKillSelectedEnemy", OnKillSelectedEnemy);
-        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnStartBot", OnStartBot);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnKillSelectedEnemy", OnKillSelectedEnemy, EventOwner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnStartBot", OnStartBot, EventOwner);
     }
 
     /// <summary>

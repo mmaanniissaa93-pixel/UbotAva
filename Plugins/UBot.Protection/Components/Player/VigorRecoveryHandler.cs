@@ -6,6 +6,8 @@ namespace UBot.Protection.Components.Player;
 
 internal class VigorRecoveryHandler
 {
+    private static readonly object EventOwner = new();
+
     /// <summary>
     ///     Initialize the <see cref="VigorRecoveryHandler" />
     /// </summary>
@@ -15,11 +17,28 @@ internal class VigorRecoveryHandler
     }
 
     /// <summary>
+    ///     Subscribes all events (idempotent - clears existing first).
+    /// </summary>
+    public static void SubscribeAll()
+    {
+        UnsubscribeAll();
+        SubscribeEvents();
+    }
+
+    /// <summary>
+    ///     Unsubscribes all events.
+    /// </summary>
+    public static void UnsubscribeAll()
+    {
+        UBot.Core.RuntimeAccess.Events.UnsubscribeOwner(EventOwner);
+    }
+
+    /// <summary>
     ///     Subscribes the events.
     /// </summary>
     private static void SubscribeEvents()
     {
-        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnUpdateHPMP", OnUpdateHPMP);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnUpdateHPMP", OnUpdateHPMP, EventOwner);
     }
 
     /// <summary>

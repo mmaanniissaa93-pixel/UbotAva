@@ -8,6 +8,8 @@ namespace UBot.Protection.Components.Town;
 
 public class DurabilityLowHandler : AbstractTownHandler
 {
+    private static readonly object EventOwner = new();
+
     /// <summary>
     ///     The last tick count
     /// </summary>
@@ -29,12 +31,29 @@ public class DurabilityLowHandler : AbstractTownHandler
     }
 
     /// <summary>
+    ///     Subscribes all events (idempotent - clears existing first).
+    /// </summary>
+    public static void SubscribeAll()
+    {
+        UnsubscribeAll();
+        SubscribeEvents();
+    }
+
+    /// <summary>
+    ///     Unsubscribes all events.
+    /// </summary>
+    public static void UnsubscribeAll()
+    {
+        UBot.Core.RuntimeAccess.Events.UnsubscribeOwner(EventOwner);
+    }
+
+    /// <summary>
     ///     Subscribes the events.
     /// </summary>
     private static void SubscribeEvents()
     {
-        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnUpdateItemDurability", new Action<byte, uint>(OnUpdateItemDurability));
-        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnTick", OnTick);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnUpdateItemDurability", new Action<byte, uint>(OnUpdateItemDurability), EventOwner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnTick", OnTick, EventOwner);
     }
 
     internal static bool TryHandleStartPrecheck()

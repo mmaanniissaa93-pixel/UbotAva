@@ -890,7 +890,7 @@ public class ExtensionManager
         return string.Equals(contract.Isolation?.Mode, "outproc", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static PluginRestartPolicyManifest GetRestartPolicy(string pluginName)
+    internal static PluginRestartPolicyManifest GetRestartPolicy(string pluginName)
     {
         if (string.IsNullOrWhiteSpace(pluginName))
             return new PluginRestartPolicyManifest();
@@ -899,6 +899,25 @@ public class ExtensionManager
             return contract.Isolation?.RestartPolicy ?? new PluginRestartPolicyManifest();
 
         return new PluginRestartPolicyManifest();
+    }
+
+    internal static string GetPluginTier(string pluginName)
+    {
+        if (string.IsNullOrWhiteSpace(pluginName))
+            return "standard";
+
+        if (_pluginContracts.TryGetValue(pluginName, out var contract))
+            return contract.Isolation?.Tier ?? "standard";
+
+        return "standard";
+    }
+
+    internal static bool HasPluginContract(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return false;
+
+        return _pluginContracts.ContainsKey(name);
     }
 
     private static void ValidatePluginContracts()

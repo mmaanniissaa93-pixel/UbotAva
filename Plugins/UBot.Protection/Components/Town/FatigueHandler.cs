@@ -7,6 +7,8 @@ namespace UBot.Protection.Components.Town;
 
 public class FatigueHandler : AbstractTownHandler
 {
+    private static readonly object EventOwner = new();
+
     public static int ShardFatigueFullExpSeconds { get; set; }
 
     private static Timer _disconnectTimer;
@@ -16,8 +18,30 @@ public class FatigueHandler : AbstractTownHandler
     /// </summary>
     public static void Initialize()
     {
-        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnFatigueTimeUpdate", OnFatigueTimeUpdate);
-        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnAgentServerDisconnected", OnAgentServerDisconnected);
+        SubscribeEvents();
+    }
+
+    /// <summary>
+    ///     Subscribes all events (idempotent - clears existing first).
+    /// </summary>
+    public static void SubscribeAll()
+    {
+        UnsubscribeAll();
+        SubscribeEvents();
+    }
+
+    /// <summary>
+    ///     Unsubscribes all events.
+    /// </summary>
+    public static void UnsubscribeAll()
+    {
+        UBot.Core.RuntimeAccess.Events.UnsubscribeOwner(EventOwner);
+    }
+
+    private static void SubscribeEvents()
+    {
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnFatigueTimeUpdate", OnFatigueTimeUpdate, EventOwner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnAgentServerDisconnected", OnAgentServerDisconnected, EventOwner);
     }
 
     private static void OnFatigueTimeUpdate()
