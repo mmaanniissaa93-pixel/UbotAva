@@ -36,6 +36,15 @@ public partial class AppState : ObservableObject
     [ObservableProperty] private double _playerExpPercent;
     [ObservableProperty] private bool   _hasLiveStats;
 
+    // Log filtering
+    [ObservableProperty] private bool   _showDebug       = true;
+    [ObservableProperty] private bool   _showEntity      = false;
+    [ObservableProperty] private bool   _showPerf        = false;
+    [ObservableProperty] private bool   _showProtocol    = false;
+    [ObservableProperty] private bool   _showErrorsOnly  = false;
+    [ObservableProperty] private bool   _pauseAutoscroll = false;
+    [ObservableProperty] private string _searchFilter    = string.Empty;
+
     public ObservableCollection<PluginDescriptor> Plugins { get; } = new();
 
     private readonly Dictionary<string, Dictionary<string, object?>> _configs = new();
@@ -77,21 +86,80 @@ public partial class AppState : ObservableObject
     }
 
     public ObservableCollection<string> LogLines { get; } = new();
+    private readonly List<string> _allLogs = new();
+
     public ObservableCollection<ChatMessageEntry> ChatMessages { get; } = new();
 
     public void AddLog(string message)
     {
         global::Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
-            LogLines.Insert(0, message);
-            if (LogLines.Count > 800) LogLines.RemoveAt(LogLines.Count - 1);
+            _allLogs.Insert(0, message);
+            if (_allLogs.Count > 2000)
+                _allLogs.RemoveAt(_allLogs.Count - 1);
+
+            RefreshLogDisplay();
         });
     }
 
     public void ClearLogs()
     {
-        global::Avalonia.Threading.Dispatcher.UIThread.Post(() => LogLines.Clear());
+        global::Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            _allLogs.Clear();
+            LogLines.Clear();
+        });
     }
+
+    private void RefreshLogDisplay()
+    {
+        LogLines.Clear();
+        var search = SearchFilter?.ToLowerInvariant() ?? string.Empty;
+        var errorsOnly = ShowErrorsOnly;
+
+        foreach (var log in _allLogs)
+        {
+            if (!ShouldShowLog(log))
+                continue;
+
+            if (!string.IsNullOrEmpty(search) && !log.ToLowerInvariant().Contains(search))
+                continue;
+
+            LogLines.Add(log);
+        }
+    }
+
+    private bool ShouldShowLog(string log)
+    {
+        var upper = log.ToUpperInvariant();
+
+        if (upper.Contains("[ERROR]") || upper.Contains("[FATAL]"))
+            return true;
+
+        if (ShowErrorsOnly)
+            return false;
+
+        if (upper.Contains("[ENTITY]") && !ShowEntity)
+            return false;
+
+        if ((upper.Contains("[PERF]") || upper.Contains("[PERFTICK]")) && !ShowPerf)
+            return false;
+
+        if ((upper.Contains("[PROTOCOL]") || upper.Contains("[NETWORK]")) && !ShowProtocol)
+            return false;
+
+        if (upper.Contains("[DEBUG]") && !ShowDebug)
+            return false;
+
+        return true;
+    }
+
+    partial void OnShowDebugChanged(bool value) => RefreshLogDisplay();
+    partial void OnShowEntityChanged(bool value) => RefreshLogDisplay();
+    partial void OnShowPerfChanged(bool value) => RefreshLogDisplay();
+    partial void OnShowProtocolChanged(bool value) => RefreshLogDisplay();
+    partial void OnShowErrorsOnlyChanged(bool value) => RefreshLogDisplay();
+    partial void OnSearchFilterChanged(string value) => RefreshLogDisplay();
 
     public void AddChatMessage(string channel, string sender, string message)
     {

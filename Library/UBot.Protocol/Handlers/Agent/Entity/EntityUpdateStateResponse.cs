@@ -50,8 +50,8 @@ public class EntityUpdateStateResponse : IPacketHandler
             case 0:
 
                 entity.State.LifeState = (LifeState)state;
-                if ( /*uniqueId == CoreGame.SelectedEntity?.UniqueId || */
-                    player.GetAttackers().Any(e => e.UniqueId == uniqueId)
+                var attackers = player.GetAttackers();
+                if (attackers.Any(e => e.UniqueId == uniqueId)
                     && entity.State.LifeState == LifeState.Dead
                 )
                     UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnKillEnemy");
@@ -74,7 +74,7 @@ public class EntityUpdateStateResponse : IPacketHandler
                 var motionState = (MotionState)state;
                 entity.State.MotionState = motionState;
 
-                Log.Debug("EntityUpdate: type=1 MotionState=" + motionState + " uniqueId=" + uniqueId);
+                Log.Debug("[Entity] EntityUpdate: type=1 MotionState=" + motionState + " uniqueId=" + uniqueId);
 
                 switch (motionState)
                 {

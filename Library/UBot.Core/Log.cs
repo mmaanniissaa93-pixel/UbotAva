@@ -106,12 +106,28 @@ public class Log
     }
 
     /// <summary>
+    ///     Append specified error message with exception
+    /// </summary>
+    public static void Error(string message, Exception ex)
+    {
+        Error(message + Environment.NewLine + ex);
+    }
+
+    /// <summary>
     ///     Append specified fatal message
     /// </summary>
     /// <param name="obj">The message</param>
     public static void Fatal(Exception obj)
     {
-        Warn(obj.Message);
+        Fatal(obj.Message ?? "Unknown error", obj);
+    }
+
+    /// <summary>
+    ///     Append specified fatal message with exception
+    /// </summary>
+    public static void Fatal(string message, Exception ex)
+    {
+        Error(message, ex);
 
         var filePath = Path.Combine(UBot.Core.RuntimeAccess.Core.BasePath, "Data", "Logs", "Exceptions", $"{DateTime.Now:dd-MM-yyyy}.txt");
         var directory = Path.GetDirectoryName(filePath);
@@ -120,7 +136,7 @@ public class Log
 
         using (var stream = File.AppendText(filePath))
         {
-            stream.WriteLine(obj.ToString());
+            stream.WriteLine(ex.ToString());
         }
     }
 }

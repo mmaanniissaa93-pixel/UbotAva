@@ -127,8 +127,9 @@ public class SpawnedBionic : SpawnedEntity
     /// <returns></returns>
     public List<SpawnedBionic> GetAttackers()
     {
-        return (_context.GetEntities(typeof(SpawnedBionic), entity => ((SpawnedBionic)entity).TargetId == UniqueId)
+        return (_context.GetEntities(typeof(SpawnedBionic), entity => entity is SpawnedBionic bionic && bionic.TargetId == UniqueId)
                 as IEnumerable<SpawnedBionic>)
-            ?.ToList();
+            ?.ToList()
+            ?? new List<SpawnedBionic>();
     }
 }
