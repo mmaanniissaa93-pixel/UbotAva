@@ -99,9 +99,14 @@ internal sealed class UbotCoreLifecycleService : UbotServiceBase
                 UBot.Core.RuntimeAccess.Player.Load(selectedCharacter);
             }
 
-            UBot.Core.RuntimeAccess.Core.Language = UBot.Core.RuntimeAccess.Global.Get("UBot.Language", "en_US");
-            UBot.Core.RuntimeAccess.Core.Initialize();
-            UBot.Core.RuntimeAccess.Session.Initialize();
+            var core = UBot.Core.RuntimeAccess.Core;
+            var session = UBot.Core.RuntimeAccess.Session;
+            if (core != null)
+            {
+                core.Language = UBot.Core.RuntimeAccess.Global.Get("UBot.Language", "en_US");
+                core.Initialize();
+            }
+            session?.Initialize();
 
             ExtensionManager.LoadAssemblies<IPlugin>();
             ExtensionManager.LoadAssemblies<IBotbase>();
@@ -113,10 +118,11 @@ internal sealed class UbotCoreLifecycleService : UbotServiceBase
             if (!_eventsSubscribed)
             {
                 _eventsSubscribed = true;
-                UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnAddLog", new Action<string, LogLevel>(OnLog));
-                UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnChangeStatusText", new Action<string>(status => _statusText = status ?? string.Empty));
-                UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnChatMessage", new Action<string, string, ChatType>(OnChatMessage));
-                UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnUniqueMessage", new Action<string>(OnUniqueMessage));
+                var events = UBot.Core.RuntimeAccess.Events;
+                events?.SubscribeEvent("OnAddLog", new Action<string, LogLevel>(OnLog));
+                events?.SubscribeEvent("OnChangeStatusText", new Action<string>(status => _statusText = status ?? string.Empty));
+                events?.SubscribeEvent("OnChatMessage", new Action<string, string, ChatType>(OnChatMessage));
+                events?.SubscribeEvent("OnUniqueMessage", new Action<string>(OnUniqueMessage));
             }
 
             // Keep idle footprint low: load lightweight connection metadata only.
@@ -144,7 +150,7 @@ internal sealed class UbotCoreLifecycleService : UbotServiceBase
             }
             catch (Exception ex)
             {
-                Log.Error($"Plugin [{plugin.Name}] failed to initialize", ex);
+                Log.Error($"Plugin [{plugin.Name ?? "unknown"}] failed to initialize", ex);
             }
         }
     }
@@ -221,8 +227,9 @@ internal sealed class UbotCoreLifecycleService : UbotServiceBase
             try
             {
                 var worker = new BackgroundWorker { WorkerReportsProgress = true };
-                UBot.Core.RuntimeAccess.Session.ReferenceManager.Load(UBot.Core.RuntimeAccess.Global.Get("UBot.TranslationIndex", 9), worker);
-                _referenceLoaded = true;
+                var refManager = UBot.Core.RuntimeAccess.Session?.ReferenceManager;
+                refManager?.Load(UBot.Core.RuntimeAccess.Global.Get("UBot.TranslationIndex", 9), worker);
+                _referenceLoaded = refManager != null;
             }
             catch (Exception ex)
             {
