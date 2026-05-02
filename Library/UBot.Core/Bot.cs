@@ -110,10 +110,7 @@ public class Bot
     private string ResolveBotbaseTier(string botbaseName)
     {
         if (!ExtensionManager.HasPluginContract(botbaseName))
-        {
-            Log.Warn($"Botbase [{botbaseName}] has no manifest; treating Tick failure as critical.");
             return "critical";
-        }
 
         return ExtensionManager.GetPluginTier(botbaseName);
     }
@@ -148,6 +145,10 @@ public class Bot
         if (!_faultIsolation.TryExecute(botbaseName, "tick", new PluginRestartPolicyManifest { Enabled = false }, Botbase.Tick, out var failure))
         {
             _lastCriticalFailure = botbaseName;
+
+            if (!ExtensionManager.HasPluginContract(botbaseName))
+                Log.Warn($"Botbase [{botbaseName}] has no manifest; critical tier fallback applied on failure.");
+
             Log.Error($"CRITICAL: Botbase [{botbaseName}] failed in critical tier. Stopping bot to prevent further damage.");
             OnCriticalPluginFailure?.Invoke(botbaseName, "tick", failure);
 

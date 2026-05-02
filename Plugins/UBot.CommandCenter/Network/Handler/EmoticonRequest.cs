@@ -21,12 +21,17 @@ internal class EmoticonRequest : IPacketHandler
         var emoticon = Emoticons.GetEmoticonItemByType(type);
         var assignedCommand = PluginConfig.GetAssignedEmoteCommand(emoticon.Name);
 
-        Task.Run(() =>
+Task.Run(() =>
         {
-            if (!CommandManager.Execute(assignedCommand))
+            var success = CommandManager.Execute(assignedCommand);
+            if (!success)
+            {
+                var bot = UBot.Core.RuntimeAccess.Core.Bot;
+                var botState = bot == null ? "not initialized" : (bot.Running ? "running" : "not running");
                 Log.Debug(
-                    $"[Command center] Command execution of the command [{assignedCommand}] for emoticon [{emoticon.Name}] failed."
+                    $"[Command center] Command [{assignedCommand}] for emoticon [{emoticon.Name}] returned false. Bot state: {botState}. This is a feedback command and does not block the main start flow."
                 );
+            }
         });
     }
 }

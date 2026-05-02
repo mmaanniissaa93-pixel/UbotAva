@@ -37,7 +37,7 @@ public partial class AppState : ObservableObject
     [ObservableProperty] private bool   _hasLiveStats;
 
     // Log filtering
-    [ObservableProperty] private bool   _showDebug       = true;
+    [ObservableProperty] private bool   _showDebug       = false;
     [ObservableProperty] private bool   _showEntity      = false;
     [ObservableProperty] private bool   _showPerf        = false;
     [ObservableProperty] private bool   _showProtocol    = false;

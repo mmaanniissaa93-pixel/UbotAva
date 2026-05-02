@@ -107,9 +107,6 @@ internal sealed class UbotTrainingBotbaseService : UbotServiceBase
             changed = true;
         }
 
-        if (changed)
-            UBot.Core.RuntimeAccess.Player.Save();
-
         return changed;
     }
 

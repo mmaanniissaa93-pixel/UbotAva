@@ -39,6 +39,8 @@ public sealed class LureRecorderWindow : Window
     private static readonly object GlobalSync = new();
     private static bool _eventsSubscribed;
     private static WeakReference<LureRecorderWindow>? _activeRecorder;
+    private static Action? _playerMoveHandler;
+    private static Action<uint>? _skillCastHandler;
 
     private readonly Func<string, Task>? _onScriptSaved;
     private readonly List<LureRecorderCommandEntry> _commands = new();
@@ -267,7 +269,20 @@ public sealed class LureRecorderWindow : Window
             _isRecording = false;
             if (_activeRecorder != null && _activeRecorder.TryGetTarget(out var current) && ReferenceEquals(current, this))
                 _activeRecorder = null;
+
+            TryCleanupEventSubscriptions();
         };
+    }
+
+    private static void TryCleanupEventSubscriptions()
+    {
+        lock (GlobalSync)
+        {
+            if (_activeRecorder != null && _activeRecorder.TryGetTarget(out var active) && active != null)
+                return;
+
+            _eventsSubscribed = false;
+        }
     }
 
     private static Control CreateField(string label, Control input)
@@ -749,8 +764,10 @@ public sealed class LureRecorderWindow : Window
             if (_eventsSubscribed)
                 return;
 
-            UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnPlayerMove", new Action(OnGlobalPlayerMove));
-            UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnCastSkill", new Action<uint>(OnGlobalCastSkill));
+            _playerMoveHandler = OnGlobalPlayerMove;
+            _skillCastHandler = OnGlobalCastSkill;
+            UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnPlayerMove", _playerMoveHandler);
+            UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnCastSkill", _skillCastHandler);
             _eventsSubscribed = true;
         }
     }
