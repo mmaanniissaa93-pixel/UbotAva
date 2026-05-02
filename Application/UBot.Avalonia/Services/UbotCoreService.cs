@@ -216,4 +216,71 @@ public sealed class UbotCoreService : UbotServiceBase, IUbotCoreService
     public Task<byte[]?> GetEmoteIconAsync(string emoteName) => _iconService.GetEmoteIconAsync(emoteName);
 
     public Task<IReadOnlyList<MapLocationDto>> GetMapLocationsAsync() => _mapService.GetMapLocationsAsync();
+
+    public Task<NetworkConfig> GetNetworkConfigAsync()
+    {
+        var bindIp = UBot.Core.RuntimeAccess.Global.Get("UBot.Network.BindIp", "0.0.0.0");
+        var proxy = UBot.Core.RuntimeAccess.Global.GetArray<string>("UBot.Network.Proxy", '|', System.StringSplitOptions.TrimEntries);
+
+        var active   = false;
+        var proxyIp   = string.Empty;
+        var proxyPort = 0;
+        var proxyUser = string.Empty;
+        var proxyPass = string.Empty;
+        var proxyType = "SOCKS5";
+        var version   = 5;
+
+        if (proxy.Length >= 6)
+        {
+            _ = bool.TryParse(proxy[0], out active);
+            proxyIp = proxy[1];
+            _ = int.TryParse(proxy[2], System.Globalization.NumberStyles.Integer,
+                System.Globalization.CultureInfo.InvariantCulture, out proxyPort);
+            proxyUser = proxy[3];
+            proxyPass = proxy[4];
+            proxyType = proxy[5] == "4" ? "SOCKS4" : "SOCKS5";
+            version   = proxy[5] == "4" ? 4 : 5;
+        }
+
+        return Task.FromResult(new NetworkConfig
+        {
+            BindIp = string.IsNullOrWhiteSpace(bindIp) ? "0.0.0.0" : bindIp,
+            Proxy  = new ProxyConfig
+            {
+                Active   = active,
+                Ip       = proxyIp,
+                Port     = Math.Clamp(proxyPort, 0, 65535),
+                Username = proxyUser,
+                Password = proxyPass,
+                Type     = proxyType,
+                Version  = version
+            }
+        });
+    }
+
+    public Task<bool> SaveNetworkConfigAsync(NetworkConfig config)
+    {
+        try
+        {
+            UBot.Core.RuntimeAccess.Global.Set("UBot.Network.BindIp", config.BindIp ?? "0.0.0.0");
+            UBot.Core.RuntimeAccess.Global.SetArray(
+                "UBot.Network.Proxy",
+                new List<string>
+                {
+                    config.Proxy.Active.ToString(),
+                    config.Proxy.Ip ?? string.Empty,
+                    Math.Clamp(config.Proxy.Port, 0, 65535).ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    config.Proxy.Username ?? string.Empty,
+                    config.Proxy.Password ?? string.Empty,
+                    config.Proxy.Version.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                },
+                "|");
+            UBot.Core.RuntimeAccess.Global.Save();
+            return Task.FromResult(true);
+        }
+        catch
+        {
+            return Task.FromResult(false);
+        }
+    }
 }

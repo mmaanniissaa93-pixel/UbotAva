@@ -712,7 +712,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            var dlg = new ProxyConfigWindow();
+            var dlg = new ProxyConfigWindow(_core!);
             dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             dlg.Closed += async (_, _) =>
             {

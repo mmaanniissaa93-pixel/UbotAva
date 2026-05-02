@@ -41,4 +41,6 @@ public interface IUbotCoreService
     Task<byte[]?> GetSkillIconAsync(string iconFile);
     Task<byte[]?> GetEmoteIconAsync(string emoteName);
     Task<IReadOnlyList<MapLocationDto>> GetMapLocationsAsync();
+    Task<NetworkConfig> GetNetworkConfigAsync();
+    Task<bool> SaveNetworkConfigAsync(NetworkConfig config);
 }
