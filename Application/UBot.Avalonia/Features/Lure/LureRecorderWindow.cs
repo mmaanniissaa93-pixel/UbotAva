@@ -281,6 +281,13 @@ public sealed class LureRecorderWindow : Window
             if (_activeRecorder != null && _activeRecorder.TryGetTarget(out var active) && active != null)
                 return;
 
+            if (_playerMoveHandler != null)
+                UBot.Core.RuntimeAccess.Events.UnsubscribeEvent("OnPlayerMove", _playerMoveHandler);
+            if (_skillCastHandler != null)
+                UBot.Core.RuntimeAccess.Events.UnsubscribeEvent("OnCastSkill", _skillCastHandler);
+
+            _playerMoveHandler = null;
+            _skillCastHandler = null;
             _eventsSubscribed = false;
         }
     }

@@ -133,7 +133,7 @@ public partial class AppState : ObservableObject
     {
         var upper = log.ToUpperInvariant();
 
-        if (upper.Contains("[ERROR]") || upper.Contains("[FATAL]"))
+        if (upper.Contains("[ERROR]") || upper.Contains("[FATAL]") || upper.Contains("[WARNING]"))
             return true;
 
         if (ShowErrorsOnly)
