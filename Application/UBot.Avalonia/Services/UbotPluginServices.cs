@@ -233,14 +233,4 @@ internal sealed class UbotPluginConfigService : UbotServiceBase
 
         return Task.FromResult(changed);
     }
-
-    internal static void ApplyLivePartySettingsFromConfig()
-    {
-        UbotPartyPluginService.ApplyLivePartySettingsFromConfig();
-    }
-
-    internal static void RefreshPartyPluginRuntime()
-    {
-        UbotPartyPluginService.RefreshPartyPluginRuntime();
-    }
 }
