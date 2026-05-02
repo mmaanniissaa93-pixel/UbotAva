@@ -30,6 +30,9 @@ public partial class ProtectionFeatureView : UserControl
 {
     private PluginViewModelBase? _vm;
     private bool _syncing;
+    private bool _rowsBuilt;
+    private ObservableCollection<ThresholdRow> _recovRows = new();
+    private ObservableCollection<CheckRow>     _backRows  = new();
 
     public ProtectionFeatureView() { InitializeComponent(); }
 
@@ -46,48 +49,80 @@ public partial class ProtectionFeatureView : UserControl
         RefreshFromConfig();
     }
 
-    public void UpdateFromState(System.Text.Json.JsonElement state) => RefreshFromConfig();
-
+    // Protection config is independent of runtime state — never reload config on state polls.
+    // State polls carry live game data (HP bars, bot status), not user config.
+    public void UpdateFromState(System.Text.Json.JsonElement state) { }
 
     public async void RefreshFromConfig()
     {
         if (_vm is null) return;
         await _vm.LoadConfigAsync();
-        
+
         _syncing = true;
 
-        // Recovery rows
-        var recovRows = new ObservableCollection<ThresholdRow>
+        if (!_rowsBuilt)
         {
-            MakeThresh("Use HP potions if HP",       "hpPotionEnabled",  "hpPotionThreshold",  75),
-            MakeThresh("Use MP potions if MP",       "mpPotionEnabled",  "mpPotionThreshold",  75),
-            MakeThresh("Use Vigor Potions if HP",    "vigorHpEnabled",   "vigorHpThreshold",   50),
-            MakeThresh("Use Vigor Potions if MP",    "vigorMpEnabled",   "vigorMpThreshold",   50),
-            MakeThresh("Use skill if HP",            "skillHpEnabled",   "skillHpThreshold",   50),
-            MakeThresh("Use skill if MP",            "mpSkillEnabled",   "mpSkillThreshold",   50),
-        };
-        RecoveryList.ItemsSource = recovRows;
+            // First load: build collections and assign ItemsSource once.
+            // ItemsSource is never replaced after this point, so DataTemplate
+            // TextBox instances persist and focus is never destroyed by a reload.
+            _recovRows = new ObservableCollection<ThresholdRow>
+            {
+                MakeThresh("Use HP potions if HP",    "hpPotionEnabled",  "hpPotionThreshold",  75),
+                MakeThresh("Use MP potions if MP",    "mpPotionEnabled",  "mpPotionThreshold",  75),
+                MakeThresh("Use Vigor Potions if HP", "vigorHpEnabled",   "vigorHpThreshold",   50),
+                MakeThresh("Use Vigor Potions if MP", "vigorMpEnabled",   "vigorMpThreshold",   50),
+                MakeThresh("Use skill if HP",         "skillHpEnabled",   "skillHpThreshold",   50),
+                MakeThresh("Use skill if MP",         "mpSkillEnabled",   "mpSkillThreshold",   50),
+            };
+            RecoveryList.ItemsSource = _recovRows;
 
-        // Back to town
-        var backRows = new ObservableCollection<CheckRow>
+            _backRows = new ObservableCollection<CheckRow>
+            {
+                MakeCheck("Dead with delay",            "deadDelayEnabled"),
+                MakeCheck("Stop bot when back in town", "stopInTown"),
+                MakeCheck("No arrows / bolts left",     "noArrows"),
+                MakeCheck("Full inventory",             "fullInventory"),
+                MakeCheck("Full pet inventory",         "fullPetInventory"),
+                MakeCheck("HP Potions left",            "hpPotionsLow"),
+                MakeCheck("MP Potions left",            "mpPotionsLow"),
+                MakeCheck("Equipment durability low",   "lowDurability"),
+                MakeCheck("Level up",                   "levelUp"),
+                MakeCheck("Shard fatigue",              "shardFatigue"),
+            };
+            BackToTownList.ItemsSource = _backRows;
+            _rowsBuilt = true;
+        }
+        else
         {
-            MakeCheck("Dead with delay",             "deadDelayEnabled"),
-            MakeCheck("Stop bot when back in town",  "stopInTown"),
-            MakeCheck("No arrows / bolts left",      "noArrows"),
-            MakeCheck("Full inventory",              "fullInventory"),
-            MakeCheck("Full pet inventory",          "fullPetInventory"),
-            MakeCheck("HP Potions left",             "hpPotionsLow"),
-            MakeCheck("MP Potions left",             "mpPotionsLow"),
-            MakeCheck("Equipment durability low",    "lowDurability"),
-            MakeCheck("Level up",                    "levelUp"),
-            MakeCheck("Shard fatigue",               "shardFatigue"),
-        };
-        BackToTownList.ItemsSource = backRows;
+            // Subsequent calls: update existing row objects in-place.
+            // ThresholdRow/CheckRow use SetProperty which skips PropertyChanged
+            // when the value is unchanged, so a focused TextBox is not disturbed.
+            SetThresh(_recovRows, 0, "hpPotionEnabled",  "hpPotionThreshold",  75);
+            SetThresh(_recovRows, 1, "mpPotionEnabled",  "mpPotionThreshold",  75);
+            SetThresh(_recovRows, 2, "vigorHpEnabled",   "vigorHpThreshold",   50);
+            SetThresh(_recovRows, 3, "vigorMpEnabled",   "vigorMpThreshold",   50);
+            SetThresh(_recovRows, 4, "skillHpEnabled",   "skillHpThreshold",   50);
+            SetThresh(_recovRows, 5, "mpSkillEnabled",   "mpSkillThreshold",   50);
+
+            SetCheck(_backRows, 0, "deadDelayEnabled");
+            SetCheck(_backRows, 1, "stopInTown");
+            SetCheck(_backRows, 2, "noArrows");
+            SetCheck(_backRows, 3, "fullInventory");
+            SetCheck(_backRows, 4, "fullPetInventory");
+            SetCheck(_backRows, 5, "hpPotionsLow");
+            SetCheck(_backRows, 6, "mpPotionsLow");
+            SetCheck(_backRows, 7, "lowDurability");
+            SetCheck(_backRows, 8, "levelUp");
+            SetCheck(_backRows, 9, "shardFatigue");
+        }
 
         UseUniversalPillsCheck.IsChecked = _vm.BoolCfg("useUniversalPills", true);
         UseBadStatusSkillCheck.IsChecked = _vm.BoolCfg("useBadStatusSkill");
-        IncIntBox.Text = _vm.NumCfg("increaseInt").ToString("F0");
-        IncStrBox.Text = _vm.NumCfg("increaseStr").ToString("F0");
+
+        // Don't overwrite stat boxes while the user is actively editing them.
+        if (!IncIntBox.IsFocused) IncIntBox.Text = _vm.NumCfg("increaseInt").ToString("F0");
+        if (!IncStrBox.IsFocused) IncStrBox.Text = _vm.NumCfg("increaseStr").ToString("F0");
+
         PetHpCheck.IsChecked     = _vm.BoolCfg("petHpPotionEnabled",         true);
         PetHungerCheck.IsChecked = _vm.BoolCfg("petHgpPotionEnabled",        true);
         PetAbnormCheck.IsChecked = _vm.BoolCfg("petAbnormalRecoveryEnabled", true);
@@ -95,6 +130,19 @@ public partial class ProtectionFeatureView : UserControl
         PetSummonCheck.IsChecked = _vm.BoolCfg("autoSummonGrowthFellow",     true);
 
         _syncing = false;
+    }
+
+    private void SetThresh(ObservableCollection<ThresholdRow> rows, int i, string flagKey, string valKey, double def)
+    {
+        if (i >= rows.Count) return;
+        rows[i].Enabled = _vm!.BoolCfg(flagKey);
+        rows[i].Value   = _vm.NumCfg(valKey, def);
+    }
+
+    private void SetCheck(ObservableCollection<CheckRow> rows, int i, string key)
+    {
+        if (i >= rows.Count) return;
+        rows[i].Enabled = _vm!.BoolCfg(key);
     }
 
     private ThresholdRow MakeThresh(string label, string flagKey, string valKey, double def)

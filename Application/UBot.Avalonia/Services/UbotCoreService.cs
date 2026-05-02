@@ -353,4 +353,17 @@ public sealed class UbotCoreService : UbotServiceBase, IUbotCoreService
         }
         return Task.CompletedTask;
     }
+
+    public Task SetPlayerValueOnlyAsync<T>(string key, T value)
+    {
+        try
+        {
+            UBot.Core.RuntimeAccess.Player.Set(key, value);
+        }
+        catch
+        {
+            // Player Set-only hatası sessizce yutulur.
+        }
+        return Task.CompletedTask;
+    }
 }
