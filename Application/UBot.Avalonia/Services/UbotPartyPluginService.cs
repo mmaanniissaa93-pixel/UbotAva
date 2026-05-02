@@ -464,7 +464,7 @@ internal sealed class UbotPartyPluginService : UbotServiceBase
 
         if (UBot.Core.RuntimeAccess.Session.Player != null && UBot.Core.RuntimeAccess.Session.Player.TryGetAbilitySkills(out var abilitySkills))
         {
-            foreach (var ability in abilitySkills)
+            foreach (var ability in abilitySkills ?? new List<SkillInfo>())
             {
                 if (ability?.Record == null || result.ContainsKey(ability.Id))
                     continue;

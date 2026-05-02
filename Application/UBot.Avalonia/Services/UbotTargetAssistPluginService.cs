@@ -161,13 +161,13 @@ internal sealed class UbotTargetAssistPluginService : UbotServiceBase
         if (enabled
             && UBot.Core.RuntimeAccess.Session.Ready
             && UBot.Core.RuntimeAccess.Session.Player != null
-            && UBot.Core.RuntimeAccess.Session.Player.State.LifeState == LifeState.Alive
+            && UBot.Core.RuntimeAccess.Session.Player.State?.LifeState == LifeState.Alive
             && SpawnManager.TryGetEntities<SpawnedPlayer>(out var players))
         {
             var candidates = players
                 .Where(player => player != null && player.UniqueId != UBot.Core.RuntimeAccess.Session.Player.UniqueId)
                 .Where(player => !string.IsNullOrWhiteSpace(player.Name))
-                .Where(player => includeDeadTargets || player.State.LifeState == LifeState.Alive)
+                .Where(player => includeDeadTargets || player.State?.LifeState == LifeState.Alive)
                 .Where(player => player.DistanceToPlayer <= maxRange)
                 .Where(player => !ignoreSnowShieldTargets || !HasSnowShieldBuff(player, effectTransferParam))
                 .Where(player => !ignoreBloodyStormTargets || !HasAnyBuffCodeToken(player, bloodyStormCodeTokens))
@@ -218,7 +218,7 @@ internal sealed class UbotTargetAssistPluginService : UbotServiceBase
             if (!string.IsNullOrWhiteSpace(code) && code.IndexOf("COLD_SHIELD", StringComparison.OrdinalIgnoreCase) >= 0)
                 return true;
 
-            if (record.Params.Contains(effectTransferParam))
+            if (record.Params != null && record.Params.Contains(effectTransferParam))
                 return true;
         }
 
