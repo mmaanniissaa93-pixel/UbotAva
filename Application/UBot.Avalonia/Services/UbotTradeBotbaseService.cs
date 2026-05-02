@@ -205,8 +205,8 @@ internal sealed class UbotTradeBotbaseService : UbotServiceBase
         var routeLists = new List<TradeRouteListDefinition>(names.Count);
         foreach (var name in names)
         {
-            var scripts = PlayerConfig
-                .GetArray<string>($"UBot.Trade.RouteScriptList.{name}")
+            var scripts = (PlayerConfig
+                .GetArray<string>($"UBot.Trade.RouteScriptList.{name}") ?? Array.Empty<string>())
                 .Where(path => !string.IsNullOrWhiteSpace(path))
                 .Select(path => path.Trim())
                 .Distinct(StringComparer.OrdinalIgnoreCase)

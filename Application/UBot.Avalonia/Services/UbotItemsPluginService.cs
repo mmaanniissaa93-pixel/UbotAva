@@ -389,11 +389,16 @@ internal sealed class UbotItemsPluginService : UbotServiceBase
 
         if (TryGetPickupFilterValue(patch, "pickupFilter", out var pickupFilter))
         {
-            PickupManager.PickupFilter.Clear();
-            foreach (var item in pickupFilter)
-                PickupManager.PickupFilter.Add(item);
-            PickupManager.SaveFilter();
-            changed = true;
+            if (PickupManager.PickupFilter == null)
+                PickupManager.LoadFilter();
+            if (PickupManager.PickupFilter != null)
+            {
+                PickupManager.PickupFilter.Clear();
+                foreach (var item in pickupFilter)
+                    PickupManager.PickupFilter.Add(item);
+                PickupManager.SaveFilter();
+                changed = true;
+            }
         }
 
         var pluginConfig = LoadPluginJsonConfig(ItemsPluginName);
