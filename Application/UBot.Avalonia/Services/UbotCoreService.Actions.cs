@@ -761,9 +761,9 @@ internal sealed class UbotPartyActionHandler : UbotServiceBase
         UBot.Core.RuntimeAccess.Player.Set("UBot.Party.Matching.Title", title);
         UBot.Core.RuntimeAccess.Player.Set("UBot.Party.Matching.AutoReform", autoReform);
         UBot.Core.RuntimeAccess.Player.Set("UBot.Party.Matching.AutoAccept", autoAccept);
-        UbotPluginConfigService.ApplyLivePartySettingsFromConfig();
-        UbotPluginConfigService.RefreshPartyPluginRuntime();
-
+        UbotPartyPluginService.ApplyLivePartySettingsFromConfig();
+UbotPartyPluginService.RefreshPartyPluginRuntime();
+        
         uint matchingId = 0;
         if (changeExisting && !TryResolveMatchingId(payload, out matchingId))
             return false;
