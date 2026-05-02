@@ -109,18 +109,20 @@ internal sealed class UbotMapService : UbotServiceBase
 
     private static Dictionary<string, object?> BuildMapPluginState()
     {
+        var player = UBot.Core.RuntimeAccess.Session?.Player;
         var showFilter = NormalizeMapShowFilter(
-            UBot.Core.RuntimeAccess.Player.Get("UBot.Desktop.Map.ShowFilter",
-                UBot.Core.RuntimeAccess.Player.Get("UBot.Desktop.Map.EntityFilter", "All")));
+            UBot.Core.RuntimeAccess.Player.Get<string>("UBot.Desktop.Map.ShowFilter")
+                ?? UBot.Core.RuntimeAccess.Player.Get<string>("UBot.Desktop.Map.EntityFilter", "All")
+                ?? "All");
 
         SpawnManager.TryGetEntities<SpawnedEntity>(out var spawnedEntities);
         var all = spawnedEntities?.Where(entity => entity != null).ToArray() ?? Array.Empty<SpawnedEntity>();
-        var player = UBot.Core.RuntimeAccess.Session.Player;
         var playerPosition = player?.Position ?? default;
         var playerRegion = playerPosition.Region;
 
+        var session = UBot.Core.RuntimeAccess.Session;
         var partyMemberNames = new HashSet<string>(
-            (UBot.Core.RuntimeAccess.Session.Party?.Members ?? new List<PartyMember>())
+            (session?.Party?.Members ?? new List<PartyMember>())
                 .Select(member => member?.Name ?? string.Empty)
                 .Where(name => !string.IsNullOrWhiteSpace(name)),
             StringComparer.OrdinalIgnoreCase);
@@ -267,7 +269,7 @@ internal sealed class UbotMapService : UbotServiceBase
             ["items"] = items,
             ["portals"] = portals,
             ["uniques"] = uniques,
-            ["collisionDetection"] = UBot.Core.RuntimeAccess.Core.EnableCollisionDetection,
+            ["collisionDetection"] = UBot.Core.RuntimeAccess.Core?.EnableCollisionDetection ?? false,
             ["autoSelectUniques"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Map.AutoSelectUnique", false),
             ["resetToPlayerAt"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Desktop.Map.ResetToPlayerAt", 0L),
             ["mapRegion"] = (int)playerRegion.Id,
@@ -427,18 +429,19 @@ internal sealed class UbotMapService : UbotServiceBase
 
     private static void TryAutoSelectUniqueMonster(Player? player, IReadOnlyCollection<SpawnedEntity> entities)
     {
-        if (player == null || UBot.Core.RuntimeAccess.Core.Bot?.Running == true)
+        var core = UBot.Core.RuntimeAccess.Core;
+        if (player == null || core?.Bot?.Running == true)
             return;
 
         if (!UBot.Core.RuntimeAccess.Player.Get("UBot.Map.AutoSelectUnique", false))
             return;
 
-        if (UBot.Core.RuntimeAccess.Core.TickCount - _mapAutoSelectUniqueLastTick < 1250)
+        if (core?.TickCount - _mapAutoSelectUniqueLastTick < 1250)
             return;
 
-        _mapAutoSelectUniqueLastTick = UBot.Core.RuntimeAccess.Core.TickCount;
+        _mapAutoSelectUniqueLastTick = core?.TickCount ?? 0;
 
-        if (UBot.Core.RuntimeAccess.Session.SelectedEntity is SpawnedMonster selectedMonster && IsUniqueMonster(selectedMonster))
+        if (UBot.Core.RuntimeAccess.Session?.SelectedEntity is SpawnedMonster selectedMonster && IsUniqueMonster(selectedMonster))
             return;
 
         var nearestUnique = entities
