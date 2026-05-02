@@ -283,4 +283,18 @@ public sealed class UbotCoreService : UbotServiceBase, IUbotCoreService
             return Task.FromResult(false);
         }
     }
+
+    public Task SetGlobalValueAsync<T>(string key, T value)
+    {
+        try
+        {
+            UBot.Core.RuntimeAccess.Global.Set(key, value);
+            UBot.Core.RuntimeAccess.Global.Save();
+        }
+        catch
+        {
+            // Bridge hatası sessizce yutulur; UI akışı kesilmemeli.
+        }
+        return Task.CompletedTask;
+    }
 }

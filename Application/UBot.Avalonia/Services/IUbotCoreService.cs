@@ -43,4 +43,5 @@ public interface IUbotCoreService
     Task<IReadOnlyList<MapLocationDto>> GetMapLocationsAsync();
     Task<NetworkConfig> GetNetworkConfigAsync();
     Task<bool> SaveNetworkConfigAsync(NetworkConfig config);
+    Task SetGlobalValueAsync<T>(string key, T value);
 }

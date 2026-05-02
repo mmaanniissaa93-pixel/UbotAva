@@ -7,7 +7,6 @@ using System.Globalization;
 using UBot.Avalonia.Controls;
 using UBot.Avalonia.Services;
 using UBot.Avalonia.ViewModels;
-using UBot.Core;
 
 namespace UBot.Avalonia.Features.General;
 
@@ -196,7 +195,7 @@ public partial class GeneralFeatureView : UserControl
                || double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out value);
     }
 
-    private static void PersistCriticalGeneralBool(string key, bool value)
+    private void PersistCriticalGeneralBool(string key, bool value)
     {
         string? configKey = key switch
         {
@@ -208,11 +207,10 @@ public partial class GeneralFeatureView : UserControl
         if (configKey == null)
             return;
 
-        UBot.Core.RuntimeAccess.Global.Set(configKey, value);
-        UBot.Core.RuntimeAccess.Global.Save();
+        _ = _vm!.Core.SetGlobalValueAsync(configKey, value);
     }
 
-    private static void PersistCriticalGeneralInt(string key, int value)
+    private void PersistCriticalGeneralInt(string key, int value)
     {
         string? configKey = key switch
         {
@@ -224,8 +222,7 @@ public partial class GeneralFeatureView : UserControl
         if (configKey == null)
             return;
 
-        UBot.Core.RuntimeAccess.Global.Set(configKey, Math.Clamp(value, 0, 3600));
-        UBot.Core.RuntimeAccess.Global.Save();
+        _ = _vm!.Core.SetGlobalValueAsync(configKey, Math.Clamp(value, 0, 3600));
     }
 
     private async System.Threading.Tasks.Task OpenAccountSetupDialogAsync()
