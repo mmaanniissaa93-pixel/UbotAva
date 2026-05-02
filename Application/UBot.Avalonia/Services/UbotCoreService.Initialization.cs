@@ -144,7 +144,7 @@ internal sealed class UbotCoreLifecycleService : UbotServiceBase
             }
             catch (Exception ex)
             {
-                Log.Error($"Plugin [{plugin.Name}] failed to initialize: {ex.Message}");
+                Log.Error($"Plugin [{plugin.Name}] failed to initialize", ex);
             }
         }
     }
@@ -200,7 +200,7 @@ internal sealed class UbotCoreLifecycleService : UbotServiceBase
             }
             catch (Exception ex)
             {
-                Log.Error($"Client info load failed: {ex.Message}");
+                Log.Error("Client info load failed", ex);
                 _clientInfoLoaded = false;
                 return false;
             }
@@ -226,7 +226,7 @@ internal sealed class UbotCoreLifecycleService : UbotServiceBase
             }
             catch (Exception ex)
             {
-                Log.Error($"Reference load failed: {ex.Message}");
+                Log.Error("Reference load failed", ex);
             }
             finally
             {

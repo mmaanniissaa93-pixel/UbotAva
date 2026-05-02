@@ -48,4 +48,10 @@ public interface IUbotCoreService
     Task LoadPlayerConfigAsync(string character);
     Task<T> GetGlobalValueAsync<T>(string key, T defaultValue);
     Task SetCoreLanguageAsync(string language);
+
+    // Lure recorder event bridge
+    Task SubscribeLureRecorderEventsAsync(Action onPlayerMove, Action<uint> onCastSkill);
+    Task UnsubscribeLureRecorderEventsAsync(Action onPlayerMove, Action<uint> onCastSkill);
+    Task<PlayerPositionSnapshot?> GetCurrentPlayerPositionAsync();
+    Task<string?> GetSkillCodeByIdAsync(uint skillId);
 }

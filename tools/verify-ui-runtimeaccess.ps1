@@ -16,11 +16,11 @@ $AllowedUsing = @(
     "using UBot\.Core\.Network;"
 )
 
-# LureRecorderWindow: realtime event subscription (OnPlayerMove, OnCastSkill)
-#   - Duplicate subscription cleanup düzeltildi (TryCleanupEventSubscriptions)
-#   - Gerçek UnsubscribeEvent kullanılıyor
-#   - Full bridge migration ayrı refactor olarak planlanacak
-$TempExceptions = @("LureRecorderWindow")
+# LureRecorderWindow: Full Event Bridge Migration tamamlandı
+#   - IUbotCoreService üzerinden SubscribeLureRecorderEventsAsync / UnsubscribeLureRecorderEventsAsync
+#   - GetCurrentPlayerPositionAsync ve GetSkillCodeByIdAsync ile player verisi
+#   - Artık doğrudan RuntimeAccess kullanımı yok
+$TempExceptions = @()
 
 $Violations = @()
 

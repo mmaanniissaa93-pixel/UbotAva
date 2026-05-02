@@ -193,3 +193,14 @@ public class MapLocationDto
     [JsonPropertyName("id")]   public int    Id   { get; set; }
     [JsonPropertyName("name")] public string Name { get; set; } = "";
 }
+
+// ─── Lure recorder bridge ─────────────────────────────────────────────────────
+
+public sealed class PlayerPositionSnapshot
+{
+    public float XOffset  { get; init; }
+    public float YOffset  { get; init; }
+    public float ZOffset  { get; init; }
+    public byte  XSector  { get; init; }
+    public byte  YSector  { get; init; }
+}

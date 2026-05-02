@@ -68,6 +68,15 @@ public class Log
     }
 
     /// <summary>
+    ///     Append specified Warning message with exception details
+    /// </summary>
+    public static void Warn(string message, Exception ex)
+    {
+        var fullMessage = FormatException(message, ex, includeStackTrace: false);
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnAddLog", fullMessage, LogLevel.Warning);
+    }
+
+    /// <summary>
     ///     Appends the specified language key.
     /// </summary>
     /// <param name="obj">The message.</param>
@@ -84,6 +93,15 @@ public class Log
     public static void Error(object obj)
     {
         UBot.Core.RuntimeAccess.Events.FireEvent("OnAddLog", obj.ToString(), LogLevel.Error);
+    }
+
+    /// <summary>
+    ///     Append specified Error message with exception details (includes stack trace)
+    /// </summary>
+    public static void Error(string message, Exception ex)
+    {
+        var fullMessage = FormatException(message, ex, includeStackTrace: true);
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnAddLog", fullMessage, LogLevel.Error);
     }
 
     /// <summary>
@@ -106,14 +124,6 @@ public class Log
     }
 
     /// <summary>
-    ///     Append specified error message with exception
-    /// </summary>
-    public static void Error(string message, Exception ex)
-    {
-        Error(message + Environment.NewLine + ex);
-    }
-
-    /// <summary>
     ///     Append specified fatal message
     /// </summary>
     /// <param name="obj">The message</param>
@@ -123,20 +133,54 @@ public class Log
     }
 
     /// <summary>
-    ///     Append specified fatal message with exception
+    ///     Append specified fatal message with exception (includes stack trace + file logging)
     /// </summary>
     public static void Fatal(string message, Exception ex)
     {
-        Error(message, ex);
+        var fullMessage = FormatException(message, ex, includeStackTrace: true);
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnAddLog", fullMessage, LogLevel.Fatal);
 
-        var filePath = Path.Combine(UBot.Core.RuntimeAccess.Core.BasePath, "Data", "Logs", "Exceptions", $"{DateTime.Now:dd-MM-yyyy}.txt");
+        var filePath = Path.Combine(UBot.Core.RuntimeAccess.Core.BasePath, "Data", "Logs", "Exceptions", $"{DateTime.Now:dd-MM-yyyy_HH-mm-ss}.txt");
         var directory = Path.GetDirectoryName(filePath);
         if (!string.IsNullOrWhiteSpace(directory) && !Directory.Exists(directory))
             Directory.CreateDirectory(directory);
 
         using (var stream = File.AppendText(filePath))
         {
+            stream.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}");
             stream.WriteLine(ex.ToString());
+            stream.WriteLine();
         }
+    }
+
+    private static string FormatException(string message, Exception ex, bool includeStackTrace)
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine(message);
+
+        sb.Append("Type: ").AppendLine(ex.GetType().FullName);
+        sb.Append("Message: ").AppendLine(ex.Message);
+
+        if (includeStackTrace && !string.IsNullOrWhiteSpace(ex.StackTrace))
+        {
+            sb.AppendLine("StackTrace:");
+            sb.AppendLine(ex.StackTrace);
+        }
+
+        var inner = ex.InnerException;
+        while (inner != null)
+        {
+            sb.AppendLine("Inner:");
+            sb.Append("Type: ").AppendLine(inner.GetType().FullName);
+            sb.Append("Message: ").AppendLine(inner.Message);
+            if (includeStackTrace && !string.IsNullOrWhiteSpace(inner.StackTrace))
+            {
+                sb.AppendLine("StackTrace:");
+                sb.AppendLine(inner.StackTrace);
+            }
+            inner = inner.InnerException;
+        }
+
+        return sb.ToString();
     }
 }

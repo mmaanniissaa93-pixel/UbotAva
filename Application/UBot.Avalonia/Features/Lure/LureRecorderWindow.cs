@@ -10,8 +10,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using UBot.Core;
-using UBot.Core.Event;
+using UBot.Avalonia.Services;
 using Forms = System.Windows.Forms;
 
 namespace UBot.Avalonia.Features.Lure;
@@ -42,6 +41,7 @@ public sealed class LureRecorderWindow : Window
     private static Action? _playerMoveHandler;
     private static Action<uint>? _skillCastHandler;
 
+    private readonly IUbotCoreService _core;
     private readonly Func<string, Task>? _onScriptSaved;
     private readonly List<LureRecorderCommandEntry> _commands = new();
     private readonly ObservableCollection<string> _commandLines = new();
@@ -74,8 +74,9 @@ public sealed class LureRecorderWindow : Window
     private string _lastCastSignature = string.Empty;
     private long _lastCastAtMs;
 
-    public LureRecorderWindow(string scriptPath, Func<string, Task>? onScriptSaved)
+    public LureRecorderWindow(string scriptPath, Func<string, Task>? onScriptSaved, IUbotCoreService core)
     {
+        _core = core;
         _scriptPath = scriptPath?.Trim() ?? string.Empty;
         _initialPath = _scriptPath;
         _onScriptSaved = onScriptSaved;
@@ -274,17 +275,31 @@ public sealed class LureRecorderWindow : Window
         };
     }
 
-    private static void TryCleanupEventSubscriptions()
+    private void EnsureGlobalEventSubscriptions()
+    {
+        lock (GlobalSync)
+        {
+            if (_eventsSubscribed)
+                return;
+
+            _playerMoveHandler = OnGlobalPlayerMove;
+            _skillCastHandler = OnGlobalCastSkill;
+            _ = _core.SubscribeLureRecorderEventsAsync(_playerMoveHandler, _skillCastHandler);
+            _eventsSubscribed = true;
+        }
+    }
+
+    private void TryCleanupEventSubscriptions()
     {
         lock (GlobalSync)
         {
             if (_activeRecorder != null && _activeRecorder.TryGetTarget(out var active) && active != null)
                 return;
 
-            if (_playerMoveHandler != null)
-                UBot.Core.RuntimeAccess.Events.UnsubscribeEvent("OnPlayerMove", _playerMoveHandler);
-            if (_skillCastHandler != null)
-                UBot.Core.RuntimeAccess.Events.UnsubscribeEvent("OnCastSkill", _skillCastHandler);
+            if (_playerMoveHandler != null || _skillCastHandler != null)
+                _ = _core.UnsubscribeLureRecorderEventsAsync(
+                    _playerMoveHandler ?? (() => { }),
+                    _skillCastHandler ?? (_ => { }));
 
             _playerMoveHandler = null;
             _skillCastHandler = null;
@@ -294,18 +309,8 @@ public sealed class LureRecorderWindow : Window
 
     private static Control CreateField(string label, Control input)
     {
-        var row = new StackPanel
-        {
-            Orientation = Orientation.Horizontal,
-            Spacing = 8
-        };
-
-        row.Children.Add(new TextBlock
-        {
-            Text = label,
-            Width = 120,
-            VerticalAlignment = VerticalAlignment.Center
-        });
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+        row.Children.Add(new TextBlock { Text = label, Width = 120, VerticalAlignment = VerticalAlignment.Center });
         row.Children.Add(input);
         return row;
     }
@@ -428,25 +433,14 @@ public sealed class LureRecorderWindow : Window
                 error = "Codename is required";
                 return false;
             }
-
             parameters["codename"] = codename;
         }
         else if (type == "teleport")
         {
             var codename = ReadToken(_codenameBox);
             var destination = ReadToken(_destinationBox);
-            if (string.IsNullOrWhiteSpace(codename))
-            {
-                error = "Codename is required";
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(destination))
-            {
-                error = "Destination is required";
-                return false;
-            }
-
+            if (string.IsNullOrWhiteSpace(codename)) { error = "Codename is required"; return false; }
+            if (string.IsNullOrWhiteSpace(destination)) { error = "Destination is required"; return false; }
             parameters["codename"] = codename;
             parameters["destination"] = destination;
         }
@@ -458,7 +452,6 @@ public sealed class LureRecorderWindow : Window
                 error = "Time must be a non-negative integer";
                 return false;
             }
-
             parameters["time"] = seconds.ToString(CultureInfo.InvariantCulture);
         }
         else if (type == "move")
@@ -499,15 +492,13 @@ public sealed class LureRecorderWindow : Window
     {
         _commandLines.Clear();
         for (var i = 0; i < _commands.Count; i++)
-        {
             _commandLines.Add($"{i + 1}. {FormatCommandLine(_commands[i])}");
-        }
     }
 
     private static string FormatCommandLine(LureRecorderCommandEntry command)
     {
-        static string Value(Dictionary<string, string> parameters, string key, string fallback = "")
-            => parameters.TryGetValue(key, out var value) ? value.Trim() : fallback;
+        static string Value(Dictionary<string, string> p, string key, string fallback = "")
+            => p.TryGetValue(key, out var value) ? value.Trim() : fallback;
 
         return command.Type switch
         {
@@ -649,15 +640,12 @@ public sealed class LureRecorderWindow : Window
 
             if (type is "buy" or "repair" or "cast" or "store" or "supply")
             {
-                if (tokens.Length > 1)
-                    entry.Params["codename"] = tokens[1];
+                if (tokens.Length > 1) entry.Params["codename"] = tokens[1];
             }
             else if (type == "teleport")
             {
-                if (tokens.Length > 1)
-                    entry.Params["codename"] = tokens[1];
-                if (tokens.Length > 2)
-                    entry.Params["destination"] = tokens[2];
+                if (tokens.Length > 1) entry.Params["codename"] = tokens[1];
+                if (tokens.Length > 2) entry.Params["destination"] = tokens[2];
             }
             else if (type == "wait")
             {
@@ -665,16 +653,11 @@ public sealed class LureRecorderWindow : Window
             }
             else if (type == "move")
             {
-                if (tokens.Length > 1)
-                    entry.Params["xOffset"] = tokens[1];
-                if (tokens.Length > 2)
-                    entry.Params["yOffset"] = tokens[2];
-                if (tokens.Length > 3)
-                    entry.Params["zOffset"] = tokens[3];
-                if (tokens.Length > 4)
-                    entry.Params["xSector"] = tokens[4];
-                if (tokens.Length > 5)
-                    entry.Params["ySector"] = tokens[5];
+                if (tokens.Length > 1) entry.Params["xOffset"] = tokens[1];
+                if (tokens.Length > 2) entry.Params["yOffset"] = tokens[2];
+                if (tokens.Length > 3) entry.Params["zOffset"] = tokens[3];
+                if (tokens.Length > 4) entry.Params["xSector"] = tokens[4];
+                if (tokens.Length > 5) entry.Params["ySector"] = tokens[5];
             }
 
             if (type != "dismount")
@@ -689,47 +672,46 @@ public sealed class LureRecorderWindow : Window
         _statusLabel.Text = status;
     }
 
-    private void HandleAutoPlayerMove()
+    // ─── Auto-recording handlers ───────────────────────────────────────────────
+
+    private async void HandleAutoPlayerMove()
     {
         if (!_isRecording || !IsVisible)
             return;
 
-        var player = UBot.Core.RuntimeAccess.Session.Player;
-        if (player == null)
+        var snapshot = await _core.GetCurrentPlayerPositionAsync();
+        if (snapshot == null)
             return;
 
-        var position = player.Position;
-        var xOffset = position.XOffset.ToString("0.00", CultureInfo.InvariantCulture);
-        var yOffset = position.YOffset.ToString("0.00", CultureInfo.InvariantCulture);
-        var zOffset = position.ZOffset.ToString("0.00", CultureInfo.InvariantCulture);
-        var xSector = position.Region.X.ToString(CultureInfo.InvariantCulture);
-        var ySector = position.Region.Y.ToString(CultureInfo.InvariantCulture);
+        var xOffset = snapshot.XOffset.ToString("0.00", CultureInfo.InvariantCulture);
+        var yOffset = snapshot.YOffset.ToString("0.00", CultureInfo.InvariantCulture);
+        var zOffset = snapshot.ZOffset.ToString("0.00", CultureInfo.InvariantCulture);
+        var xSector = snapshot.XSector.ToString(CultureInfo.InvariantCulture);
+        var ySector = snapshot.YSector.ToString(CultureInfo.InvariantCulture);
 
         var signature = $"{xOffset}|{yOffset}|{zOffset}|{xSector}|{ySector}";
         if (string.Equals(signature, _lastMoveSignature, StringComparison.Ordinal))
             return;
 
         _lastMoveSignature = signature;
-        _commands.Add(
-            new LureRecorderCommandEntry
+        _commands.Add(new LureRecorderCommandEntry
+        {
+            Type = "move",
+            Params = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                Type = "move",
-                Params = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-                {
-                    ["xOffset"] = xOffset,
-                    ["yOffset"] = yOffset,
-                    ["zOffset"] = zOffset,
-                    ["xSector"] = xSector,
-                    ["ySector"] = ySector
-                }
+                ["xOffset"] = xOffset,
+                ["yOffset"] = yOffset,
+                ["zOffset"] = zOffset,
+                ["xSector"] = xSector,
+                ["ySector"] = ySector
             }
-        );
+        });
         RefreshCommandLines();
         _commandsList.SelectedIndex = _commands.Count - 1;
         SetStatus("Recording: move");
     }
 
-    private void HandleAutoCast(uint skillId)
+    private async void HandleAutoCast(uint skillId)
     {
         if (!_isRecording || !IsVisible)
             return;
@@ -738,46 +720,31 @@ public sealed class LureRecorderWindow : Window
         if (nowMs - _lastCastAtMs < 450)
             return;
 
-        var skillCode = UBot.Core.RuntimeAccess.Session.Player?.Skills?.GetSkillInfoById(skillId)?.Record?.Basic_Code?.Trim();
+        var skillCode = await _core.GetSkillCodeByIdAsync(skillId);
         if (string.IsNullOrWhiteSpace(skillCode))
             skillCode = skillId.ToString(CultureInfo.InvariantCulture);
 
-        var signature = skillCode.ToLowerInvariant();
+        var signature = skillCode!.ToLowerInvariant();
         if (string.Equals(signature, _lastCastSignature, StringComparison.Ordinal))
             return;
 
         _lastCastSignature = signature;
         _lastCastAtMs = nowMs;
 
-        _commands.Add(
-            new LureRecorderCommandEntry
+        _commands.Add(new LureRecorderCommandEntry
+        {
+            Type = "cast",
+            Params = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                Type = "cast",
-                Params = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-                {
-                    ["codename"] = skillCode
-                }
+                ["codename"] = skillCode
             }
-        );
+        });
         RefreshCommandLines();
         _commandsList.SelectedIndex = _commands.Count - 1;
         SetStatus("Recording: cast");
     }
 
-    private static void EnsureGlobalEventSubscriptions()
-    {
-        lock (GlobalSync)
-        {
-            if (_eventsSubscribed)
-                return;
-
-            _playerMoveHandler = OnGlobalPlayerMove;
-            _skillCastHandler = OnGlobalCastSkill;
-            UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnPlayerMove", _playerMoveHandler);
-            UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnCastSkill", _skillCastHandler);
-            _eventsSubscribed = true;
-        }
-    }
+    // ─── Static event dispatch ─────────────────────────────────────────────────
 
     private static void OnGlobalPlayerMove()
     {

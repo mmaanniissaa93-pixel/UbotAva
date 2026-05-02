@@ -366,4 +366,64 @@ public sealed class UbotCoreService : UbotServiceBase, IUbotCoreService
         }
         return Task.CompletedTask;
     }
+
+    // ─── Lure recorder event bridge ──────────────────────────────────────────
+
+    public Task SubscribeLureRecorderEventsAsync(Action onPlayerMove, Action<uint> onCastSkill)
+    {
+        try
+        {
+            UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnPlayerMove", onPlayerMove);
+            UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnCastSkill", onCastSkill);
+        }
+        catch { }
+        return Task.CompletedTask;
+    }
+
+    public Task UnsubscribeLureRecorderEventsAsync(Action onPlayerMove, Action<uint> onCastSkill)
+    {
+        try
+        {
+            UBot.Core.RuntimeAccess.Events.UnsubscribeEvent("OnPlayerMove", onPlayerMove);
+            UBot.Core.RuntimeAccess.Events.UnsubscribeEvent("OnCastSkill", onCastSkill);
+        }
+        catch { }
+        return Task.CompletedTask;
+    }
+
+    public Task<PlayerPositionSnapshot?> GetCurrentPlayerPositionAsync()
+    {
+        try
+        {
+            var player = UBot.Core.RuntimeAccess.Session.Player;
+            if (player == null)
+                return Task.FromResult<PlayerPositionSnapshot?>(null);
+            var pos = player.Position;
+            return Task.FromResult<PlayerPositionSnapshot?>(new PlayerPositionSnapshot
+            {
+                XOffset = pos.XOffset,
+                YOffset = pos.YOffset,
+                ZOffset = pos.ZOffset,
+                XSector = pos.Region.X,
+                YSector = pos.Region.Y
+            });
+        }
+        catch
+        {
+            return Task.FromResult<PlayerPositionSnapshot?>(null);
+        }
+    }
+
+    public Task<string?> GetSkillCodeByIdAsync(uint skillId)
+    {
+        try
+        {
+            var code = UBot.Core.RuntimeAccess.Session.Player?.Skills?.GetSkillInfoById(skillId)?.Record?.Basic_Code?.Trim();
+            return Task.FromResult(string.IsNullOrWhiteSpace(code) ? null : code);
+        }
+        catch
+        {
+            return Task.FromResult<string?>(null);
+        }
+    }
 }

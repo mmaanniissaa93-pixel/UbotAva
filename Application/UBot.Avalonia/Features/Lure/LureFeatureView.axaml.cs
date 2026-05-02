@@ -271,7 +271,8 @@ public partial class LureFeatureView : UserControl
                 {
                     ["lureScriptPath"] = savedPath
                 });
-            }
+            },
+            _vm.Core
         );
 
         if (owner != null)

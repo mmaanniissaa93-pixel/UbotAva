@@ -574,7 +574,7 @@ internal sealed class UbotItemsPluginService : UbotServiceBase
         }
         catch (Exception ex)
         {
-            Log.Error($"Error building inventory state: {ex.Message}");
+            Log.Error("Error building inventory state", ex);
         }
 
         return new
