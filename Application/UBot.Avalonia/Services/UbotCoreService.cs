@@ -297,4 +297,58 @@ public sealed class UbotCoreService : UbotServiceBase, IUbotCoreService
         }
         return Task.CompletedTask;
     }
+
+    public Task LoadGlobalConfigAsync()
+    {
+        try
+        {
+            UBot.Core.RuntimeAccess.Global.Load();
+        }
+        catch
+        {
+            // Config yükleme hatası sessizce yutulur.
+        }
+        return Task.CompletedTask;
+    }
+
+    public Task LoadPlayerConfigAsync(string character)
+    {
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(character))
+                UBot.Core.RuntimeAccess.Player.Load(character);
+        }
+        catch
+        {
+            // Player config yükleme hatası sessizce yutulur.
+        }
+        return Task.CompletedTask;
+    }
+
+    public Task<T> GetGlobalValueAsync<T>(string key, T defaultValue)
+    {
+        try
+        {
+            var result = UBot.Core.RuntimeAccess.Global.Get(key, defaultValue);
+            return Task.FromResult(result);
+        }
+        catch
+        {
+            return Task.FromResult(defaultValue);
+        }
+    }
+
+    public Task SetCoreLanguageAsync(string language)
+    {
+        try
+        {
+            UBot.Core.RuntimeAccess.Global.Set("UBot.Language", language);
+            UBot.Core.RuntimeAccess.Core.Language = language;
+        }
+        catch
+        {
+            // Language set hatası sessizce yutulur.
+        }
+        return Task.CompletedTask;
+    }
 }

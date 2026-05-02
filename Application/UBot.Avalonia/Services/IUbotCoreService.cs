@@ -44,4 +44,8 @@ public interface IUbotCoreService
     Task<NetworkConfig> GetNetworkConfigAsync();
     Task<bool> SaveNetworkConfigAsync(NetworkConfig config);
     Task SetGlobalValueAsync<T>(string key, T value);
+    Task LoadGlobalConfigAsync();
+    Task LoadPlayerConfigAsync(string character);
+    Task<T> GetGlobalValueAsync<T>(string key, T defaultValue);
+    Task SetCoreLanguageAsync(string language);
 }

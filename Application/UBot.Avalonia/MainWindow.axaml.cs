@@ -17,7 +17,6 @@ using UBot.Avalonia.Controls;
 using UBot.Avalonia.Features.CommandCenter;
 using UBot.Avalonia.Services;
 using UBot.Avalonia.Dialogs;
-using UBot.Core;
 
 namespace UBot.Avalonia;
 
@@ -751,9 +750,10 @@ public partial class MainWindow : Window
         LoadBanner();
     }
 
-    private void LoadDesktopPreferences()
+    private async void LoadDesktopPreferences()
     {
-        var savedTheme = UBot.Core.RuntimeAccess.Global.Get(DesktopThemeConfigKey, "dark");
+        var core = MainWindow.CoreService;
+        var savedTheme = await core?.GetGlobalValueAsync(DesktopThemeConfigKey, "dark") ?? "dark";
         _isDark = !string.Equals(savedTheme, "light", StringComparison.OrdinalIgnoreCase);
 
         var target = _isDark ? ThemeVariant.Dark : ThemeVariant.Light;
@@ -761,16 +761,17 @@ public partial class MainWindow : Window
         if (Application.Current is { } app)
             app.RequestedThemeVariant = target;
 
-        var savedLanguage = UBot.Core.RuntimeAccess.Global.Get(DesktopLanguageConfigKey, "English");
+        var savedLanguage = await core?.GetGlobalValueAsync(DesktopLanguageConfigKey, "English") ?? "English";
         _lang = string.Equals(savedLanguage, "Turkish", StringComparison.OrdinalIgnoreCase)
             ? "Turkish"
             : "English";
     }
 
-    private void PersistDesktopPreferences()
+    private async void PersistDesktopPreferences()
     {
-        UBot.Core.RuntimeAccess.Global.Set(DesktopThemeConfigKey, _isDark ? "dark" : "light");
-        UBot.Core.RuntimeAccess.Global.Set(DesktopLanguageConfigKey, _lang);
+        var core = MainWindow.CoreService;
+        await core?.SetGlobalValueAsync(DesktopThemeConfigKey, _isDark ? "dark" : "light");
+        await core?.SetGlobalValueAsync(DesktopLanguageConfigKey, _lang);
     }
 
     private void UpdateThemeIcon()
@@ -791,12 +792,12 @@ public partial class MainWindow : Window
     }
 
 
-    private void ApplyTranslations()
+    private async void ApplyTranslations()
     {
         bool tr = _lang == "Turkish";
         DesktopLanguageService.SetLanguage(_lang);
-        UBot.Core.RuntimeAccess.Global.Set("UBot.Language", tr ? "tr_TR" : "en_US");
-        UBot.Core.RuntimeAccess.Core.Language = tr ? "tr_TR" : "en_US";
+        var core = MainWindow.CoreService;
+        await core?.SetCoreLanguageAsync(tr ? "tr_TR" : "en_US");
         LblToggle.Text       = _state!.BotRunning
             ? DesktopLanguageService.Translate("STOP")
             : DesktopLanguageService.Translate("START");

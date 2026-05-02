@@ -4,7 +4,7 @@ using Avalonia.Interactivity;
 using System.Collections.ObjectModel;
 using System;
 using System.Linq;
-using UBot.Core;
+using UBot.Avalonia.Services;
 using UBot.Core.Components;
 using UBot.Core.Plugins;
 
@@ -100,7 +100,7 @@ public partial class ProfileSelectionWindow : Window
         LoadProfiles(wasSelected ? fallback : ProfileManager.SelectedProfile);
     }
 
-    private void Continue_Click(object? sender, RoutedEventArgs e)
+    private async void Continue_Click(object? sender, RoutedEventArgs e)
     {
         try
         {
@@ -112,7 +112,6 @@ public partial class ProfileSelectionWindow : Window
             {
                 if (string.IsNullOrWhiteSpace(ProfileManager.SelectedCharacter))
                 {
-                    // Fallback to Default if trying to use non-existent profile without character
                     selected = "Default";
                 }
                 else if (!ProfileManager.Add(selected, true))
@@ -126,16 +125,20 @@ public partial class ProfileSelectionWindow : Window
 
             try
             {
-                UBot.Core.RuntimeAccess.Global.Load();
-                
+                var core = MainWindow.CoreService;
+                await core?.LoadGlobalConfigAsync()!;
+
                 var activeChar = ProfileManager.SelectedCharacter;
                 if (string.IsNullOrWhiteSpace(activeChar))
-                    activeChar = UBot.Core.RuntimeAccess.Global.Get("UBot.General.AutoLoginCharacter", string.Empty)?.Trim() ?? string.Empty;
+                {
+                    var storedChar = await core?.GetGlobalValueAsync<string>("UBot.General.AutoLoginCharacter", string.Empty)!;
+                    activeChar = storedChar?.Trim() ?? string.Empty;
+                }
 
                 if (!string.IsNullOrWhiteSpace(activeChar))
                 {
                     ProfileManager.SelectedCharacter = activeChar;
-                    UBot.Core.RuntimeAccess.Player.Load(activeChar);
+                    await core?.LoadPlayerConfigAsync(activeChar)!;
                 }
 
                 ExtensionManager.OnProfileChanged();

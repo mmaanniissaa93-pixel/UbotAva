@@ -26,6 +26,13 @@ Write-Output "Removing Mark-of-the-Web flags from repository files..."
 Get-ChildItem -Path "." -Recurse -File -ErrorAction SilentlyContinue |
     Unblock-File -ErrorAction SilentlyContinue
 
+Write-Output "Running UI RuntimeAccess guard..."
+powershell.exe -ExecutionPolicy Bypass -File ".\tools\verify-ui-runtimeaccess.ps1"
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "UI RuntimeAccess guard failed. Please fix violations before building."
+    exit 1
+}
+
 Write-Output "Building with '$Configuration' configuration..."
 $vsWherePath = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
 $vsPath = $null
