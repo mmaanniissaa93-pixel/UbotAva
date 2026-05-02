@@ -74,7 +74,15 @@ public partial class ProxyConfigWindow : Window
             }
         };
 
-        await _core.SaveNetworkConfigAsync(networkConfig);
+        try
+        {
+            await _core.SaveNetworkConfigAsync(networkConfig);
+        }
+        catch
+        {
+            // Save hatası dialog'u kapatmamalı.
+            return;
+        }
 
         Config  = networkConfig;
         Applied = true;
@@ -83,15 +91,22 @@ public partial class ProxyConfigWindow : Window
 
     private async System.Threading.Tasks.Task LoadFromServiceAsync()
     {
-        var cfg = await _core.GetNetworkConfigAsync();
+        try
+        {
+            var cfg = await _core.GetNetworkConfigAsync();
 
-        ProxyActiveToggle.IsChecked  = cfg.Proxy.Active;
-        ProxyIpBox.Text              = cfg.Proxy.Ip;
-        ProxyPortBox.Text            = cfg.Proxy.Port.ToString(CultureInfo.InvariantCulture);
-        ProxyUserBox.Text            = cfg.Proxy.Username;
-        ProxyPassBox.Text            = cfg.Proxy.Password;
-        ProxyTypeSelect.SelectedItem = cfg.Proxy.Type;
-        IpBindBox.Text               = string.IsNullOrWhiteSpace(cfg.BindIp) ? "0.0.0.0" : cfg.BindIp;
+            ProxyActiveToggle.IsChecked  = cfg.Proxy.Active;
+            ProxyIpBox.Text              = cfg.Proxy.Ip;
+            ProxyPortBox.Text            = cfg.Proxy.Port.ToString(CultureInfo.InvariantCulture);
+            ProxyUserBox.Text            = cfg.Proxy.Username;
+            ProxyPassBox.Text            = cfg.Proxy.Password;
+            ProxyTypeSelect.SelectedItem = cfg.Proxy.Type;
+            IpBindBox.Text               = string.IsNullOrWhiteSpace(cfg.BindIp) ? "0.0.0.0" : cfg.BindIp;
+        }
+        catch
+        {
+            // Dialog açık kalmalı; kontroller varsayılan değerlerini korur.
+        }
     }
 
     private static int ParseInt(string? value, int fallback)
