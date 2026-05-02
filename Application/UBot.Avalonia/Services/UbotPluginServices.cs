@@ -7,6 +7,7 @@ namespace UBot.Avalonia.Services;
 
 internal sealed class UbotPluginStateService : UbotServiceBase
 {
+    private readonly IUbotCoreService _coreService;
     private readonly UbotConnectionService _connectionService;
     private readonly UbotMapService _mapService;
     private readonly UbotPartyPluginService _partyPluginService;
@@ -19,6 +20,7 @@ internal sealed class UbotPluginStateService : UbotServiceBase
     private readonly UbotPluginStateAuxService _auxStateService;
 
     internal UbotPluginStateService(
+        IUbotCoreService coreService,
         UbotConnectionService connectionService,
         UbotMapService mapService,
         UbotPartyPluginService partyPluginService,
@@ -30,6 +32,7 @@ internal sealed class UbotPluginStateService : UbotServiceBase
         UbotAlchemyBotbaseService alchemyBotbaseService,
         UbotPluginStateAuxService auxStateService)
     {
+        _coreService = coreService;
         _connectionService = connectionService;
         _mapService = mapService;
         _partyPluginService = partyPluginService;
@@ -42,15 +45,15 @@ internal sealed class UbotPluginStateService : UbotServiceBase
         _auxStateService = auxStateService;
     }
 
-    internal Task<PluginStateDto> GetPluginStateAsync(string pluginId)
+    internal async Task<PluginStateDto> GetPluginStateAsync(string pluginId)
     {
-        var statusSnapshot = _connectionService.CreateStatusSnapshot();
+        var status = await _coreService.GetStatusAsync();
         var state = new Dictionary<string, object?>
         {
             ["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-            ["botRunning"] = UBot.Core.RuntimeAccess.Core.Bot != null && UBot.Core.RuntimeAccess.Core.Bot.Running,
-            ["statusText"] = statusSnapshot.StatusText,
-            ["player"] = statusSnapshot.Player
+            ["botRunning"] = status.BotRunning,
+            ["statusText"] = status.StatusText,
+            ["player"] = status.Player
         };
 
         if (TryResolvePlugin(pluginId, out var plugin))
@@ -84,25 +87,29 @@ internal sealed class UbotPluginStateService : UbotServiceBase
         var dto = new PluginStateDto
         {
             Id = pluginId ?? string.Empty,
-            Enabled = ResolveEnabledState(pluginId),
+            Enabled = await ResolveEnabledStateAsync(pluginId),
             State = ToJsonElement(state)
         };
 
-        return Task.FromResult(dto);
+        return dto;
     }
 
-    private static bool ResolveEnabledState(string pluginId)
+    private async Task<bool> ResolveEnabledStateAsync(string pluginId)
     {
         if (TryResolvePlugin(pluginId, out var plugin))
             return plugin.Enabled;
         if (TryResolveBotbase(pluginId, out var botbase))
-            return UBot.Core.RuntimeAccess.Core.Bot?.Botbase?.Name == botbase.Name;
+        {
+            var status = await _coreService.GetStatusAsync();
+            return status.SelectedBotbase == botbase.Name;
+        }
         return false;
     }
 }
 
 internal sealed class UbotPluginConfigService : UbotServiceBase
 {
+    private readonly IUbotCoreService _coreService;
     private readonly UbotGeneralPluginService _generalPluginService;
     private readonly UbotProtectionPluginService _protectionPluginService;
     private readonly UbotMapPluginService _mapPluginService;
@@ -117,6 +124,7 @@ internal sealed class UbotPluginConfigService : UbotServiceBase
     private readonly UbotCommandCenterPluginService _commandCenterPluginService;
 
     internal UbotPluginConfigService(
+        IUbotCoreService coreService,
         UbotGeneralPluginService generalPluginService,
         UbotProtectionPluginService protectionPluginService,
         UbotMapPluginService mapPluginService,
@@ -130,6 +138,7 @@ internal sealed class UbotPluginConfigService : UbotServiceBase
         UbotAlchemyBotbaseService alchemyBotbaseService,
         UbotCommandCenterPluginService commandCenterPluginService)
     {
+        _coreService = coreService;
         _generalPluginService = generalPluginService;
         _protectionPluginService = protectionPluginService;
         _mapPluginService = mapPluginService;
@@ -181,10 +190,10 @@ internal sealed class UbotPluginConfigService : UbotServiceBase
         return Task.FromResult(UbotPluginConfigHelpers.LoadRawConfig(pluginId));
     }
 
-    internal Task<bool> SetPluginConfigAsync(string pluginId, Dictionary<string, object?> patch)
+    internal async Task<bool> SetPluginConfigAsync(string pluginId, Dictionary<string, object?> patch)
     {
         if (patch == null || patch.Count == 0)
-            return Task.FromResult(false);
+            return false;
 
         var changed = false;
 
@@ -227,10 +236,9 @@ internal sealed class UbotPluginConfigService : UbotServiceBase
 
         if (changed)
         {
-            UBot.Core.RuntimeAccess.Global.Save();
-            UBot.Core.RuntimeAccess.Player.Save();
+            await _coreService.SaveConfigAsync();
         }
 
-        return Task.FromResult(changed);
+        return changed;
     }
 }

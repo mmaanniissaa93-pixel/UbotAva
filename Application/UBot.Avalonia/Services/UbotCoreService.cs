@@ -72,6 +72,7 @@ public sealed class UbotCoreService : UbotServiceBase, IUbotCoreService
         var auxPluginStateService = new UbotPluginStateAuxService(_connectionService);
 
         _pluginConfigService = new UbotPluginConfigService(
+            this,
             generalPluginService,
             protectionPluginService,
             mapPluginService,
@@ -85,6 +86,7 @@ public sealed class UbotCoreService : UbotServiceBase, IUbotCoreService
             alchemyBotbaseService,
             commandCenterPluginService);
         _pluginStateService = new UbotPluginStateService(
+            this,
             _connectionService,
             _mapService,
             partyPluginService,
