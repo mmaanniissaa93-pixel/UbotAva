@@ -148,10 +148,11 @@ internal sealed class UbotGeneralActionHandler : UbotServiceBase
 
     private bool HandleSetTrainingAreaToCurrentPosition()
     {
-        if (UBot.Core.RuntimeAccess.Session.Player == null)
+        var player = UBot.Core.RuntimeAccess.Session.Player;
+        if (player == null)
             return false;
 
-        var p = UBot.Core.RuntimeAccess.Session.Player.Position;
+        var p = player.Position;
         UBot.Core.RuntimeAccess.Player.Set("UBot.Area.Region", (ushort)p.Region);
         UBot.Core.RuntimeAccess.Player.Set("UBot.Area.X", p.XOffset);
         UBot.Core.RuntimeAccess.Player.Set("UBot.Area.Y", p.YOffset);
@@ -163,7 +164,8 @@ internal sealed class UbotGeneralActionHandler : UbotServiceBase
 
     private bool HandleMapWalkToAction(Dictionary<string, object?> payload)
     {
-        if (UBot.Core.RuntimeAccess.Session.Player == null)
+        var player = UBot.Core.RuntimeAccess.Session.Player;
+        if (player == null)
             return false;
 
         if (!TryGetDoubleValue(payload, "mapX", out var mapX))
@@ -171,7 +173,7 @@ internal sealed class UbotGeneralActionHandler : UbotServiceBase
         if (!TryGetDoubleValue(payload, "mapY", out var mapY))
             return false;
 
-        var source = UBot.Core.RuntimeAccess.Session.Player.Position;
+        var source = player.Position;
         if (!_mapService.TryResolveWalkDestination(source, mapX, mapY, out var destination))
             return false;
 
@@ -193,13 +195,17 @@ internal sealed class UbotGeneralActionHandler : UbotServiceBase
 
     private static bool TrySendPlayerMovePacket(Position destination)
     {
-        if (UBot.Core.RuntimeAccess.Session.Player == null)
+        var player = UBot.Core.RuntimeAccess.Session.Player;
+        if (player == null)
+            return false;
+
+        if (UBot.Core.RuntimeAccess.Packets == null)
             return false;
 
         var packet = new Packet(0x7021);
         packet.WriteByte(1);
 
-        if (!UBot.Core.RuntimeAccess.Session.Player.IsInDungeon)
+        if (!player.IsInDungeon)
         {
             packet.WriteUShort(destination.Region);
             packet.WriteShort((short)Math.Clamp(Math.Round(destination.XOffset), short.MinValue, short.MaxValue));
@@ -208,7 +214,7 @@ internal sealed class UbotGeneralActionHandler : UbotServiceBase
         }
         else
         {
-            packet.WriteUShort(UBot.Core.RuntimeAccess.Session.Player.Position.Region);
+            packet.WriteUShort(player.Position.Region);
             packet.WriteInt((int)Math.Round(destination.XOffset));
             packet.WriteInt((int)Math.Round(destination.ZOffset));
             packet.WriteInt((int)Math.Round(destination.YOffset));
@@ -260,13 +266,17 @@ internal sealed class UbotGeneralActionHandler : UbotServiceBase
 
     private static void SendChatPacket(ChatType type, string message, string? receiver = null)
     {
+        if (UBot.Core.RuntimeAccess.Packets == null)
+            return;
+
         var packet = new Packet(0x7025);
         packet.WriteByte(type);
         packet.WriteByte(1);
 
-        if (UBot.Core.RuntimeAccess.Session.ClientType > GameClientType.Vietnam)
+        var clientType = UBot.Core.RuntimeAccess.Session?.ClientType ?? GameClientType.Global;
+        if (clientType > GameClientType.Vietnam)
             packet.WriteByte(0);
-        if (UBot.Core.RuntimeAccess.Session.ClientType >= GameClientType.Chinese_Old)
+        if (clientType >= GameClientType.Chinese_Old)
             packet.WriteByte(0);
 
         if (type == ChatType.Private)
@@ -278,13 +288,18 @@ internal sealed class UbotGeneralActionHandler : UbotServiceBase
 
     private static void SendGlobalChatPacket(string message)
     {
-        var item = UBot.Core.RuntimeAccess.Session.Player?.Inventory?.GetItem(new TypeIdFilter(3, 3, 3, 5));
+        if (UBot.Core.RuntimeAccess.Packets == null)
+            return;
+
+        var player = UBot.Core.RuntimeAccess.Session.Player;
+        var item = player?.Inventory?.GetItem(new TypeIdFilter(3, 3, 3, 5));
         if (item == null)
             return;
 
         var packet = new Packet(0x704C);
         packet.WriteByte(item.Slot);
-        if (UBot.Core.RuntimeAccess.Session.ClientType > GameClientType.Vietnam)
+        var clientType = UBot.Core.RuntimeAccess.Session?.ClientType ?? GameClientType.Global;
+        if (clientType > GameClientType.Vietnam)
         {
             packet.WriteInt(item.Record.Tid);
             packet.WriteByte(0);
@@ -471,6 +486,9 @@ internal sealed class UbotInventoryActionHandler : UbotServiceBase
 
     private static bool ToggleConfigArrayItem(string key, string value)
     {
+        if (UBot.Core.RuntimeAccess.Player == null)
+            return false;
+
         var list = UBot.Core.RuntimeAccess.Player.GetArray<string>(key).ToList();
         if (list.Contains(value, StringComparer.OrdinalIgnoreCase))
             list.RemoveAll(x => x.Equals(value, StringComparison.OrdinalIgnoreCase));
@@ -687,6 +705,9 @@ internal sealed class UbotPartyActionHandler : UbotServiceBase
         if (!TryResolveMatchingId(payload, out var matchingId))
             return false;
 
+        if (UBot.Core.RuntimeAccess.Packets == null)
+            return false;
+
         var accepted = 0;
         var callback = new AwaitCallback(
             response =>
@@ -708,7 +729,7 @@ internal sealed class UbotPartyActionHandler : UbotServiceBase
         return callback.IsCompleted && accepted == 1;
     }
 
-    private static bool HandlePartyMatchingCreateOrChangeAction(Dictionary<string, object?> payload, bool changeExisting)
+private static bool HandlePartyMatchingCreateOrChangeAction(Dictionary<string, object?> payload, bool changeExisting)
     {
         var expAutoShare = TryGetBoolValue(payload, "expAutoShare", out var parsedExpAutoShare)
             ? parsedExpAutoShare
@@ -762,10 +783,13 @@ internal sealed class UbotPartyActionHandler : UbotServiceBase
         UBot.Core.RuntimeAccess.Player.Set("UBot.Party.Matching.AutoReform", autoReform);
         UBot.Core.RuntimeAccess.Player.Set("UBot.Party.Matching.AutoAccept", autoAccept);
         UbotPartyPluginService.ApplyLivePartySettingsFromConfig();
-UbotPartyPluginService.RefreshPartyPluginRuntime();
-        
+        UbotPartyPluginService.RefreshPartyPluginRuntime();
+
         uint matchingId = 0;
         if (changeExisting && !TryResolveMatchingId(payload, out matchingId))
+            return false;
+
+        if (UBot.Core.RuntimeAccess.Packets == null)
             return false;
 
         var settings = new PartySettings(expAutoShare, itemAutoShare, allowInvitations);
@@ -796,6 +820,9 @@ UbotPartyPluginService.RefreshPartyPluginRuntime();
     private static bool HandlePartyMatchingDeleteAction(Dictionary<string, object?> payload)
     {
         if (!TryResolveMatchingId(payload, out var matchingId))
+            return false;
+
+        if (UBot.Core.RuntimeAccess.Packets == null)
             return false;
 
         var packet = new Packet(0x706B);

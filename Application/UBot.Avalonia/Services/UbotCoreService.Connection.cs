@@ -62,13 +62,18 @@ internal sealed class UbotConnectionService : UbotServiceBase
         var options = ResolveConnectionOptions();
         var normalized = NormalizeConnectionIndices(options.mode, options.divisionIndex, options.gatewayIndex);
 
+        var session = UBot.Core.RuntimeAccess.Session;
+        var clientType = session != null
+            ? UBot.Core.RuntimeAccess.Global.GetEnum("UBot.Game.ClientType", session.ClientType)
+            : GameClientType.Global;
+
         return Task.FromResult(new ConnectionOptions
         {
             Mode = normalized.mode,
             DivisionIndex = normalized.divisionIndex,
             GatewayIndex = normalized.gatewayIndex,
             Divisions = BuildDivisionOptions(),
-            ClientType = UBot.Core.RuntimeAccess.Global.GetEnum("UBot.Game.ClientType", UBot.Core.RuntimeAccess.Session.ClientType).ToString(),
+            ClientType = clientType.ToString(),
             ClientTypes = BuildClientTypeOptions(),
             ReferenceLoading = _lifecycle.ReferenceLoading,
             ReferenceLoaded = _lifecycle.ReferenceLoaded
@@ -112,11 +117,13 @@ internal sealed class UbotConnectionService : UbotServiceBase
         if (!string.IsNullOrWhiteSpace(clientType)
             && Enum.TryParse<GameClientType>(clientType, true, out var requestedClientType))
         {
-            var currentClientType = UBot.Core.RuntimeAccess.Global.GetEnum("UBot.Game.ClientType", UBot.Core.RuntimeAccess.Session.ClientType);
-            if (requestedClientType != currentClientType && !UBot.Core.RuntimeAccess.Session.Ready && !_lifecycle.ReferenceLoading)
+            var session = UBot.Core.RuntimeAccess.Session;
+            var currentClientType = UBot.Core.RuntimeAccess.Global.GetEnum("UBot.Game.ClientType", session?.ClientType ?? GameClientType.Global);
+            if (requestedClientType != currentClientType && (session == null || !session.Ready) && !_lifecycle.ReferenceLoading)
             {
                 UBot.Core.RuntimeAccess.Global.Set("UBot.Game.ClientType", requestedClientType);
-                UBot.Core.RuntimeAccess.Session.ClientType = requestedClientType;
+                if (session != null)
+                    session.ClientType = requestedClientType;
                 _lifecycle.MarkReferenceDataDirty();
                 changed = true;
             }
@@ -182,14 +189,15 @@ internal sealed class UbotConnectionService : UbotServiceBase
             // ignored
         }
 
-        UBot.Core.RuntimeAccess.Session.Started = false;
+        if (UBot.Core.RuntimeAccess.Session != null)
+            UBot.Core.RuntimeAccess.Session.Started = false;
         return Task.FromResult(BuildStatusSnapshot());
     }
 
     public Task SaveConfigAsync()
     {
         UBot.Core.RuntimeAccess.Global.Save();
-        UBot.Core.RuntimeAccess.Player.Save();
+        UBot.Core.RuntimeAccess.Player?.Save();
         return Task.CompletedTask;
     }
 
@@ -200,10 +208,11 @@ internal sealed class UbotConnectionService : UbotServiceBase
 
     public Task<bool> GoClientlessAsync()
     {
-        if (UBot.Core.RuntimeAccess.Session.Clientless)
+        var session = UBot.Core.RuntimeAccess.Session;
+        if (session?.Clientless == true)
             return Task.FromResult(true);
 
-        if (!UBot.Core.RuntimeAccess.Session.Started || UBot.Core.RuntimeAccess.Core.Proxy == null || !UBot.Core.RuntimeAccess.Core.Proxy.IsConnectedToAgentserver)
+        if (session == null || !session.Started || UBot.Core.RuntimeAccess.Core.Proxy == null || !UBot.Core.RuntimeAccess.Core.Proxy.IsConnectedToAgentserver)
             return Task.FromResult(false);
 
         UBot.Core.RuntimeAccess.Global.Set("UBot.General.StayConnected", true);
@@ -284,30 +293,39 @@ internal sealed class UbotConnectionService : UbotServiceBase
             UBot.Core.RuntimeAccess.Core.Bot.Stop();
 
         UBot.Core.RuntimeAccess.Core.Proxy?.Shutdown();
-        UBot.Core.RuntimeAccess.Session.Clientless = requestedMode == "clientless";
+
+        var session = UBot.Core.RuntimeAccess.Session;
+        if (session != null)
+            session.Clientless = requestedMode == "clientless";
 
         if (!await EnsureReferenceDataReadyAsync().ConfigureAwait(false))
             return false;
 
-        if (UBot.Core.RuntimeAccess.Session.ReferenceManager?.DivisionInfo?.Divisions == null
-            || UBot.Core.RuntimeAccess.Session.ReferenceManager.DivisionInfo.Divisions.Count == 0
-            || UBot.Core.RuntimeAccess.Session.ReferenceManager.GatewayInfo == null)
+        if (session?.ReferenceManager?.DivisionInfo?.Divisions == null
+            || session.ReferenceManager.DivisionInfo.Divisions.Count == 0
+            || session.ReferenceManager.GatewayInfo == null)
         {
             return false;
         }
 
         try
         {
-            UBot.Core.RuntimeAccess.Session.Start();
-            if (!UBot.Core.RuntimeAccess.Session.Clientless)
+            session?.Start();
+            if (session?.Clientless != true)
             {
                 return await ClientManager.Start();
             }
 
             _ = Task.Run(async () =>
             {
-                await Task.Delay(1200).ConfigureAwait(false);
-                ClientlessManager.RequestServerList();
+                try
+                {
+                    await Task.Delay(1200).ConfigureAwait(false);
+                    ClientlessManager.RequestServerList();
+                }
+                catch
+                {
+                }
             });
             return true;
         }
@@ -353,6 +371,8 @@ internal sealed class UbotConnectionService : UbotServiceBase
             UBot.Core.RuntimeAccess.Global.Get("UBot.DivisionIndex", 0),
             UBot.Core.RuntimeAccess.Global.Get("UBot.GatewayIndex", 0));
 
+        var session = UBot.Core.RuntimeAccess.Session;
+
         return new RuntimeStatus
         {
             BotRunning = UBot.Core.RuntimeAccess.Core.Bot != null && UBot.Core.RuntimeAccess.Core.Bot.Running,
@@ -360,8 +380,8 @@ internal sealed class UbotConnectionService : UbotServiceBase
             Server = ResolveServerName(normalized.divisionIndex, normalized.gatewayIndex),
             Character = ResolveCharacterName(),
             StatusText = _lifecycle.StatusText,
-            ClientReady = UBot.Core.RuntimeAccess.Session.Ready,
-            ClientStarted = UBot.Core.RuntimeAccess.Session.Started,
+            ClientReady = session?.Ready ?? false,
+            ClientStarted = session?.Started ?? false,
             ClientConnected = UBot.Core.RuntimeAccess.Core.Proxy != null && UBot.Core.RuntimeAccess.Core.Proxy.ClientConnected,
             GatewayConnected = UBot.Core.RuntimeAccess.Core.Proxy != null && UBot.Core.RuntimeAccess.Core.Proxy.IsConnectedToGatewayserver,
             AgentConnected = UBot.Core.RuntimeAccess.Core.Proxy != null && UBot.Core.RuntimeAccess.Core.Proxy.IsConnectedToAgentserver,
