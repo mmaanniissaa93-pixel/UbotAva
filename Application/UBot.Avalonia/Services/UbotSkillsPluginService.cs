@@ -300,7 +300,7 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
             name = $"Skill {id}";
 
         var isPassive = record.Basic_Activity == 0;
-        var isAttack = record.Params.Contains(6386804);
+        var isAttack = record.Params != null && record.Params.Contains(6386804);
         var isImbue = record.Basic_Activity == 1 && isAttack;
 
         bool isLowLevel = false;
@@ -334,6 +334,8 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
 
         foreach (var mastery in masteries)
         {
+            if (mastery == null)
+                continue;
             var record = mastery.Record;
             if (record == null)
                 continue;
@@ -364,6 +366,8 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
 
         foreach (var buff in buffs)
         {
+            if (buff == null)
+                continue;
             var record = buff.Record;
             if (record == null)
                 continue;
@@ -406,7 +410,7 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
 
         if (UBot.Core.RuntimeAccess.Session.Player != null && UBot.Core.RuntimeAccess.Session.Player.TryGetAbilitySkills(out var abilitySkills))
         {
-            foreach (var ability in abilitySkills)
+            foreach (var ability in abilitySkills ?? new List<SkillInfo>())
             {
                 if (ability?.Record == null || result.ContainsKey(ability.Id))
                     continue;
