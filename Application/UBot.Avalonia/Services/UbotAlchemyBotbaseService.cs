@@ -274,7 +274,7 @@ internal sealed class UbotAlchemyBotbaseService : UbotServiceBase
 
         var option = targetItem.MagicOptions?.FirstOrDefault(m =>
         {
-            var record = m?.Record ?? UBot.Core.RuntimeAccess.Session.ReferenceManager.GetMagicOption(m?.Id ?? 0);
+            var record = m?.Record ?? UBot.Core.RuntimeAccess.Session.ReferenceManager?.GetMagicOption(m?.Id ?? 0);
             return record?.Group == group;
         });
 
@@ -288,14 +288,14 @@ internal sealed class UbotAlchemyBotbaseService : UbotServiceBase
 
         var current = targetItem.MagicOptions?.FirstOrDefault(m =>
         {
-            var record = m?.Record ?? UBot.Core.RuntimeAccess.Session.ReferenceManager.GetMagicOption(m?.Id ?? 0);
+            var record = m?.Record ?? UBot.Core.RuntimeAccess.Session.ReferenceManager?.GetMagicOption(m?.Id ?? 0);
             return record?.Group == group;
         });
 
         if (current?.Record != null)
             return current.Record.GetMaxValue();
 
-        var byDegree = UBot.Core.RuntimeAccess.Session.ReferenceManager.GetMagicOption(group, (byte)targetItem.Record.Degree);
+        var byDegree = UBot.Core.RuntimeAccess.Session.ReferenceManager?.GetMagicOption(group, (byte)targetItem.Record.Degree);
         return byDegree?.GetMaxValue() ?? 0;
     }
 
@@ -555,7 +555,7 @@ internal sealed class UbotAlchemyBotbaseService : UbotServiceBase
                 if (!UBot.Core.RuntimeAccess.Player.Get(GetAlchemyBlueEnabledConfigKey(option.Key), false))
                     continue;
 
-                var referenceOption = UBot.Core.RuntimeAccess.Session.ReferenceManager.GetMagicOption(option.Group, (byte)selectedItem.Record.Degree);
+                var referenceOption = UBot.Core.RuntimeAccess.Session.ReferenceManager?.GetMagicOption(option.Group, (byte)selectedItem.Record.Degree);
                 if (referenceOption == null)
                     continue;
 
