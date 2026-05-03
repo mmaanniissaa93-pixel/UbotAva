@@ -51,9 +51,26 @@ internal sealed class UbotCommandCenterService : UbotServiceBase
     internal Dictionary<string, object?> BuildCommandCenterPluginConfig()
     {
         var config = LoadPluginJsonConfig(CommandCenterPluginName);
-        var descriptions = CommandManager.GetCommandDescriptions() ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        config["enabled"] = UBot.Core.RuntimeAccess.Player.Get("UBot.CommandCenter.Enabled", true);
+        Dictionary<string, string> descriptions;
+        try
+        {
+            descriptions = CommandManager.GetCommandDescriptions() ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            descriptions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { { "none", "No action" } };
+        }
+
+        var player = UBot.Core.RuntimeAccess.Player;
+        T GetConfig<T>(string key, T defaultValue)
+        {
+            return player != null 
+                ? player.Get(key, defaultValue) 
+                : UBot.Core.RuntimeAccess.Global.Get(key, defaultValue);
+        }
+
+        config["enabled"] = GetConfig("UBot.CommandCenter.Enabled", true);
         config["commandOptions"] = descriptions
             .Select(entry => new Dictionary<string, object?>
             {
@@ -68,7 +85,7 @@ internal sealed class UbotCommandCenterService : UbotServiceBase
         config["emotes"] = CommandCenterEmoteDefinitions
             .Select(definition =>
             {
-                var mappedCommand = UBot.Core.RuntimeAccess.Player.Get(
+                var mappedCommand = GetConfig(
                     $"UBot.CommandCenter.MappedEmotes.{definition.Name}",
                     definition.DefaultCommand);
 
@@ -100,10 +117,22 @@ internal sealed class UbotCommandCenterService : UbotServiceBase
 
     internal bool ApplyCommandCenterPluginPatch(Dictionary<string, object?> patch)
     {
+        if (patch == null)
+            return false;
+
+        var player = UBot.Core.RuntimeAccess.Player;
+        void SetConfig(string key, object? value)
+        {
+            if (player != null)
+                player.Set(key, value);
+            else
+                UBot.Core.RuntimeAccess.Global.Set(key, value);
+        }
+
         var changed = false;
         if (TryGetBoolValue(patch, "enabled", out var enabled))
         {
-            UBot.Core.RuntimeAccess.Player.Set("UBot.CommandCenter.Enabled", enabled);
+            SetConfig("UBot.CommandCenter.Enabled", enabled);
             changed = true;
         }
 
@@ -118,7 +147,7 @@ internal sealed class UbotCommandCenterService : UbotServiceBase
                         continue;
 
                     var command = NormalizeCommandCenterCommand(entry.Value?.ToString() ?? string.Empty);
-                    UBot.Core.RuntimeAccess.Player.Set($"UBot.CommandCenter.MappedEmotes.{emoteName}", command);
+                    SetConfig($"UBot.CommandCenter.MappedEmotes.{emoteName}", command);
                     changed = true;
                 }
             }
@@ -140,14 +169,14 @@ internal sealed class UbotCommandCenterService : UbotServiceBase
                     var command = TryGetStringValue(entry, "command", out var mapped)
                         ? NormalizeCommandCenterCommand(mapped)
                         : "none";
-                    UBot.Core.RuntimeAccess.Player.Set($"UBot.CommandCenter.MappedEmotes.{emoteName.Trim()}", command);
+                    SetConfig($"UBot.CommandCenter.MappedEmotes.{emoteName.Trim()}", command);
                     changed = true;
                 }
             }
         }
 
         if (changed)
-            UBot.Core.RuntimeAccess.Events.FireEvent("OnSavePlayerConfig");
+            UBot.Core.RuntimeAccess.Events?.FireEvent("OnSavePlayerConfig");
 
         return changed;
     }
