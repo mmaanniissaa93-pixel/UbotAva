@@ -9,39 +9,47 @@ internal sealed class UbotSoundNotificationService : UbotServiceBase
 {
     internal Task<SoundNotificationSettingsDto> GetSoundNotificationSettingsAsync()
     {
-        var sounds = UBot.Core.RuntimeAccess.Session.Player?.NotificationSounds;
+        var player = UBot.Core.RuntimeAccess.Session?.Player;
+        var sounds = player?.NotificationSounds;
+
+        T GetConfig<T>(string key, T defaultValue)
+        {
+            return player != null 
+                ? UBot.Core.RuntimeAccess.Player.Get(key, defaultValue) 
+                : UBot.Core.RuntimeAccess.Global.Get(key, defaultValue);
+        }
 
         var settings = new SoundNotificationSettingsDto
         {
-            IsPlayerLoggedIn = UBot.Core.RuntimeAccess.Session.Player != null,
+            IsPlayerLoggedIn = player != null,
 
-            PlayUniqueAppeared = sounds?.PlayUniqueAlarmGeneral ?? UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PlayUniqueAlarmGeneral", false),
-            PathUniqueAppeared = sounds?.PathUniqueAlarmGeneral ?? UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PathUniqueAlarmGeneral", string.Empty),
-            MatchRegex = sounds?.RegexUniqueAlarmGeneral?.ToString() ?? UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.RegexUniqueAlarmGeneral", "^.*$"),
+            PlayUniqueAppeared = sounds?.PlayUniqueAlarmGeneral ?? GetConfig("UBot.Sounds.PlayUniqueAlarmGeneral", false),
+            PathUniqueAppeared = sounds?.PathUniqueAlarmGeneral ?? GetConfig("UBot.Sounds.PathUniqueAlarmGeneral", string.Empty),
+            MatchRegex = sounds?.RegexUniqueAlarmGeneral?.ToString() ?? GetConfig("UBot.Sounds.RegexUniqueAlarmGeneral", "^.*$"),
 
-            PlayTigerGirl = sounds?.PlayUniqueAlarmTigerGirl ?? UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PlayUniqueAlarmTigerGirl", false),
-            PathTigerGirl = sounds?.PathUniqueAlarmTigerGirl ?? UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PathUniqueAlarmTigerGirl", string.Empty),
+            PlayTigerGirl = sounds?.PlayUniqueAlarmTigerGirl ?? GetConfig("UBot.Sounds.PlayUniqueAlarmTigerGirl", false),
+            PathTigerGirl = sounds?.PathUniqueAlarmTigerGirl ?? GetConfig("UBot.Sounds.PathUniqueAlarmTigerGirl", string.Empty),
 
-            PlayCerberus = sounds?.PlayUniqueAlarmCerberus ?? UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PlayUniqueAlarmCerberus", false),
-            PathCerberus = sounds?.PathUniqueAlarmCerberus ?? UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PathUniqueAlarmCerberus", string.Empty),
+            PlayCerberus = sounds?.PlayUniqueAlarmCerberus ?? GetConfig("UBot.Sounds.PlayUniqueAlarmCerberus", false),
+            PathCerberus = sounds?.PathUniqueAlarmCerberus ?? GetConfig("UBot.Sounds.PathUniqueAlarmCerberus", string.Empty),
 
-            PlayCaptainIvy = sounds?.PlayUniqueAlarmCaptainIvy ?? UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PlayUniqueAlarmCaptainIvy", false),
-            PathCaptainIvy = sounds?.PathUniqueAlarmCaptainIvy ?? UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PathUniqueAlarmCaptainIvy", string.Empty),
+            PlayCaptainIvy = sounds?.PlayUniqueAlarmCaptainIvy ?? GetConfig("UBot.Sounds.PlayUniqueAlarmCaptainIvy", false),
+            PathCaptainIvy = sounds?.PathUniqueAlarmCaptainIvy ?? GetConfig("UBot.Sounds.PathUniqueAlarmCaptainIvy", string.Empty),
 
-            PlayUruchi = sounds?.PlayUniqueAlarmUruchi ?? UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PlayUniqueAlarmUruchi", false),
-            PathUruchi = sounds?.PathUniqueAlarmUruchi ?? UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PathUniqueAlarmUruchi", string.Empty),
+            PlayUruchi = sounds?.PlayUniqueAlarmUruchi ?? GetConfig("UBot.Sounds.PlayUniqueAlarmUruchi", false),
+            PathUruchi = sounds?.PathUniqueAlarmUruchi ?? GetConfig("UBot.Sounds.PathUniqueAlarmUruchi", string.Empty),
 
-            PlayIsyutaru = sounds?.PlayUniqueAlarmIsyutaru ?? UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PlayUniqueAlarmIsyutaru", false),
-            PathIsyutaru = sounds?.PathUniqueAlarmIsyutaru ?? UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PathUniqueAlarmIsyutaru", string.Empty),
+            PlayIsyutaru = sounds?.PlayUniqueAlarmIsyutaru ?? GetConfig("UBot.Sounds.PlayUniqueAlarmIsyutaru", false),
+            PathIsyutaru = sounds?.PathUniqueAlarmIsyutaru ?? GetConfig("UBot.Sounds.PathUniqueAlarmIsyutaru", string.Empty),
 
-            PlayLordYarkan = sounds?.PlayUniqueAlarmLordYarkan ?? UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PlayUniqueAlarmLordYarkan", false),
-            PathLordYarkan = sounds?.PathUniqueAlarmLordYarkan ?? UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PathUniqueAlarmLordYarkan", string.Empty),
+            PlayLordYarkan = sounds?.PlayUniqueAlarmLordYarkan ?? GetConfig("UBot.Sounds.PlayUniqueAlarmLordYarkan", false),
+            PathLordYarkan = sounds?.PathUniqueAlarmLordYarkan ?? GetConfig("UBot.Sounds.PathUniqueAlarmLordYarkan", string.Empty),
 
-            PlayDemonShaitan = sounds?.PlayUniqueAlarmDemonShaitan ?? UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PlayUniqueAlarmDemonShaitan", false),
-            PathDemonShaitan = sounds?.PathUniqueAlarmDemonShaitan ?? UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PathUniqueAlarmDemonShaitan", string.Empty),
+            PlayDemonShaitan = sounds?.PlayUniqueAlarmDemonShaitan ?? GetConfig("UBot.Sounds.PlayUniqueAlarmDemonShaitan", false),
+            PathDemonShaitan = sounds?.PathUniqueAlarmDemonShaitan ?? GetConfig("UBot.Sounds.PathUniqueAlarmDemonShaitan", string.Empty),
 
-            PlayUniqueInRange = sounds?.PlayAlarmUniqueInRange ?? UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PlayAlarmUniqueInRange", false),
-            PathUniqueInRange = sounds?.PathAlarmUniqueInRange ?? UBot.Core.RuntimeAccess.Player.Get("UBot.Sounds.PathAlarmUniqueInRange", string.Empty)
+            PlayUniqueInRange = sounds?.PlayAlarmUniqueInRange ?? GetConfig("UBot.Sounds.PlayAlarmUniqueInRange", false),
+            PathUniqueInRange = sounds?.PathAlarmUniqueInRange ?? GetConfig("UBot.Sounds.PathAlarmUniqueInRange", string.Empty)
         };
 
         if (string.IsNullOrWhiteSpace(settings.MatchRegex))
@@ -87,7 +95,8 @@ internal sealed class UbotSoundNotificationService : UbotServiceBase
         sounds.UpdatePlayerSettings("UBot.Sounds.PlayAlarmUniqueInRange", settings.PlayUniqueInRange);
         sounds.UpdatePlayerSettings("UBot.Sounds.PathAlarmUniqueInRange", NormalizePath(settings.PathUniqueInRange));
 
-        UBot.Core.RuntimeAccess.Player.Save();
+        if (UBot.Core.RuntimeAccess.Session?.Player != null)
+            UBot.Core.RuntimeAccess.Player.Save();
         return Task.FromResult(true);
     }
 
