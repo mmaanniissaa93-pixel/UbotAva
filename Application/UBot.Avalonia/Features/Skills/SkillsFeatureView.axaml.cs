@@ -205,6 +205,7 @@ public partial class SkillsFeatureView : UserControl
             LearnMasteryCheck.IsChecked = _vm.BoolCfg("learnMastery", false);
             LearnMasteryStoppedCheck.IsChecked = _vm.BoolCfg("learnMasteryBotStopped", false);
             WarlockModeCheck.IsChecked = _vm.BoolCfg("warlockMode", false);
+            UseMaliciousDevilCheck.IsChecked = _vm.BoolCfg("useMaliciousDevilSkill", false);
             UseDefaultAttackCheck.IsChecked = _vm.BoolCfg("useDefaultAttack", true);
             UseTeleportSkillCheck.IsChecked = _vm.BoolCfg("useTeleportSkill", false);
 
@@ -587,6 +588,12 @@ public partial class SkillsFeatureView : UserControl
         if (_vm == null || PlayerSkillsList.SelectedItem is not SkillListRow selectedSkill)
             return;
 
+        var skillEntry = _catalog.FirstOrDefault(s => s.Id == selectedSkill.Id);
+        if (skillEntry == null || !skillEntry.IsAttack)
+        {
+            return;
+        }
+
         var currentAttackSkills = GetCurrentAttackSkills();
         if (currentAttackSkills.Contains(selectedSkill.Id))
             return;
@@ -633,6 +640,12 @@ public partial class SkillsFeatureView : UserControl
     {
         if (_vm == null || PlayerSkillsList.SelectedItem is not SkillListRow selectedSkill)
             return;
+
+        var skillEntry = _catalog.FirstOrDefault(s => s.Id == selectedSkill.Id);
+        if (skillEntry == null || !skillEntry.IsBuff)
+        {
+            return;
+        }
 
         if (_buffSkillIds.Contains(selectedSkill.Id))
             return;

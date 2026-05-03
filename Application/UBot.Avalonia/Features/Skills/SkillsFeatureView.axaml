@@ -225,6 +225,8 @@
                     <TextBlock Grid.Column="0" Text="Imbue" Classes="label" VerticalAlignment="Center" Margin="0,0,8,0" FontSize="11" />
                     <controls:CustomSelect Grid.Column="1" x:Name="ImbueSkillSelect" Height="32" VerticalAlignment="Center" />
                   </Grid>
+
+                  <CheckBox x:Name="UseMaliciousDevilCheck" Content="Use Malicious Devil Skill" Classes="legacy-check" IsCheckedChanged="SimpleCheck_Changed" Tag="useMaliciousDevilSkill" FontSize="11.5" />
                 </StackPanel>
               </Grid>
             </Border>

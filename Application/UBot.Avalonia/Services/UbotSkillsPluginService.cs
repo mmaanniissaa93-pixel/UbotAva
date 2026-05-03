@@ -63,6 +63,7 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
         config["learnMasteryBotStopped"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.checkLearnMasteryBotStopped", false);
         config["masteryGap"] = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.numMasteryGap", 0), 0, 120);
         config["warlockMode"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.checkWarlockMode", false);
+        config["useMaliciousDevilSkill"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.UseMaliciousDevilSkill", false);
         config["imbueSkillId"] = RedirectIdIfPossible(UBot.Core.RuntimeAccess.Player.Get("UBot.Desktop.Skills.ImbueSkillId", 0U));
         config["resurrectionSkillId"] = RedirectIdIfPossible(UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.ResurrectionSkill", 0U));
         config["teleportSkillId"] = RedirectIdIfPossible(UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.TeleportSkill", 0U));
@@ -110,6 +111,7 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
         changed |= SetPlayerBool("UBot.Skills.checkLearnMasteryBotStopped", patch, "learnMasteryBotStopped");
         changed |= SetPlayerInt("UBot.Skills.numMasteryGap", patch, "masteryGap", 0, 120);
         changed |= SetPlayerBool("UBot.Skills.checkWarlockMode", patch, "warlockMode");
+        changed |= SetPlayerBool("UBot.Skills.UseMaliciousDevilSkill", patch, "useMaliciousDevilSkill");
 
         if (TryGetUIntValue(patch, "imbueSkillId", out var imbueSkillId))
         {
