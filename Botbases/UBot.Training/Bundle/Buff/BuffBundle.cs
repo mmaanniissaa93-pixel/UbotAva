@@ -67,6 +67,12 @@ internal class BuffBundle : IBundle
             }
 
             var buffs = SkillManager.Buffs.FindAll(p => !UBot.Core.RuntimeAccess.Session.Player.State.HasActiveBuff(p, out _) && p.CanBeCasted);
+
+            // Cast Malicious Devil skill regardless of whether regular buffs are pending.
+            // Previously this call was after the early-return guard, so it was never
+            // reached when all regular buffs were already active.
+            TryCastMaliciousDevilSkill();
+
             if (buffs == null || buffs.Count == 0)
                 return;
 
@@ -84,8 +90,6 @@ internal class BuffBundle : IBundle
 
                 buff.Cast(buff: true);
             }
-
-            TryCastMaliciousDevilSkill();
         }
         finally
         {
