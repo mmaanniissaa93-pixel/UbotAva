@@ -65,22 +65,23 @@ internal sealed class UbotIconService : UbotServiceBase
             if (cleanPath.StartsWith("icon\\icon\\", StringComparison.OrdinalIgnoreCase))
                 cleanPath = cleanPath.Substring(5);
 
-            if (UBot.Core.RuntimeAccess.Session.MediaPk2 == null) return null;
+            var mediaPk2 = UBot.Core.RuntimeAccess.Session?.MediaPk2;
+            if (mediaPk2 == null) return null;
 
-            if (!UBot.Core.RuntimeAccess.Session.MediaPk2.TryGetFile(cleanPath, out var file))
+            if (!mediaPk2.TryGetFile(cleanPath, out var file))
             {
                 // Try just the filename in icon folder as fallback
                 var fileName = Path.GetFileName(cleanPath);
                 var fallbackPath = Path.Combine("icon", fileName);
-                if (!UBot.Core.RuntimeAccess.Session.MediaPk2.TryGetFile(fallbackPath, out file))
+                if (!mediaPk2.TryGetFile(fallbackPath, out file))
                 {
                     // Last resort: default icon
-                    if (!UBot.Core.RuntimeAccess.Session.MediaPk2.TryGetFile("icon\\icon_default.ddj", out file))
+                    if (!mediaPk2.TryGetFile("icon\\icon_default.ddj", out file))
                         return null;
                 }
             }
 
-            using var drawingImage = file.ToImage();
+            using var drawingImage = file?.ToImage();
             if (drawingImage == null || (drawingImage.Width <= 16 && drawingImage.Height <= 16)) 
                 return null; // Don't return the 16x16 placeholder from Pk2Extensions
 
@@ -105,15 +106,16 @@ internal sealed class UbotIconService : UbotServiceBase
 
         try
         {
-            if (UBot.Core.RuntimeAccess.Session.MediaPk2 == null) return Task.FromResult<byte[]>(null);
-            if (!UBot.Core.RuntimeAccess.Session.MediaPk2.TryGetFile(iconPath, out var file))
+            var mediaPk2 = UBot.Core.RuntimeAccess.Session?.MediaPk2;
+            if (mediaPk2 == null) return Task.FromResult<byte[]>(null);
+            if (!mediaPk2.TryGetFile(iconPath, out var file))
             {
                 // Fallback: try as-is added by default
-                if (!UBot.Core.RuntimeAccess.Session.MediaPk2.TryGetFile(iconPath, out file))
+                if (!mediaPk2.TryGetFile(iconPath, out file))
                     return Task.FromResult<byte[]>(null);
             }
 
-            using var drawingImage = file.ToImage();
+            using var drawingImage = file?.ToImage();
             if (drawingImage == null)
                 return Task.FromResult<byte[]>(null);
 
