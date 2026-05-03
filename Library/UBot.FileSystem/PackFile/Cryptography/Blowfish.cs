@@ -1216,14 +1216,14 @@ public class Blowfish
 
     // Encodes a stream of data and returns a new array of the encoded data.
     // Returns null if length is 0.
-    public byte[] Encode(byte[] stream)
+    public byte[]? Encode(byte[] stream)
     {
         return Encode(stream, 0, stream.Length);
     }
 
     // Encodes a stream of data and returns a new array of the encoded data.
     // Returns null if length is 0.
-    public byte[] Encode(byte[] stream, int offset, int length)
+    public byte[]? Encode(byte[] stream, int offset, int length)
     {
         if (length == 0)
             return null;
@@ -1248,14 +1248,14 @@ public class Blowfish
 
     // Decodes a stream of data and returns an array of the decoded data.
     // Returns null if length is not % 8.
-    public byte[] Decode(byte[] stream)
+    public byte[]? Decode(byte[] stream)
     {
         return Decode(stream, 0, stream.Length);
     }
 
     // Decodes a stream of data and returns an array of the decoded data.
     // Returns null if length is not % 8.
-    public byte[] Decode(byte[] stream, int offset, int length)
+    public byte[]? Decode(byte[] stream, int offset, int length)
     {
         if (length % 8 != 0 || length == 0)
             return null;

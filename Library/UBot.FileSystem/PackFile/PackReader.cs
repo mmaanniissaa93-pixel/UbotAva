@@ -9,8 +9,8 @@ namespace UBot.FileSystem.PackFile;
 internal class PackReader
 {
     private Blowfish? _blowfish;
-    private BsReader _reader;
-    private PackResolver _resolver;
+    private BsReader? _reader;
+    private PackResolver? _resolver;
 
     public PackArchive Read(
         Stream fileStream,
@@ -67,7 +67,7 @@ internal class PackReader
 
     private PackBlock ReadBlockAt(long position)
     {
-        _reader.BaseStream.Position = position;
+        _reader!.BaseStream.Position = position;
 
         var block = new PackBlock { Position = position, Entries = ReadEntries(_reader) };
 
@@ -93,7 +93,7 @@ internal class PackReader
         var result = new PackEntry[20];
 
         var buffer = reader.ReadBytes(128 * result.Length);
-        var entryBuffer = _blowfish != null ? _blowfish.Decode(buffer) : buffer;
+        var entryBuffer = (_blowfish != null ? _blowfish.Decode(buffer) : null) ?? buffer;
 
         using var entryReader = new BsReader(new MemoryStream(entryBuffer));
         //Read entries

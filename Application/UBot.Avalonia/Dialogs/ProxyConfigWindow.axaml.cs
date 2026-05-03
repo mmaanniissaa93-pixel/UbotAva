@@ -16,6 +16,9 @@ public partial class ProxyConfigWindow : Window
     public NetworkConfig? Config { get; private set; }
     public bool Applied { get; private set; }
 
+    // Avalonia XAML loader için gerekli parameterless constructor (design-time)
+    public ProxyConfigWindow() : this(null!) { }
+
     public ProxyConfigWindow(IUbotCoreService core)
     {
         _core = core;
