@@ -243,10 +243,13 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
     {
         var entries = new List<Dictionary<string, object?>>();
         var seenIds = new HashSet<uint>();
+        const uint maliciousDevilSkillId = 31145;
 
         // 1. Current known/ability skills
         foreach (var skill in CollectKnownAndAbilitySkills())
         {
+            if (skill.Id == maliciousDevilSkillId)
+                continue;
             if (seenIds.Add(skill.Id))
                 entries.Add(MapSkillToEntry(skill.Id, skill.Record, skill, true));
         }
@@ -254,6 +257,8 @@ internal sealed class UbotSkillsPluginService : UbotServiceBase
         // 2. Referenced skills from config (to keep names valid during upgrade/sync)
         foreach (var id in GetReferencedSkillIds())
         {
+            if (id == maliciousDevilSkillId)
+                continue;
             if (id != 0 && seenIds.Add(id))
             {
                 var record = UBot.Core.RuntimeAccess.Session.ReferenceManager?.GetRefSkill(id);

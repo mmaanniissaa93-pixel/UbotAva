@@ -1,8 +1,10 @@
+using System;
 using System.Linq;
 using UBot.Core;
 using UBot.Core.Components;
 using UBot.Core.Event;
 using UBot.Core.Objects;
+using UBot.Core.Objects.Skill;
 
 namespace UBot.Training.Bundle.Buff;
 
@@ -10,6 +12,11 @@ internal class BuffBundle : IBundle
 {
     private bool _invoked;
     private bool _buffBetweenAttacks { get; set; }
+    private bool _useMaliciousDevilSkill;
+    private SkillInfo _maliciousDevilSkill;
+    private int _lastMaliciousDevilCastTick;
+    private const int MaliciousDevilCooldownMs = 4000;
+    private const uint MaliciousDevilSkillId = 31145;
 
     /// <summary>
     ///     Invokes this instance.
@@ -77,6 +84,8 @@ internal class BuffBundle : IBundle
 
                 buff.Cast(buff: true);
             }
+
+            TryCastMaliciousDevilSkill();
         }
         finally
         {
@@ -90,7 +99,97 @@ internal class BuffBundle : IBundle
     public void Refresh()
     {
         _buffBetweenAttacks = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Skills.checkCastBuffsBetweenAttacks", false);
+        _useMaliciousDevilSkill = UBot.Core.RuntimeAccess.Player.Get("UBot.Skills.UseMaliciousDevilSkill", false);
         _invoked = false;
+    }
+
+    private void TryCastMaliciousDevilSkill()
+    {
+        if (!_useMaliciousDevilSkill)
+            return;
+
+        var player = UBot.Core.RuntimeAccess.Session.Player;
+        if (player == null || player.Skills == null)
+        {
+            Log.Debug("[MaliciousDevil] Player or Skills null");
+            return;
+        }
+
+        if (player.State.LifeState != LifeState.Alive)
+        {
+            Log.Debug("[MaliciousDevil] Player not alive");
+            return;
+        }
+
+        var currentTick = UBot.Core.RuntimeAccess.Core.TickCount;
+        if (_lastMaliciousDevilCastTick > 0 && currentTick - _lastMaliciousDevilCastTick < MaliciousDevilCooldownMs)
+        {
+            Log.Debug($"[MaliciousDevil] Cooldown active: {currentTick - _lastMaliciousDevilCastTick}ms elapsed");
+            return;
+        }
+
+        if (_maliciousDevilSkill == null)
+        {
+            _maliciousDevilSkill = FindMaliciousDevilSkill(player);
+            if (_maliciousDevilSkill == null)
+            {
+                Log.Debug("[MaliciousDevil] Skill not found in player skills");
+                return;
+            }
+            Log.Debug($"[MaliciousDevil] Found skill: {_maliciousDevilSkill.Id} - {_maliciousDevilSkill.Record?.GetRealName()}");
+        }
+
+        if (player.State.HasActiveBuff(_maliciousDevilSkill, out _))
+        {
+            Log.Debug("[MaliciousDevil] Already active");
+            return;
+        }
+
+        if (!_maliciousDevilSkill.CanBeCasted)
+        {
+            Log.Debug("[MaliciousDevil] Cannot be cast");
+            return;
+        }
+
+        Log.Notify($"[MaliciousDevil] Casting skill: {_maliciousDevilSkill.Record?.GetRealName()} (ID: {_maliciousDevilSkill.Id})");
+        _maliciousDevilSkill.Cast(buff: true);
+        _lastMaliciousDevilCastTick = currentTick;
+    }
+
+    private static SkillInfo FindMaliciousDevilSkill(Player player)
+    {
+        var allSkills = player.Skills.KnownSkills;
+
+        var skill = allSkills.FirstOrDefault(s => s.Id == MaliciousDevilSkillId);
+        if (skill != null)
+            return skill;
+
+        if (player.TryGetAbilitySkills(out var abilitySkills))
+        {
+            skill = abilitySkills.FirstOrDefault(s => s.Id == MaliciousDevilSkillId);
+            if (skill != null)
+                return skill;
+        }
+
+        var searchName = "malicious devil";
+        skill = allSkills.FirstOrDefault(s =>
+            s.Record?.Basic_Code?.IndexOf(searchName, StringComparison.OrdinalIgnoreCase) >= 0
+            || s.Record?.CodeName?.IndexOf(searchName, StringComparison.OrdinalIgnoreCase) >= 0
+            || s.Record?.GetRealName()?.IndexOf(searchName, StringComparison.OrdinalIgnoreCase) >= 0
+        );
+        if (skill != null)
+            return skill;
+
+        if (player.TryGetAbilitySkills(out abilitySkills))
+        {
+            return abilitySkills.FirstOrDefault(s =>
+                s.Record?.Basic_Code?.IndexOf(searchName, StringComparison.OrdinalIgnoreCase) >= 0
+                || s.Record?.CodeName?.IndexOf(searchName, StringComparison.OrdinalIgnoreCase) >= 0
+                || s.Record?.GetRealName()?.IndexOf(searchName, StringComparison.OrdinalIgnoreCase) >= 0
+            );
+        }
+
+        return null;
     }
 
     public void Stop()
