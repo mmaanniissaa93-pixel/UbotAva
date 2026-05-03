@@ -538,10 +538,20 @@ public abstract class UbotServiceBase
         };
     }
 
-    protected static JsonElement ToJsonElement(object value)
+    protected static JsonElement ToJsonElement(object? value)
     {
-        using var document = JsonDocument.Parse(JsonSerializer.Serialize(value));
-        return document.RootElement.Clone();
+        if (value == null)
+            return default;
+
+        try
+        {
+            using var document = JsonDocument.Parse(JsonSerializer.Serialize(value));
+            return document.RootElement.Clone();
+        }
+        catch
+        {
+            return default;
+        }
     }
 }
 
