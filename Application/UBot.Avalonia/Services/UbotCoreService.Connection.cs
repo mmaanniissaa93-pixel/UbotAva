@@ -203,6 +203,13 @@ internal sealed class UbotConnectionService : UbotServiceBase
 
     public Task<bool> StartClientAsync()
     {
+        var session = UBot.Core.RuntimeAccess.Session;
+        if (session?.Started == true || UBot.Core.RuntimeAccess.Core?.Proxy?.ClientConnected == true)
+        {
+            Log.Warn("[UbotConnectionService] Client is already running. Start Client ignored.");
+            return Task.FromResult(false);
+        }
+
         return ConnectCoreAsync("client");
     }
 
