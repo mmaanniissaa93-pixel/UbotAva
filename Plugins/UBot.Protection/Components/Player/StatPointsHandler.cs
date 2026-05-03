@@ -11,6 +11,8 @@ public class StatPointsHandler
 {
     public static bool CancellationRequested;
     private static readonly object EventOwner = new();
+    private static long _lastDistribution;
+    private static bool _wasAppliedThisTick;
 
     /// <summary>
     ///     Initializes this instance.
@@ -44,26 +46,59 @@ public class StatPointsHandler
     {
         UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnLevelUp", new Action<byte>(OnPlayerLevelUp), EventOwner);
         UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnApplyStatPoints", OnApplyStatPoints, EventOwner);
+        UBot.Core.RuntimeAccess.Events.SubscribeEvent("OnTick", OnTick, EventOwner);
+    }
+
+    private static void OnTick()
+    {
+        if (!IsAutoDistributionEnabled())
+            return;
+
+        var player = UBot.Core.RuntimeAccess.Session.Player;
+        if (player == null)
+            return;
+
+        var available = (int)player.StatPoints;
+        if (available <= 0)
+        {
+            _wasAppliedThisTick = false;
+            return;
+        }
+
+        if (_wasAppliedThisTick)
+            return;
+
+        var now = UBot.Core.RuntimeAccess.Core.TickCount;
+        if (now - _lastDistribution < 2000)
+            return;
+
+        _lastDistribution = now;
+        _wasAppliedThisTick = true;
+        OnApplyStatPoints();
+    }
+
+    private static bool IsAutoDistributionEnabled()
+    {
+        return UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.StatPoints.Enabled", false);
     }
 
     private static void OnApplyStatPoints()
     {
+        if (!IsAutoDistributionEnabled())
+            return;
+
         if (UBot.Core.RuntimeAccess.Session.Player == null)
             return;
 
-        var incStr = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckIncStr");
-        var incInt = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckIncInt");
         GetNormalizedDistribution(out var numStr, out var numInt);
-
-        var pointsPerStep = (incStr ? numStr : 0) + (incInt ? numInt : 0);
-        if (pointsPerStep <= 0)
+        if (numStr + numInt <= 0)
             return;
 
         var available = (int)UBot.Core.RuntimeAccess.Session.Player.StatPoints;
         if (available <= 0)
             return;
 
-        var stepCount = Math.Max(1, (int)Math.Ceiling(available / (double)pointsPerStep));
+        var stepCount = Math.Max(1, (int)Math.Ceiling(available / (double)(numStr + numInt)));
         Task.Run(() => IncreaseStatPoints(stepCount));
     }
 
@@ -72,6 +107,9 @@ public class StatPointsHandler
     /// </summary>
     private static void OnPlayerLevelUp(byte oldLevel)
     {
+        if (!IsAutoDistributionEnabled())
+            return;
+
         var enabledIfBotIsStopped = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckIncBotStopped", true);
         if (!UBot.Core.RuntimeAccess.Core.Bot.Running && !enabledIfBotIsStopped)
             return;
@@ -83,15 +121,16 @@ public class StatPointsHandler
 
     public static void IncreaseStatPoints(int stepCount)
     {
-        var incStr = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckIncStr");
-        var incInt = UBot.Core.RuntimeAccess.Player.Get<bool>("UBot.Protection.CheckIncInt");
+        if (!IsAutoDistributionEnabled())
+            return;
+
         GetNormalizedDistribution(out var numStr, out var numInt);
 
         for (var iLevelUp = 0; iLevelUp < stepCount; iLevelUp++)
         {
             if (CancellationRequested)
                 return;
-            if (incStr && numStr > 0)
+            if (numStr > 0)
                 for (var i = 0; i < numStr; i++)
                 {
                     if (CancellationRequested)
@@ -105,7 +144,7 @@ public class StatPointsHandler
                     Thread.Sleep(500);
                 }
 
-            if (incInt && numInt > 0)
+            if (numInt > 0)
                 for (var i = 0; i < numInt; i++)
                 {
                     if (CancellationRequested)

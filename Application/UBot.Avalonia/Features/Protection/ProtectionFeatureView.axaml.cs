@@ -46,6 +46,7 @@ public partial class ProtectionFeatureView : UserControl
         PetAbnormCheck.Content = "Use abnormal state recovery potions";
         PetReviveCheck.Content = "Revive growth / fellow pet";
         PetSummonCheck.Content = "Auto summon growth & fellow pet";
+        AutoStatCheck.Content = "Auto distribute stat points";
         RefreshFromConfig();
     }
 
@@ -118,6 +119,7 @@ public partial class ProtectionFeatureView : UserControl
 
         UseUniversalPillsCheck.IsChecked = _vm.BoolCfg("useUniversalPills", true);
         UseBadStatusSkillCheck.IsChecked = _vm.BoolCfg("useBadStatusSkill");
+        AutoStatCheck.IsChecked = _vm.BoolCfg("statPointsAutoEnabled", false);
 
         // Don't overwrite stat boxes while the user is actively editing them.
         if (!IncIntBox.IsFocused) IncIntBox.Text = _vm.NumCfg("increaseInt").ToString("F0");
@@ -168,10 +170,32 @@ public partial class ProtectionFeatureView : UserControl
     private void NumBox_Changed(object? s, TextChangedEventArgs e)
     {
         if (_syncing || _vm is null || s is not TextBox tb || tb.Tag is not string key) return;
-        if (double.TryParse(tb.Text, out var v))
-            _ = _vm.PatchConfigAsync(new Dictionary<string, object?> { [key] = System.Math.Clamp(v, 0, 3) });
-    }
 
-    private void ApplyStat_Click(object? s, RoutedEventArgs e)
-        => _vm?.PluginActionAsync("protection.apply-stat-points");
+        var isInt = key == "increaseInt";
+        if (!double.TryParse(tb.Text, out var raw))
+            raw = 0;
+
+        var intVal = isInt ? (int)raw : (int)_vm.NumCfg("increaseInt");
+        var strVal = isInt ? (int)_vm.NumCfg("increaseStr") : (int)raw;
+
+        intVal = System.Math.Clamp(intVal, 0, 3);
+        strVal = System.Math.Clamp(strVal, 0, 3);
+
+        if (intVal + strVal > 3)
+        {
+            if (isInt)
+                strVal = System.Math.Max(0, 3 - intVal);
+            else
+                intVal = System.Math.Max(0, 3 - strVal);
+        }
+
+        IncIntBox.Text = intVal.ToString();
+        IncStrBox.Text = strVal.ToString();
+
+        _ = _vm.PatchConfigAsync(new Dictionary<string, object?>
+        {
+            ["increaseInt"] = intVal,
+            ["increaseStr"] = strVal
+        });
+    }
 }

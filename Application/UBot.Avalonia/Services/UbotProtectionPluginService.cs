@@ -67,6 +67,7 @@ internal sealed class UbotProtectionPluginService : UbotServiceBase
             ["shardFatigue"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.CheckShardFatigue", false),
             ["useUniversalPills"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.CheckUseUniversalPills", true),
             ["useBadStatusSkill"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.CheckUseBadStatusSkill", false),
+            ["statPointsAutoEnabled"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.StatPoints.Enabled", false),
             ["increaseInt"] = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.IncrementInt", 0), 0, 3),
             ["increaseStr"] = Math.Clamp(UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.IncrementStr", 0), 0, 3),
             ["petHpPotionEnabled"] = UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.CheckUsePetHP", false),
@@ -108,8 +109,30 @@ internal sealed class UbotProtectionPluginService : UbotServiceBase
         changed |= SetPlayerBool("UBot.Protection.CheckShardFatigue", patch, "shardFatigue");
         changed |= SetPlayerBool("UBot.Protection.CheckUseUniversalPills", patch, "useUniversalPills");
         changed |= SetPlayerBool("UBot.Protection.CheckUseBadStatusSkill", patch, "useBadStatusSkill");
-        changed |= SetPlayerInt("UBot.Protection.IncrementInt", patch, "increaseInt", 0, 3);
-        changed |= SetPlayerInt("UBot.Protection.IncrementStr", patch, "increaseStr", 0, 3);
+        changed |= SetPlayerBool("UBot.Protection.StatPoints.Enabled", patch, "statPointsAutoEnabled");
+        var newInt = patch.TryGetValue("increaseInt", out var iv) && iv is double d ? (int)d : -1;
+        var newStr = patch.TryGetValue("increaseStr", out var sv) && sv is double ds ? (int)ds : -1;
+        if (newInt >= 0 || newStr >= 0)
+        {
+            var currentInt = (int)UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.IncrementInt", 0);
+            var currentStr = (int)UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.IncrementStr", 0);
+            if (newInt < 0) newInt = currentInt;
+            if (newStr < 0) newStr = currentStr;
+            newInt = Math.Clamp(newInt, 0, 3);
+            newStr = Math.Clamp(newStr, 0, 3);
+            if (newInt + newStr > 3)
+                newStr = Math.Max(0, 3 - newInt);
+            if (UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.IncrementInt", 0) != newInt)
+            {
+                UBot.Core.RuntimeAccess.Player.Set("UBot.Protection.IncrementInt", newInt);
+                changed = true;
+            }
+            if (UBot.Core.RuntimeAccess.Player.Get("UBot.Protection.IncrementStr", 0) != newStr)
+            {
+                UBot.Core.RuntimeAccess.Player.Set("UBot.Protection.IncrementStr", newStr);
+                changed = true;
+            }
+        }
         changed |= SetPlayerBool("UBot.Protection.CheckUsePetHP", patch, "petHpPotionEnabled");
         changed |= SetPlayerBool("UBot.Protection.CheckUseHGP", patch, "petHgpPotionEnabled");
         changed |= SetPlayerBool("UBot.Protection.CheckUseAbnormalStatePotion", patch, "petAbnormalRecoveryEnabled");
