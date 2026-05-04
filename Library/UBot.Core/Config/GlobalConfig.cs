@@ -83,7 +83,11 @@ public static class GlobalConfig
     public static void Set<T>(string key, T value)
     {
         if (_config != null)
+        {
+            var oldValue = _config.Get(key, default(T));
             _config.Set(key, value);
+            Log.Debug($"[GlobalConfig] {key} changed old={oldValue} new={value} path={_config.FilePath}");
+        }
     }
 
     /// <summary>
@@ -125,7 +129,9 @@ public static class GlobalConfig
         if (_config == null)
             return;
 
+        var path = _config.FilePath;
         _config.Save();
+        Log.Debug($"[GlobalConfig] Saved path={path}");
         UBot.Core.RuntimeAccess.Events.FireEvent("OnSaveGlobalConfig");
     }
 }

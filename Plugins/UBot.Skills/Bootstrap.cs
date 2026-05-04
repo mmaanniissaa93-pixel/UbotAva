@@ -59,6 +59,7 @@ public class Bootstrap : IPlugin
     /// <inheritdoc />
     public void Enable()
     {
+        LoadCharacterSubscriber.SubscribeEvents();
         if (View != null)
             View.Enabled = true;
     }

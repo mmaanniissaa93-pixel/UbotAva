@@ -163,8 +163,19 @@ public class PacketManager
         var handlerCount = handlers.Length;
         for (var i = 0; i < handlerCount; i++)
         {
-            handlers[i].Invoke(packet);
-            packet.SeekRead(0, SeekOrigin.Begin);
+            try
+            {
+                handlers[i].Invoke(packet);
+            }
+            catch (Exception ex)
+            {
+                var handlerName = handlers[i]?.GetType().Name ?? "unknown";
+                Log.Error("[PacketManager.CallHandler] opcode=0x" + packet.Opcode.ToString("X4") + " handler=" + handlerName + " threw: " + ex.Message);
+            }
+            finally
+            {
+                packet.SeekRead(0, SeekOrigin.Begin);
+            }
         }
     }
 

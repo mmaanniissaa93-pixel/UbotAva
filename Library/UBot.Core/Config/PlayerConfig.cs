@@ -86,7 +86,11 @@ public static class PlayerConfig
     public static void Set<T>(string key, T value)
     {
         if (_config != null)
+        {
+            var oldValue = _config.Get(key, default(T));
             _config.Set(key, value);
+            Log.Debug($"[PlayerConfig] {key} changed old={oldValue} new={value} character={ProfileManager.SelectedCharacter} path={_config.FilePath}");
+        }
     }
 
     /// <summary>
@@ -138,7 +142,9 @@ public static class PlayerConfig
         if (_config == null)
             return;
 
+        var path = _config.FilePath;
         _config.Save();
+        Log.Debug($"[PlayerConfig] Saved character={ProfileManager.SelectedCharacter} path={path}");
         UBot.Core.RuntimeAccess.Events.FireEvent("OnSavePlayerConfig");
     }
 }

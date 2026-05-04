@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using UBot.Core;
 using UBot.Core.Abstractions;
 using UBot.Core.Abstractions.Network;
 using UBot.Core.Abstractions.Services;
@@ -57,8 +59,16 @@ public static class ProtocolRuntime
 
         foreach (var callback in callbacks)
         {
-            packet.SeekRead(0, System.IO.SeekOrigin.Begin);
-            callback.Invoke(packet);
+            try
+            {
+                packet.SeekRead(0, System.IO.SeekOrigin.Begin);
+                callback.Invoke(packet);
+            }
+            catch (Exception ex)
+            {
+                var callbackName = callback?.GetType().Name ?? "unknown";
+                UBot.Core.Log.Error("[ProtocolRuntime.CallCallback] opcode=0x" + packet.Opcode.ToString("X4") + " callback=" + callbackName + " threw: " + ex.Message);
+            }
         }
 
         lock (CallbackLock)

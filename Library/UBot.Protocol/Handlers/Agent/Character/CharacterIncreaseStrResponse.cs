@@ -1,3 +1,5 @@
+using System;
+using UBot.Core;
 using UBot.Core.Network;
 using UBot.Protocol;
 
@@ -11,15 +13,30 @@ public class CharacterIncreaseStrResponse : IPacketHandler
 
     public void Invoke(Packet packet)
     {
-        if (packet.ReadByte() != 1)
-            return;
+        try
+        {
+            if (packet.ReadByte() != 1)
+                return;
 
-        dynamic player = UBot.Protocol.ProtocolRuntime.GameState?.Player;
-        if (player == null)
-            return;
+            dynamic player = UBot.Protocol.ProtocolRuntime.GameState?.Player;
+            if (player == null)
+                return;
 
-        player.StatPoints--;
-        UBot.Protocol.ProtocolRuntime.GameState?.FireEvent("OnIncreaseStrength");
+            var oldStatPoints = (int)player.StatPoints;
+            if (oldStatPoints <= 0)
+            {
+                Log.Debug("[CharacterIncreaseStrResponse] StatPoints underflow prevented: current=" + oldStatPoints);
+                return;
+            }
+
+            player.StatPoints--;
+            Log.Debug("[CharacterIncreaseStrResponse] StatPoints changed: old=" + oldStatPoints + " new=" + player.StatPoints + " reason=IncreaseStr");
+            UBot.Protocol.ProtocolRuntime.GameState?.FireEvent("OnIncreaseStrength");
+        }
+        catch (Exception ex)
+        {
+            Log.Error("[CharacterIncreaseStrResponse] Exception in handler: " + ex.Message);
+        }
     }
 }
 

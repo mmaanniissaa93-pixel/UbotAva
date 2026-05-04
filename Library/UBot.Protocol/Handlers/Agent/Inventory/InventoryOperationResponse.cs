@@ -36,10 +36,12 @@ public class InventoryOperationResponse : IPacketHandler
     /// <param name="packet">The packet.</param>
     public void Invoke(Packet packet)
     {
-        if (CoreGame.Player == null)
-            return;
+        try
+        {
+            if (CoreGame.Player == null)
+                return;
 
-        var result = packet.ReadByte();
+            var result = packet.ReadByte();
         if (result != 0x01)
         {
             var code = packet.ReadByte();
@@ -781,6 +783,12 @@ public class InventoryOperationResponse : IPacketHandler
         }
 
         ShoppingManager.BuybackList = newBuybackList;
+        UBot.Core.RuntimeAccess.Events.FireEvent("OnInventoryUpdate");
+        }
+        catch (Exception ex)
+        {
+            Log.Error("[InventoryOperationResponse] Exception in Invoke: " + ex.Message);
+        }
     }
 }
 

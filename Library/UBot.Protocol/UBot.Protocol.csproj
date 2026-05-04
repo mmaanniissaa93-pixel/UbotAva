@@ -1,11 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\UBot.Core\UBot.Core.csproj" />
     <ProjectReference Include="..\UBot.Core.Abstractions\UBot.Core.Abstractions.csproj" />
     <ProjectReference Include="..\UBot.Core.Common\UBot.Core.Common.csproj" />
     <ProjectReference Include="..\UBot.Core.Domain\UBot.Core.Domain.csproj" />
     <ProjectReference Include="..\UBot.Core.GameState\UBot.Core.GameState.csproj" />
     <ProjectReference Include="..\UBot.Core.Network\UBot.Core.Network.csproj" />
+    <ProjectReference Include="..\UBot.FileSystem\UBot.FileSystem.csproj" />
     <ProjectReference Include="..\UBot.GameData\UBot.GameData.csproj" />
     <ProjectReference Include="..\UBot.NavMeshApi\UBot.NavMeshApi.csproj" />
   </ItemGroup>
