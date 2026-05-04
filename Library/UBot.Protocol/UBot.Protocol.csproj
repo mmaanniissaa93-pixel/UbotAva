@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\UBot.Core\UBot.Core.csproj" />
     <ProjectReference Include="..\UBot.Core.Abstractions\UBot.Core.Abstractions.csproj" />
     <ProjectReference Include="..\UBot.Core.Common\UBot.Core.Common.csproj" />
     <ProjectReference Include="..\UBot.Core.Domain\UBot.Core.Domain.csproj" />

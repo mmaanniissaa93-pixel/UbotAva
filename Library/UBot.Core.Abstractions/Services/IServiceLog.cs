@@ -7,5 +7,6 @@ public interface IServiceLog
     void Debug(string message);
     void Notify(string message);
     void Warn(string message);
+    void Error(string message);
     void Fatal(Exception exception);
 }

@@ -1,5 +1,4 @@
 using System;
-using UBot.Core;
 using UBot.Core.Network;
 using UBot.Protocol;
 

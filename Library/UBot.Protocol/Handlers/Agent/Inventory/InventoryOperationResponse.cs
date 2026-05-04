@@ -1,11 +1,12 @@
 using CoreGame = UBot.Protocol.Legacy.LegacyGame;
+using System;
 using UBot.Core.Abstractions;
 using UBot.Core.Network;
 using System.Collections.Generic;
 using UBot.Core.Objects;
 using UBot.Core.Objects.Cos;
 using UBot.Core.Objects.Inventory;
-using UBot.Core.Objects.Item;
+using UBot.Core.Objects.Item;
 using UBot.Protocol.Legacy;
 using UBot.Core;
 using CosEntity = UBot.Core.Objects.Cos.Cos;
@@ -247,9 +248,14 @@ public class InventoryOperationResponse : IPacketHandler
 
         UBot.Protocol.ProtocolRuntime.LegacyRuntime.FireEvent("OnInventoryUpdate");
     }
+    catch (Exception ex)
+    {
+        Log.Error("[InventoryOperationResponse] Exception in Invoke: " + ex.Message);
+    }
+}
 
-    /// <summary>
-    ///     Parses the floor to inventory.
+/// <summary>
+///     Parses the floor to inventory.
     /// </summary>
     /// <param name="packet">The packet.</param>
     private static void ParseFloorToSpecialtyBag(Packet packet)
@@ -783,12 +789,7 @@ public class InventoryOperationResponse : IPacketHandler
         }
 
         ShoppingManager.BuybackList = newBuybackList;
-        UBot.Core.RuntimeAccess.Events.FireEvent("OnInventoryUpdate");
-        }
-        catch (Exception ex)
-        {
-            Log.Error("[InventoryOperationResponse] Exception in Invoke: " + ex.Message);
-        }
+        UBot.Protocol.ProtocolRuntime.LegacyRuntime?.FireEvent("OnInventoryUpdate");
     }
 }
 

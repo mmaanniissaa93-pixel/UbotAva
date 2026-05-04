@@ -20,6 +20,11 @@ public class Config
     private readonly string _path;
 
     /// <summary>
+    ///     Gets the file path.
+    /// </summary>
+    public string FilePath => _path;
+
+    /// <summary>
     ///     Loads the specified file.
     /// </summary>
     /// <param name="file">The file.</param>

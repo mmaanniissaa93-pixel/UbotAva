@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UBot.Core;
 using UBot.Core.Abstractions;
 using UBot.Core.Abstractions.Network;
 using UBot.Core.Abstractions.Services;
@@ -17,6 +16,7 @@ public static class ProtocolRuntime
     public static IPacketDispatcher PacketDispatcher { get; set; }
     public static Legacy.IProtocolLegacyRuntime LegacyRuntime { get; set; }
     public static ISpawnController SpawnController { get; set; }
+    public static IServiceLog LogService { get; set; }
     public static IScriptEventBus EventBus { get; set; }
     public static IUIFeedbackService Feedback { get; set; }
     public static IShoppingController Shopping { get; set; }
@@ -67,7 +67,7 @@ public static class ProtocolRuntime
             catch (Exception ex)
             {
                 var callbackName = callback?.GetType().Name ?? "unknown";
-                UBot.Core.Log.Error("[ProtocolRuntime.CallCallback] opcode=0x" + packet.Opcode.ToString("X4") + " callback=" + callbackName + " threw: " + ex.Message);
+                Log.Error("[ProtocolRuntime.CallCallback] opcode=0x" + packet.Opcode.ToString("X4") + " callback=" + callbackName + " threw: " + ex.Message);
             }
         }
 

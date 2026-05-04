@@ -11,5 +11,7 @@ internal sealed class CoreServiceLog : IServiceLog
 
     public void Warn(string message) => Log.Warn(message);
 
+    public void Error(string message) => Log.Error(message);
+
     public void Fatal(Exception exception) => Log.Fatal(exception);
 }
